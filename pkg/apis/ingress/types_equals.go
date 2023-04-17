@@ -431,10 +431,6 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 
-	if !(&l1.InfluxDB).Equal(&l2.InfluxDB) {
-		return false
-	}
-
 	if l1.BackendProtocol != l2.BackendProtocol {
 		return false
 	}

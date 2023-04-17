@@ -50,7 +50,7 @@ var INGRESS_REGISTRY = "registry.k8s.io"                                    //Co
 var KUSTOMIZE_INSTALL_VERSION = "sigs.k8s.io/kustomize/kustomize/v4@v4.5.4" //static deploys needs kustomize to generate the template
 
 // ingress-nginx releases start with a TAG then a cloudbuild, then a promotion through a PR, this the location of that PR
-var IMAGES_YAML = "https://raw.githubusercontent.com/kubernetes/k8s.io/main/k8s.gcr.io/images/k8s-staging-ingress-nginx/images.yaml"
+var IMAGES_YAML = "https://raw.githubusercontent.com/kubernetes/k8s.io/main/registry.k8s.io/images/k8s-staging-ingress-nginx/images.yaml"
 var ctx = context.Background() // Context used for GitHub Client
 
 const INDEX_DOCS = "docs/deploy/index.md" //index.md has a version of the controller and needs to updated

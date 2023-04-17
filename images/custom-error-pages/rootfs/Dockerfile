@@ -13,7 +13,9 @@
 # limitations under the License.
 
 FROM golang:1.20.1-alpine3.17 as builder
-RUN apk add git
+
+RUN apk update \
+    && apk upgrade && apk add git
 
 WORKDIR /go/src/k8s.io/ingress-nginx/images/custom-error-pages
 

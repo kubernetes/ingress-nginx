@@ -18,7 +18,9 @@ SHELL=/bin/bash -o pipefail -o errexit
 DIR:=$(strip $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))
 INIT_BUILDX=$(DIR)/../../hack/init-buildx.sh
 
-TAG ?=v$(shell date +%m%d%Y)-$(shell git rev-parse --short HEAD)
+SHORT_SHA ?=$(shell git rev-parse --short HEAD)
+TAG ?=v$(shell date +%Y%m%d)-$(SHORT_SHA)
+
 REGISTRY ?= local
 
 IMAGE = $(REGISTRY)/e2e-test-runner
@@ -30,27 +32,52 @@ export DOCKER_CLI_EXPERIMENTAL=enabled
 
 # build with buildx
 PLATFORMS?=linux/amd64,linux/arm64
-OUTPUT=
+OUTPUT?=
 PROGRESS=plain
 
-build: ensure-buildx
-	docker buildx build \
-		--platform=${PLATFORMS} $(OUTPUT) \
-		--progress=$(PROGRESS) \
+image:
+	echo "Building docker image ($(ARCH))..."
+	docker build \
+		${PLATFORM_FLAG} ${PLATFORM} \
+		--no-cache \
 		--pull \
-		--build-arg BASE_IMAGE=$(NGINX_BASE_IMAGE) \
+		--push \
+		--build-arg BASE_IMAGE=${NGINX_BASE_IMAGE} \
 		--build-arg GOLANG_VERSION=1.20.1 \
 		--build-arg ETCD_VERSION=3.4.3-0 \
-		--build-arg K8S_RELEASE=v1.24.2 \
+		--build-arg K8S_RELEASE=v1.26.0 \
 		--build-arg RESTY_CLI_VERSION=0.27 \
 		--build-arg RESTY_CLI_SHA=e5f4f3128af49ba5c4d039d0554e5ae91bbe05866f60eccfa96d3653274bff90 \
 		--build-arg LUAROCKS_VERSION=3.8.0 \
 		--build-arg LUAROCKS_SHA=ab6612ca9ab87c6984871d2712d05525775e8b50172701a0a1cabddf76de2be7 \
-		--build-arg CHART_TESTING_VERSION=3.7.0 \
+		--build-arg CHART_TESTING_VERSION=3.8.0 \
 		--build-arg YAML_LINT_VERSION=1.27.1 \
 		--build-arg YAMALE_VERSION=4.0.4 \
-		--build-arg HELM_VERSION=v3.9.0 \
-		-t $(IMAGE):$(TAG) rootfs
+		--build-arg HELM_VERSION=3.11.2 \
+		--build-arg GINKGO_VERSION=2.9.0 \
+		--build-arg GOLINT_VERSION=latest \
+		-t ${IMAGE}:${TAG} rootfs
+
+build: ensure-buildx
+	docker buildx build \
+		--platform=${PLATFORMS} ${OUTPUT} \
+		--progress=${PROGRESS} \
+		--pull \
+		--build-arg BASE_IMAGE=${NGINX_BASE_IMAGE} \
+		--build-arg GOLANG_VERSION=1.20.1 \
+		--build-arg ETCD_VERSION=3.4.3-0 \
+		--build-arg K8S_RELEASE=v1.26.0 \
+		--build-arg RESTY_CLI_VERSION=0.27 \
+		--build-arg RESTY_CLI_SHA=e5f4f3128af49ba5c4d039d0554e5ae91bbe05866f60eccfa96d3653274bff90 \
+		--build-arg LUAROCKS_VERSION=3.8.0 \
+		--build-arg LUAROCKS_SHA=ab6612ca9ab87c6984871d2712d05525775e8b50172701a0a1cabddf76de2be7 \
+		--build-arg CHART_TESTING_VERSION=3.8.0 \
+		--build-arg YAML_LINT_VERSION=1.27.1 \
+		--build-arg YAMALE_VERSION=4.0.4 \
+		--build-arg HELM_VERSION=3.11.2 \
+		--build-arg GINKGO_VERSION=2.9.0 \
+		--build-arg GOLINT_VERSION=latest \
+		-t ${IMAGE}:${TAG} rootfs
 
 # push the cross built image
 push: OUTPUT=--push

@@ -2,16 +2,15 @@
 
 [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 
-![Version: 4.5.2](https://img.shields.io/badge/Version-4.5.2-informational?style=flat-square) ![AppVersion: 1.6.4](https://img.shields.io/badge/AppVersion-1.6.4-informational?style=flat-square)
+![Version: 4.6.0](https://img.shields.io/badge/Version-4.6.0-informational?style=flat-square) ![AppVersion: 1.7.0](https://img.shields.io/badge/AppVersion-1.7.0-informational?style=flat-square)
 
 To use, add `ingressClassName: nginx` spec field or the `kubernetes.io/ingress.class: nginx` annotation to your Ingress resources.
 
 This chart bootstraps an ingress-nginx deployment on a [Kubernetes](http://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
 
-## Prerequisites
+## Requirements
 
-- Chart version 3.x.x: Kubernetes v1.16+
-- Chart version 4.x.x and above: Kubernetes v1.19+
+Kubernetes: `>=1.20.0-0`
 
 ## Get Repo Info
 
@@ -52,10 +51,6 @@ helm upgrade [RELEASE_NAME] [CHART] --install
 
 _See [helm upgrade](https://helm.sh/docs/helm/helm_upgrade/) for command documentation._
 
-### Upgrading With Zero Downtime in Production
-
-By default the ingress-nginx controller has service interruptions whenever it's pods are restarted or redeployed. In order to fix that, see the excellent blog post by Lindsay Landry from Codecademy: [Kubernetes: Nginx and Zero Downtime in Production](https://medium.com/codecademy-engineering/kubernetes-nginx-and-zero-downtime-in-production-2c910c6a5ed8).
-
 ### Migrating from stable/nginx-ingress
 
 There are two main ways to migrate a release from `stable/nginx-ingress` to `ingress-nginx/ingress-nginx` chart:
@@ -66,7 +61,6 @@ There are two main ways to migrate a release from `stable/nginx-ingress` to `ing
     1. Redirect your DNS traffic from the old controller to the new controller
     1. Log traffic from both controllers during this changeover
     1. [Uninstall](#uninstall-chart) the old controller once traffic has fully drained from it
-    1. For details on all of these steps see [Upgrading With Zero Downtime in Production](#upgrading-with-zero-downtime-in-production)
 
 Note that there are some different and upgraded configurations between the two charts, described by Rimas Mocevicius from JFrog in the "Upgrading to ingress-nginx Helm chart" section of [Migrating from Helm chart nginx-ingress to ingress-nginx](https://rimusz.net/migrating-to-ingress-nginx). As the `ingress-nginx/ingress-nginx` chart continues to update, you will want to check current differences by running [helm configuration](#configuration) commands on both charts.
 
@@ -124,19 +118,6 @@ controller:
       service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "http"
       service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "https"
       service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: '3600'
-```
-
-### AWS route53-mapper
-
-To configure the LoadBalancer service with the [route53-mapper addon](https://github.com/kubernetes/kops/blob/be63d4f1a7a46daaf1c4c482527328236850f111/addons/route53-mapper/README.md), add the `domainName` annotation and `dns` label:
-
-```yaml
-controller:
-  service:
-    labels:
-      dns: "route53"
-    annotations:
-      domainName: "kubernetes-example.com"
 ```
 
 ### Additional Internal Load Balancer
@@ -244,10 +225,6 @@ Detail of how and why are in [this issue](https://github.com/helm/charts/pull/13
 
 As of version `1.26.0` of this chart, by simply not providing any clusterIP value, `invalid: spec.clusterIP: Invalid value: "": field is immutable` will no longer occur since `clusterIP: ""` will not be rendered.
 
-## Requirements
-
-Kubernetes: `>=1.20.0-0`
-
 ## Values
 
 | Key | Type | Default | Description |
@@ -333,13 +310,13 @@ Kubernetes: `>=1.20.0-0`
 | controller.hostname | object | `{}` | Optionally customize the pod hostname. |
 | controller.image.allowPrivilegeEscalation | bool | `true` |  |
 | controller.image.chroot | bool | `false` |  |
-| controller.image.digest | string | `"sha256:15be4666c53052484dd2992efacf2f50ea77a78ae8aa21ccd91af6baaa7ea22f"` |  |
-| controller.image.digestChroot | string | `"sha256:0de01e2c316c3ca7847ca13b32d077af7910d07f21a4a82f81061839764f8f81"` |  |
+| controller.image.digest | string | `"sha256:7612338342a1e7b8090bef78f2a04fffcadd548ccaabe8a47bf7758ff549a5f7"` |  |
+| controller.image.digestChroot | string | `"sha256:e84ef3b44c8efeefd8b0aa08770a886bfea1f04c53b61b4ba9a7204e9f1a7edc"` |  |
 | controller.image.image | string | `"ingress-nginx/controller"` |  |
 | controller.image.pullPolicy | string | `"IfNotPresent"` |  |
 | controller.image.registry | string | `"registry.k8s.io"` |  |
 | controller.image.runAsUser | int | `101` |  |
-| controller.image.tag | string | `"v1.6.4"` |  |
+| controller.image.tag | string | `"v1.7.0"` |  |
 | controller.ingressClass | string | `"nginx"` | For backwards compatibility with ingress.class annotation, use ingressClass. Algorithm is as follows, first ingressClassName is considered, if not present, controller looks for ingress.class annotation |
 | controller.ingressClassByName | bool | `false` | Process IngressClass per name (additionally as per spec.controller). |
 | controller.ingressClassResource.controllerValue | string | `"k8s.io/ingress-nginx"` | Controller-value of the controller that is processing this ingressClass |
@@ -522,4 +499,3 @@ Kubernetes: `>=1.20.0-0`
 | serviceAccount.name | string | `""` |  |
 | tcp | object | `{}` | TCP service key-value pairs # Ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/exposing-tcp-udp-services.md # |
 | udp | object | `{}` | UDP service key-value pairs # Ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/exposing-tcp-udp-services.md # |
-

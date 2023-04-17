@@ -45,7 +45,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/fastcgi"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/globalratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/http2pushpreload"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipdenylist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/loadbalancing"
@@ -59,7 +58,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/redirect"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/rewrite"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/satisfy"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/secureupstream"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/serversnippet"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/serviceupstream"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/sessionaffinity"
@@ -105,7 +103,6 @@ type Ingress struct {
 	Redirect           redirect.Config
 	Rewrite            rewrite.Config
 	Satisfy            string
-	SecureUpstream     secureupstream.Config
 	ServerSnippet      string
 	ServiceUpstream    bool
 	SessionAffinity    sessionaffinity.Config
@@ -119,7 +116,6 @@ type Ingress struct {
 	XForwardedPrefix   string
 	SSLCipher          sslcipher.Config
 	Logs               log.Config
-	InfluxDB           influxdb.Config
 	ModSecurity        modsecurity.Config
 	Mirror             mirror.Config
 	StreamSnippet      string
@@ -158,7 +154,6 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"Redirect":                    redirect.NewParser(cfg),
 			"Rewrite":                     rewrite.NewParser(cfg),
 			"Satisfy":                     satisfy.NewParser(cfg),
-			"SecureUpstream":              secureupstream.NewParser(cfg),
 			"ServerSnippet":               serversnippet.NewParser(cfg),
 			"ServiceUpstream":             serviceupstream.NewParser(cfg),
 			"SessionAffinity":             sessionaffinity.NewParser(cfg),
@@ -172,7 +167,6 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"XForwardedPrefix":            xforwardedprefix.NewParser(cfg),
 			"SSLCipher":                   sslcipher.NewParser(cfg),
 			"Logs":                        log.NewParser(cfg),
-			"InfluxDB":                    influxdb.NewParser(cfg),
 			"BackendProtocol":             backendprotocol.NewParser(cfg),
 			"ModSecurity":                 modsecurity.NewParser(cfg),
 			"Mirror":                      mirror.NewParser(cfg),

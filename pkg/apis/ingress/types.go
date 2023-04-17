@@ -29,7 +29,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/fastcgi"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/globalratelimit"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipdenylist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
@@ -338,9 +337,6 @@ type Location struct {
 	// Logs allows to enable or disable the nginx logs
 	// By default access logs are enabled and rewrite logs are disabled
 	Logs log.Config `json:"logs,omitempty"`
-	// InfluxDB allows to monitor the incoming request by sending them to an influxdb database
-	// +optional
-	InfluxDB influxdb.Config `json:"influxDB,omitempty"`
 	// BackendProtocol indicates which protocol should be used to communicate with the service
 	// By default this is HTTP
 	BackendProtocol string `json:"backend-protocol"`

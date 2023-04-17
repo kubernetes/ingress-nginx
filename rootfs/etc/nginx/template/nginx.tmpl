@@ -21,10 +21,6 @@ load_module /etc/nginx/modules/ngx_http_brotli_filter_module.so;
 load_module /etc/nginx/modules/ngx_http_brotli_static_module.so;
 {{ end }}
 
-{{ if (shouldLoadInfluxDBModule $servers) }}
-load_module /etc/nginx/modules/ngx_http_influxdb_module.so;
-{{ end }}
-
 {{ if (shouldLoadAuthDigestModule $servers) }}
 load_module /etc/nginx/modules/ngx_http_auth_digest_module.so;
 {{ end }}
@@ -1365,8 +1361,6 @@ stream {
             {{ $limits := buildRateLimit $location }}
             {{ range $limit := $limits }}
             {{ $limit }}{{ end }}
-
-            {{ buildInfluxDB $location.InfluxDB }}
 
             {{ if isValidByteSize $location.Proxy.BodySize true }}
             client_max_body_size                    {{ $location.Proxy.BodySize }};
