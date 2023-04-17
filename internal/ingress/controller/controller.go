@@ -102,10 +102,11 @@ type Configuration struct {
 
 	EnableProfiling bool
 
-	EnableMetrics       bool
-	MetricsPerHost      bool
-	MetricsBuckets      *collectors.HistogramBuckets
-	ReportStatusClasses bool
+	EnableMetrics        bool
+	MetricsPerHost       bool
+	MetricsBuckets       *collectors.HistogramBuckets
+	ReportStatusClasses  bool
+	ExcludeSocketMetrics []string
 
 	FakeCertificate *ingress.SSLCert
 
@@ -1444,6 +1445,7 @@ func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) 
 	loc.EnableGlobalAuth = anns.EnableGlobalAuth
 	loc.HTTP2PushPreload = anns.HTTP2PushPreload
 	loc.Opentracing = anns.Opentracing
+	loc.Opentelemetry = anns.Opentelemetry
 	loc.Proxy = anns.Proxy
 	loc.ProxySSL = anns.ProxySSL
 	loc.RateLimit = anns.RateLimit
@@ -1458,7 +1460,6 @@ func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) 
 	loc.UsePortInRedirects = anns.UsePortInRedirects
 	loc.Connection = anns.Connection
 	loc.Logs = anns.Logs
-	loc.InfluxDB = anns.InfluxDB
 	loc.DefaultBackend = anns.DefaultBackend
 	loc.BackendProtocol = anns.BackendProtocol
 	loc.FastCGI = anns.FastCGI

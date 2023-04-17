@@ -63,3 +63,9 @@ spec:
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
 ```
+Then, the configmap should be added into ingress controller's deployment args.
+```
+ args:
+    - /nginx-ingress-controller
+    - --tcp-services-configmap=ingress-nginx/tcp-services
+```

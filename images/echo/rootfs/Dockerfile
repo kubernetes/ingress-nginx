@@ -2,7 +2,7 @@ ARG BASE_IMAGE
 
 FROM ${BASE_IMAGE}
 
-RUN apk add -U perl curl make unzip
+RUN apk update && apk upgrade && apk add -U --no-cache perl curl make unzip
 
 ARG LUAROCKS_VERSION
 ARG LUAROCKS_SHA

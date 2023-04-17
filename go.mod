@@ -6,7 +6,7 @@ require (
 	github.com/armon/go-proxyproto v0.0.0-20210323213023-7e956b284f0a
 	github.com/eapache/channels v1.1.0
 	github.com/fsnotify/fsnotify v1.6.0
-	github.com/imdario/mergo v0.3.13
+	github.com/imdario/mergo v0.3.15
 	github.com/json-iterator/go v1.1.12
 	github.com/kylelemons/godebug v1.1.0
 	github.com/mitchellh/go-ps v1.0.0
@@ -15,18 +15,18 @@ require (
 	github.com/moul/pb v0.0.0-20220425114252-bca18df4138c
 	github.com/ncabatoff/process-exporter v0.7.10
 	github.com/onsi/ginkgo/v2 v2.9.0
-	github.com/opencontainers/runc v1.1.4
+	github.com/opencontainers/runc v1.1.5
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/prometheus/client_golang v1.14.0
 	github.com/prometheus/client_model v0.3.0
 	github.com/prometheus/common v0.42.0
-	github.com/spf13/cobra v1.6.1
+	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.2
 	github.com/yudai/gojsondiff v1.0.0
 	github.com/zakjan/cert-chain-resolver v0.0.0-20211122211144-c6b0b792af9a
-	golang.org/x/crypto v0.7.0
-	google.golang.org/grpc v1.53.0
+	golang.org/x/crypto v0.8.0
+	google.golang.org/grpc v1.54.0
 	google.golang.org/grpc/examples v0.0.0-20221220003428-4f16fbe410f7
 	gopkg.in/go-playground/pool.v3 v3.1.1
 	gopkg.in/mcuadros/go-syslog.v2 v2.3.0
@@ -40,7 +40,7 @@ require (
 	k8s.io/component-base v0.26.3
 	k8s.io/klog/v2 v2.90.1
 	pault.ag/go/sniff v0.0.0-20200207005214-cf7e4d167732
-	sigs.k8s.io/controller-runtime v0.14.5
+	sigs.k8s.io/controller-runtime v0.14.6
 	sigs.k8s.io/mdtoc v1.1.0
 )
 
@@ -76,7 +76,7 @@ require (
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gregjones/httpcache v0.0.0-20180305231024-9cad4c3443a7 // indirect
-	github.com/inconshreveable/mousetrap v1.0.1 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
@@ -101,11 +101,11 @@ require (
 	github.com/yudai/pp v2.0.1+incompatible // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
 	golang.org/x/mod v0.8.0 // indirect
-	golang.org/x/net v0.8.0 // indirect
+	golang.org/x/net v0.9.0 // indirect
 	golang.org/x/oauth2 v0.5.0 // indirect
-	golang.org/x/sys v0.6.0 // indirect
-	golang.org/x/term v0.6.0 // indirect
-	golang.org/x/text v0.8.0 // indirect
+	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/term v0.7.0 // indirect
+	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.6.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
