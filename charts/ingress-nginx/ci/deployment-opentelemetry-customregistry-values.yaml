@@ -4,3 +4,6 @@ controller:
     enabled: true
     image:
       registry: registry.k8s.io # must be a valid registry containing the ingress-nginx/opentelemetry image, otherwise ci tests fail
+      image: ingress-nginx/opentelemetry
+      tag: "v20230312-helm-chart-4.5.2-28-g66a760794"
+      digest: sha256:40f766ac4a9832f36f217bb0e98d44c8d38faeccbfe861fbc1a76af7e9ab257f
