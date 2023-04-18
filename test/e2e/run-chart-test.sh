@@ -97,7 +97,7 @@ if [ "${SKIP_CERT_MANAGER_CREATION:-false}" = "false" ]; then
  ./cmctl help
   echo "[dev-env] apply cert-manager ..."
   kubectl apply --wait -f https://github.com/cert-manager/cert-manager/releases/download/v1.11.0/cert-manager.yaml
-  kubectl wait --timeout=30s --for=condition=available deployment/cert-manager -n cert-manager
+  kubectl wait --timeout=30s --for-condition=available -l app=cert-manager -l "app.kubernetes.io/component=controller"
   kubectl get validatingwebhookconfigurations cert-manager-webhook -ojson | jq '.webhooks[].clientConfig'
   kubectl get endpoints -n cert-manager cert-manager-webhook
   ./cmctl check api --wait=2m
