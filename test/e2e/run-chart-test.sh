@@ -93,7 +93,7 @@ kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${R
 if [ "${SKIP_CERT_MANAGER_CREATION:-false}" = "false" ]; then
   echo "[dev-env] apply cert-manager ..."
   kubectl apply --wait -f https://github.com/cert-manager/cert-manager/releases/download/v1.10.0/cert-manager.yaml
-  sleep 10
+  sleep 30
 fi
 
 echo "[dev-env] running helm chart e2e tests..."
