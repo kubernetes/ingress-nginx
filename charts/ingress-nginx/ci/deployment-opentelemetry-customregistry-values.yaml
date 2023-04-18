@@ -3,4 +3,4 @@ controller:
   opentelemetry:
     enabled: true
     image:
-      registry: mycontainerreg.some.io
+      registry: registry.k8s.io # must be a valid registry containing the ingress-nginx/opentelemetry image, otherwise ci tests fail
