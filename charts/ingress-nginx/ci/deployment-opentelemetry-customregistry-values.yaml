@@ -1,0 +1,6 @@
+controller:
+  kind: Deployment
+  opentelemetry:
+    enabled: true
+    image:
+      registry: mycontainerreg.some.io
