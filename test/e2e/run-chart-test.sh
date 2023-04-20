@@ -62,7 +62,7 @@ export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-config-$KIND_CLUSTER_NAME}"
 if [ "${SKIP_CLUSTER_CREATION:-false}" = "false" ]; then
   echo "[dev-env] creating Kubernetes cluster with kind"
 
-  export K8S_VERSION=${K8S_VERSION:-v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6}
+  export K8S_VERSION=${K8S_VERSION:-v1.25.2@sha256:9be91e9e9cdf116809841fc77ebdb8845443c4c72fe5218f3ae9eb57fdb4bace}
 
   kind create cluster \
     --verbosity=${KIND_LOG_LEVEL} \
@@ -97,7 +97,7 @@ if [ "${SKIP_CERT_MANAGER_CREATION:-false}" = "false" ]; then
  ./cmctl help
   echo "[dev-env] apply cert-manager ..."
   kubectl apply --wait -f https://github.com/cert-manager/cert-manager/releases/download/v1.11.0/cert-manager.yaml
-  kubectl wait --timeout=30s --for-condition=available -l app=cert-manager -l "app.kubernetes.io/component=controller"
+  kubectl wait --timeout=30s --for=condition=available -l app=cert-manager -l "app.kubernetes.io/component=controller"
   kubectl get validatingwebhookconfigurations cert-manager-webhook -ojson | jq '.webhooks[].clientConfig'
   kubectl get endpoints -n cert-manager cert-manager-webhook
   ./cmctl check api --wait=2m
