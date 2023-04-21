@@ -193,7 +193,7 @@ jobs:
         with:
           name: docker.tar.gz
           path: docker.tar.gz
-
+          retention-days: 5
   helm:
     name: Helm chart
     runs-on: ubuntu-latest
@@ -205,7 +205,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.7, v1.25.3, v1.26.0]
+        k8s: [v1.24.12, v1.25.8, v1.26.3]
 
     steps:
       - name: Checkout
@@ -255,11 +255,6 @@ jobs:
         run: |
           kind create cluster --image=kindest/node:${{ matrix.k8s }}
 
-      - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
-        with:
-          name: docker.tar.gz
-          failOnError: false
-
       - name: Load images from cache
         run: |
           echo "loading docker images..."
@@ -285,7 +280,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.7, v1.25.3, v1.26.0]
+        k8s: [v1.24.12, v1.25.8, v1.26.3]
 
     steps:
       - name: Checkout
@@ -300,11 +295,6 @@ jobs:
         id: kind
         run: |
           kind create cluster --image=kindest/node:${{ matrix.k8s }} --config test/e2e/kind.yaml
-
-      - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
-        with:
-          name: docker.tar.gz
-          failOnError: false
 
       - name: Load images from cache
         run: |
@@ -327,6 +317,7 @@ jobs:
           name: e2e-test-reports-${{ matrix.k8s }}
           path: 'test/junitreports/report*.xml'
 
+
   kubernetes-chroot:
     name: Kubernetes chroot
     runs-on: ubuntu-latest
@@ -338,7 +329,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.7, v1.25.3, v1.26.0]
+        k8s: [v1.24.12, v1.25.8, v1.26.3]
 
     steps:
 
@@ -355,11 +346,6 @@ jobs:
         run: |
           kind create cluster --image=kindest/node:${{ matrix.k8s }} --config test/e2e/kind.yaml
 
-      - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
-        with:
-          name: docker.tar.gz
-          failOnError: false
-
       - name: Load images from cache
         run: |
           echo "loading docker images..."
@@ -375,7 +361,7 @@ jobs:
           kind get kubeconfig > $HOME/.kube/kind-config-kind
           make kind-e2e-test
 
-      - name: Uplaod e2e junit-reports
+      - name: Upload e2e junit-reports
         uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         if: success() || failure()
         with:
@@ -461,7 +447,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.7, v1.25.3, v1.26.0]
+        k8s: [v1.24.12, v1.25.8, v1.26.3]
 
     steps:
       - name: Checkout
