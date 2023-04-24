@@ -32,4 +32,4 @@ maintainers:
 name: ingress-nginx
 sources:
 - https://github.com/kubernetes/ingress-nginx
-version: 4.6.0
+version: 4.6.1
