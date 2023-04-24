@@ -1175,7 +1175,7 @@ Sets a list of URLs that should not appear in the NGINX access log. This is usef
 
 ## skip-access-log-http-statuses
 
-Sets a list of HTTP statuses that should not appear in the NGINX access log. This is useful for high volume ingress where turning access logging completely off is undesirable, but not logging things like 2xx and 3xx responses is desirable. _**default:**_ is empty
+Sets a comma separated list of HTTP statuses, each interpreted as a regular expression, that should not appear in the NGINX access log. This is useful for high volume ingress where turning access logging completely off is undesirable, but not logging things like 2xx and 3xx responses is desirable. _**default:**_ is empty
 
 ## limit-rate
 
