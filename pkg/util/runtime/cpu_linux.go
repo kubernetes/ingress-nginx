@@ -70,7 +70,7 @@ func getCgroupVersion() int64 {
 	}
 }
 
-func readCgroup2FileToInt64Tuple(cgroupPath, cgroupFile string) (int64, int64) {
+func readCgroup2FileToInt64Tuple(cgroupFile string) (int64, int64) {
 	contents, err := os.ReadFile(filepath.Join("/sys/fs/cgroup/", cgroupFile))
 
 	if err != nil {
