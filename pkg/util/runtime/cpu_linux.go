@@ -38,7 +38,6 @@ import (
 func NumCPU() int {
 	cpus := runtime.NumCPU()
 
-	cgroupPath, err := libcontainercgroups.FindCgroupMountpoint("", "cpu")
 	if err != nil {
 		return cpus
 	}
@@ -48,10 +47,11 @@ func NumCPU() int {
 	cpuPeriod := int64(-1)
 
 	if cgroupVersion == 1 {
+		cgroupPath, err := libcontainercgroups.FindCgroupMountpoint("", "cpu")
 		cpuQuota = readCgroupFileToInt64(cgroupPath, "cpu.cfs_quota_us")
 		cpuPeriod = readCgroupFileToInt64(cgroupPath, "cpu.cfs_period_us")
 	} else if cgroupVersion == 2 {
-		cpuQuota, cpuPeriod = readCgroup2FileToInt64Tuple(cgroupPath, "cpu.max")
+		cpuQuota, cpuPeriod = readCgroup2FileToInt64Tuple("cpu.max")
 	}
 
 	if cpuQuota == -1 || cpuPeriod == -1 {
@@ -71,7 +71,7 @@ func getCgroupVersion() int64 {
 }
 
 func readCgroup2FileToInt64Tuple(cgroupPath, cgroupFile string) (int64, int64) {
-	contents, err := os.ReadFile(filepath.Join(cgroupPath, cgroupFile))
+	contents, err := os.ReadFile(filepath.Join("/sys/fs/cgroup/", cgroupFile))
 
 	if err != nil {
 		return -1, -1
