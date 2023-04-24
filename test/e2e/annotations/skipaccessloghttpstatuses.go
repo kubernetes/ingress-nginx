@@ -17,21 +17,21 @@ limitations under the License.
 package annotations
 
 import (
-    "net/http"
+	"net/http"
 	"strings"
 
 	"github.com/onsi/ginkgo/v2"
 
+	"github.com/stretchr/testify/assert"
 	"k8s.io/ingress-nginx/test/e2e/framework"
-    "github.com/stretchr/testify/assert"
 )
 
 var _ = framework.DescribeAnnotation("skip-access-log-http-statuses", func() {
 	f := framework.NewDefaultFramework("skipaccessloghttpstatuses")
 
-    ginkgo.BeforeEach(func() {
-        f.NewEchoDeployment()
-    })
+	ginkgo.BeforeEach(func() {
+		f.NewEchoDeployment()
+	})
 
 	ginkgo.It("skip-access-log-http-statuses 200 literal, 200 OK", func() {
 		host := "skipaccessloghttpstatuses.go.foo.com"
@@ -44,15 +44,15 @@ var _ = framework.DescribeAnnotation("skip-access-log-http-statuses", func() {
 			return strings.Contains(ngx, `~200 0;`)
 		})
 
-        f.HTTPTestClient().
-            GET("/prefixOne").
-            WithHeader("Host", host).
-            Expect().
-            Status(http.StatusOK)
+		f.HTTPTestClient().
+			GET("/prefixOne").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
 
-        logs, err := f.NginxLogs()
-        assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
-        assert.NotContains(ginkgo.GinkgoT(), logs, `GET / HTTP/1.1" 200`)
+		logs, err := f.NginxLogs()
+		assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
+		assert.NotContains(ginkgo.GinkgoT(), logs, `GET / HTTP/1.1" 200`)
 	})
 
 	ginkgo.It("skip-access-log-http-statuses ^2.. regex, 200 OK", func() {
@@ -66,15 +66,15 @@ var _ = framework.DescribeAnnotation("skip-access-log-http-statuses", func() {
 			return strings.Contains(ngx, `~^2.. 0;`)
 		})
 
-        f.HTTPTestClient().
-            GET("/prefixOne").
-            WithHeader("Host", host).
-            Expect().
-            Status(http.StatusOK)
+		f.HTTPTestClient().
+			GET("/prefixOne").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
 
-        logs, err := f.NginxLogs()
-        assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
-        assert.NotContains(ginkgo.GinkgoT(), logs, `GET / HTTP/1.1" 200`)
+		logs, err := f.NginxLogs()
+		assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
+		assert.NotContains(ginkgo.GinkgoT(), logs, `GET / HTTP/1.1" 200`)
 	})
 
 	ginkgo.It("skip-access-log-http-statuses ^2.. regex, 404 Not Found", func() {
@@ -88,14 +88,14 @@ var _ = framework.DescribeAnnotation("skip-access-log-http-statuses", func() {
 			return strings.Contains(ngx, `~^2.. 0;`)
 		})
 
-        f.HTTPTestClient().
-            GET("/404").
-            WithHeader("Host", host).
-            Expect().
-            Status(http.StatusNotFound)
+		f.HTTPTestClient().
+			GET("/404").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusNotFound)
 
-        logs, err := f.NginxLogs()
-        assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
-        assert.Contains(ginkgo.GinkgoT(), logs, `GET /404 HTTP/1.1" 404`)
+		logs, err := f.NginxLogs()
+		assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
+		assert.Contains(ginkgo.GinkgoT(), logs, `GET /404 HTTP/1.1" 404`)
 	})
 })
