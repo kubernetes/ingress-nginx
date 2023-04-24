@@ -106,7 +106,7 @@ local function get_or_update_ewma(upstream, rtt, failed, update)
   local ewma = ngx.shared.balancer_ewma:get(upstream) or 0
   local total_ewma = ngx.shared.balancer_ewma_total:get(upstream) or 0
   local failed_ewma = ngx.shared.balancer_ewma_failed:get(upstream) or 0
-
+  
   if lock_err ~= nil then
     return ewma, lock_err
   end
@@ -114,35 +114,29 @@ local function get_or_update_ewma(upstream, rtt, failed, update)
   local now = ngx.now()
   local last_touched_at = ngx.shared.balancer_ewma_last_touched_at:get(upstream) or 0
 
-  ewma = decay_ewma(ewma, last_touched_at, rtt, now)
-
-  if rtt > 0 then
-    total_ewma = decay_ewma(total_ewma, last_touched_at, 1, now)
-  end
-
+  local failed_delta = 0
   if failed then
-    failed_ewma = decay_ewma(failed_ewma, last_touched_at, 1, now)
+    failed_delta = 1
   end
 
-  if not update then
-    return ewma, nil
-  end
+  ewma = decay_ewma(ewma, last_touched_at, rtt, now)
+  -- make sure failed rate is always decayed
+  total_ewma = decay_ewma(total_ewma, last_touched_at, 1, now)
+  failed_ewma = decay_ewma(failed_ewma, last_touched_at, failed_delta, now)
 
-  store_stats(upstream, ewma, total_ewma, failed_ewma, now)
+  if update then
+    store_stats(upstream, ewma, total_ewma, failed_ewma, now)
+  end
 
   unlock()
 
-  if rtt == 0 then
-    return ewma, nil
-  else
-    local success_rate = 1 - failed_ewma / total_ewma
+  local success_rate = 1 - failed_ewma / total_ewma
 
-    if success_rate < MIN_SUCCESS_RATE then
-      success_rate = MIN_SUCCESS_RATE
-    end
-
-    return ewma / success_rate, nil
+  if success_rate < MIN_SUCCESS_RATE then
+    success_rate = MIN_SUCCESS_RATE
   end
+
+  return ewma / success_rate, nil
 end
 
 
@@ -305,6 +299,10 @@ function _M.sync(self, backend)
       store_stats(endpoint_string, slow_start_ewma, 0, 0, now)
     end
   end
+end
+
+function _M.score(self, upstream)
+  return score(upstream)
 end
 
 function _M.new(self, backend)

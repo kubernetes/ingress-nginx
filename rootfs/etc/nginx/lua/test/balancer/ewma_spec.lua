@@ -171,17 +171,16 @@ describe("Balancer ewma", function()
       assert.equal("10.10.10.3:8080", peer)
     end)
 
-
     it("the success rate should keep increasing", function()
       local new_backend = util.deepcopy(backend)
       table.insert(new_backend.endpoints, { address = "10.10.10.4", port = "8080", maxFails = 0, failTimeout = 0 })
 
-      local offsets = {-5, -10, -15}
+      local offsets = {-15, -10, -5}
       local pre = 0;
       for _, offset in ipairs(offsets) do
         store_ewma_stats("10.10.10.4:8080", 1, 10, 1, ngx_now + offset)
         local score = balancer_ewma:score({ address = "10.10.10.4", port = "8080" })
-        assert.is.True(score < pre)
+        assert.is.True(score > pre)
         pre = score
       end
     end)
