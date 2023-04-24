@@ -945,9 +945,6 @@ The mirror backend can be set by applying:
 nginx.ingress.kubernetes.io/mirror-target: https://test.env.com/$request_uri
 ```
 
-!!! attention
-    When `nginx.ingress.kubernetes.io/mirror-host` is not defined, the `Host` header value is extracted from `nginx.ingress.kubernetes.io/mirror-target`, which is processed using [`url.Parse`](https://pkg.go.dev/net/url#Parse). However, if there is no `/` separator, `url.Parse` is unable to distinguish between additional path variables and the port number in the `mirror-target` value.
-
 By default the request-body is sent to the mirror backend, but can be turned off by applying:
 
 ```yaml
