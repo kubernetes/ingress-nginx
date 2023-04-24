@@ -30,14 +30,14 @@ require (
 	google.golang.org/grpc/examples v0.0.0-20221220003428-4f16fbe410f7
 	gopkg.in/go-playground/pool.v3 v3.1.1
 	gopkg.in/mcuadros/go-syslog.v2 v2.3.0
-	k8s.io/api v0.26.3
-	k8s.io/apiextensions-apiserver v0.26.1
-	k8s.io/apimachinery v0.26.3
-	k8s.io/apiserver v0.26.1
-	k8s.io/cli-runtime v0.26.0
-	k8s.io/client-go v0.26.3
-	k8s.io/code-generator v0.26.1
-	k8s.io/component-base v0.26.3
+	k8s.io/api v0.26.4
+	k8s.io/apiextensions-apiserver v0.26.4
+	k8s.io/apimachinery v0.26.4
+	k8s.io/apiserver v0.26.4
+	k8s.io/cli-runtime v0.26.4
+	k8s.io/client-go v0.26.4
+	k8s.io/code-generator v0.26.4
+	k8s.io/component-base v0.26.4
 	k8s.io/klog/v2 v2.90.1
 	pault.ag/go/sniff v0.0.0-20200207005214-cf7e4d167732
 	sigs.k8s.io/controller-runtime v0.14.6
