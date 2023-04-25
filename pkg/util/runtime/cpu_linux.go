@@ -38,16 +38,15 @@ import (
 func NumCPU() int {
 	cpus := runtime.NumCPU()
 
-	if err != nil {
-		return cpus
-	}
-
 	cgroupVersion := getCgroupVersion()
 	cpuQuota := int64(-1)
 	cpuPeriod := int64(-1)
 
 	if cgroupVersion == 1 {
 		cgroupPath, err := libcontainercgroups.FindCgroupMountpoint("", "cpu")
+		if err != nil {
+			return cpus
+		}
 		cpuQuota = readCgroupFileToInt64(cgroupPath, "cpu.cfs_quota_us")
 		cpuPeriod = readCgroupFileToInt64(cgroupPath, "cpu.cfs_period_us")
 	} else if cgroupVersion == 2 {

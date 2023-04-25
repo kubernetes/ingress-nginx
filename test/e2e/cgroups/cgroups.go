@@ -17,6 +17,9 @@ limitations under the License.
 package cgroups
 
 import (
+	"log"
+	"os"
+
 	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 
@@ -33,15 +36,23 @@ var _ = framework.IngressNginxDescribeSerial("[CGroups] cgroups", func() {
 		f.NewSlowEchoDeployment()
 	})
 
+	ginkgo.It("detects cgroups version v1", func() {
+		assert.Equal(ginkgo.GinkgoT(), runtime.getCgroupVersion(), 1)
+	})
+
 	ginkgo.It("detects number of CPUs properly in cgroups v1", func() {
 		assert.Equal(ginkgo.GinkgoT(), runtime.NumCPU(), -1)
 	})
 
-	ginkgo.It("detects number of CPUs properly in cgroups v2", func() {
-		assert.Equal(ginkgo.GinkgoT(), runtime.NumCPU(), -1)
+	ginkgo.It("detects cgroups version v2", func() {
+		// create cgroups2 files
+		if err := os.MkdirAll("a/b/c/d", os.ModePerm); err != nil {
+			log.Fatal(err)
+		}
+
 	})
 
-	ginkgo.It("detects cgroups version", func() {
-
+	ginkgo.It("detects number of CPUs properly in cgroups v2", func() {
+		assert.Equal(ginkgo.GinkgoT(), runtime.NumCPU(), -1)
 	})
 })
