@@ -52,7 +52,7 @@ var _ = framework.DescribeAnnotation("skip-access-log-http-statuses", func() {
 
 		logs, err := f.NginxLogs()
 		assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
-		assert.NotContains(ginkgo.GinkgoT(), logs, `GET / HTTP/1.1" 200`)
+		assert.NotContains(ginkgo.GinkgoT(), logs, `GET /prefixOne HTTP/1.1" 200`)
 	})
 
 	ginkgo.It("skip-access-log-http-statuses ^2.. regex, 200 OK", func() {
@@ -74,7 +74,7 @@ var _ = framework.DescribeAnnotation("skip-access-log-http-statuses", func() {
 
 		logs, err := f.NginxLogs()
 		assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
-		assert.NotContains(ginkgo.GinkgoT(), logs, `GET / HTTP/1.1" 200`)
+		assert.NotContains(ginkgo.GinkgoT(), logs, `GET /prefixOne HTTP/1.1" 200`)
 	})
 
 	ginkgo.It("skip-access-log-http-statuses ^2.. regex, 404 Not Found", func() {
