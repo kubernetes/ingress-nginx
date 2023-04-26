@@ -38,11 +38,11 @@ import (
 func buildHTTPBinExternalNameService(f *framework.Framework, portName string) *corev1.Service {
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      framework.HTTPBinService,
+			Name:      "neverssl",
 			Namespace: f.Namespace,
 		},
 		Spec: corev1.ServiceSpec{
-			ExternalName: "httpbin.org",
+			ExternalName: "neverssl.com",
 			Type:         corev1.ServiceTypeExternalName,
 			Ports: []corev1.ServicePort{
 				{
@@ -56,17 +56,17 @@ func buildHTTPBinExternalNameService(f *framework.Framework, portName string) *c
 	}
 }
 
-var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
+var _ = framework.IngressNginxDescribe("[Service] type=ExternalName", func() {
 	f := framework.NewDefaultFramework("type-externalname")
 
-	ginkgo.It("works with external name set to incomplete fqdn", func() {
+	ginkgo.It("works with type=ExternalName set to incomplete fqdn", func() {
 		f.NewEchoDeployment()
 
 		host := "echo"
 
 		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      framework.HTTPBinService,
+				Name:      "neverssl",
 				Namespace: f.Namespace,
 			},
 			Spec: corev1.ServiceSpec{
@@ -77,7 +77,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 
 		f.EnsureService(svc)
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, nil)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "neverssl", 80, nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -97,11 +97,11 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 
 		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      framework.HTTPBinService,
+				Name:      "neverssl",
 				Namespace: f.Namespace,
 			},
 			Spec: corev1.ServiceSpec{
-				ExternalName: "httpbin.org",
+				ExternalName: "neverssl.com",
 				Type:         corev1.ServiceTypeExternalName,
 			},
 		}
@@ -109,9 +109,9 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 		f.EnsureService(svc)
 
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/upstream-vhost": "httpbin.org",
+			"nginx.ingress.kubernetes.io/upstream-vhost": "neverssl.com",
 		}
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "neverssl", 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -120,7 +120,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 			})
 
 		f.HTTPTestClient().
-			GET("/get").
+			GET("/").
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusOK)
@@ -133,9 +133,9 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 		f.EnsureService(svc)
 
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/upstream-vhost": "httpbin.org",
+			"nginx.ingress.kubernetes.io/upstream-vhost": "neverssl.com",
 		}
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "neverssl", 80, annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -144,7 +144,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 			})
 
 		f.HTTPTestClient().
-			GET("/get").
+			GET("/").
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusOK)
@@ -155,7 +155,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 
 		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      framework.HTTPBinService,
+				Name:      "neverssl",
 				Namespace: f.Namespace,
 			},
 			Spec: corev1.ServiceSpec{
@@ -166,7 +166,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 
 		f.EnsureService(svc)
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, nil)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "neverssl", 80, nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -175,7 +175,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 			})
 
 		f.HTTPTestClient().
-			GET("/get").
+			GET("/").
 			WithHeader("Host", host).
 			Expect().
 			StatusRange(httpexpect.Status5xx)
@@ -188,12 +188,12 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 		f.EnsureService(svc)
 
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/upstream-vhost": "httpbin.org",
+			"nginx.ingress.kubernetes.io/upstream-vhost": "neverssl.com",
 		}
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "neverssl", 80, annotations)
 		namedBackend := networking.IngressBackend{
 			Service: &networking.IngressServiceBackend{
-				Name: framework.HTTPBinService,
+				Name: "neverssl",
 				Port: networking.ServiceBackendPort{
 					Name: host,
 				},
@@ -208,7 +208,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 			})
 
 		f.HTTPTestClient().
-			GET("/get").
+			GET("/").
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusOK)
@@ -219,18 +219,19 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 
 		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      framework.HTTPBinService,
+				Name:      "neverssl",
 				Namespace: f.Namespace,
 			},
 			Spec: corev1.ServiceSpec{
-				ExternalName: "httpbin.org.",
+				ExternalName: "github.com.",
 				Type:         corev1.ServiceTypeExternalName,
 			},
 		}
 
 		f.EnsureService(svc)
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, nil)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "neverssl", 80, nil)
+
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -239,25 +240,25 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 			})
 
 		f.HTTPTestClient().
-			GET("/get").
+			GET("/").
 			WithHeader("Host", host).
 			Expect().
-			Status(http.StatusOK)
+			Status(http.StatusMovedPermanently)
 	})
 
-	ginkgo.It("should update the external name after a service update", func() {
+	ginkgo.It("should update the type=ExternalName after a service update", func() {
 		host := "echo"
 
 		svc := buildHTTPBinExternalNameService(f, host)
 		f.EnsureService(svc)
 
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/upstream-vhost": "httpbin.org",
+			"nginx.ingress.kubernetes.io/upstream-vhost": "neverssl.com",
 		}
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "neverssl", 80, annotations)
 		namedBackend := networking.IngressBackend{
 			Service: &networking.IngressServiceBackend{
-				Name: framework.HTTPBinService,
+				Name: "neverssl",
 				Port: networking.ServiceBackendPort{
 					Name: host,
 				},
@@ -272,27 +273,27 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 			})
 
 		body := f.HTTPTestClient().
-			GET("/get").
+			GET("/").
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusOK).
 			Body().
 			Raw()
 
-		assert.Contains(ginkgo.GinkgoT(), body, `"X-Forwarded-Host": "echo"`)
+		assert.Contains(ginkgo.GinkgoT(), body, `"neverssl.com"`)
 
-		svc, err := f.KubeClientSet.CoreV1().Services(f.Namespace).Get(context.TODO(), framework.HTTPBinService, metav1.GetOptions{})
-		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error obtaining httpbin service")
+		svc, err := f.KubeClientSet.CoreV1().Services(f.Namespace).Get(context.TODO(), "neverssl", metav1.GetOptions{})
+		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error obtaining service")
 
-		svc.Spec.ExternalName = "eu.httpbin.org"
+		svc.Spec.ExternalName = "google.com"
 
 		_, err = f.KubeClientSet.CoreV1().Services(f.Namespace).Update(context.Background(), svc, metav1.UpdateOptions{})
-		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error updating httpbin service")
+		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error updating service")
 
 		framework.Sleep()
 
 		body = f.HTTPTestClient().
-			GET("/get").
+			GET("/").
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusOK).
@@ -301,18 +302,18 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 
 		assert.Contains(ginkgo.GinkgoT(), body, `"X-Forwarded-Host": "echo"`)
 
-		ginkgo.By("checking the service is updated to use eu.httpbin.org")
+		ginkgo.By("checking the service is updated to use google.com")
 		curlCmd := fmt.Sprintf("curl --fail --silent http://localhost:%v/configuration/backends", nginx.StatusPort)
 		output, err := f.ExecIngressPod(curlCmd)
 		assert.Nil(ginkgo.GinkgoT(), err)
-		assert.Contains(ginkgo.GinkgoT(), output, `{"address":"eu.httpbin.org"`)
+		assert.Contains(ginkgo.GinkgoT(), output, `{"address":"google.com"`)
 	})
 
-	ginkgo.It("should sync ingress on external name service addition/deletion", func() {
+	ginkgo.It("should sync ingress on type=ExternalName service addition/deletion", func() {
 		host := "echo"
 
 		// Create the Ingress first
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, nil)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "neverssl", 80, nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -322,7 +323,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 
 		// Nginx should return 503 without the underlying service being available
 		f.HTTPTestClient().
-			GET("/get").
+			GET("/").
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusServiceUnavailable)
@@ -335,20 +336,19 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 
 		// 503 should change to 200 OK
 		f.HTTPTestClient().
-			GET("/get").
+			GET("/").
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusOK)
 
 		// And back to 503 after deleting the service
-
-		err := f.KubeClientSet.CoreV1().Services(f.Namespace).Delete(context.TODO(), framework.HTTPBinService, metav1.DeleteOptions{})
-		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error deleting httpbin service")
+		err := f.KubeClientSet.CoreV1().Services(f.Namespace).Delete(context.TODO(), "neverssl", metav1.DeleteOptions{})
+		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error deleting service")
 
 		framework.Sleep()
 
 		f.HTTPTestClient().
-			GET("/get").
+			GET("/").
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusServiceUnavailable)

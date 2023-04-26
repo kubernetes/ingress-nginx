@@ -1,0 +1,1308 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <testsuites tests="428" disabled="419" errors="0" failures="0" time="55.326167864">
+      <testsuite name="nginx-ingress-controller e2e suite" package="/" tests="428" disabled="0" skipped="419" errors="0" failures="0" time="55.326167864" timestamp="2023-04-26T18:14:44">
+          <properties>
+              <property name="SuiteSucceeded" value="true"></property>
+              <property name="SuiteHasProgrammaticFocus" value="false"></property>
+              <property name="SpecialSuiteFailureReason" value=""></property>
+              <property name="SuiteLabels" value="[]"></property>
+              <property name="RandomSeed" value="1682532884"></property>
+              <property name="RandomizeAllSpecs" value="true"></property>
+              <property name="LabelFilter" value=""></property>
+              <property name="FocusStrings" value="External"></property>
+              <property name="SkipStrings" value="\[Memory Leak\]"></property>
+              <property name="FocusFiles" value=""></property>
+              <property name="SkipFiles" value=""></property>
+              <property name="FailOnPending" value="false"></property>
+              <property name="FailFast" value="true"></property>
+              <property name="FlakeAttempts" value="2"></property>
+              <property name="DryRun" value="false"></property>
+              <property name="ParallelTotal" value="7"></property>
+              <property name="OutputInterceptorMode" value=""></property>
+          </properties>
+          <testcase name="[It] [Default Backend] enables access logging for default backend" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] proxy-* should turn on proxy-buffering" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] backend-protocol - GRPC should use grpc_pass in the configuration file" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [Security] global-auth-url when global external authentication is configured should return status code 200 when request whitelisted (via ingress annotation) service and 401 when request protected service" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] proxy-ssl-* proxy-ssl-location-only flag should change the nginx config server part" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] canary-* when canaried by header with value and pattern should routes to mainline upstream when the given Regex causes error" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] canary-* when canaried by weight should route requests only to canary if canary weight is equal to canary weight total" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] enable-multi-accept should be enabled by default" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-tls-* should 302 redirect to error page instead of 400 when auth-tls-error-page is set" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] plugins should exist a x-hello-world header" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] affinity session-cookie-name should set cookie with domain" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Ingress] definition without host should set ingress details variables for ingresses with host without IngressRuleValue, only Backend" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Ingress] definition without host should set ingress details variables for ingresses without a host" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] add-headers Add a custom header" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Lua] dynamic certificates given an ingress with TLS correctly configured supports requests with domain with trailing dot" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] backend-protocol should set backend protocol to $scheme:// and use proxy_pass" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [Security] block-* should block User-Agents defined in the ConfigMap" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] mirror-* should disable mirror-request-body" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] cors-* should enable cors" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* when external authentication is configured should not create additional upstream block when auth-keepalive is not set" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [Security] global-auth-url when global external authentication is configured should add auth headers when global-auth-response-headers is configured" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] backend-protocol - GRPC authorization metadata should be overwritten by external auth response headers" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] ingress-class With default ingress class config should delete Ingress when class is removed" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] affinity session-cookie-name should set sticky cookie SERVERID" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Configure OpenTracing should not exists opentracing directive" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] affinity session-cookie-name should work with use-regex annotation and session-cookie-path" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Debug CLI should list the backend servers" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] hash size Check proxy header hash size should set proxy-headers-hash-bucket-size" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Lua] dynamic configuration when only backends change handles endpoints only changes" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* should set snippet &#34;proxy_set_header My-Custom-Header 42;&#34; when external auth is configured" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] canary-* when canaried by header with value and cookie should route requests to the correct upstream" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] rewrite-target use-regex enable-rewrite-log should allow for custom rewrite parameters" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] access-log access-log-path use the specified configuration" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] proxy-* should not set invalid proxy timeouts" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] from-to-www-redirect should redirect from www HTTP to HTTP" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] ingress-class With watch-ingress-without-class flag should watch Ingress with no class and ignore ingress with a different class" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [SSL] TLS protocols, ciphers and headers) should configure HSTS policy header setting preload parameter" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Endpointslices] long service name should return 200 when service name has max allowed number of characters 63" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] access-log access-log-path use the default configuration" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* when external authentication is configured should overwrite Foo header with auth response" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [Security] global-auth-url cookie set by external authentication server user retains cookie by default" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] hash size Check the variable hash size should set variables-hash-bucket-size" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] enable-ssl-passthrough With enable-ssl-passthrough enabled should pass unknown traffic to default backend and handle known traffic" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] custom HTTP and HTTPS ports with a TLS enabled ingress when external authentication is configured should set the X-Forwarded-Port header to 443" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] proxy-send-timeout should not set invalid proxy send timeouts using configmap values" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] canary-* when canary is created should route requests to the correct upstream if the mainline ingress is modified" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* when external authentication is configured with a custom redirect param keeps processing new ingresses even if one of the existing ingresses is misconfigured" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [SSL] secret update should not appear references to secret updates not used in ingress rules" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [Security] global-auth-url when global external authentication is configured should add custom error page when global-auth-signin url is configured" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] configmap server-snippet should add global server-snippet and drop annotations per admin config" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] client-body-buffer-size should not set client_body_buffer_size to invalid 1b" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] Annotation - limit-connections should limit-connections" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [Security] no-auth-locations should return status code 200 when accessing &#39;/&#39;  authentication" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] ingress-class With ingress-class-by-name flag should watch Ingress that uses the class name even if spec is different" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* should return status code 503 when authentication is configured with an invalid secret" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] enable-real-ip trusts X-Forwarded-For header only when setting is true" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] mirror-* should set mirror-target to https://test.env.com/$request_uri" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] backend-protocol should set backend protocol to https:// and use proxy_pass" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [Security] block-* should block Referers defined in the ConfigMap" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] modsecurity owasp should enable modsecurity globally and with modsecurity-snippet block requests" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] Bad annotation values [BAD_ANNOTATIONS] should drop an ingress if there is a custom blocklist config in place and allow others to pass" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Configure Opentelemetry should not exists opentelemetry directive" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* should return status code 401 and cors headers when authentication and cors is configured but Authorization header is not configured" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] cors-* should not match" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] modsecurity owasp should enable modsecurity through the config map" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] server-snippet drops server snippet if disabled by the administrator" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [Load Balancer] round-robin should evenly distribute requests with round-robin (default algorithm)" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [Security] no-auth-locations should return status code 200 when accessing &#39;/noauth&#39; unauthenticated" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] upstream-vhost set host to upstreamvhost.bar.com" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] modsecurity owasp should disable modsecurity" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] disable-sync-events should create sync events" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] log-format-* Check log-format-escape-json and log-format-escape-none should enable the log-format-escape-json" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] disable-service-external-name should ignore services of external-name type" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] ingress-class Without IngressClass Cluster scoped Permission should watch Ingress with correct annotation" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] ingress-class Without IngressClass Cluster scoped Permission should ignore Ingress with only IngressClassName" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] use-proxy-protocol should enable PROXY Protocol for TCP" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] cors-* should allow correct origins - missing subdomain + origin with wildcard origin and correct origin" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [Security] no-auth-locations should return status code 401 when accessing &#39;/&#39; unauthentication" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] use-forwarded-headers should not trust X-Forwarded headers when setting is false" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] backend-protocol - FastCGI should return OK for service with backend protocol FastCGI" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] use-forwarded-headers should trust X-Forwarded headers when setting is true" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] configuration-snippet set snippet &#34;more_set_headers &#34;Foo1: Bar1&#34;;&#34; in all locations&#34;" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* when external authentication is configured should create additional upstream block when auth-keepalive is set with HTTP/1.x" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] configmap server-snippet should add value of server-snippet setting to all ingress config" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] service-upstream when using the default value (false) and enabling in the annotations should use the Service Cluster IP and Port" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] mirror-* should set mirror-target to http://localhost/mirror" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [Security] global-auth-url when global external authentication is configured should return status code 401 when request any protected service" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] backend-protocol - GRPC should return OK for service with backend protocol GRPC" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-tls-* should return 200 using auth-tls-match-cn with matching CN from client" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] backend-protocol should set backend protocol to grpc:// and use grpc_pass" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] cors-* should not break functionality with extra domain" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] cors-* should disable cors allow credentials" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] disable-catch-all should ignore catch all Ingress with backend and rules" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Dynamic $proxy_host should exist a proxy_host using the upstream-vhost annotation value" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] client-body-buffer-size should set client_body_buffer_size to 1M" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] keep-alive keep-alive-requests Check the keep alive should set keepalive_requests" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Service] type=ExternalName should return 200 for service type=ExternalName with a port defined" classname="nginx-ingress-controller e2e suite" status="passed" time="55.314587416">
+              <system-err>&gt; Enter [BeforeEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:83 @ 04/26/23 18:14:44.933&#xA;&lt; Exit [BeforeEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:83 @ 04/26/23 18:14:54.223 (9.29s)&#xA;&gt; Enter [It] should return 200 for service type=ExternalName with a port defined - /go/src/k8s.io/ingress-nginx/test/e2e/servicebackend/service_externalname.go:129 @ 04/26/23 18:14:54.223&#xA;[FAILED] Failure recorded during attempt 1:&#xA;&#xA;&#x9;Error Trace:&#x9;/go/src/k8s.io/ingress-nginx/test/e2e/framework/httpexpect/reporter.go:47&#xA;&#x9;            &#x9;&#x9;&#x9;&#x9;/go/src/k8s.io/ingress-nginx/test/e2e/framework/httpexpect/chain.go:37&#xA;&#x9;            &#x9;&#x9;&#x9;&#x9;/go/src/k8s.io/ingress-nginx/test/e2e/framework/httpexpect/response.go:262&#xA;&#x9;            &#x9;&#x9;&#x9;&#x9;/go/src/k8s.io/ingress-nginx/test/e2e/framework/httpexpect/response.go:79&#xA;&#x9;            &#x9;&#x9;&#x9;&#x9;/go/src/k8s.io/ingress-nginx/test/e2e/servicebackend/service_externalname.go:150&#xA;&#x9;            &#x9;&#x9;&#x9;&#x9;/go/src/k8s.io/ingress-nginx/.modcache/github.com/onsi/ginkgo/v2@v2.9.0/internal/node.go:463&#xA;&#x9;            &#x9;&#x9;&#x9;&#x9;/go/src/k8s.io/ingress-nginx/.modcache/github.com/onsi/ginkgo/v2@v2.9.0/internal/suite.go:863&#xA;&#x9;            &#x9;&#x9;&#x9;&#x9;/usr/local/go/src/runtime/asm_amd64.s:1598&#xA;&#x9;Error:      &#x9;&#xA;&#x9;            &#x9;expected status equal to:&#xA;&#x9;            &#x9; &#34;200 OK&#34;&#xA;&#x9;            &#x9;&#xA;&#x9;            &#x9;but got:&#xA;&#x9;            &#x9; &#34;504 Gateway Timeout&#34;&#xA;&#x9;Test:       &#x9;[Service] type=ExternalName should return 200 for service type=ExternalName with a port defined&#xA;In [It] at: /go/src/k8s.io/ingress-nginx/test/e2e/framework/httpexpect/reporter.go:47 @ 04/26/23 18:15:14.416&#xA;&lt; Exit [It] should return 200 for service type=ExternalName with a port defined - /go/src/k8s.io/ingress-nginx/test/e2e/servicebackend/service_externalname.go:129 @ 04/26/23 18:15:14.416 (20.194s)&#xA;&gt; Enter [AfterEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:84 @ 04/26/23 18:15:14.416&#xA;STEP: Dumping NGINX configuration after failure - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:172 @ 04/26/23 18:15:14.496&#xA;Apr 26 18:15:14.496: INFO: &#xA;# Configuration checksum: 4195219159642437490&#xA;&#xA;# setup custom paths that do not require root access&#xA;pid /tmp/nginx/nginx.pid;&#xA;&#xA;daemon off;&#xA;&#xA;worker_processes 1;&#xA;&#xA;worker_rlimit_nofile 1073740792;&#xA;&#xA;worker_shutdown_timeout 240s ;&#xA;&#xA;events {&#xA;&#x9;multi_accept        on;&#xA;&#x9;worker_connections  16384;&#xA;&#x9;use                 epoll;&#xA;&#x9;&#xA;}&#xA;&#xA;http {&#xA;&#x9;&#xA;&#x9;lua_package_path &#34;/etc/nginx/lua/?.lua;;&#34;;&#xA;&#x9;&#xA;&#x9;lua_shared_dict balancer_ewma 10M;&#xA;&#x9;lua_shared_dict balancer_ewma_last_touched_at 10M;&#xA;&#x9;lua_shared_dict balancer_ewma_locks 1M;&#xA;&#x9;lua_shared_dict certificate_data 20M;&#xA;&#x9;lua_shared_dict certificate_servers 5M;&#xA;&#x9;lua_shared_dict configuration_data 20M;&#xA;&#x9;lua_shared_dict global_throttle_cache 10M;&#xA;&#x9;lua_shared_dict ocsp_response_cache 5M;&#xA;&#x9;&#xA;&#x9;init_by_lua_block {&#xA;&#x9;&#x9;collectgarbage(&#34;collect&#34;)&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;-- init modules&#xA;&#x9;&#x9;local ok, res&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;ok, res = pcall(require, &#34;lua_ingress&#34;)&#xA;&#x9;&#x9;if not ok then&#xA;&#x9;&#x9;error(&#34;require failed: &#34; .. tostring(res))&#xA;&#x9;&#x9;else&#xA;&#x9;&#x9;lua_ingress = res&#xA;&#x9;&#x9;lua_ingress.set_config({&#xA;&#x9;&#x9;&#x9;use_forwarded_headers = false,&#xA;&#x9;&#x9;&#x9;use_proxy_protocol = false,&#xA;&#x9;&#x9;&#x9;is_ssl_passthrough_enabled = false,&#xA;&#x9;&#x9;&#x9;http_redirect_code = 308,&#xA;&#x9;&#x9;&#x9;listen_ports = { ssl_proxy = &#34;442&#34;, https = &#34;443&#34; },&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;hsts = true,&#xA;&#x9;&#x9;&#x9;hsts_max_age = 15724800,&#xA;&#x9;&#x9;&#x9;hsts_include_subdomains = true,&#xA;&#x9;&#x9;&#x9;hsts_preload = false,&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;global_throttle = {&#xA;&#x9;&#x9;&#x9;&#x9;memcached = {&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;host = &#34;&#34;, port = 11211, connect_timeout = 50, max_idle_timeout = 10000, pool_size = 50,&#xA;&#x9;&#x9;&#x9;&#x9;},&#xA;&#x9;&#x9;&#x9;&#x9;status_code = 429,&#xA;&#x9;&#x9;&#x9;}&#xA;&#x9;&#x9;})&#xA;&#x9;&#x9;end&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;ok, res = pcall(require, &#34;configuration&#34;)&#xA;&#x9;&#x9;if not ok then&#xA;&#x9;&#x9;error(&#34;require failed: &#34; .. tostring(res))&#xA;&#x9;&#x9;else&#xA;&#x9;&#x9;configuration = res&#xA;&#x9;&#x9;configuration.prohibited_localhost_port = &#39;10246&#39;&#xA;&#x9;&#x9;end&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;ok, res = pcall(require, &#34;balancer&#34;)&#xA;&#x9;&#x9;if not ok then&#xA;&#x9;&#x9;error(&#34;require failed: &#34; .. tostring(res))&#xA;&#x9;&#x9;else&#xA;&#x9;&#x9;balancer = res&#xA;&#x9;&#x9;end&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;ok, res = pcall(require, &#34;monitor&#34;)&#xA;&#x9;&#x9;if not ok then&#xA;&#x9;&#x9;error(&#34;require failed: &#34; .. tostring(res))&#xA;&#x9;&#x9;else&#xA;&#x9;&#x9;monitor = res&#xA;&#x9;&#x9;end&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;ok, res = pcall(require, &#34;certificate&#34;)&#xA;&#x9;&#x9;if not ok then&#xA;&#x9;&#x9;error(&#34;require failed: &#34; .. tostring(res))&#xA;&#x9;&#x9;else&#xA;&#x9;&#x9;certificate = res&#xA;&#x9;&#x9;certificate.is_ocsp_stapling_enabled = false&#xA;&#x9;&#x9;end&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;ok, res = pcall(require, &#34;plugins&#34;)&#xA;&#x9;&#x9;if not ok then&#xA;&#x9;&#x9;error(&#34;require failed: &#34; .. tostring(res))&#xA;&#x9;&#x9;else&#xA;&#x9;&#x9;plugins = res&#xA;&#x9;&#x9;end&#xA;&#x9;&#x9;-- load all plugins that&#39;ll be used here&#xA;&#x9;&#x9;plugins.init({  })&#xA;&#x9;}&#xA;&#x9;&#xA;&#x9;init_worker_by_lua_block {&#xA;&#x9;&#x9;lua_ingress.init_worker()&#xA;&#x9;&#x9;balancer.init_worker()&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;monitor.init_worker(10000)&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;plugins.run()&#xA;&#x9;}&#xA;&#x9;&#xA;&#x9;geoip_country       /etc/nginx/geoip/GeoIP.dat;&#xA;&#x9;geoip_city          /etc/nginx/geoip/GeoLiteCity.dat;&#xA;&#x9;geoip_org           /etc/nginx/geoip/GeoIPASNum.dat;&#xA;&#x9;geoip_proxy_recursive on;&#xA;&#x9;&#xA;&#x9;aio                 threads;&#xA;&#x9;aio_write           on;&#xA;&#x9;&#xA;&#x9;tcp_nopush          on;&#xA;&#x9;tcp_nodelay         on;&#xA;&#x9;&#xA;&#x9;log_subrequest      on;&#xA;&#x9;&#xA;&#x9;reset_timedout_connection on;&#xA;&#x9;&#xA;&#x9;keepalive_timeout  75s;&#xA;&#x9;keepalive_requests 1000;&#xA;&#x9;&#xA;&#x9;client_body_temp_path           /tmp/nginx/client-body;&#xA;&#x9;fastcgi_temp_path               /tmp/nginx/fastcgi-temp;&#xA;&#x9;proxy_temp_path                 /tmp/nginx/proxy-temp;&#xA;&#x9;ajp_temp_path                   /tmp/nginx/ajp-temp;&#xA;&#x9;&#xA;&#x9;client_header_buffer_size       1k;&#xA;&#x9;client_header_timeout           60s;&#xA;&#x9;large_client_header_buffers     4 8k;&#xA;&#x9;client_body_buffer_size         8k;&#xA;&#x9;client_body_timeout             60s;&#xA;&#x9;&#xA;&#x9;http2_max_field_size            4k;&#xA;&#x9;http2_max_header_size           16k;&#xA;&#x9;http2_max_requests              1000;&#xA;&#x9;http2_max_concurrent_streams    128;&#xA;&#x9;&#xA;&#x9;types_hash_max_size             2048;&#xA;&#x9;server_names_hash_max_size      1024;&#xA;&#x9;server_names_hash_bucket_size   32;&#xA;&#x9;map_hash_bucket_size            64;&#xA;&#x9;&#xA;&#x9;proxy_headers_hash_max_size     512;&#xA;&#x9;proxy_headers_hash_bucket_size  64;&#xA;&#x9;&#xA;&#x9;variables_hash_bucket_size      256;&#xA;&#x9;variables_hash_max_size         2048;&#xA;&#x9;&#xA;&#x9;underscores_in_headers          off;&#xA;&#x9;ignore_invalid_headers          on;&#xA;&#x9;&#xA;&#x9;limit_req_status                503;&#xA;&#x9;limit_conn_status               503;&#xA;&#x9;&#xA;&#x9;include /etc/nginx/mime.types;&#xA;&#x9;default_type text/html;&#xA;&#x9;&#xA;&#x9;# Custom headers for response&#xA;&#x9;&#xA;&#x9;server_tokens off;&#xA;&#x9;&#xA;&#x9;more_clear_headers Server;&#xA;&#x9;&#xA;&#x9;# disable warnings&#xA;&#x9;uninitialized_variable_warn off;&#xA;&#x9;&#xA;&#x9;# Additional available variables:&#xA;&#x9;# $namespace&#xA;&#x9;# $ingress_name&#xA;&#x9;# $service_name&#xA;&#x9;# $service_port&#xA;&#x9;log_format upstreaminfo &#39;$remote_addr - $remote_user [$time_local] &#34;$request&#34; $status $body_bytes_sent &#34;$http_referer&#34; &#34;$http_user_agent&#34; $request_length $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status $req_id&#39;;&#xA;&#x9;&#xA;&#x9;map $request_uri $loggable {&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;default 1;&#xA;&#x9;}&#xA;&#x9;&#xA;&#x9;access_log /var/log/nginx/access.log upstreaminfo  if=$loggable;&#xA;&#x9;&#xA;&#x9;error_log  /var/log/nginx/error.log notice;&#xA;&#x9;&#xA;&#x9;resolver 10.96.0.10 valid=30s;&#xA;&#x9;&#xA;&#x9;# See https://www.nginx.com/blog/websocket-nginx&#xA;&#x9;map $http_upgrade $connection_upgrade {&#xA;&#x9;&#x9;default          upgrade;&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;# See http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive&#xA;&#x9;&#x9;&#39;&#39;               &#39;&#39;;&#xA;&#x9;&#x9;&#xA;&#x9;}&#xA;&#x9;&#xA;&#x9;# Reverse proxies can detect if a client provides a X-Request-ID header, and pass it on to the backend server.&#xA;&#x9;# If no such header is provided, it can provide a random value.&#xA;&#x9;map $http_x_request_id $req_id {&#xA;&#x9;&#x9;default   $http_x_request_id;&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;&#34;&#34;        $request_id;&#xA;&#x9;&#x9;&#xA;&#x9;}&#xA;&#x9;&#xA;&#x9;# Create a variable that contains the literal $ character.&#xA;&#x9;# This works because the geo module will not resolve variables.&#xA;&#x9;geo $literal_dollar {&#xA;&#x9;&#x9;default &#34;$&#34;;&#xA;&#x9;}&#xA;&#x9;&#xA;&#x9;server_name_in_redirect off;&#xA;&#x9;port_in_redirect        off;&#xA;&#x9;&#xA;&#x9;ssl_protocols TLSv1.2 TLSv1.3;&#xA;&#x9;&#xA;&#x9;ssl_early_data off;&#xA;&#x9;&#xA;&#x9;# turn on session caching to drastically improve performance&#xA;&#x9;&#xA;&#x9;ssl_session_cache shared:SSL:10m;&#xA;&#x9;ssl_session_timeout 10m;&#xA;&#x9;&#xA;&#x9;# allow configuring ssl session tickets&#xA;&#x9;ssl_session_tickets off;&#xA;&#x9;&#xA;&#x9;# slightly reduce the time-to-first-byte&#xA;&#x9;ssl_buffer_size 4k;&#xA;&#x9;&#xA;&#x9;# allow configuring custom ssl ciphers&#xA;&#x9;ssl_ciphers &#39;ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384&#39;;&#xA;&#x9;ssl_prefer_server_ciphers on;&#xA;&#x9;&#xA;&#x9;ssl_ecdh_curve auto;&#xA;&#x9;&#xA;&#x9;# PEM sha: 6e043501fda50a4225f2addf171ef02aa04c8353&#xA;&#x9;ssl_certificate     /etc/ingress-controller/ssl/default-fake-certificate.pem;&#xA;&#x9;ssl_certificate_key /etc/ingress-controller/ssl/default-fake-certificate.pem;&#xA;&#x9;&#xA;&#x9;proxy_ssl_session_reuse on;&#xA;&#x9;&#xA;&#x9;upstream upstream_balancer {&#xA;&#x9;&#x9;### Attention!!!&#xA;&#x9;&#x9;#&#xA;&#x9;&#x9;# We no longer create &#34;upstream&#34; section for every backend.&#xA;&#x9;&#x9;# Backends are handled dynamically using Lua. If you would like to debug&#xA;&#x9;&#x9;# and see what backends ingress-nginx has in its memory you can&#xA;&#x9;&#x9;# install our kubectl plugin https://kubernetes.github.io/ingress-nginx/kubectl-plugin.&#xA;&#x9;&#x9;# Once you have the plugin you can use &#34;kubectl ingress-nginx backends&#34; command to&#xA;&#x9;&#x9;# inspect current backends.&#xA;&#x9;&#x9;#&#xA;&#x9;&#x9;###&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;server 0.0.0.1; # placeholder&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;balancer_by_lua_block {&#xA;&#x9;&#x9;&#x9;balancer.balance()&#xA;&#x9;&#x9;}&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;keepalive 320;&#xA;&#x9;&#x9;keepalive_time 1h;&#xA;&#x9;&#x9;keepalive_timeout  60s;&#xA;&#x9;&#x9;keepalive_requests 10000;&#xA;&#x9;&#x9;&#xA;&#x9;}&#xA;&#x9;&#xA;&#x9;# Cache for internal auth checks&#xA;&#x9;proxy_cache_path /tmp/nginx/nginx-cache-auth levels=1:2 keys_zone=auth_cache:10m max_size=128m inactive=30m use_temp_path=off;&#xA;&#x9;&#xA;&#x9;# Global filters&#xA;&#x9;&#xA;&#x9;## start server _&#xA;&#x9;server {&#xA;&#x9;&#x9;server_name _ ;&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;listen 80 default_server reuseport backlog=4096 ;&#xA;&#x9;&#x9;listen [::]:80 default_server reuseport backlog=4096 ;&#xA;&#x9;&#x9;listen 443 default_server reuseport backlog=4096 ssl http2 ;&#xA;&#x9;&#x9;listen [::]:443 default_server reuseport backlog=4096 ssl http2 ;&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;set $proxy_upstream_name &#34;-&#34;;&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;ssl_reject_handshake off;&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;ssl_certificate_by_lua_block {&#xA;&#x9;&#x9;&#x9;certificate.call()&#xA;&#x9;&#x9;}&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;location / {&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;set $namespace      &#34;&#34;;&#xA;&#x9;&#x9;&#x9;set $ingress_name   &#34;&#34;;&#xA;&#x9;&#x9;&#x9;set $service_name   &#34;&#34;;&#xA;&#x9;&#x9;&#x9;set $service_port   &#34;&#34;;&#xA;&#x9;&#x9;&#x9;set $location_path  &#34;&#34;;&#xA;&#x9;&#x9;&#x9;set $global_rate_limit_exceeding n;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;rewrite_by_lua_block {&#xA;&#x9;&#x9;&#x9;&#x9;lua_ingress.rewrite({&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;force_ssl_redirect = false,&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;ssl_redirect = false,&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;force_no_ssl_redirect = false,&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;preserve_trailing_slash = false,&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;use_port_in_redirects = false,&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;global_throttle = { namespace = &#34;&#34;, limit = 0, window_size = 0, key = { }, ignored_cidrs = { } },&#xA;&#x9;&#x9;&#x9;&#x9;})&#xA;&#x9;&#x9;&#x9;&#x9;balancer.rewrite()&#xA;&#x9;&#x9;&#x9;&#x9;plugins.run()&#xA;&#x9;&#x9;&#x9;}&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;# be careful with `access_by_lua_block` and `satisfy any` directives as satisfy any&#xA;&#x9;&#x9;&#x9;# will always succeed when there&#39;s `access_by_lua_block` that does not have any lua code doing `ngx.exit(ngx.DECLINED)`&#xA;&#x9;&#x9;&#x9;# other authentication method such as basic auth or external auth useless - all requests will be allowed.&#xA;&#x9;&#x9;&#x9;#access_by_lua_block {&#xA;&#x9;&#x9;&#x9;#}&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;header_filter_by_lua_block {&#xA;&#x9;&#x9;&#x9;&#x9;lua_ingress.header()&#xA;&#x9;&#x9;&#x9;&#x9;plugins.run()&#xA;&#x9;&#x9;&#x9;}&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;body_filter_by_lua_block {&#xA;&#x9;&#x9;&#x9;&#x9;plugins.run()&#xA;&#x9;&#x9;&#x9;}&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;log_by_lua_block {&#xA;&#x9;&#x9;&#x9;&#x9;balancer.log()&#xA;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;&#x9;monitor.call()&#xA;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;&#x9;plugins.run()&#xA;&#x9;&#x9;&#x9;}&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;access_log off;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;port_in_redirect off;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;set $balancer_ewma_score -1;&#xA;&#x9;&#x9;&#x9;set $proxy_upstream_name &#34;upstream-default-backend&#34;;&#xA;&#x9;&#x9;&#x9;set $proxy_host          $proxy_upstream_name;&#xA;&#x9;&#x9;&#x9;set $pass_access_scheme  $scheme;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;set $pass_server_port    $server_port;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;set $best_http_host      $http_host;&#xA;&#x9;&#x9;&#x9;set $pass_port           $pass_server_port;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;set $proxy_alternative_upstream_name &#34;&#34;;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;client_max_body_size                    1m;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_set_header Host                   $best_http_host;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;# Pass the extracted client certificate to the backend&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;# Allow websocket connections&#xA;&#x9;&#x9;&#x9;proxy_set_header                        Upgrade           $http_upgrade;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_set_header                        Connection        $connection_upgrade;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_set_header X-Request-ID           $req_id;&#xA;&#x9;&#x9;&#x9;proxy_set_header X-Real-IP              $remote_addr;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_set_header X-Forwarded-For        $remote_addr;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_set_header X-Forwarded-Host       $best_http_host;&#xA;&#x9;&#x9;&#x9;proxy_set_header X-Forwarded-Port       $pass_port;&#xA;&#x9;&#x9;&#x9;proxy_set_header X-Forwarded-Proto      $pass_access_scheme;&#xA;&#x9;&#x9;&#x9;proxy_set_header X-Forwarded-Scheme     $pass_access_scheme;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_set_header X-Scheme               $pass_access_scheme;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;# Pass the original X-Forwarded-For&#xA;&#x9;&#x9;&#x9;proxy_set_header X-Original-Forwarded-For $http_x_forwarded_for;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;# mitigate HTTPoxy Vulnerability&#xA;&#x9;&#x9;&#x9;# https://www.nginx.com/blog/mitigating-the-httpoxy-vulnerability-with-nginx/&#xA;&#x9;&#x9;&#x9;proxy_set_header Proxy                  &#34;&#34;;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;# Custom headers to proxied server&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_connect_timeout                   5s;&#xA;&#x9;&#x9;&#x9;proxy_send_timeout                      60s;&#xA;&#x9;&#x9;&#x9;proxy_read_timeout                      60s;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_buffering                         off;&#xA;&#x9;&#x9;&#x9;proxy_buffer_size                       4k;&#xA;&#x9;&#x9;&#x9;proxy_buffers                           4 4k;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_max_temp_file_size                1024m;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_request_buffering                 on;&#xA;&#x9;&#x9;&#x9;proxy_http_version                      1.1;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_cookie_domain                     off;&#xA;&#x9;&#x9;&#x9;proxy_cookie_path                       off;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;# In case of errors try the next upstream server before returning an error&#xA;&#x9;&#x9;&#x9;proxy_next_upstream                     error timeout;&#xA;&#x9;&#x9;&#x9;proxy_next_upstream_timeout             0;&#xA;&#x9;&#x9;&#x9;proxy_next_upstream_tries               3;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_pass http://upstream_balancer;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_redirect                          off;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;}&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;# health checks in cloud providers require the use of port 80&#xA;&#x9;&#x9;location /healthz {&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;access_log off;&#xA;&#x9;&#x9;&#x9;return 200;&#xA;&#x9;&#x9;}&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;# this is required to avoid error if nginx is being monitored&#xA;&#x9;&#x9;# with an external software (like sysdig)&#xA;&#x9;&#x9;location /nginx_status {&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;allow 127.0.0.1;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;allow ::1;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;deny all;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;access_log off;&#xA;&#x9;&#x9;&#x9;stub_status on;&#xA;&#x9;&#x9;}&#xA;&#x9;&#x9;&#xA;&#x9;}&#xA;&#x9;## end server _&#xA;&#x9;&#xA;&#x9;## start server echo&#xA;&#x9;server {&#xA;&#x9;&#x9;server_name echo ;&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;listen 80  ;&#xA;&#x9;&#x9;listen [::]:80  ;&#xA;&#x9;&#x9;listen 443  ssl http2 ;&#xA;&#x9;&#x9;listen [::]:443  ssl http2 ;&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;set $proxy_upstream_name &#34;-&#34;;&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;ssl_certificate_by_lua_block {&#xA;&#x9;&#x9;&#x9;certificate.call()&#xA;&#x9;&#x9;}&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;location / {&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;set $namespace      &#34;e2e-tests-type-externalname-1682532884933614881-brsxh&#34;;&#xA;&#x9;&#x9;&#x9;set $ingress_name   &#34;echo&#34;;&#xA;&#x9;&#x9;&#x9;set $service_name   &#34;httpbin&#34;;&#xA;&#x9;&#x9;&#x9;set $service_port   &#34;80&#34;;&#xA;&#x9;&#x9;&#x9;set $location_path  &#34;/&#34;;&#xA;&#x9;&#x9;&#x9;set $global_rate_limit_exceeding n;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;rewrite_by_lua_block {&#xA;&#x9;&#x9;&#x9;&#x9;lua_ingress.rewrite({&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;force_ssl_redirect = false,&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;ssl_redirect = true,&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;force_no_ssl_redirect = false,&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;preserve_trailing_slash = false,&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;use_port_in_redirects = false,&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;global_throttle = { namespace = &#34;&#34;, limit = 0, window_size = 0, key = { }, ignored_cidrs = { } },&#xA;&#x9;&#x9;&#x9;&#x9;})&#xA;&#x9;&#x9;&#x9;&#x9;balancer.rewrite()&#xA;&#x9;&#x9;&#x9;&#x9;plugins.run()&#xA;&#x9;&#x9;&#x9;}&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;# be careful with `access_by_lua_block` and `satisfy any` directives as satisfy any&#xA;&#x9;&#x9;&#x9;# will always succeed when there&#39;s `access_by_lua_block` that does not have any lua code doing `ngx.exit(ngx.DECLINED)`&#xA;&#x9;&#x9;&#x9;# other authentication method such as basic auth or external auth useless - all requests will be allowed.&#xA;&#x9;&#x9;&#x9;#access_by_lua_block {&#xA;&#x9;&#x9;&#x9;#}&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;header_filter_by_lua_block {&#xA;&#x9;&#x9;&#x9;&#x9;lua_ingress.header()&#xA;&#x9;&#x9;&#x9;&#x9;plugins.run()&#xA;&#x9;&#x9;&#x9;}&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;body_filter_by_lua_block {&#xA;&#x9;&#x9;&#x9;&#x9;plugins.run()&#xA;&#x9;&#x9;&#x9;}&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;log_by_lua_block {&#xA;&#x9;&#x9;&#x9;&#x9;balancer.log()&#xA;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;&#x9;monitor.call()&#xA;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;&#x9;plugins.run()&#xA;&#x9;&#x9;&#x9;}&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;port_in_redirect off;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;set $balancer_ewma_score -1;&#xA;&#x9;&#x9;&#x9;set $proxy_upstream_name &#34;e2e-tests-type-externalname-1682532884933614881-brsxh-httpbin-80&#34;;&#xA;&#x9;&#x9;&#x9;set $proxy_host          $proxy_upstream_name;&#xA;&#x9;&#x9;&#x9;set $pass_access_scheme  $scheme;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;set $pass_server_port    $server_port;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;set $best_http_host      $http_host;&#xA;&#x9;&#x9;&#x9;set $pass_port           $pass_server_port;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;set $proxy_alternative_upstream_name &#34;&#34;;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;client_max_body_size                    1m;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_set_header Host                   &#34;httpbin.org&#34;;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;# Pass the extracted client certificate to the backend&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;# Allow websocket connections&#xA;&#x9;&#x9;&#x9;proxy_set_header                        Upgrade           $http_upgrade;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_set_header                        Connection        $connection_upgrade;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_set_header X-Request-ID           $req_id;&#xA;&#x9;&#x9;&#x9;proxy_set_header X-Real-IP              $remote_addr;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_set_header X-Forwarded-For        $remote_addr;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_set_header X-Forwarded-Host       $best_http_host;&#xA;&#x9;&#x9;&#x9;proxy_set_header X-Forwarded-Port       $pass_port;&#xA;&#x9;&#x9;&#x9;proxy_set_header X-Forwarded-Proto      $pass_access_scheme;&#xA;&#x9;&#x9;&#x9;proxy_set_header X-Forwarded-Scheme     $pass_access_scheme;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_set_header X-Scheme               $pass_access_scheme;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;# Pass the original X-Forwarded-For&#xA;&#x9;&#x9;&#x9;proxy_set_header X-Original-Forwarded-For $http_x_forwarded_for;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;# mitigate HTTPoxy Vulnerability&#xA;&#x9;&#x9;&#x9;# https://www.nginx.com/blog/mitigating-the-httpoxy-vulnerability-with-nginx/&#xA;&#x9;&#x9;&#x9;proxy_set_header Proxy                  &#34;&#34;;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;# Custom headers to proxied server&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_connect_timeout                   5s;&#xA;&#x9;&#x9;&#x9;proxy_send_timeout                      60s;&#xA;&#x9;&#x9;&#x9;proxy_read_timeout                      60s;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_buffering                         off;&#xA;&#x9;&#x9;&#x9;proxy_buffer_size                       4k;&#xA;&#x9;&#x9;&#x9;proxy_buffers                           4 4k;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_max_temp_file_size                1024m;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_request_buffering                 on;&#xA;&#x9;&#x9;&#x9;proxy_http_version                      1.1;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_cookie_domain                     off;&#xA;&#x9;&#x9;&#x9;proxy_cookie_path                       off;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;# In case of errors try the next upstream server before returning an error&#xA;&#x9;&#x9;&#x9;proxy_next_upstream                     error timeout;&#xA;&#x9;&#x9;&#x9;proxy_next_upstream_timeout             0;&#xA;&#x9;&#x9;&#x9;proxy_next_upstream_tries               3;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_pass http://upstream_balancer;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;proxy_redirect                          off;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;}&#xA;&#x9;&#x9;&#xA;&#x9;}&#xA;&#x9;## end server echo&#xA;&#x9;&#xA;&#x9;# backend for when default-backend-service is not configured or it does not have endpoints&#xA;&#x9;server {&#xA;&#x9;&#x9;listen 8181 default_server reuseport backlog=4096;&#xA;&#x9;&#x9;listen [::]:8181 default_server reuseport backlog=4096;&#xA;&#x9;&#x9;set $proxy_upstream_name &#34;internal&#34;;&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;access_log off;&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;location / {&#xA;&#x9;&#x9;&#x9;return 404;&#xA;&#x9;&#x9;}&#xA;&#x9;}&#xA;&#x9;&#xA;&#x9;# default server, used for NGINX healthcheck and access to nginx stats&#xA;&#x9;server {&#xA;&#x9;&#x9;listen 127.0.0.1:10246;&#xA;&#x9;&#x9;set $proxy_upstream_name &#34;internal&#34;;&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;keepalive_timeout 0;&#xA;&#x9;&#x9;gzip off;&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;access_log off;&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;location /healthz {&#xA;&#x9;&#x9;&#x9;return 200;&#xA;&#x9;&#x9;}&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;location /is-dynamic-lb-initialized {&#xA;&#x9;&#x9;&#x9;content_by_lua_block {&#xA;&#x9;&#x9;&#x9;&#x9;local configuration = require(&#34;configuration&#34;)&#xA;&#x9;&#x9;&#x9;&#x9;local backend_data = configuration.get_backends_data()&#xA;&#x9;&#x9;&#x9;&#x9;if not backend_data then&#xA;&#x9;&#x9;&#x9;&#x9;ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)&#xA;&#x9;&#x9;&#x9;&#x9;return&#xA;&#x9;&#x9;&#x9;&#x9;end&#xA;&#x9;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;&#x9;ngx.say(&#34;OK&#34;)&#xA;&#x9;&#x9;&#x9;&#x9;ngx.exit(ngx.HTTP_OK)&#xA;&#x9;&#x9;&#x9;}&#xA;&#x9;&#x9;}&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;location /nginx_status {&#xA;&#x9;&#x9;&#x9;stub_status on;&#xA;&#x9;&#x9;}&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;location /configuration {&#xA;&#x9;&#x9;&#x9;client_max_body_size                    21M;&#xA;&#x9;&#x9;&#x9;client_body_buffer_size                 21M;&#xA;&#x9;&#x9;&#x9;proxy_buffering                         off;&#xA;&#x9;&#x9;&#x9;&#xA;&#x9;&#x9;&#x9;content_by_lua_block {&#xA;&#x9;&#x9;&#x9;&#x9;configuration.call()&#xA;&#x9;&#x9;&#x9;}&#xA;&#x9;&#x9;}&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;location / {&#xA;&#x9;&#x9;&#x9;content_by_lua_block {&#xA;&#x9;&#x9;&#x9;&#x9;ngx.exit(ngx.HTTP_NOT_FOUND)&#xA;&#x9;&#x9;&#x9;}&#xA;&#x9;&#x9;}&#xA;&#x9;}&#xA;}&#xA;&#xA;stream {&#xA;&#x9;lua_package_path &#34;/etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/?.lua;;&#34;;&#xA;&#x9;&#xA;&#x9;lua_shared_dict tcp_udp_configuration_data 5M;&#xA;&#x9;&#xA;&#x9;resolver 10.96.0.10 valid=30s;&#xA;&#x9;&#xA;&#x9;init_by_lua_block {&#xA;&#x9;&#x9;collectgarbage(&#34;collect&#34;)&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;-- init modules&#xA;&#x9;&#x9;local ok, res&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;ok, res = pcall(require, &#34;configuration&#34;)&#xA;&#x9;&#x9;if not ok then&#xA;&#x9;&#x9;error(&#34;require failed: &#34; .. tostring(res))&#xA;&#x9;&#x9;else&#xA;&#x9;&#x9;configuration = res&#xA;&#x9;&#x9;end&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;ok, res = pcall(require, &#34;tcp_udp_configuration&#34;)&#xA;&#x9;&#x9;if not ok then&#xA;&#x9;&#x9;error(&#34;require failed: &#34; .. tostring(res))&#xA;&#x9;&#x9;else&#xA;&#x9;&#x9;tcp_udp_configuration = res&#xA;&#x9;&#x9;tcp_udp_configuration.prohibited_localhost_port = &#39;10246&#39;&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;end&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;ok, res = pcall(require, &#34;tcp_udp_balancer&#34;)&#xA;&#x9;&#x9;if not ok then&#xA;&#x9;&#x9;error(&#34;require failed: &#34; .. tostring(res))&#xA;&#x9;&#x9;else&#xA;&#x9;&#x9;tcp_udp_balancer = res&#xA;&#x9;&#x9;end&#xA;&#x9;}&#xA;&#x9;&#xA;&#x9;init_worker_by_lua_block {&#xA;&#x9;&#x9;tcp_udp_balancer.init_worker()&#xA;&#x9;}&#xA;&#x9;&#xA;&#x9;lua_add_variable $proxy_upstream_name;&#xA;&#x9;&#xA;&#x9;log_format log_stream &#39;[$remote_addr] [$time_local] $protocol $status $bytes_sent $bytes_received $session_time&#39;;&#xA;&#x9;&#xA;&#x9;access_log /var/log/nginx/access.log log_stream ;&#xA;&#x9;&#xA;&#x9;error_log  /var/log/nginx/error.log notice;&#xA;&#x9;&#xA;&#x9;upstream upstream_balancer {&#xA;&#x9;&#x9;server 0.0.0.1:1234; # placeholder&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;balancer_by_lua_block {&#xA;&#x9;&#x9;&#x9;tcp_udp_balancer.balance()&#xA;&#x9;&#x9;}&#xA;&#x9;}&#xA;&#x9;&#xA;&#x9;server {&#xA;&#x9;&#x9;listen 127.0.0.1:10247;&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;access_log off;&#xA;&#x9;&#x9;&#xA;&#x9;&#x9;content_by_lua_block {&#xA;&#x9;&#x9;&#x9;tcp_udp_configuration.call()&#xA;&#x9;&#x9;}&#xA;&#x9;}&#xA;&#x9;&#xA;&#x9;# TCP services&#xA;&#x9;&#xA;&#x9;# UDP services&#xA;&#x9;&#xA;&#x9;# Stream Snippets&#xA;&#x9;&#xA;}&#xA;&#xA;&#xA;STEP: Dumping NGINX logs - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:181 @ 04/26/23 18:15:17.501&#xA;Apr 26 18:15:17.501: INFO: -------------------------------------------------------------------------------&#xA;NGINX Ingress controller&#xA;  Release:       1.0.0-dev&#xA;  Build:         git-fa44f2f7c&#xA;  Repository:    git@github.com:kubernetes/ingress-nginx.git&#xA;  nginx version: nginx/1.21.6&#xA;&#xA;-------------------------------------------------------------------------------&#xA;&#xA;W0426 18:14:49.907769      13 client_config.go:618] Neither --kubeconfig nor --master was specified.  Using the inClusterConfig.  This might not work.&#xA;I0426 18:14:49.907833      13 main.go:209] &#34;Creating API client&#34; host=&#34;https://10.96.0.1:443&#34;&#xA;I0426 18:14:49.909984      13 main.go:253] &#34;Running in Kubernetes cluster&#34; major=&#34;1&#34; minor=&#34;26&#34; git=&#34;v1.26.3&#34; state=&#34;clean&#34; commit=&#34;9e644106593f3f4aa98f8a84b23db5fa378900bd&#34; platform=&#34;linux/amd64&#34;&#xA;I0426 18:14:49.973750      13 main.go:104] &#34;SSL fake certificate created&#34; file=&#34;/etc/ingress-controller/ssl/default-fake-certificate.pem&#34;&#xA;W0426 18:14:49.977891      13 main.go:125] Unable to get NODE information: nodes &#34;ingress-nginx-dev-worker2&#34; is forbidden: User &#34;system:serviceaccount:e2e-tests-type-externalname-1682532884933614881-brsxh:nginx-ingress&#34; cannot get resource &#34;nodes&#34; in API group &#34;&#34; at the cluster scope&#xA;W0426 18:14:49.982107      13 nginx.go:154] Update of Ingress status is disabled (flag --update-status)&#xA;I0426 18:14:49.983194      13 nginx.go:261] &#34;Starting NGINX Ingress controller&#34;&#xA;I0426 18:14:49.984460      13 event.go:285] Event(v1.ObjectReference{Kind:&#34;ConfigMap&#34;, Namespace:&#34;e2e-tests-type-externalname-1682532884933614881-brsxh&#34;, Name:&#34;tcp-services&#34;, UID:&#34;68eacc37-5686-486d-9e18-ddf586ce5c5f&#34;, APIVersion:&#34;v1&#34;, ResourceVersion:&#34;648&#34;, FieldPath:&#34;&#34;}): type: &#39;Normal&#39; reason: &#39;CREATE&#39; ConfigMap e2e-tests-type-externalname-1682532884933614881-brsxh/tcp-services&#xA;I0426 18:14:49.984483      13 event.go:285] Event(v1.ObjectReference{Kind:&#34;ConfigMap&#34;, Namespace:&#34;e2e-tests-type-externalname-1682532884933614881-brsxh&#34;, Name:&#34;nginx-ingress-controller&#34;, UID:&#34;68f0a2c4-e66b-4173-a2d7-8614d622cbc0&#34;, APIVersion:&#34;v1&#34;, ResourceVersion:&#34;670&#34;, FieldPath:&#34;&#34;}): type: &#39;Normal&#39; reason: &#39;CREATE&#39; ConfigMap e2e-tests-type-externalname-1682532884933614881-brsxh/nginx-ingress-controller&#xA;I0426 18:14:51.184167      13 nginx.go:304] &#34;Starting NGINX process&#34;&#xA;I0426 18:14:51.184274      13 leaderelection.go:248] attempting to acquire leader lease e2e-tests-type-externalname-1682532884933614881-brsxh/ingress-controller-leader...&#xA;I0426 18:14:51.184421      13 controller.go:190] &#34;Configuration changes detected, backend reload required&#34;&#xA;I0426 18:14:51.192935      13 leaderelection.go:258] successfully acquired lease e2e-tests-type-externalname-1682532884933614881-brsxh/ingress-controller-leader&#xA;I0426 18:14:51.192986      13 status.go:84] &#34;New leader elected&#34; identity=&#34;nginx-ingress-controller-5696d6dd6d-96v72&#34;&#xA;I0426 18:14:51.216927      13 controller.go:207] &#34;Backend successfully reloaded&#34;&#xA;I0426 18:14:51.216966      13 controller.go:218] &#34;Initial sync, sleeping for 1 second&#34;&#xA;I0426 18:14:51.216987      13 event.go:285] Event(v1.ObjectReference{Kind:&#34;Pod&#34;, Namespace:&#34;e2e-tests-type-externalname-1682532884933614881-brsxh&#34;, Name:&#34;nginx-ingress-controller-5696d6dd6d-96v72&#34;, UID:&#34;8875ba08-1756-4e60-a144-9d299c223157&#34;, APIVersion:&#34;v1&#34;, ResourceVersion:&#34;812&#34;, FieldPath:&#34;&#34;}): type: &#39;Normal&#39; reason: &#39;RELOAD&#39; NGINX reload triggered due to a change in configuration&#xA;I0426 18:14:54.242451      13 store.go:433] &#34;Found valid IngressClass&#34; ingress=&#34;e2e-tests-type-externalname-1682532884933614881-brsxh/echo&#34; ingressclass=&#34;ic-e2e-tests-type-externalname-1682532884933614881-brsxh&#34;&#xA;I0426 18:14:54.242752      13 event.go:285] Event(v1.ObjectReference{Kind:&#34;Ingress&#34;, Namespace:&#34;e2e-tests-type-externalname-1682532884933614881-brsxh&#34;, Name:&#34;echo&#34;, UID:&#34;8edfeaec-a519-4ba5-b5ec-fc2195807e2c&#34;, APIVersion:&#34;networking.k8s.io/v1&#34;, ResourceVersion:&#34;969&#34;, FieldPath:&#34;&#34;}): type: &#39;Normal&#39; reason: &#39;Sync&#39; Scheduled for sync&#xA;I0426 18:14:54.990746      13 controller.go:190] &#34;Configuration changes detected, backend reload required&#34;&#xA;I0426 18:14:55.026728      13 controller.go:207] &#34;Backend successfully reloaded&#34;&#xA;I0426 18:14:55.026832      13 event.go:285] Event(v1.ObjectReference{Kind:&#34;Pod&#34;, Namespace:&#34;e2e-tests-type-externalname-1682532884933614881-brsxh&#34;, Name:&#34;nginx-ingress-controller-5696d6dd6d-96v72&#34;, UID:&#34;8875ba08-1756-4e60-a144-9d299c223157&#34;, APIVersion:&#34;v1&#34;, ResourceVersion:&#34;812&#34;, FieldPath:&#34;&#34;}): type: &#39;Normal&#39; reason: &#39;RELOAD&#39; NGINX reload triggered due to a change in configuration&#xA;10.244.1.2 - - [26/Apr/2023:18:15:14 +0000] &#34;GET /get HTTP/1.1&#34; 504 132 &#34;-&#34; &#34;Go-http-client/1.1&#34; 88 10.085 [e2e-tests-type-externalname-1682532884933614881-brsxh-httpbin-80] [] 3.230.204.70:80 132 10.085 504 240f27eda5ca9f5a1f1ca8005cfecd5b&#xA;&#xA;STEP: Dumping namespace content - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:190 @ 04/26/23 18:15:17.527&#xA;Apr 26 18:15:17.527: INFO: NAME                                            READY   STATUS    RESTARTS   AGE&#xA;pod/nginx-ingress-controller-5696d6dd6d-96v72   1/1     Running   0          29s&#xA;&#xA;NAME                               TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                      AGE&#xA;service/httpbin                    ExternalName   &lt;none&gt;          httpbin.org   80/TCP                       23s&#xA;service/nginx-ingress-controller   NodePort       10.96.187.199   &lt;none&gt;        80:30404/TCP,443:31881/TCP   29s&#xA;&#xA;NAME                                 ENDPOINTS                      AGE&#xA;endpoints/nginx-ingress-controller   10.244.1.4:443,10.244.1.4:80   29s&#xA;&#xA;NAME                                       READY   UP-TO-DATE   AVAILABLE   AGE&#xA;deployment.apps/nginx-ingress-controller   1/1     1            1           29s&#xA;&#xA;&lt; Exit [AfterEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:84 @ 04/26/23 18:15:18.142 (3.726s)&#xA;&#xA;Attempt #1 Failed.  Retrying ↺ @ 04/26/23 18:15:18.142&#xA;&#xA;&gt; Enter [BeforeEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:83 @ 04/26/23 18:15:18.142&#xA;&lt; Exit [BeforeEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:83 @ 04/26/23 18:15:25.53 (7.388s)&#xA;&gt; Enter [It] should return 200 for service type=ExternalName with a port defined - /go/src/k8s.io/ingress-nginx/test/e2e/servicebackend/service_externalname.go:129 @ 04/26/23 18:15:25.53&#xA;&lt; Exit [It] should return 200 for service type=ExternalName with a port defined - /go/src/k8s.io/ingress-nginx/test/e2e/servicebackend/service_externalname.go:129 @ 04/26/23 18:15:39.705 (14.175s)&#xA;&gt; Enter [AfterEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:84 @ 04/26/23 18:15:39.705&#xA;&lt; Exit [AfterEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:84 @ 04/26/23 18:15:40.247 (542ms)&#xA;</system-err>
+          </testcase>
+          <testcase name="[It] [Admission] admission controller should block ingress with invalid path" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Admission] admission controller should return an error if there is a forbidden value in some annotation" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Admission] admission controller should not return an error if the Ingress V1 definition is valid with Ingress Class" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Admission] admission controller should return an error if there is an error validating the ingress definition" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Admission] admission controller reject ingress with global-rate-limit annotations when memcached is not configured" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Admission] admission controller should return an error if the Ingress V1 definition contains invalid annotations" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Admission] admission controller should not return an error for an invalid Ingress when it has unknown class" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Admission] admission controller should return an error if there is an invalid value in some annotation" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Admission] admission controller should not return an error if the Ingress V1 definition is valid with IngressClass annotation" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [TopologyHints] topology aware routing should return 200 when service has topology hints" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] watch namespace selector With specific watch-namespace-selector flags should ingore Ingress of namespace without label foo=bar and accept those of namespace with label foo=bar" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Admission] admission controller should not allow overlaps of host and paths without canary annotations" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Admission] admission controller should allow overlaps of host and paths with canary annotation" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] keep-alive keep-alive-requests Check the keep alive should set keepalive_timeout" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] force-ssl-redirect should redirect to https" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] canary-* does not crash when canary ingress has multiple paths to the same non-matching backend" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-tls-* should return 200 using auth-tls-match-cn where atleast one of the regex options matches CN from client" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] log-format-* Check log-format-upstream with log-format-escape-json and log-format-escape-none log-format-escape-none enabled" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] log-format-* Check log-format-upstream with log-format-escape-json and log-format-escape-none log-format-escape-json enabled" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] disable-access-log disable-http-access-log disable-stream-access-log disable-http-access-log set access_log off" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [SSL] TLS protocols, ciphers and headers) should configure HSTS policy header setting includeSubDomains parameter" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] use-proxy-protocol should respect port passed by the PROXY Protocol" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* when external authentication with caching is configured should deny login for different location on same server" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] affinity session-cookie-name should not set secure in cookie with provided false annotation on http" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] cors-* should allow - matching origin with wildcard origin (2 subdomains)" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] reuse-port reuse port should be disabled" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] ingress-class With specific ingress-class flags should ignore Ingress with no class and accept the correctly configured Ingresses" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] Configmap - limit-rate Check limit-rate config" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Security] Pod Security Policies should be running with a Pod Security Policy" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] affinity session-cookie-name should set sticky cookie without host" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [Security] block-* should block CIDRs defined in the ConfigMap" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] ingress-class With default ingress class config should ignore Ingress with different controller class" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Ingress] [PathType] exact should choose exact location for /exact" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Ingress] DeepInspection should drop whole ingress if one path matches invalid regex" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] configmap stream-snippet should add value of stream-snippet via config map to nginx config" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] keep-alive keep-alive-requests Check the upstream keep alive should set keep alive connection timeout to upstream server" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] cors-* should not break functionality" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* when external authentication with caching is configured should redirect to signin url when not signed in" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] hash size Check the variable hash size should set variables-hash-max-size" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* when external authentication is configured should return status code 200 when signed in" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Configure OpenTracing should enable opentracing using jaeger with sampler host" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Configure OpenTracing should not exists opentracing_location_operation_name directive when is empty" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] client-body-buffer-size should set client_body_buffer_size to 1k" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Service] type=ExternalName should return 200 for service type=ExternalName using a port name" classname="nginx-ingress-controller e2e suite" status="passed" time="22.324790717">
+              <system-err>&gt; Enter [BeforeEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:83 @ 04/26/23 18:14:44.928&#xA;&lt; Exit [BeforeEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:83 @ 04/26/23 18:14:54.258 (9.33s)&#xA;&gt; Enter [It] should return 200 for service type=ExternalName using a port name - /go/src/k8s.io/ingress-nginx/test/e2e/servicebackend/service_externalname.go:184 @ 04/26/23 18:14:54.258&#xA;&lt; Exit [It] should return 200 for service type=ExternalName using a port name - /go/src/k8s.io/ingress-nginx/test/e2e/servicebackend/service_externalname.go:184 @ 04/26/23 18:15:06.399 (12.141s)&#xA;&gt; Enter [AfterEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:84 @ 04/26/23 18:15:06.399&#xA;&lt; Exit [AfterEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:84 @ 04/26/23 18:15:07.253 (854ms)&#xA;</system-err>
+          </testcase>
+          <testcase name="[It] Configure OpenTracing should exists opentracing directive when is enabled" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-tls-* should validate auth-tls-verify-client" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] cors-* should not allow - unmatching origin with wildcard origin (2 subdomains)" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* when external authentication is configured should redirect to signin url when not signed in" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [SSL] TLS protocols, ciphers and headers) ports or X-Forwarded-Host check during HTTP tp HTTPS redirection should not use ports or X-Forwarded-Host during the HTTP to HTTPS redirection" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] preserve-trailing-slash should allow preservation of trailing slashes" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] affinity session-cookie-name should warn user when use-regex is true and session-cookie-path is not set" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* should return status code 401 when authentication is configured and Authorization header is sent with invalid credentials" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] nginx-configuration start nginx with default configuration" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] affinity session-cookie-name does not set the path to / on the generated cookie if there&#39;s more than one rule referring to the same backend" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] hash size Check server names hash size should set server_names_hash_max_size" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [Security] global-auth-url when global external authentication is configured should return status code 200 when request whitelisted (via no-auth-locations) service and 401 when request protected service" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] rewrite-target use-regex enable-rewrite-log should write rewrite logs" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [TCP] tcp-services should expose a TCP service" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Configure Opentelemetry should exists opentelemetry directive when is enabled" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Dynamic $proxy_host should exist a proxy_host" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] OCSP should enable OCSP and contain stapling information in the connection" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] rewrite-target use-regex enable-rewrite-log should use ~* location modifier if regex annotation is present" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Lua] dynamic configuration when only backends change handles an annotation change" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [TCP] tcp-services should reload after an update in the configuration" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] proxy-ssl-* should set valid proxy-ssl-secret, proxy-ssl-verify to on, proxy-ssl-verify-depth to 2, and proxy-ssl-server-name to on" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [SSL] redirect to HTTPS should redirect from HTTP to HTTPS when secret is missing" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] log-format-* Check log-format-escape-json and log-format-escape-none should disable the log-format-escape-json" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] proxy-* should build proxy next upstream" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] proxy-ssl-* should set valid proxy-ssl-secret" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] disable-catch-all should ignore catch all Ingress with backend" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] proxy-* should set proxy client-max-body-size to 8m" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] server-alias should return status code 200 for hosts defined in two ingresses, different path with one alias" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] canary-* when canaried by cookie respects always and never values" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* should set cache_key when external auth cache is configured" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] custom-http-errors configures Nginx correctly" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Service] backend status code 503 should return 503 when all backend service endpoints are unavailable" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] affinity session-cookie-name should set the path to /something on the generated cookie" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] affinitymode Check persistent affinity mode" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] enable-real-ip should not trust X-Forwarded-For header when setting is false" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] disable-sync-events should not create sync events" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] hash size Check proxy header hash size should set proxy-headers-hash-max-size" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] canary-* when canary is created should response with a 200 status from the mainline upstream when requests are made to the mainline ingress" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] proxy-* should change the default proxy HTTP version" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] cors-* should allow - single origin with required port" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] ingress-class With default ingress class config should serve Ingress when class is added" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] cors-* should not allow - portless origin with wildcard origin" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Lua] dynamic configuration when only backends change handles endpoints only changes (down scaling of replicas)" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] upstream-hash-by-* should connect to the same subset of pods" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] use-proxy-protocol should enable PROXY Protocol for HTTPS" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] Add no tls redirect locations Check no tls redirect locations config" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] canary-* when canaried by weight should route requests only to canary if canary weight is 100" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] proxy-read-timeout should set valid proxy read timeouts using configmap values" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] backend-protocol - FastCGI should add fastcgi_param in the configuration file" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] keep-alive keep-alive-requests Check the upstream keep alive should set keepalive connection to upstream server" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] server-tokens should not exists Server header in the response" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* with invalid auth-url should deny whole location should add error to the config" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Lua] dynamic configuration configures balancer Lua middleware correctly" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] enable-multi-accept should be enabled when set to true" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] canary-* when canaried by weight should route requests split between mainline and canary if canary weight is 50" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] proxy-* should not set proxy client-max-body-size to incorrect value" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] enable-ssl-passthrough With enable-ssl-passthrough enabled should enable ssl-passthrough-proxy-port on a different port" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [SSL] secret update should return the fake SSL certificate if the secret is invalid" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [Security] global-auth-url when global external authentication is configured should set snippet when global external auth is configured" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] log-format-* Check log-format-escape-json and log-format-escape-none should disable the log-format-escape-none" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] affinity session-cookie-name should change cookie name on ingress definition change" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] satisfy should configure satisfy directive correctly" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Lua] dynamic certificates given an ingress with TLS correctly configured picks up the updated certificate without reloading" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Service] type=ExternalName should return status 502 for service type=ExternalName with an invalid host" classname="nginx-ingress-controller e2e suite" status="passed" time="24.902312903">
+              <system-err>&gt; Enter [BeforeEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:83 @ 04/26/23 18:14:44.929&#xA;&lt; Exit [BeforeEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:83 @ 04/26/23 18:14:53.994 (9.065s)&#xA;&gt; Enter [It] should return status 502 for service type=ExternalName with an invalid host - /go/src/k8s.io/ingress-nginx/test/e2e/servicebackend/service_externalname.go:153 @ 04/26/23 18:14:53.994&#xA;&lt; Exit [It] should return status 502 for service type=ExternalName with an invalid host - /go/src/k8s.io/ingress-nginx/test/e2e/servicebackend/service_externalname.go:153 @ 04/26/23 18:15:09.106 (15.111s)&#xA;&gt; Enter [AfterEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:84 @ 04/26/23 18:15:09.106&#xA;&lt; Exit [AfterEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:84 @ 04/26/23 18:15:09.832 (726ms)&#xA;</system-err>
+          </testcase>
+          <testcase name="[It] Configure Opentelemetry should not exists opentelemetry_operation_name directive when is empty" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [SSL] TLS protocols, ciphers and headers) ports or X-Forwarded-Host check during HTTP tp HTTPS redirection should not use ports during the HTTP to HTTPS redirection" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] proxy-send-timeout should set valid proxy send timeouts using configmap values" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] disable-catch-all should delete Ingress updated to catch-all" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] affinity session-cookie-name should work with server-alias annotation" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] permanent-redirect permanent-redirect-code should respond with a custom redirect code" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] hash size Check the map hash size should set vmap-hash-bucket-size" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] use-proxy-protocol should respect proto passed by the PROXY Protocol server port" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] Bad annotation values [BAD_ANNOTATIONS] should drop an ingress if there is an invalid character in some annotation" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] canary-* canary affinity behavior always routes traffic to canary if first request was affinitized to canary (explicit sticky behavior)" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] canary-* when canaried by header with value and pattern should route requests to the correct upstream" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Lua] dynamic certificates given an ingress with TLS correctly configured falls back to using default certificate when secret gets deleted without reloading" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] from-to-www-redirect should redirect from www HTTPS to HTTPS" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Service] type=ExternalName should update the type=ExternalName  after a service update" classname="nginx-ingress-controller e2e suite" status="passed" time="30.374816227">
+              <system-err>&gt; Enter [BeforeEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:83 @ 04/26/23 18:14:44.927&#xA;&lt; Exit [BeforeEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:83 @ 04/26/23 18:14:54.141 (9.214s)&#xA;&gt; Enter [It] should update the type=ExternalName  after a service update - /go/src/k8s.io/ingress-nginx/test/e2e/servicebackend/service_externalname.go:248 @ 04/26/23 18:14:54.141&#xA;STEP: checking the service is updated to use eu.httpbin.org - /go/src/k8s.io/ingress-nginx/test/e2e/servicebackend/service_externalname.go:304 @ 04/26/23 18:15:14.27&#xA;&lt; Exit [It] should update the type=ExternalName  after a service update - /go/src/k8s.io/ingress-nginx/test/e2e/servicebackend/service_externalname.go:248 @ 04/26/23 18:15:14.333 (20.191s)&#xA;&gt; Enter [AfterEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:84 @ 04/26/23 18:15:14.333&#xA;&lt; Exit [AfterEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:84 @ 04/26/23 18:15:15.302 (969ms)&#xA;</system-err>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-tls-* should set sslClientCertificate, sslVerifyClient and sslVerifyDepth with auth-tls-secret" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] stream-snippet should add value of stream-snippet to nginx config" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] Configmap change should reload after an update in the configuration" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] proxy-read-timeout should not set invalid proxy read timeouts using configmap values" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Ingress] [PathType] prefix checks should return 404 when prefix /aaa does not match request /aaaccc" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [metrics] exported prometheus metrics exclude socket request metrics are present" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Configure Opentelemetry should exists opentelemetry_operation_name directive when is configured" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] affinity session-cookie-name should not set affinity across all server locations when using separate ingresses" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [SSL] TLS protocols, ciphers and headers) should configure HSTS policy header setting max-age parameter" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* when external authentication is configured should not create additional upstream block when host part of auth-url contains a variable" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] global-options should have worker_rlimit_nofile option" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] app-root should redirect to /foo" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] client-body-buffer-size should set client_body_buffer_size to 1000" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Configure OpenTracing should enable opentracing using jaeger" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Service] backend status code 503 should return 503 when backend service does not exist" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Lua] dynamic configuration when only backends change handles endpoints only changes consistently (down scaling of replicas vs. empty service)" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] settings-global-rate-limit generates correct NGINX configuration" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] whitelist-source-range should set valid ip whitelist range" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] ingress-class With default ingress class config should ignore Ingress without IngressClass configuration" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] backend-protocol should set backend protocol to &#39;&#39; and use ajp_pass" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] proxy-* should set proxy_redirect to hello.com goodbye.com" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] canary-* when canaried by header with value and pattern should route requests to the correct upstream" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] modsecurity owasp should disable modsecurity using &#39;modsecurity off;&#39;" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Lua] dynamic certificates given an ingress with TLS correctly configured removes HTTPS configuration when we delete TLS spec" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] gzip should set gzip_disable to msie6" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] proxy-next-upstream should build proxy next upstream using configmap values" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [Security] global-auth-url when global external authentication is configured should proxy_method method when global-auth-method is configured" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Default Backend] disables access logging for default backend" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] proxy-* should turn off proxy-request-buffering" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] canary-* Single canary Ingress should not use canary as a catch-all server" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] canary-* when canary is created should route requests to the correct upstream if mainline ingress is created before the canary ingress" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Configure OpenTracing should exists opentracing_operation_name directive when is configured" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] default-backend when default backend annotation is enabled should use a custom default backend as upstream" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] stream-snippet should add stream-snippet and drop annotations per admin config" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] cors-* should allow headers for cors" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [Load Balancer] load-balance should apply the configmap load-balance setting" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] service-upstream when enabling in the configmap should use the Service Cluster IP and Port" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] canary-* when canaried by weight should route requests split between mainline and canary if canary weight is 100 and weight total is 200" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] satisfy should allow multiple auth with satisfy any" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] canary-* canary affinity behavior routes traffic to either mainline or canary backend (legacy behavior)" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* should return status code 200 when no authentication is configured" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] access-log http-access-log-path use the specified configuration" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] affinity session-cookie-name should set cookie with expires" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] canary-* when canary is created should route requests to the correct upstream if the canary ingress is modified" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] nginx-configuration fails when using root directive" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [Security] modsecurity-snippet should add value of modsecurity-snippet setting to nginx config" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] affinity session-cookie-name should set secure in cookie with provided false annotation on https" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [SSL] TLS protocols, ciphers and headers) should configure TLS protocol setting cipher suite" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] Geoip2 should include geoip2 line in config when enabled and db file exists" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Lua] dynamic certificates picks up the previously missing secret for a given ingress without reloading" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [Security] global-auth-url when global external authentication is configured should still return status code 200 after auth backend is deleted using cache" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* when external authentication is configured with a custom redirect param should return status code 200 when signed in" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Shutdown] Grace period shutdown /healthz should return status code 500 during shutdown grace period" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] modsecurity owasp should enable modsecurity with snippet" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] proxy-connect-timeout should not set invalid proxy timeouts using configmap values" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] server-alias should return status code 200 for host &#39;foo&#39; and 404 for &#39;bar&#39;" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] custom HTTP and HTTPS ports with a plain HTTP ingress should set X-Forwarded-Port headers accordingly when listening on a non-default HTTP port" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] cors-* should not allow - single origin for multiple cors values" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] cors-* should not allow - single origin with port and origin without port" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] server-snippet add valid directives to server via server snippet" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] canary-* when canaried by header with value should route requests to the correct upstream" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] backend-protocol should set backend protocol to grpcs:// and use grpc_pass" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Shutdown] ingress controller should shutdown in less than 60 secons without pending connections" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [SSL] TLS protocols, ciphers and headers) should configure HSTS policy header overriding what&#39;s set from the upstream" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] cors-* should allow - matching origin+port with wildcard origin" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] enable-multi-accept should be disabled when set to false" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] limit-rate Check limit-rate annotation" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] brotli should only compress responses that meet the `brotli-min-length` condition" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] reuse-port reuse port should be enabled" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [TCP] tcp-services should expose an ExternalName TCP service" classname="nginx-ingress-controller e2e suite" status="passed" time="13.053699104">
+              <system-err>&gt; Enter [BeforeEach] [TCP] tcp-services - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:83 @ 04/26/23 18:14:44.932&#xA;&lt; Exit [BeforeEach] [TCP] tcp-services - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:83 @ 04/26/23 18:14:54.075 (9.143s)&#xA;&gt; Enter [BeforeEach] [TCP] tcp-services - /go/src/k8s.io/ingress-nginx/test/e2e/tcpudp/tcp.go:42 @ 04/26/23 18:14:54.075&#xA;&lt; Exit [BeforeEach] [TCP] tcp-services - /go/src/k8s.io/ingress-nginx/test/e2e/tcpudp/tcp.go:42 @ 04/26/23 18:14:54.076 (1ms)&#xA;&gt; Enter [It] should expose an ExternalName TCP service - /go/src/k8s.io/ingress-nginx/test/e2e/tcpudp/tcp.go:80 @ 04/26/23 18:14:54.076&#xA;&lt; Exit [It] should expose an ExternalName TCP service - /go/src/k8s.io/ingress-nginx/test/e2e/tcpudp/tcp.go:80 @ 04/26/23 18:14:57.318 (3.242s)&#xA;&gt; Enter [AfterEach] [TCP] tcp-services - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:84 @ 04/26/23 18:14:57.318&#xA;&lt; Exit [AfterEach] [TCP] tcp-services - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:84 @ 04/26/23 18:14:57.986 (668ms)&#xA;</system-err>
+          </testcase>
+          <testcase name="[It] [Setting] gzip should set gzip_types to application/javascript" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [Security] global-auth-url when global external authentication is configured should set request-redirect when global-auth-request-redirect is configured" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] modsecurity owasp should enable modsecurity with snippet and block requests" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Configure OpenTracing should enable opentracing using datadog" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] backend-protocol should set backend protocol to &#39;&#39; and use fastcgi_pass" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-tls-* should pass URL-encoded certificate to upstream" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] x-forwarded-prefix should not add X-Forwarded-Prefix if the annotation value is empty" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] log-format-* Check log-format-escape-json and log-format-escape-none should not configure log-format escape by default" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] add-headers Add multiple custom headers" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] affinity session-cookie-name should set secure in cookie with provided true annotation on http" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] service-upstream when enabling in the configmap and disabling in the annotations should not use the Service Cluster IP and Port" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] access-log http-access-log-path &amp; stream-access-log-path use the specified configuration" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] canary-* when canaried by header with no value should route requests to the correct upstream" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [SSL] [Flag] default-ssl-certificate uses default ssl certificate for host based ingress when configured certificate does not match host" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [SSL] [Flag] default-ssl-certificate uses default ssl certificate for catch-all ingress" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] access-log stream-access-log-path use the specified configuration" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] modsecurity owasp should disable default modsecurity conf setting when modsecurity-snippet is specified" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Default Backend] change default settings should apply the annotation to the default backend" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] canary-* when canary is created should route requests to the correct upstream if mainline ingress is created after the canary ingress" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] enable-access-log enable-rewrite-log set rewrite_log on" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] keep-alive keep-alive-requests Check the upstream keep alive should set keepalive time to upstream server" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] connection-proxy-header set connection header to keep-alive" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* should return status code 200 when authentication is configured with a map and Authorization header is sent" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* when external authentication with caching is configured should deny login for different servers" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* cookie set by external authentication server user retains cookie by default" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] disable-catch-all should allow Ingress with rules" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] canary-* when canary is created should return 404 status for requests to the canary if no matching ingress is found" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] rewrite-target use-regex enable-rewrite-log should use correct longest path match" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] upstream-hash-by-* should connect to the same pod" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* should return status code 401 when authentication is configured but Authorization header is not configured" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] ingress-class With default ingress class config should ignore Ingress with a different class annotation" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] gzip should be disabled by default" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] nginx-configuration fails when using alias directive" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] cors-* should not break functionality - without `*`" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] gzip should be enabled with default settings" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Lua] dynamic certificates picks up the certificate when we add TLS spec to existing ingress" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] ssl-ciphers should change ssl ciphers" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] proxy-* should set valid proxy timeouts" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] proxy-* should set proxy_redirect to default" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* cookie set by external authentication server user with annotated ingress retains cookie if upstream returns error status code" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Service] type=ExternalName should return 200 for service type=ExternalName without a port defined" classname="nginx-ingress-controller e2e suite" status="passed" time="18.784582137">
+              <system-err>&gt; Enter [BeforeEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:83 @ 04/26/23 18:14:57.989&#xA;&lt; Exit [BeforeEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:83 @ 04/26/23 18:15:05.27 (7.281s)&#xA;&gt; Enter [It] should return 200 for service type=ExternalName without a port defined - /go/src/k8s.io/ingress-nginx/test/e2e/servicebackend/service_externalname.go:95 @ 04/26/23 18:15:05.27&#xA;&lt; Exit [It] should return 200 for service type=ExternalName without a port defined - /go/src/k8s.io/ingress-nginx/test/e2e/servicebackend/service_externalname.go:95 @ 04/26/23 18:15:15.873 (10.603s)&#xA;&gt; Enter [AfterEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:84 @ 04/26/23 18:15:15.873&#xA;&lt; Exit [AfterEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:84 @ 04/26/23 18:15:16.773 (900ms)&#xA;</system-err>
+          </testcase>
+          <testcase name="[It] [Setting] server-tokens should exists Server header in the response when is enabled" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* cookie set by external authentication server user does not retain cookie if upstream returns error status code" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] proxy-ssl-* should set valid proxy-ssl-secret, proxy-ssl-protocols" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] proxy-ssl-* should set valid proxy-ssl-secret, proxy-ssl-ciphers to HIGH:!AES" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-tls-* should return 403 using auth-tls-match-cn with no matching CN from client" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] modsecurity owasp should enable modsecurity without using &#39;modsecurity on;&#39;" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] main-snippet should add value of main-snippet setting to nginx config" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] cors-* should expose headers for cors" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] single ingress - multiple hosts should set the correct $service_name NGINX variable" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] proxy-* should set proxy_redirect to off" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Service] Nil Service Backend should return 404 when backend service is nil" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* when external authentication is configured should not create additional upstream block when auth-keepalive is set with HTTP/2" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] backend-protocol - FastCGI should add fastcgi_index in the configuration file" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] http2-push-preload enable the http2-push-preload directive" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* when external authentication is configured should not create additional upstream block when auth-keepalive is negative" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] cors-* should allow - single origin for multiple cors values" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] proxy-* should setup proxy cookies" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] cors-* should not allow - single origin without port and origin with required port" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] permanent-redirect permanent-redirect-code should respond with a standard redirect code" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] gzip should set gzip_min_length to 100" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] modsecurity owasp should enable modsecurity when enable-owasp-modsecurity-crs is set to true" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] modsecurity owasp should enable modsecurity through the config map but ignore snippet as disabled by admin" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Configure OpenTracing should not exists opentracing_operation_name directive when is empty" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Configure OpenTracing should propagate the w3c header when configured with jaeger" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] enable-access-log enable-rewrite-log set access_log off" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] ingress-class With default ingress class config should accept both Ingresses with default IngressClassName and IngressClass annotation" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] disable-access-log disable-http-access-log disable-stream-access-log disable-stream-access-log set access_log off" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] client-body-buffer-size should set client_body_buffer_size to 1K" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] log-format-* Check log-format-upstream with log-format-escape-json and log-format-escape-none log-format default escape" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] proxy-connect-timeout should set valid proxy timeouts using configmap values" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Configure OpenTracing should enable opentracing using zipkin" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] backend-protocol - FastCGI should use fastcgi_pass in the configuration file" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Configure OpenTracing should include opentracing_trust_incoming_span off directive when disabled" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Security] Pod Security Policies with volumes should be running with a Pod Security Policy" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-tls-* should set valid auth-tls-secret, sslVerify to off, and sslVerifyDepth to 2" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* when external authentication is configured with a custom redirect param should redirect to signin url when not signed in" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [metrics] exported prometheus metrics exclude socket request metrics are absent" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] cors-* should set cors methods to only allow POST, GET" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] disable-sync-events should create sync events (default)" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* should set &#34;proxy_set_header &#39;My-Custom-Header&#39; &#39;42&#39;;&#34; when auth-headers are set" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] reuse-port reuse port should be enabled by default" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] cors-* should allow - missing origins (should allow all origins)" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] modsecurity owasp should enable modsecurity" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] hash size Check server names hash size should set server_names_hash_bucket_size" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* should return status code 401 when authentication is configured with invalid content and Authorization header is sent" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] custom HTTP and HTTPS ports with a TLS enabled ingress should set X-Forwarded-Port header to 443" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] ssl-ciphers Add ssl ciphers" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Memory Leak] Dynamic Certificates should not leak memory from ingress SSL certificates or configuration updates" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] gzip should set gzip_comp_level to 4" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Lua] dynamic certificates given an ingress with TLS correctly configured picks up a non-certificate only change" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Ingress] [PathType] mix Exact and Prefix paths should choose the correct location" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] disable-access-log disable-http-access-log disable-stream-access-log disable-access-log set access_log off" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* with invalid auth-url should deny whole location should return 503 (location was denied)" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] cors-* should allow correct origins - single origin for multiple cors values" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Flag] ingress-class With default ingress class config should serve Ingress when class is updated between annotation and ingressClassName" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] modsecurity owasp should enable modsecurity with transaction ID and OWASP rules" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] client-body-buffer-size should set client_body_buffer_size to 1m" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] canary-* Single canary Ingress should not use canary with domain as a server" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] Bad annotation values [BAD_ANNOTATIONS] should allow an ingress if there is a default blocklist config in place" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] cors-* should allow origin for cors" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Service] type=ExternalName should sync ingress on type=ExternalName service addition/deletion" classname="nginx-ingress-controller e2e suite" status="passed" time="31.870598789">
+              <system-err>&gt; Enter [BeforeEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:83 @ 04/26/23 18:14:44.932&#xA;&lt; Exit [BeforeEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:83 @ 04/26/23 18:14:55.241 (10.309s)&#xA;&gt; Enter [It] should sync ingress on type=ExternalName service addition/deletion - /go/src/k8s.io/ingress-nginx/test/e2e/servicebackend/service_externalname.go:311 @ 04/26/23 18:14:55.241&#xA;&lt; Exit [It] should sync ingress on type=ExternalName service addition/deletion - /go/src/k8s.io/ingress-nginx/test/e2e/servicebackend/service_externalname.go:311 @ 04/26/23 18:15:15.906 (20.665s)&#xA;&gt; Enter [AfterEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:84 @ 04/26/23 18:15:15.906&#xA;&lt; Exit [AfterEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:84 @ 04/26/23 18:15:16.802 (896ms)&#xA;</system-err>
+          </testcase>
+          <testcase name="[It] [Service] type=ExternalName should return 200 for service type=ExternalName using FQDN with trailing dot" classname="nginx-ingress-controller e2e suite" status="passed" time="19.534717174">
+              <system-err>&gt; Enter [BeforeEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:83 @ 04/26/23 18:14:44.928&#xA;&lt; Exit [BeforeEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:83 @ 04/26/23 18:14:53.104 (8.176s)&#xA;&gt; Enter [It] should return 200 for service type=ExternalName using FQDN with trailing dot - /go/src/k8s.io/ingress-nginx/test/e2e/servicebackend/service_externalname.go:217 @ 04/26/23 18:14:53.104&#xA;&lt; Exit [It] should return 200 for service type=ExternalName using FQDN with trailing dot - /go/src/k8s.io/ingress-nginx/test/e2e/servicebackend/service_externalname.go:217 @ 04/26/23 18:15:03.883 (10.78s)&#xA;&gt; Enter [AfterEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:84 @ 04/26/23 18:15:03.883&#xA;&lt; Exit [AfterEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:84 @ 04/26/23 18:15:04.462 (579ms)&#xA;</system-err>
+          </testcase>
+          <testcase name="[It] [Default Backend] SSL should return a self generated SSL certificate" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Default Backend] should return 404 sending requests when only a default backend is running" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] affinity session-cookie-name should not set cookie without domain annotation" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] global-options should have worker_rlimit_nofile option and be independent on amount of worker processes" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Default Backend] custom service uses custom default backend that returns 200 as status code" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* when external authentication with caching is configured should return status code 200 when signed in after auth backend is deleted" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Configure Opentelemetry should include opentelemetry_trust_incoming_spans on directive when enabled" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Security] request smuggling should not return body content from error_page" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Debug CLI should get information for a specific backend server" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] Bad annotation values [BAD_ANNOTATIONS] should drop an ingress if there is a forbidden word in some annotation" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [Security] global-auth-url cookie set by external authentication server user with global-auth-always-set-cookie key in configmap retains cookie if upstream returns error status code" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* should not set snippet &#34;proxy_set_header My-Custom-Header 42;&#34; when external auth is not configured" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [Security] global-auth-url cookie set by external authentication server user does not retain cookie if upstream returns error status code" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] canary-* when canaried by weight should route requests only to mainline if canary weight is 0" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] cors-* should set cors max-age" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [Lua] lua-shared-dicts configures lua shared dicts" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Configure OpenTracing should exists opentracing_location_operation_name directive when is configured" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] canary-* canary affinity behavior always routes traffic to canary if first request was affinitized to canary (default behavior)" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] server-alias should return status code 200 for host &#39;foo&#39; and &#39;bar&#39;" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* when external authentication is configured keeps processing new ingresses even if one of the existing ingresses is misconfigured" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] denylist-source-range only deny explicitly denied IPs, allow all others" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Status] status update should update status field after client-go reconnection" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] log-format-* Check log-format-escape-json and log-format-escape-none should enable the log-format-escape-none" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] Geoip2 should only allow requests from specific countries" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] affinitymode Balanced affinity mode should balance" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] x-forwarded-prefix should set the X-Forwarded-Prefix to the annotation value" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Debug CLI should produce valid JSON for /dbg general" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] denylist-source-range only allow explicitly allowed IPs, deny all others" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] auth-* should return status code 200 when authentication is configured and Authorization header is sent" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] rewrite-target use-regex enable-rewrite-log should fail to use longest match for documented warning" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] keep-alive keep-alive-requests Check the upstream keep alive should set the request count to upstream server through one keep alive connection" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] backend-protocol - GRPC should return OK for service with backend protocol GRPCS" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Setting] [Load Balancer] EWMA does not fail requests" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] configuration-snippet drops snippet &#34;more_set_headers &#34;Foo1: Bar1&#34;;&#34; in all locations if disabled by admin&#34;" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Annotations] annotation-global-rate-limit generates correct configuration" classname="nginx-ingress-controller e2e suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] [Service] type=ExternalName works with type=ExternalName set to incomplete fqdn" classname="nginx-ingress-controller e2e suite" status="passed" time="29.205205233">
+              <system-err>&gt; Enter [BeforeEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:83 @ 04/26/23 18:15:04.465&#xA;&lt; Exit [BeforeEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:83 @ 04/26/23 18:15:12.968 (8.503s)&#xA;&gt; Enter [It] works with type=ExternalName set to incomplete fqdn - /go/src/k8s.io/ingress-nginx/test/e2e/servicebackend/service_externalname.go:62 @ 04/26/23 18:15:12.968&#xA;&lt; Exit [It] works with type=ExternalName set to incomplete fqdn - /go/src/k8s.io/ingress-nginx/test/e2e/servicebackend/service_externalname.go:62 @ 04/26/23 18:15:33.125 (20.157s)&#xA;&gt; Enter [AfterEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:84 @ 04/26/23 18:15:33.125&#xA;&lt; Exit [AfterEach] [Service] type=ExternalName - /go/src/k8s.io/ingress-nginx/test/e2e/framework/framework.go:84 @ 04/26/23 18:15:33.67 (545ms)&#xA;</system-err>
+          </testcase>
+      </testsuite>
+  </testsuites>

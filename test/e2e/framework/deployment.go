@@ -427,7 +427,7 @@ func (f *Framework) NewDeployment(name, image string, port int32, replicas int32
 	f.NewDeploymentWithOpts(name, image, port, replicas, nil, nil, nil, nil, nil, true)
 }
 
-// NewDeployment creates a new deployment in a particular namespace.
+// NewDeploymentWithOpts NewDeployment creates a new deployment in a particular namespace.
 func (f *Framework) NewDeploymentWithOpts(name, image string, port int32, replicas int32, command []string, args []string, env []corev1.EnvVar, volumeMounts []corev1.VolumeMount, volumes []corev1.Volume, setProbe bool) {
 	deployment := newDeployment(name, f.Namespace, image, port, replicas, command, args, env, volumeMounts, volumes, setProbe)
 
