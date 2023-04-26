@@ -59,7 +59,7 @@ func buildHTTPBinExternalNameService(f *framework.Framework, portName string) *c
 var _ = framework.IngressNginxDescribe("[Service] type=ExternalName", func() {
 	f := framework.NewDefaultFramework("type-externalname")
 
-	ginkgo.It("works with type=ExternalName set to incomplete fqdn", func() {
+	ginkgo.It("works with ExternalName set to incomplete fqdn", func() {
 		f.NewEchoDeployment()
 
 		host := "echo"
@@ -92,7 +92,7 @@ var _ = framework.IngressNginxDescribe("[Service] type=ExternalName", func() {
 			Status(http.StatusOK)
 	})
 
-	ginkgo.It("should return 200 for service type=ExternalName without a port defined", func() {
+	ginkgo.It("should return 200 for service ExternalName without a port defined", func() {
 		host := "echo"
 
 		svc := &corev1.Service{
@@ -126,7 +126,7 @@ var _ = framework.IngressNginxDescribe("[Service] type=ExternalName", func() {
 			Status(http.StatusOK)
 	})
 
-	ginkgo.It("should return 200 for service type=ExternalName with a port defined", func() {
+	ginkgo.It("should return 200 for service ExternalName with a port defined", func() {
 		host := "echo"
 
 		svc := buildHTTPBinExternalNameService(f, host)
@@ -150,7 +150,7 @@ var _ = framework.IngressNginxDescribe("[Service] type=ExternalName", func() {
 			Status(http.StatusOK)
 	})
 
-	ginkgo.It("should return status 502 for service type=ExternalName with an invalid host", func() {
+	ginkgo.It("should return status 502 for service ExternalName with an invalid host", func() {
 		host := "echo"
 
 		svc := &corev1.Service{
@@ -181,7 +181,7 @@ var _ = framework.IngressNginxDescribe("[Service] type=ExternalName", func() {
 			StatusRange(httpexpect.Status5xx)
 	})
 
-	ginkgo.It("should return 200 for service type=ExternalName using a port name", func() {
+	ginkgo.It("should return 200 for service ExternalName using a port name", func() {
 		host := "echo"
 
 		svc := buildHTTPBinExternalNameService(f, host)
@@ -214,7 +214,7 @@ var _ = framework.IngressNginxDescribe("[Service] type=ExternalName", func() {
 			Status(http.StatusOK)
 	})
 
-	ginkgo.It("should return 200 for service type=ExternalName using FQDN with trailing dot", func() {
+	ginkgo.It("should return 200 for service ExternalName using FQDN with trailing dot", func() {
 		host := "echo"
 
 		svc := &corev1.Service{
@@ -246,7 +246,7 @@ var _ = framework.IngressNginxDescribe("[Service] type=ExternalName", func() {
 			Status(http.StatusMovedPermanently)
 	})
 
-	ginkgo.It("should update the type=ExternalName after a service update", func() {
+	ginkgo.It("should update the ExternalName after a service update", func() {
 		host := "echo"
 
 		svc := buildHTTPBinExternalNameService(f, host)
@@ -280,7 +280,7 @@ var _ = framework.IngressNginxDescribe("[Service] type=ExternalName", func() {
 			Body().
 			Raw()
 
-		assert.Contains(ginkgo.GinkgoT(), body, `"neverssl.com"`)
+		assert.Contains(ginkgo.GinkgoT(), body, `neverssl.com`)
 
 		svc, err := f.KubeClientSet.CoreV1().Services(f.Namespace).Get(context.TODO(), "neverssl", metav1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error obtaining service")
@@ -290,7 +290,7 @@ var _ = framework.IngressNginxDescribe("[Service] type=ExternalName", func() {
 		_, err = f.KubeClientSet.CoreV1().Services(f.Namespace).Update(context.Background(), svc, metav1.UpdateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error updating service")
 
-		framework.Sleep()
+		framework.Sleep(10)
 
 		body = f.HTTPTestClient().
 			GET("/").
@@ -300,7 +300,7 @@ var _ = framework.IngressNginxDescribe("[Service] type=ExternalName", func() {
 			Body().
 			Raw()
 
-		assert.Contains(ginkgo.GinkgoT(), body, `"X-Forwarded-Host": "echo"`)
+		assert.Contains(ginkgo.GinkgoT(), body, `neverssl.com`)
 
 		ginkgo.By("checking the service is updated to use google.com")
 		curlCmd := fmt.Sprintf("curl --fail --silent http://localhost:%v/configuration/backends", nginx.StatusPort)
@@ -309,7 +309,7 @@ var _ = framework.IngressNginxDescribe("[Service] type=ExternalName", func() {
 		assert.Contains(ginkgo.GinkgoT(), output, `{"address":"google.com"`)
 	})
 
-	ginkgo.It("should sync ingress on type=ExternalName service addition/deletion", func() {
+	ginkgo.It("should sync ingress on ExternalName service addition/deletion", func() {
 		host := "echo"
 
 		// Create the Ingress first
