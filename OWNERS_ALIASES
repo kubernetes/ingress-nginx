@@ -11,27 +11,28 @@ aliases:
   - strongjz
 
   ingress-nginx-maintainers:
-  - ElvinEfendi
   - rikatz
   - strongjz
+  - cpanato
+  - puerco
   - tao12345666333
 
   ingress-nginx-reviewers:
-  - ElvinEfendi
   - rikatz
   - strongjz
+  - puerco
+  - cpanato
   - tao12345666333
 
   ingress-nginx-helm-maintainers:
-  - ChiefAlexander
   - cpanato
+  - strongjz
 
   ingress-nginx-helm-reviewers:
-  - ChiefAlexander
   - cpanato
+  - strongjz
 
   ingress-nginx-docs-maintainers:
-  - IamNoah1
   - longwuyuan
   - tao12345666333
 
