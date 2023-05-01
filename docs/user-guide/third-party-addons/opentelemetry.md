@@ -27,7 +27,7 @@ We must also set the host to use when uploading traces:
 ```yaml
 otlp-collector-host: "otel-coll-collector.otel.svc"
 ```
-NOTE: While the option is called `otlp-collector-host`, you will need to point this to any backend that recieves otlp-grpc.
+NOTE: While the option is called `otlp-collector-host`, you will need to point this to any backend that receives otlp-grpc.
 
 Next you will need to deploy a distributed telemetry system which uses OpenTelemetry.
 [opentelemetry-collector](https://github.com/open-telemetry/opentelemetry-collector), [Jaeger](https://www.jaegertracing.io/)
