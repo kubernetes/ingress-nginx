@@ -31,19 +31,20 @@ import (
 // CreateCommand creates and returns this cobra subcommand
 func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	o := logsFlags{}
-	var pod, deployment, selector *string
+	var pod, deployment, selector, container *string
 
 	cmd := &cobra.Command{
 		Use:   "logs",
 		Short: "Get the kubernetes logs for an ingress-nginx pod",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			util.PrintError(logs(flags, *pod, *deployment, *selector, o))
+			util.PrintError(logs(flags, *pod, *deployment, *selector, *container, o))
 			return nil
 		},
 	}
 	pod = util.AddPodFlag(cmd)
 	deployment = util.AddDeploymentFlag(cmd)
 	selector = util.AddSelectorFlag(cmd)
+	container = util.AddContainerFlag(cmd)
 
 	cmd.Flags().BoolVarP(&o.Follow, "follow", "f", o.Follow, "Specify if the logs should be streamed.")
 	cmd.Flags().BoolVar(&o.Timestamps, "timestamps", o.Timestamps, "Include timestamps on each line in the log output")
@@ -94,13 +95,13 @@ func (o *logsFlags) toStrings() []string {
 	return r
 }
 
-func logs(flags *genericclioptions.ConfigFlags, podName string, deployment string, selector string, opts logsFlags) error {
+func logs(flags *genericclioptions.ConfigFlags, podName string, deployment string, selector string, container string, opts logsFlags) error {
 	pod, err := request.ChoosePod(flags, podName, deployment, selector)
 	if err != nil {
 		return err
 	}
 
-	cmd := []string{"logs", "-n", pod.Namespace, pod.Name}
+	cmd := []string{"logs", "-n", pod.Namespace, "-c", container, pod.Name}
 	cmd = append(cmd, opts.toStrings()...)
 	return kubectl.Exec(flags, cmd)
 }
