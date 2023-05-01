@@ -29,19 +29,21 @@ import (
 // CreateCommand creates and returns this cobra subcommand
 func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	opts := execFlags{}
-	var pod, deployment, selector *string
+	var pod, deployment, selector, container *string
 
 	cmd := &cobra.Command{
 		Use:   "exec",
 		Short: "Execute a command inside an ingress-nginx pod",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			util.PrintError(exec(flags, *pod, *deployment, *selector, args, opts))
+			util.PrintError(exec(flags, *pod, *deployment, *selector, *container, args, opts))
 			return nil
 		},
 	}
 	pod = util.AddPodFlag(cmd)
 	deployment = util.AddDeploymentFlag(cmd)
 	selector = util.AddSelectorFlag(cmd)
+	container = util.AddContainerFlag(cmd)
+
 	cmd.Flags().BoolVarP(&opts.TTY, "tty", "t", false, "Stdin is a TTY")
 	cmd.Flags().BoolVarP(&opts.Stdin, "stdin", "i", false, "Pass stdin to the container")
 
@@ -53,7 +55,7 @@ type execFlags struct {
 	Stdin bool
 }
 
-func exec(flags *genericclioptions.ConfigFlags, podName string, deployment string, selector string, cmd []string, opts execFlags) error {
+func exec(flags *genericclioptions.ConfigFlags, podName string, deployment string, selector string, container string, cmd []string, opts execFlags) error {
 	pod, err := request.ChoosePod(flags, podName, deployment, selector)
 	if err != nil {
 		return err
@@ -67,7 +69,7 @@ func exec(flags *genericclioptions.ConfigFlags, podName string, deployment strin
 		args = append(args, "-i")
 	}
 
-	args = append(args, []string{"-n", pod.Namespace, pod.Name, "--"}...)
+	args = append(args, []string{"-n", pod.Namespace, "-c", container, pod.Name, "--"}...)
 	args = append(args, cmd...)
 	return kubectl.Exec(flags, args)
 }
