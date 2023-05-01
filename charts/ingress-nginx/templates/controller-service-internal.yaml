@@ -29,9 +29,9 @@ spec:
   {{- $setNodePorts := (or (eq .Values.controller.service.type "NodePort") (eq .Values.controller.service.type "LoadBalancer")) }}
   {{- if .Values.controller.service.enableHttp }}
     - name: http
-      port: {{ .Values.controller.service.ports.http }}
+      port: {{ .Values.controller.service.internal.ports.http | default .Values.controller.service.ports.http }}
       protocol: TCP
-      targetPort: {{ .Values.controller.service.targetPorts.http }}
+      targetPort: {{ .Values.controller.service.internal.targetPorts.http | default .Values.controller.service.targetPorts.http }}
     {{- if semverCompare ">=1.20" .Capabilities.KubeVersion.Version }}
       appProtocol: http
     {{- end }}
@@ -41,9 +41,9 @@ spec:
   {{- end }}
   {{- if .Values.controller.service.enableHttps }}
     - name: https
-      port: {{ .Values.controller.service.ports.https }}
+      port: {{ .Values.controller.service.internal.ports.https | default .Values.controller.service.ports.https }}
       protocol: TCP
-      targetPort: {{ .Values.controller.service.targetPorts.https }}
+      targetPort: {{ .Values.controller.service.internal.targetPorts.https | default .Values.controller.service.targetPorts.https }}
     {{- if semverCompare ">=1.20" .Capabilities.KubeVersion.Version }}
       appProtocol: https
     {{- end }}

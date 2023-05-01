@@ -482,6 +482,17 @@ controller:
       ## providers supporting it
       ## Ref: https://kubernetes.io/docs/tutorials/services/source-ip/#source-ip-for-services-with-typeloadbalancer
       # externalTrafficPolicy: ""
+
+      # -- Custom port mapping for internal service
+      ports: {}
+      #  http: 80
+      #  https: 443
+
+      # -- Custom target port mapping for internal service
+      targetPorts: {}
+      #  http: http
+      #  https: https
+
   # shareProcessNamespace enables process namespace sharing within the pod.
   # This can be used for example to signal log rotation using `kill -USR1` from a sidecar.
   shareProcessNamespace: false
