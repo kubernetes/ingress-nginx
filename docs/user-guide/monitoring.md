@@ -6,14 +6,14 @@ Two different methods to install and configure Prometheus and Grafana are descri
 
 ## Prometheus and Grafana installation using Pod Annotations
 
-This tutorial will show you how to install [Prometheus](https://prometheus.io/) and [Grafana](https://grafana.com/) for scraping the metrics of the NGINX Ingress controller.
+This tutorial will show you how to install [Prometheus](https://prometheus.io/) and [Grafana](https://grafana.com/) for scraping the metrics of the Ingress-Nginx Controller.
 
 !!! important
     This example uses `emptyDir` volumes for Prometheus and Grafana. This means once the pod gets terminated you will lose all the data.
 
 ### Before You Begin
 
-- The NGINX Ingress controller should already be deployed according to the deployment instructions [here](../deploy/index.md).
+- The Ingress-Nginx Controller should already be deployed according to the deployment instructions [here](../deploy/index.md).
 
 - The controller should be configured for exporting metrics. This requires 3 configurations to the controller. These configurations are :
   1. controller.metrics.enabled=true
@@ -184,9 +184,9 @@ According to the above example, this URL will be http://10.192.0.3:31086
 ## Prometheus and Grafana installation using Service Monitors
 This document assumes you're using helm and using the kube-prometheus-stack package to install Prometheus and Grafana.
 
-### Verify NGINX Ingress controller is installed
+### Verify Ingress-Nginx Controller is installed
 
-- The NGINX Ingress controller should already be deployed according to the deployment instructions [here](../deploy/index.md).
+- The Ingress-Nginx Controller should already be deployed according to the deployment instructions [here](../deploy/index.md).
 
 - To check if Ingress controller is deployed,
   ```
@@ -214,7 +214,7 @@ This document assumes you're using helm and using the kube-prometheus-stack pack
 
 - If prometheus is not installed, then you can install from [here](https://artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack)
 
-### Re-configure NGINX Ingress controller
+### Re-configure Ingress-Nginx Controller
 
 - The Ingress NGINX controller needs to be reconfigured for exporting metrics. This requires 3 additional configurations to the controller. These configurations are :
   ```

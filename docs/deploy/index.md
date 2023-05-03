@@ -1,6 +1,6 @@
 # Installation Guide
 
-There are multiple ways to install the NGINX ingress controller:
+There are multiple ways to install the Ingress-Nginx Controller:
 
 - with [Helm](https://helm.sh), using the project repository chart;
 - with `kubectl apply`, using YAML manifests;
@@ -192,9 +192,9 @@ doesn't work, you might have to fall back to the `kubectl port-forward` method d
 
 Rancher Desktop provides Kubernetes and Container Management on the desktop. Kubernetes is enabled by default in Rancher Desktop. 
 
-Rancher Desktop uses K3s under the hood, which in turn uses Traefik as the default ingress controller for the Kubernetes cluster. To use NGINX ingress controller in place of the default Traefik, disable Traefik from Preference > Kubernetes menu.
+Rancher Desktop uses K3s under the hood, which in turn uses Traefik as the default ingress controller for the Kubernetes cluster. To use Ingress-Nginx Controller in place of the default Traefik, disable Traefik from Preference > Kubernetes menu.
 
-Once traefik is disabled, the NGINX ingress controller can be installed on Rancher Desktop using the default [quick start](#quick-start) instructions. Follow the instructions described in the [local testing section](#local-testing) to try a sample.
+Once traefik is disabled, the Ingress-Nginx Controller can be installed on Rancher Desktop using the default [quick start](#quick-start) instructions. Follow the instructions described in the [local testing section](#local-testing) to try a sample.
 
 ### Cloud deployments
 
@@ -214,7 +214,7 @@ options of various cloud providers.
 
 #### AWS
 
-In AWS, we use a Network load balancer (NLB) to expose the NGINX Ingress controller behind a Service of `Type=LoadBalancer`.
+In AWS, we use a Network load balancer (NLB) to expose the Ingress-Nginx Controller behind a Service of `Type=LoadBalancer`.
 
 !!! info
     The provided templates illustrate the setup for legacy in-tree service load balancer for AWS NLB.
@@ -419,14 +419,14 @@ Here is how these Ingress versions are supported in Kubernetes:
 - from Kubernetes 1.19 to 1.21, both `v1beta1` and `v1` Ingress resources are supported
 - in Kubernetes 1.22 and above, only `v1` Ingress resources are supported
 
-And here is how these Ingress versions are supported in NGINX Ingress Controller:
+And here is how these Ingress versions are supported in Ingress-Nginx Controller:
 - before version 1.0, only `v1beta1` Ingress resources are supported
 - in version 1.0 and above, only `v1` Ingress resources are
 
 As a result, if you're running Kubernetes 1.19 or later, you should be able to use the latest version of the NGINX 
 Ingress Controller; but if you're using an old version of Kubernetes (1.18 or earlier) you will have to use version 0.X 
-of the NGINX Ingress Controller (e.g. version 0.49).
+of the Ingress-Nginx Controller (e.g. version 0.49).
 
-The Helm chart of the NGINX Ingress Controller switched to version 1 in version 4 of the chart. In other words, if 
+The Helm chart of the Ingress-Nginx Controller switched to version 1 in version 4 of the chart. In other words, if 
 you're running Kubernetes 1.19 or earlier, you should use version 3.X of the chart (this can be done by adding 
 `--version='<4'` to the `helm install` command ).

@@ -13,7 +13,7 @@
 
 Directory | Purpose
 ------------ | -------------
-custom-error-pages | Example of Custom error pages for the NGINX Ingress controller
+custom-error-pages | Example of Custom error pages for the Ingress-Nginx Controller
 e2e | Image to run e2e tests
 fastcgi-helloserver | FastCGI application for e2e tests
 grpc-fortune-teller | grpc server application for the nginx-ingress grpc example
