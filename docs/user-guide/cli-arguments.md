@@ -8,6 +8,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 |----------|-------------|
 | `--annotations-prefix`             | Prefix of the Ingress annotations specific to the NGINX controller. (default "nginx.ingress.kubernetes.io") |
 | `--apiserver-host`                 | Address of the Kubernetes API server. Takes the form "protocol://address:port". If not specified, it is assumed the program runs inside a Kubernetes cluster and local discovery is attempted. |
+| `--bucket-factor`                    | Bucket factor for native histograms. Value must be > 1 for enabling native histograms. (default 0) |
 | `--certificate-authority`          | Path to a cert file for the certificate authority. This certificate is used only when the flag --apiserver-host is specified. |
 | `--configmap`                      | Name of the ConfigMap containing custom global configurations for the controller. |
 | `--controller-class`                      | Ingress Class Controller value this Ingress satisfies. The class of an Ingress object is set using the field IngressClassName in Kubernetes clusters version v1.19.0 or higher. The .spec.controller value of the IngressClass referenced in an Ingress Object should be the same value specified here to make this object be watched. |
@@ -40,6 +41,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--internal-logger-address`        | Address to be used when binding internal syslogger. (default 127.0.0.1:11514) |
 | `--kubeconfig`                     | Path to a kubeconfig file containing authorization and API server information. |
 | `--length-buckets`                     | Set of buckets which will be used for prometheus histogram metrics such as RequestLength, ResponseLength. (default `[10, 20, 30, 40, 50, 60, 70, 80, 90, 100]`) |
+| `--max-buckets`                      | Maximum number of buckets for native histograms. (default 100) |
 | `--maxmind-edition-ids`            | Maxmind edition ids to download GeoLite2 Databases. (default "GeoLite2-City,GeoLite2-ASN") |
 | `--maxmind-retries-timeout`        | Maxmind downloading delay between 1st and 2nd attempt, 0s - do not retry to download if something went wrong. (default 0s) |
 | `--maxmind-retries-count`          | Number of attempts to download the GeoIP DB. (default 1) |

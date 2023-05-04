@@ -183,6 +183,8 @@ Requires the update-status parameter.`)
 		timeBuckets          = flags.Float64Slice("time-buckets", prometheus.DefBuckets, "Set of buckets which will be used for prometheus histogram metrics such as RequestTime, ResponseTime.")
 		lengthBuckets        = flags.Float64Slice("length-buckets", prometheus.LinearBuckets(10, 10, 10), "Set of buckets which will be used for prometheus histogram metrics such as RequestLength, ResponseLength.")
 		sizeBuckets          = flags.Float64Slice("size-buckets", prometheus.ExponentialBuckets(10, 10, 7), "Set of buckets which will be used for prometheus histogram metrics such as BytesSent.")
+		bucketFactor         = flags.Float64("bucket-factor", 0, "Bucket factor for native histograms. Value must be > 1 for enabling native histograms.")
+		maxBuckets           = flags.Uint32("max-buckets", 100, "Maximum number of buckets for native histograms.")
 		excludeSocketMetrics = flags.StringSlice("exclude-socket-metrics", []string{}, "et of socket request metrics to exclude which won't be exported nor being calculated. E.g. 'nginx_ingress_controller_success,nginx_ingress_controller_header_duration_seconds'.")
 		monitorMaxBatchSize  = flags.Int("monitor-max-batch-size", 10000, "Max batch size of NGINX metrics.")
 
@@ -339,6 +341,8 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		EnableMetrics:               *enableMetrics,
 		MetricsPerHost:              *metricsPerHost,
 		MetricsBuckets:              histogramBuckets,
+		MetricsBucketFactor:         *bucketFactor,
+		MetricsMaxBuckets:           *maxBuckets,
 		ReportStatusClasses:         *reportStatusClasses,
 		ExcludeSocketMetrics:        *excludeSocketMetrics,
 		MonitorMaxBatchSize:         *monitorMaxBatchSize,

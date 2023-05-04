@@ -108,6 +108,8 @@ type Configuration struct {
 	EnableMetrics        bool
 	MetricsPerHost       bool
 	MetricsBuckets       *collectors.HistogramBuckets
+	MetricsBucketFactor  float64
+	MetricsMaxBuckets    uint32
 	ReportStatusClasses  bool
 	ExcludeSocketMetrics []string
 
