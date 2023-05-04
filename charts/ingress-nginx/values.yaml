@@ -23,9 +23,9 @@ controller:
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
-    tag: "v1.7.0"
-    digest: sha256:7612338342a1e7b8090bef78f2a04fffcadd548ccaabe8a47bf7758ff549a5f7
-    digestChroot: sha256:e84ef3b44c8efeefd8b0aa08770a886bfea1f04c53b61b4ba9a7204e9f1a7edc
+    tag: "v1.7.1"
+    digest: sha256:7244b95ea47bddcb8267c1e625fb163fc183ef55448855e3ac52a7b260a60407
+    digestChroot: sha256:e35d5ab487861b9d419c570e3530589229224a0762c7b4d2e2222434abb8d988
     pullPolicy: IfNotPresent
     # www-data -> uid 101
     runAsUser: 101
@@ -395,7 +395,6 @@ controller:
     #   - type: Pods
     #     value: 2
     #     periodSeconds: 60
-
   # -- Enable mimalloc as a drop-in replacement for malloc.
   ## ref: https://github.com/microsoft/mimalloc
   ##
@@ -492,7 +491,6 @@ controller:
       targetPorts: {}
       #  http: http
       #  https: https
-
   # shareProcessNamespace enables process namespace sharing within the pod.
   # This can be used for example to signal log rotation using `kill -USR1` from a sidecar.
   shareProcessNamespace: false

@@ -205,7 +205,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.12, v1.25.8, v1.26.3]
+        k8s: [v1.24.12, v1.25.8, v1.26.3,v1.27.1]
 
     steps:
       - name: Checkout
@@ -280,7 +280,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.12, v1.25.8, v1.26.3]
+        k8s: [v1.24.12, v1.25.8, v1.26.3,v1.27.1]
 
     steps:
       - name: Checkout
@@ -329,7 +329,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.12, v1.25.8, v1.26.3]
+        k8s: [v1.24.12, v1.25.8, v1.26.3,v1.27.1]
 
     steps:
 
@@ -447,7 +447,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.12, v1.25.8, v1.26.3]
+        k8s: [v1.24.12, v1.25.8, v1.26.3,v1.27.1]
 
     steps:
       - name: Checkout
