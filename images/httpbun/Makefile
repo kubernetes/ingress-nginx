@@ -23,7 +23,7 @@ TAG ?=v$(shell date +%Y%m%d)-$(SHORT_SHA)
 
 REGISTRY ?= local
 
-IMAGE = $(REGISTRY)/e2e-test-httpbin
+IMAGE = $(REGISTRY)/e2e-test-httpbun
 
 # required to enable buildx
 export DOCKER_CLI_EXPERIMENTAL=enabled
