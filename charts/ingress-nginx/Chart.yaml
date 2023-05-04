@@ -1,8 +1,8 @@
 annotations:
   artifacthub.io/changes: |
-     - [helm] Support custom port configuration for internal service (#9846)
-     - Adding resource type to default HPA configuration to resolve issues with Terraform helm chart usage (#9803)
-     - Update Ingress-Nginx version controller-v1.7.1
+     - "[helm] Support custom port configuration for internal service (#9846)"
+     - "Adding resource type to default HPA configuration to resolve issues with Terraform helm chart usage (#9803)"
+     - "Update Ingress-Nginx version controller-v1.7.1"
   artifacthub.io/prerelease: "false"
 apiVersion: v2
 appVersion: 1.7.1
