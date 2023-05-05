@@ -18,7 +18,7 @@ steps:
     - -c
     - |
       gcloud auth configure-docker \
-      && cd images/httpbin && make push
+      && cd images/httpbun && make push
 substitutions:
   _GIT_TAG: "12345"
   _PULL_BASE_REF: "master"
