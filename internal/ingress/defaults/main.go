@@ -111,7 +111,7 @@ type Backend struct {
 	// The status strings provided are interpreted by an NGINX map as regex
 	// This is useful with statuses like 2xx and 3xx that make "complex" reading the logs
 	// By default this list is empty
-	SkipAccessLogHTTPStatuses []string `json:"skip-access-log-http-statuses,-"`
+	SkipAccessLogHTTPStatuses []string `json:"skip-access-log-http-statuses"`
 
 	// Enables or disables the redirect (301) to the HTTPS port
 	SSLRedirect bool `json:"ssl-redirect"`
