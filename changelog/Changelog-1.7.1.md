@@ -3,8 +3,8 @@
 ### 1.7.1
 Images:
 
- * registry.k8s.io/controller:controller-v1.7.1@sha256:7244b95ea47bddcb8267c1e625fb163fc183ef55448855e3ac52a7b260a60407
- * registry.k8s.io/controller-chroot:controller-v1.7.1@sha256:e35d5ab487861b9d419c570e3530589229224a0762c7b4d2e2222434abb8d988
+ * registry.k8s.io/ingress-nginx/controller:v1.7.1@sha256:7244b95ea47bddcb8267c1e625fb163fc183ef55448855e3ac52a7b260a60407
+ * registry.k8s.io/ingress-nginx/controller-chroot:v1.7.1@sha256:e35d5ab487861b9d419c570e3530589229224a0762c7b4d2e2222434abb8d988
  
 ### All Changes:
 
