@@ -2,7 +2,7 @@
 
 Enables requests served by NGINX for distributed telemetry via The OpenTelemetry Project.
 
-Using the third party module [opentelemetry-cpp-contrib/nginx](https://github.com/open-telemetry/opentelemetry-cpp-contrib/tree/main/instrumentation/nginx) the NGINX ingress controller can configure NGINX to enable [OpenTelemetry](http://opentelemetry.io) instrumentation.
+Using the third party module [opentelemetry-cpp-contrib/nginx](https://github.com/open-telemetry/opentelemetry-cpp-contrib/tree/main/instrumentation/nginx) the Ingress-Nginx Controller can configure NGINX to enable [OpenTelemetry](http://opentelemetry.io) instrumentation.
 By default this feature is disabled.
 
 ## Usage

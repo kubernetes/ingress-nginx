@@ -2,7 +2,7 @@
 
 Enables requests served by NGINX for distributed tracing via The OpenTracing Project.
 
-Using the third party module [opentracing-contrib/nginx-opentracing](https://github.com/opentracing-contrib/nginx-opentracing) the NGINX ingress controller can configure NGINX to enable [OpenTracing](http://opentracing.io) instrumentation.
+Using the third party module [opentracing-contrib/nginx-opentracing](https://github.com/opentracing-contrib/nginx-opentracing) the Ingress-Nginx Controller can configure NGINX to enable [OpenTracing](http://opentracing.io) instrumentation.
 By default this feature is disabled.
 
 ## Usage
