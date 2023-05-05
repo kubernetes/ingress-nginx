@@ -373,10 +373,6 @@ Do not try to edit it manually.
 
 - [should apply the annotation to the default backend](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/defaultbackend/with_hosts.go#L38)
 
-### [](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/e2e.go#L)
-
-- [](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/e2e.go#L)
-
 ### [](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/e2e_test.go#L)
 
 - [](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/e2e_test.go#L)
@@ -899,3 +895,12 @@ Do not try to edit it manually.
 - [should expose a TCP service](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/tcpudp/tcp.go#L46)
 - [should expose an ExternalName TCP service](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/tcpudp/tcp.go#L80)
 - [should reload after an update in the configuration](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/tcpudp/tcp.go#L169)
+
+### [](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/e2e.go#L)
+
+- [](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/e2e.go#L)
+
+### [[metrics] exported prometheus metrics](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/metrics/metrics.go#L36)
+
+- [exclude socket request metrics are absent](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/metrics/metrics.go#L50)
+- [exclude socket request metrics are present](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/metrics/metrics.go#L72)
