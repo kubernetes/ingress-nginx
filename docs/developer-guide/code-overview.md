@@ -53,7 +53,7 @@ This code can be found in [internal/file](https://github.com/kubernetes/ingress-
 
 #### Ingress functions
 
-Contains all the logics from NGINX Ingress Controller, with some examples being:
+Contains all the logics from Ingress-Nginx Controller, with some examples being:
 
 * Expected Golang structures that will be used in templates and other parts of the code - [internal/ingress/types.go](https://github.com/kubernetes/ingress-nginx/blob/main/internal/ingress/types.go).
 * supported annotations and its parsing logics - [internal/ingress/annotations](https://github.com/kubernetes/ingress-nginx/tree/main/internal/ingress/annotations).

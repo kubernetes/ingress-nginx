@@ -1,3 +1,3 @@
 # custom-error-pages
 
-Example of Custom error pages for the NGINX Ingress controller
+Example of Custom error pages for the Ingress-Nginx Controller
