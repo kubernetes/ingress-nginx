@@ -55,7 +55,7 @@ controller:
   # to keep resolving names inside the k8s network, use ClusterFirstWithHostNet.
   dnsPolicy: ClusterFirst
   # -- Bare-metal considerations via the host network https://kubernetes.github.io/ingress-nginx/deploy/baremetal/#via-the-host-network
-  # Ingress status was blank because there is no Service exposing the NGINX Ingress controller in a configuration using the host network, the default --publish-service flag used in standard cloud setups does not apply
+  # Ingress status was blank because there is no Service exposing the Ingress-Nginx Controller in a configuration using the host network, the default --publish-service flag used in standard cloud setups does not apply
   reportNodeInternalIp: false
   # -- Process Ingress objects without ingressClass annotation/ingressClassName field
   # Overrides value for --watch-ingress-without-class flag of the controller binary
@@ -150,7 +150,7 @@ controller:
   # -- Maxmind license key to download GeoLite2 Databases.
   ## https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases
   maxmindLicenseKey: ""
-  # -- Additional command line arguments to pass to nginx-ingress-controller
+  # -- Additional command line arguments to pass to Ingress-Nginx Controller
   # E.g. to specify the default SSL certificate you can use
   extraArgs: {}
   ## extraArgs:
@@ -302,7 +302,7 @@ controller:
   healthCheckPath: "/healthz"
   # -- Address to bind the health check endpoint.
   # It is better to set this option to the internal node address
-  # if the ingress nginx controller is running in the `hostNetwork: true` mode.
+  # if the Ingress-Nginx Controller is running in the `hostNetwork: true` mode.
   healthCheckHost: ""
   # -- Annotations to be added to controller pods
   ##
