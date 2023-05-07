@@ -22,7 +22,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/auth-realm](#authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-secret](#authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-secret-type](#authentication)|string|
-|[nginx.ingress.kubernetes.io/auth-type](#authentication)|basic or digest|
+|[nginx.ingress.kubernetes.io/auth-type](#authentication)|"basic" or "digest"|
 |[nginx.ingress.kubernetes.io/auth-tls-secret](#client-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-tls-verify-depth](#client-certificate-authentication)|number|
 |[nginx.ingress.kubernetes.io/auth-tls-verify-client](#client-certificate-authentication)|string|
