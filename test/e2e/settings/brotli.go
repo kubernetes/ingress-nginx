@@ -33,7 +33,7 @@ var _ = framework.IngressNginxDescribe("brotli", func() {
 	host := "brotli"
 
 	ginkgo.BeforeEach(func() {
-		f.NewHttpbinDeployment()
+		f.NewHttpbunDeployment()
 	})
 
 	ginkgo.It("should only compress responses that meet the `brotli-min-length` condition", func() {
@@ -43,7 +43,7 @@ var _ = framework.IngressNginxDescribe("brotli", func() {
 		f.UpdateNginxConfigMapData("brotli-types", contentEncoding)
 		f.UpdateNginxConfigMapData("brotli-min-length", strconv.Itoa(brotliMinLength))
 
-		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, nil))
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBunService, 80, nil))
 
 		f.WaitForNginxConfiguration(
 			func(server string) bool {

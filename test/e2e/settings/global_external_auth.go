@@ -50,13 +50,13 @@ var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
-		f.NewHttpbinDeployment()
+		f.NewHttpbunDeployment()
 	})
 
 	ginkgo.Context("when global external authentication is configured", func() {
 
 		ginkgo.BeforeEach(func() {
-			globalExternalAuthURL := fmt.Sprintf("http://%s.%s.svc.cluster.local:80/status/401", framework.HTTPBinService, f.Namespace)
+			globalExternalAuthURL := fmt.Sprintf("http://%s.%s.svc.cluster.local:80/status/401", framework.HTTPBunService, f.Namespace)
 
 			ginkgo.By("Adding an ingress rule for /foo")
 			fooIng := framework.NewSingleIngress("foo-ingress", fooPath, host, f.Namespace, echoServiceName, 80, nil)
@@ -158,7 +158,7 @@ var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 			globalExternalAuthCacheKey := "foo"
 			globalExternalAuthCacheDurationSetting := "global-auth-cache-duration"
 			globalExternalAuthCacheDuration := "200 201 401 30m"
-			globalExternalAuthURL := fmt.Sprintf("http://%s.%s.svc.cluster.local:80/status/200", framework.HTTPBinService, f.Namespace)
+			globalExternalAuthURL := fmt.Sprintf("http://%s.%s.svc.cluster.local:80/status/200", framework.HTTPBunService, f.Namespace)
 
 			ginkgo.By("Adding a global-auth-cache-key to configMap")
 			f.SetNginxConfigMapData(map[string]string{
@@ -182,7 +182,7 @@ var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 				Expect().
 				Status(http.StatusOK)
 
-			err := f.DeleteDeployment(framework.HTTPBinService)
+			err := f.DeleteDeployment(framework.HTTPBunService)
 			assert.Nil(ginkgo.GinkgoT(), err)
 			framework.Sleep()
 
@@ -307,9 +307,9 @@ http {
 			assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets), 1, "expected at least one endpoint")
 			assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets[0].Addresses), 1, "expected at least one address ready in the endpoint")
 
-			httpbinIP := e.Subsets[0].Addresses[0].IP
+			httpbunIP := e.Subsets[0].Addresses[0].IP
 
-			f.UpdateNginxConfigMapData(globalExternalAuthURLSetting, fmt.Sprintf("http://%s/cookies/set/alma/armud", httpbinIP))
+			f.UpdateNginxConfigMapData(globalExternalAuthURLSetting, fmt.Sprintf("http://%s/cookies/set/alma/armud", httpbunIP))
 
 			ing1 = framework.NewSingleIngress(host, "/", host, f.Namespace, "http-cookie-with-error", 80, nil)
 			f.EnsureIngress(ing1)
