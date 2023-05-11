@@ -326,7 +326,6 @@ controller:
       memory: 90Mi
   # Mutually exclusive with keda autoscaling
   autoscaling:
-    apiVersion: autoscaling/v2
     enabled: false
     annotations: {}
     minReplicas: 1
@@ -838,7 +837,6 @@ defaultBackend:
   #    emptyDir: {}
 
   autoscaling:
-    apiVersion: autoscaling/v2
     annotations: {}
     enabled: false
     minReplicas: 1
