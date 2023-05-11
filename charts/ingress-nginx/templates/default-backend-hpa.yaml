@@ -1,37 +1,40 @@
 {{- if and .Values.defaultBackend.enabled .Values.defaultBackend.autoscaling.enabled }}
-apiVersion: {{ .Values.defaultBackend.autoscaling.apiVersion }}
+apiVersion: {{ ternary "autoscaling/v2" "autoscaling/v2beta2" (.Capabilities.APIVersions.Has "autoscaling/v2") }}
 kind: HorizontalPodAutoscaler
 metadata:
+  {{- with .Values.defaultBackend.autoscaling.annotations }}
+  annotations: {{ toYaml . | nindent 4 }}
+  {{- end }}
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: default-backend
     {{- with .Values.defaultBackend.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-  name: {{ template "ingress-nginx.defaultBackend.fullname" . }}
+  name: {{ include "ingress-nginx.defaultBackend.fullname" . }}
   namespace: {{ .Release.Namespace }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ template "ingress-nginx.defaultBackend.fullname" . }}
+    name: {{ include "ingress-nginx.defaultBackend.fullname" . }}
   minReplicas: {{ .Values.defaultBackend.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.defaultBackend.autoscaling.maxReplicas }}
   metrics:
-{{- with .Values.defaultBackend.autoscaling.targetCPUUtilizationPercentage }}
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: {{ . }}
-{{- end }}
-{{- with .Values.defaultBackend.autoscaling.targetMemoryUtilizationPercentage }}
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: {{ . }}
-{{- end }}
+  {{- with .Values.defaultBackend.autoscaling.targetCPUUtilizationPercentage }}
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ . }}
+  {{- end }}
+  {{- with .Values.defaultBackend.autoscaling.targetMemoryUtilizationPercentage }}
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: {{ . }}
+  {{- end }}
 {{- end }}
