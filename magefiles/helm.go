@@ -104,7 +104,7 @@ func updateChartReleaseNotes(releasesNotes []string) {
 	CheckIfError(err, "HELM Could not Load Chart to update release notes %s", HelmChartPath)
 	var releaseNoteString string
 	for i := range releasesNotes {
-		releaseNoteString = fmt.Sprintf("%s - %s\n", releaseNoteString, releasesNotes[i])
+		releaseNoteString = fmt.Sprintf("%s - \"%s\"\n", releaseNoteString, releasesNotes[i])
 	}
 	Info("HELM Release note string %s", releaseNoteString)
 	chart.Annotations["artifacthub.io/changes"] = releaseNoteString

@@ -1,14 +1,14 @@
 # Bare-metal considerations
 
 In traditional *cloud* environments, where network load balancers are available on-demand, a single Kubernetes manifest
-suffices to provide a single point of contact to the NGINX Ingress controller to external clients and, indirectly, to
+suffices to provide a single point of contact to the Ingress-Nginx Controller to external clients and, indirectly, to
 any application running inside the cluster. *Bare-metal* environments lack this commodity, requiring a slightly
 different setup to offer the same kind of access to external consumers.
 
 ![Cloud environment](../images/baremetal/cloud_overview.jpg)
 ![Bare-metal environment](../images/baremetal/baremetal_overview.jpg)
 
-The rest of this document describes a few recommended approaches to deploying the NGINX Ingress controller inside a
+The rest of this document describes a few recommended approaches to deploying the Ingress-Nginx Controller inside a
 Kubernetes cluster running on bare-metal.
 
 ## A pure software solution: MetalLB
@@ -30,7 +30,7 @@ the traffic for the `ingress-nginx` Service IP. See [Traffic policies][metallb-t
     yourself by reading the official documentation thoroughly.
 
 MetalLB can be deployed either with a simple Kubernetes manifest or with Helm. The rest of this example assumes MetalLB
-was deployed following the [Installation][metallb-install] instructions, and that the NGINX Ingress controller was installed 
+was deployed following the [Installation][metallb-install] instructions, and that the Ingress-Nginx Controller was installed 
 using the steps described in the [quickstart section of the installation guide][install-quickstart].
 
 MetalLB requires a pool of IP addresses in order to be able to take ownership of the `ingress-nginx` Service. This pool
@@ -164,7 +164,7 @@ field of the `ingress-nginx` Service spec to `Local` ([example][preserve-ip]).
 !!! warning
     This setting effectively **drops packets** sent to Kubernetes nodes which are not running any instance of the NGINX
     Ingress controller. Consider [assigning NGINX Pods to specific nodes][pod-assign] in order to control on what nodes
-    the NGINX Ingress controller should be scheduled or not scheduled.
+    the Ingress-Nginx Controller should be scheduled or not scheduled.
 
 !!! example
     In a Kubernetes cluster composed of 3 nodes (the external IP is added as an example, in most bare-metal environments
@@ -193,7 +193,7 @@ field of the `ingress-nginx` Service spec to `Local` ([example][preserve-ip]).
 
 * **Ingress status**
 
-Because NodePort Services do not get a LoadBalancerIP assigned by definition, the NGINX Ingress controller **does not
+Because NodePort Services do not get a LoadBalancerIP assigned by definition, the Ingress-Nginx Controller **does not
 update the status of Ingress objects it manages**.
 
 ```console
@@ -202,12 +202,12 @@ NAME           HOSTS               ADDRESS   PORTS
 test-ingress   myapp.example.com             80
 ```
 
-Despite the fact there is no load balancer providing a public IP address to the NGINX Ingress controller, it is possible
+Despite the fact there is no load balancer providing a public IP address to the Ingress-Nginx Controller, it is possible
 to force the status update of all managed Ingress objects by setting the `externalIPs` field of the `ingress-nginx`
 Service.
 
 !!! warning
-    There is more to setting `externalIPs` than just enabling the NGINX Ingress controller to update the status of
+    There is more to setting `externalIPs` than just enabling the Ingress-Nginx Controller to update the status of
     Ingress objects. Please read about this option in the [Services][external-ips] page of official Kubernetes
     documentation as well as the section about [External IPs](#external-ips) in this document for more information.
 
@@ -268,11 +268,11 @@ for generating redirect URLs that take into account the URL used by external cli
 
 In a setup where there is no external load balancer available but using NodePorts is not an option, one can configure
 `ingress-nginx` Pods to use the network of the host they run on instead of a dedicated network namespace. The benefit of
-this approach is that the NGINX Ingress controller can bind ports 80 and 443 directly to Kubernetes nodes' network
+this approach is that the Ingress-Nginx Controller can bind ports 80 and 443 directly to Kubernetes nodes' network
 interfaces, without the extra network translation imposed by NodePort Services.
 
 !!! note
-    This approach does not leverage any Service object to expose the NGINX Ingress controller. If the `ingress-nginx`
+    This approach does not leverage any Service object to expose the Ingress-Nginx Controller. If the `ingress-nginx`
     Service exists in the target cluster, it is **recommended to delete it**.
 
 This can be achieved by enabling the `hostNetwork` option in the Pods' spec.
@@ -284,7 +284,7 @@ template:
 ```
 
 !!! danger "Security considerations"
-    Enabling this option **exposes every system daemon to the NGINX Ingress controller** on any network interface,
+    Enabling this option **exposes every system daemon to the Ingress-Nginx Controller** on any network interface,
     including the host's loopback. Please evaluate the impact this may have on the security of your system carefully.
 
 !!! example
@@ -299,7 +299,7 @@ template:
     ingress-nginx-controller-5b4cf5fc6-lzrls   1/1     Running   203.0.113.2   host-2
     ```
 
-One major limitation of this deployment approach is that only **a single NGINX Ingress controller Pod** may be scheduled
+One major limitation of this deployment approach is that only **a single Ingress-Nginx Controller Pod** may be scheduled
 on each cluster node, because binding the same port multiple times on the same network interface is technically
 impossible. Pods that are unschedulable due to such situation fail with the following event:
 
@@ -312,7 +312,7 @@ Events:
   Warning  FailedScheduling  default-scheduler  0/3 nodes are available: 3 node(s) didn't have free ports for the requested pod ports.
 ```
 
-One way to ensure only schedulable Pods are created is to deploy the NGINX Ingress controller as a *DaemonSet* instead
+One way to ensure only schedulable Pods are created is to deploy the Ingress-Nginx Controller as a *DaemonSet* instead
 of a traditional Deployment.
 
 !!! info
@@ -334,7 +334,7 @@ expected to resolve internal names for any reason.
 
 * **Ingress status**
 
-Because there is no Service exposing the NGINX Ingress controller in a configuration using the host network, the default
+Because there is no Service exposing the Ingress-Nginx Controller in a configuration using the host network, the default
 `--publish-service` flag used in standard cloud setups **does not apply** and the status of all Ingress objects remains
 blank.
 
@@ -346,7 +346,7 @@ test-ingress   myapp.example.com             80
 
 Instead, and because bare-metal nodes usually don't have an ExternalIP, one has to enable the
 [`--report-node-internal-ip-address`][cli-args] flag, which sets the status of all Ingress objects to the internal IP
-address of all nodes running the NGINX Ingress controller.
+address of all nodes running the Ingress-Nginx Controller.
 
 !!! example
     Given a `ingress-nginx-controller` DaemonSet composed of 2 replicas

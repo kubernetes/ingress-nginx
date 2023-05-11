@@ -17,3 +17,11 @@ updates:
       - "area/dependency"
       - "release-note-none"
       - "ok-to-test"
+  - package-ecosystem: "docker"
+    directory: "/images"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "area/dependency"
+      - "release-note-none"
+      - "ok-to-test"

@@ -205,7 +205,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.12, v1.25.8, v1.26.3]
+        k8s: [v1.24.12, v1.25.8, v1.26.3,v1.27.1]
 
     steps:
       - name: Checkout
@@ -280,7 +280,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.12, v1.25.8, v1.26.3]
+        k8s: [v1.24.12, v1.25.8, v1.26.3,v1.27.1]
 
     steps:
       - name: Checkout
@@ -329,7 +329,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.12, v1.25.8, v1.26.3]
+        k8s: [v1.24.12, v1.25.8, v1.26.3,v1.27.1]
 
     steps:
 
@@ -395,8 +395,8 @@ jobs:
               - 'images/echo/**'
             go-grpc-greeter-server:
               - 'images/go-grpc-greeter-server/**'
-            httpbin:
-              - 'images/httpbin/**'
+            httpbun:
+              - 'images/httpbun/**'
             kube-webhook-certgen:
               - 'images/kube-webhook-certgen/**'
             ext-auth-example-authsvc:
@@ -422,10 +422,10 @@ jobs:
         if: ${{ steps.filter-images.outputs.go-grpc-greeter-server == 'true' }}
         run: |
           cd images/go-grpc-greeter-server && make build
-      - name: httpbin image build
+      - name: httpbun image build
         if: ${{ steps.filter-images.outputs.httpbin == 'true' }}
         run: |
-          cd images/httpbin && make build
+          cd images/httpbun && make build
       - name: kube-webhook-certgen image build
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
         run: |
@@ -447,7 +447,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.12, v1.25.8, v1.26.3]
+        k8s: [v1.24.12, v1.25.8, v1.26.3,v1.27.1]
 
     steps:
       - name: Checkout

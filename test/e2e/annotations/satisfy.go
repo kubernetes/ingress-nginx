@@ -85,15 +85,15 @@ var _ = framework.DescribeAnnotation("satisfy", func() {
 		host := "auth"
 
 		// setup external auth
-		f.NewHttpbinDeployment()
+		f.NewHttpbunDeployment()
 
-		err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBinService, f.Namespace, 1)
+		err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBunService, f.Namespace, 1)
 		assert.Nil(ginkgo.GinkgoT(), err)
 
-		e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(context.TODO(), framework.HTTPBinService, metav1.GetOptions{})
+		e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(context.TODO(), framework.HTTPBunService, metav1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 
-		httpbinIP := e.Subsets[0].Addresses[0].IP
+		httpbunIP := e.Subsets[0].Addresses[0].IP
 
 		// create basic auth secret at ingress
 		s := f.EnsureSecret(buildSecret("uname", "pwd", "basic-secret", f.Namespace))
@@ -105,7 +105,7 @@ var _ = framework.DescribeAnnotation("satisfy", func() {
 			"nginx.ingress.kubernetes.io/auth-realm":  "test basic auth",
 
 			// annotations for external auth
-			"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/basic-auth/user/password", httpbinIP),
+			"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/basic-auth/user/password", httpbunIP),
 			"nginx.ingress.kubernetes.io/auth-signin": "http://$host/auth/start",
 
 			// set satisfy any
