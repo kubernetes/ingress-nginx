@@ -106,7 +106,7 @@ local function get_or_update_ewma(upstream, rtt, failed, update)
   local ewma = ngx.shared.balancer_ewma:get(upstream) or 0
   local total_ewma = ngx.shared.balancer_ewma_total:get(upstream) or 0
   local failed_ewma = ngx.shared.balancer_ewma_failed:get(upstream) or 0
-  
+
   if lock_err ~= nil then
     return ewma, lock_err
   end
