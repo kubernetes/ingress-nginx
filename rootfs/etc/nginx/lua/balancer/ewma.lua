@@ -301,7 +301,7 @@ function _M.sync(self, backend)
   end
 end
 
-function _M.score(self, upstream)
+function _M.score(upstream)
   return score(upstream)
 end
 
