@@ -88,11 +88,11 @@ func (a fastcgi) Parse(ing *networking.Ingress) (interface{}, error) {
 		}
 	}
 
-	if cmns == "" {
-		cmns = ing.Namespace
+	if cmns != "" && cmns != ing.Namespace {
+		return fcgiConfig, fmt.Errorf("different namespace is not supported on fast_cgi param configmap")
 	}
 
-	cm = fmt.Sprintf("%v/%v", cmns, cmn)
+	cm = fmt.Sprintf("%v/%v", ing.Namespace, cmn)
 	cmap, err := a.r.GetConfigMap(cm)
 	if err != nil {
 		return fcgiConfig, ing_errors.LocationDenied{

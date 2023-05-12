@@ -122,7 +122,7 @@ func TestNginxCheck(t *testing.T) {
 }
 
 func callHealthz(expErr bool, healthzPath string, mux *http.ServeMux) error {
-	req, err := http.NewRequest("GET", healthzPath, nil)
+	req, err := http.NewRequest(http.MethodGet, healthzPath, nil)
 	if err != nil {
 		return fmt.Errorf("healthz error: %v", err)
 	}

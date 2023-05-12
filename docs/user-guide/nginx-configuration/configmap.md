@@ -62,7 +62,7 @@ The following table shows a configuration option's name, type, and the default v
 |[hsts-max-age](#hsts-max-age)|string|"15724800"|
 |[hsts-preload](#hsts-preload)|bool|"false"|
 |[keep-alive](#keep-alive)|int|75|
-|[keep-alive-requests](#keep-alive-requests)|int|100|
+|[keep-alive-requests](#keep-alive-requests)|int|1000|
 |[large-client-header-buffers](#large-client-header-buffers)|string|"4 8k"|
 |[log-format-escape-none](#log-format-escape-none)|bool|"false"|
 |[log-format-escape-json](#log-format-escape-json)|bool|"false"|
@@ -103,7 +103,9 @@ The following table shows a configuration option's name, type, and the default v
 |[brotli-min-length](#brotli-min-length)|int|20|
 |[brotli-types](#brotli-types)|string|"application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/javascript text/plain text/x-component"|
 |[use-http2](#use-http2)|bool|"true"|
+|[gzip-disable](#gzip-disable)|string|""|
 |[gzip-level](#gzip-level)|int|1|
+|[gzip-min-length](#gzip-min-length)|int|256|
 |[gzip-types](#gzip-types)|string|"application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/javascript text/plain text/x-component"|
 |[worker-processes](#worker-processes)|string|`<Number of CPUs>`|
 |[worker-cpu-affinity](#worker-cpu-affinity)|string|""|
@@ -155,6 +157,19 @@ The following table shows a configuration option's name, type, and the default v
 |[datadog-operation-name-override](#datadog-operation-name-override)|string|"nginx.handle"|
 |[datadog-priority-sampling](#datadog-priority-sampling)|bool|"true"|
 |[datadog-sample-rate](#datadog-sample-rate)|float|1.0|
+|[enable-opentelemetry](#enable-opentelemetry)|bool|"false"|
+|[opentelemetry-trust-incoming-span](#opentelemetry-trust-incoming-span)|bool|"true"|
+|[opentelemetry-operation-name](#opentelemetry-operation-name)|string|""|
+|[opentelemetry-config](#/etc/nginx/opentelemetry.toml)|string|"/etc/nginx/opentelemetry.toml"|
+|[otlp-collector-host](#otlp-collector-host)|string|""|
+|[otlp-collector-port](#otlp-collector-port)|int|4317|
+|[otel-max-queuesize](#otel-max-queuesize)|int||
+|[otel-schedule-delay-millis](#otel-schedule-delay-millis)|int||
+|[otel-max-export-batch-size](#otel-max-export-batch-size)|int||
+|[otel-service-name](#otel-service-name)|string|"nginx"|
+|[otel-sampler](#otel-sampler)|string|"AlwaysOff"|
+|[otel-sampler-parent-based](#otel-sampler-parent-based)|bool|"false"|
+|[otel-sampler-ratio](#otel-sampler-ratio)|float|0.01|
 |[main-snippet](#main-snippet)|string|""|
 |[http-snippet](#http-snippet)|string|""|
 |[server-snippet](#server-snippet)|string|""|
@@ -693,7 +708,8 @@ _**default:**_ false
 ## enable-brotli
 
 Enables or disables compression of HTTP responses using the ["brotli" module](https://github.com/google/ngx_brotli).
-The default mime type list to compress is: `application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component`. _**default:**_ is disabled
+The default mime type list to compress is: `application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component`. 
+_**default:**_ false
 
 > __Note:__ Brotli does not works in Safari < 11. For more information see [https://caniuse.com/#feat=brotli](https://caniuse.com/#feat=brotli)
 
@@ -713,6 +729,10 @@ _**default:**_ `application/xml+rss application/atom+xml application/javascript 
 ## use-http2
 
 Enables or disables [HTTP/2](https://nginx.org/en/docs/http/ngx_http_v2_module.html) support in secure connections.
+
+## gzip-disable
+
+Disables [gzipping](http://nginx.org/en/docs/http/ngx_http_gzip_module.html#gzip_disable) of responses for requests with "User-Agent" header fields matching any of the specified regular expressions.
 
 ## gzip-level
 
@@ -1001,6 +1021,46 @@ If true disables client-side sampling (thus ignoring `sample_rate`) and enables 
 
 Specifies sample rate for any traces created.
 This is effective only when `datadog-priority-sampling` is `false` _**default:**_ 1.0
+
+## enable-opentelemetry
+
+Enables the nginx OpenTelemetry extension. _**default:**_ is disabled
+
+_References:_
+[https://github.com/open-telemetry/opentelemetry-cpp-contrib](https://github.com/open-telemetry/opentelemetry-cpp-contrib/tree/main/instrumentation/nginx)
+
+## opentelemetry-operation-name
+
+Specifies a custom name for the server span. _**default:**_ is empty
+
+For example, set to "HTTP $request_method $uri".
+
+## otlp-collector-host
+
+Specifies the host to use when uploading traces. It must be a valid URL.
+
+## otlp-collector-port
+
+Specifies the port to use when uploading traces. _**default:**_ 4317
+
+## otel-service-name
+
+Specifies the service name to use for any traces created. _**default:**_ nginx
+
+##  opentelemetry-trust-incoming-span: "true"
+Enables or disables using spans from incoming requests as parent for created ones. _**default:**_ true
+
+##  otel-sampler-parent-based
+
+Uses sampler implementation which by default will take a sample if parent Activity is sampled. _**default:**_ false
+
+## otel-sampler-ratio
+
+Specifies sample rate for any traces created. _**default:**_ 0.01
+
+## otel-sampler
+
+Specifies the sampler to be used when sampling traces. The available samplers are: AlwaysOff, AlwaysOn, TraceIdRatioBased, remote. _**default:**_ AlwaysOff
 
 ## main-snippet
 

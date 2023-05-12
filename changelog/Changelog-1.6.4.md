@@ -1,13 +1,60 @@
 # Changelog
 
-### 1.5.2
+### 1.6.4
 Images:
 
- * registry.k8s.io/ingress-nginx/controller:controller-v1.5.2@sha256:3870522ed937c9efb94bfa31a7eb16009831567a0d4cbe01846fc5486d622655
- * registry.k8s.io/ingress-nginx/controller-chroot:controller-v1.5.2@sha256:84613555694f2c59a8b2551126d226c9aa648544ebf0cde1e0df942f7dbce42b
+ * registry.k8s.io/controller:controller-v1.6.4@sha256:15be4666c53052484dd2992efacf2f50ea77a78ae8aa21ccd91af6baaa7ea22f
+ * registry.k8s.io/controller-chroot:controller-v1.6.4@sha256:0de01e2c316c3ca7847ca13b32d077af7910d07f21a4a82f81061839764f8f81
  
 ### All Changes:
 
+* remove tests and regex path checks (#9626)
+* Fix incorrect annotation name in upstream hashing configuration (#9617)
+* Release docs for Controller v1.6.3 and Helm v4.5.0 (#9614)
+* Revert Implement pathType validation (#9511) (#9607)
+* update history and allow to pass a target test  (#9605)
+* Allow to pass a target test (#9542)
+* Replace deprecated command with environment file (#9581)
+* build 1.6.2 to fix (#9569)
+* add lint on chart before release (#9570)
+* tcpproxy: increase buffer size to 16K (#9548)
+* Move and spell-check Kubernetes 1.22 migration FAQ (#9544)
+* Add CORS template check inside location for externalAuth.SignURL (#8814)
+* fix(grafana-dashboard): remove hardcoded namespace references (#9523)
+* Replace deprecated command with environment file (#9581)
+* add lint on chart before release (#9570)
+* Switch logic on path type validation and setting it to false (#9543)
+* tcpproxy: increase buffer size to 16K (#9548)
+* Move and spell-check Kubernetes 1.22 migration FAQ (#9544)
+* Add CORS template check inside location for externalAuth.SignURL (#8814)
+* fix(grafana-dashboard): remove hardcoded namespace references (#9523)
+* Align default value for keepalive_request with NGINX default (#9518)
+* feat(configmap): expose gzip-disable (#9505)
+* Values: Add missing `controller.metrics.service.labels`. (#9501)
+* Add docs about orphan_ingress metric (#9514)
+* Add new prometheus metric for orphaned ingress (#8230)
+* Sanitise request metrics in monitoring docs (#9384)
+* Change default value of enable-brotli (#9500)
+* feat: support topology aware hints (#9165)
+* Remove 1.5.2 from readme (#9498)
+* Remove nonexistent load flag from docker build commands (#9122)
+* added option to disable sync event creation (#8528)
+* Add buildResolvers to the stream module (#9184)
+* fix: disable auth access logs (#9049)
+* Adding ipdenylist annotation (#8795)
+* Add update updateStrategy and minReadySeconds for defaultBackend (#8506)
+* Fix indentation on serviceAccount annotation (#9129)
+* Update monitoring.md (#9269)
+* add github actions stale bot (#9439)
+* Admission Webhooks/Job: Add `NetworkPolicy`. (#9218)
+* update OpenTelemetry image (#9491)
+* bump OpenTelemetry (#9489)
+* Optional podman support (#9294)
+* fix change images (#9463)
+* move tests to gh actions (#9461)
+* Automated Release Controller 1.5.2 (#9455)
+* Add sslpassthrough tests (#9457)
+* updated the link in RELEASE.md file (#9456)
 * restart 1.5.2 release process (#9450)
 * Update command line arguments documentation (#9224)
 * start release 1.5.2 (#9445)
@@ -43,7 +90,6 @@ Images:
 * remove the configmap related permissions (#9310)
 * remove hardcoded datasource from grafana dashboard (#9284)
 * update gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b to 3.0.0 (#9277)
-* Validate ingress path fields  (#9309)
 * added SAN to cert create command (#9295)
 * Missing controller.ingressClass (#9304)
 * OpenTelemetry static linking (#9286)
@@ -54,6 +100,17 @@ Images:
 * add containerSecurityContext to extraModules init containers (kubernetes#9016) (#9242)
 
 ### Dependencies updates: 
+* Bump google.golang.org/grpc from 1.52.0 to 1.52.3 (#9555)
+* Bump k8s.io/klog/v2 from 2.80.1 to 2.90.0 (#9553)
+* Bump sigs.k8s.io/controller-runtime from 0.13.1 to 0.14.2 (#9552)
+* Bump google.golang.org/grpc from 1.51.0 to 1.52.0 (#9512)
+* Bump `client-go` to remove dependence on go-autorest dependency (#9488)
+* Bump google.golang.org/grpc from 1.52.0 to 1.52.3 (#9555)
+* Bump k8s.io/klog/v2 from 2.80.1 to 2.90.0 (#9553)
+* Bump sigs.k8s.io/controller-runtime from 0.13.1 to 0.14.2 (#9552)
+* Bump google.golang.org/grpc from 1.51.0 to 1.52.0 (#9512)
+* Bump `client-go` to remove dependence on go-autorest dependency (#9488)
+* Bump golang.org/x/crypto from 0.4.0 to 0.5.0 (#9494)
 * Bump golang.org/x/crypto from 0.3.0 to 0.4.0 (#9397)
 * Bump github.com/onsi/ginkgo/v2 from 2.6.0 to 2.6.1 (#9432)
 * Bump github.com/onsi/ginkgo/v2 from 2.6.0 to 2.6.1 (#9421)
@@ -76,4 +133,4 @@ Images:
 * Bump actions/dependency-review-action from 2.5.1 to 3.0.0 (#9301)
 * Bump k8s.io/component-base from 0.25.3 to 0.25.4 (#9300)
  
-**Full Changelog**: https://github.com/kubernetes/ingress-nginx/compare/controller-controller-v1.5.1...controller-controller-v1.5.2
+**Full Changelog**: https://github.com/kubernetes/ingress-nginx/compare/controller-controller-v1.5.1...controller-controller-v1.6.4

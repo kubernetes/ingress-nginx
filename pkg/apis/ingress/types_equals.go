@@ -76,11 +76,7 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 		}
 	}
 
-	if c1.BackendConfigChecksum != c2.BackendConfigChecksum {
-		return false
-	}
-
-	return true
+	return c1.BackendConfigChecksum == c2.BackendConfigChecksum
 }
 
 // Equal tests for equality between two Backend types
@@ -435,10 +431,6 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 
-	if !(&l1.InfluxDB).Equal(&l2.InfluxDB) {
-		return false
-	}
-
 	if l1.BackendProtocol != l2.BackendProtocol {
 		return false
 	}
@@ -465,6 +457,10 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	}
 
 	if !l1.Opentracing.Equal(&l2.Opentracing) {
+		return false
+	}
+
+	if !l1.Opentelemetry.Equal(&l2.Opentelemetry) {
 		return false
 	}
 

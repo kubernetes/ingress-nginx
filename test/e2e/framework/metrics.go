@@ -29,7 +29,7 @@ func (f *Framework) GetMetric(metricName, ip string) (*dto.MetricFamily, error) 
 	url := fmt.Sprintf("http://%v:10254/metrics", ip)
 
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("creating GET request for URL %q failed: %v", url, err)
 	}

@@ -81,7 +81,7 @@ var _ = framework.IngressNginxDescribe("[Flag] enable-ssl-passthrough", func() {
 			host := "testpassthrough.com"
 			echoName := "echopass"
 
-			/* Even with enable-ssl-passthrough enabled, only annotated ingresses may receive the trafic */
+			/* Even with enable-ssl-passthrough enabled, only annotated ingresses may receive the traffic */
 			annotations := map[string]string{
 				"nginx.ingress.kubernetes.io/ssl-passthrough": "true",
 			}

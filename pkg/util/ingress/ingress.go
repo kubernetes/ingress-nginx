@@ -18,28 +18,13 @@ package ingress
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 
-	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/net/ssl"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 	"k8s.io/klog/v2"
-)
-
-const (
-	alphaNumericChars = `\-\.\_\~a-zA-Z0-9/`
-	regexEnabledChars = `\^\$\[\]\(\)\{\}\*\+`
-)
-
-var (
-	// pathAlphaNumeric is a regex validation of something like "^/[a-zA-Z]+$" on path
-	pathAlphaNumeric = regexp.MustCompile("^/[" + alphaNumericChars + "]*$").MatchString
-	// pathRegexEnabled is a regex validation of paths that may contain regex.
-	pathRegexEnabled = regexp.MustCompile("^/[" + alphaNumericChars + regexEnabledChars + "]*$").MatchString
 )
 
 func GetRemovedHosts(rucfg, newcfg *ingress.Configuration) []string {
@@ -61,7 +46,7 @@ func GetRemovedHosts(rucfg, newcfg *ingress.Configuration) []string {
 	return oldSet.Difference(newSet).List()
 }
 
-// GetRemovedCertificateSerialNumber extracts the difference of certificates between two configurations
+// GetRemovedCertificateSerialNumbers extracts the difference of certificates between two configurations
 func GetRemovedCertificateSerialNumbers(rucfg, newcfg *ingress.Configuration) []string {
 	oldCertificates := sets.NewString()
 	newCertificates := sets.NewString()
@@ -192,7 +177,7 @@ type redirect struct {
 
 // BuildRedirects build the redirects of servers based on configurations and certificates
 func BuildRedirects(servers []*ingress.Server) []*redirect {
-	names := sets.String{}
+	names := sets.Set[string]{}
 	redirectServers := make([]*redirect, 0)
 
 	for _, srv := range servers {
@@ -245,14 +230,4 @@ func BuildRedirects(servers []*ingress.Server) []*redirect {
 	}
 
 	return redirectServers
-}
-
-// IsSafePath verifies if the path used in ingress object contains only valid characters.
-// It will behave differently if regex is enabled or not
-func IsSafePath(copyIng *networkingv1.Ingress, path string) bool {
-	isRegex, _ := parser.GetBoolAnnotation("use-regex", copyIng)
-	if isRegex {
-		return pathRegexEnabled(path)
-	}
-	return pathAlphaNumeric(path)
 }

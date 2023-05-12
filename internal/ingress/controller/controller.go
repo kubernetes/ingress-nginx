@@ -23,7 +23,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mitchellh/hashstructure"
+	"github.com/mitchellh/hashstructure/v2"
 	apiv1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
@@ -33,6 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
@@ -50,9 +51,12 @@ import (
 )
 
 const (
-	defUpstreamName = "upstream-default-backend"
-	defServerName   = "_"
-	rootLocation    = "/"
+	defUpstreamName             = "upstream-default-backend"
+	defServerName               = "_"
+	rootLocation                = "/"
+	emptyZone                   = ""
+	orphanMetricLabelNoService  = "no-service"
+	orphanMetricLabelNoEndpoint = "no-endpoint"
 )
 
 // Configuration contains all the settings required by an Ingress controller
@@ -98,10 +102,11 @@ type Configuration struct {
 
 	EnableProfiling bool
 
-	EnableMetrics       bool
-	MetricsPerHost      bool
-	MetricsBuckets      *collectors.HistogramBuckets
-	ReportStatusClasses bool
+	EnableMetrics        bool
+	MetricsPerHost       bool
+	MetricsBuckets       *collectors.HistogramBuckets
+	ReportStatusClasses  bool
+	ExcludeSocketMetrics []string
 
 	FakeCertificate *ingress.SSLCert
 
@@ -131,6 +136,21 @@ type Configuration struct {
 	DynamicConfigurationRetries int
 
 	DisableSyncEvents bool
+
+	EnableTopologyAwareRouting bool
+}
+
+func getIngressPodZone(svc *apiv1.Service) string {
+	svcKey := k8s.MetaNamespaceKey(svc)
+	if svcZoneAnnotation, ok := svc.ObjectMeta.GetAnnotations()[apiv1.AnnotationTopologyAwareHints]; ok {
+		if strings.ToLower(svcZoneAnnotation) == "auto" {
+			if foundZone, ok := k8s.IngressNodeDetails.GetLabels()[apiv1.LabelTopologyZone]; ok {
+				klog.V(3).Infof("Svc has topology aware annotation enabled, try to use zone %q where controller pod is running for Service %q ", foundZone, svcKey)
+				return foundZone
+			}
+		}
+	}
+	return emptyZone
 }
 
 // GetPublishService returns the Service used to set the load-balancer status of Ingresses.
@@ -169,7 +189,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	if !utilingress.IsDynamicConfigurationEnough(pcfg, n.runningConfig) {
 		klog.InfoS("Configuration changes detected, backend reload required")
 
-		hash, _ := hashstructure.Hash(pcfg, &hashstructure.HashOptions{
+		hash, _ := hashstructure.Hash(pcfg, hashstructure.FormatV1, &hashstructure.HashOptions{
 			TagName: "json",
 		})
 
@@ -429,6 +449,13 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 		var endps []ingress.Endpoint
 		/* #nosec */
 		targetPort, err := strconv.Atoi(svcPort) // #nosec
+		var zone string
+		if n.cfg.EnableTopologyAwareRouting {
+			zone = getIngressPodZone(svc)
+		} else {
+			zone = emptyZone
+		}
+
 		if err != nil {
 			// not a port number, fall back to using port name
 			klog.V(3).Infof("Searching Endpoints with %v port name %q for Service %q", proto, svcPort, nsName)
@@ -436,7 +463,7 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 				sp := svc.Spec.Ports[i]
 				if sp.Name == svcPort {
 					if sp.Protocol == proto {
-						endps = getEndpointsFromSlices(svc, &sp, proto, n.store.GetServiceEndpointsSlices)
+						endps = getEndpointsFromSlices(svc, &sp, proto, zone, n.store.GetServiceEndpointsSlices)
 						break
 					}
 				}
@@ -447,7 +474,7 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 				sp := svc.Spec.Ports[i]
 				if sp.Port == int32(targetPort) {
 					if sp.Protocol == proto {
-						endps = getEndpointsFromSlices(svc, &sp, proto, n.store.GetServiceEndpointsSlices)
+						endps = getEndpointsFromSlices(svc, &sp, proto, zone, n.store.GetServiceEndpointsSlices)
 						break
 					}
 				}
@@ -498,8 +525,13 @@ func (n *NGINXController) getDefaultUpstream() *ingress.Backend {
 		upstream.Endpoints = append(upstream.Endpoints, n.DefaultEndpoint())
 		return upstream
 	}
-
-	endps := getEndpointsFromSlices(svc, &svc.Spec.Ports[0], apiv1.ProtocolTCP, n.store.GetServiceEndpointsSlices)
+	var zone string
+	if n.cfg.EnableTopologyAwareRouting {
+		zone = getIngressPodZone(svc)
+	} else {
+		zone = emptyZone
+	}
+	endps := getEndpointsFromSlices(svc, &svc.Spec.Ports[0], apiv1.ProtocolTCP, zone, n.store.GetServiceEndpointsSlices)
 	if len(endps) == 0 {
 		klog.Warningf("Service %q does not have any active Endpoint", svcKey)
 		endps = []ingress.Endpoint{n.DefaultEndpoint()}
@@ -511,11 +543,11 @@ func (n *NGINXController) getDefaultUpstream() *ingress.Backend {
 }
 
 // getConfiguration returns the configuration matching the standard kubernetes ingress
-func (n *NGINXController) getConfiguration(ingresses []*ingress.Ingress) (sets.String, []*ingress.Server, *ingress.Configuration) {
+func (n *NGINXController) getConfiguration(ingresses []*ingress.Ingress) (sets.Set[string], []*ingress.Server, *ingress.Configuration) {
 	upstreams, servers := n.getBackendServers(ingresses)
 	var passUpstreams []*ingress.SSLPassthroughBackend
 
-	hosts := sets.NewString()
+	hosts := sets.New[string]()
 
 	for _, server := range servers {
 		// If a location is defined by a prefix string that ends with the slash character, and requests are processed by one of
@@ -827,7 +859,13 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 				}
 
 				sp := location.DefaultBackend.Spec.Ports[0]
-				endps := getEndpointsFromSlices(location.DefaultBackend, &sp, apiv1.ProtocolTCP, n.store.GetServiceEndpointsSlices)
+				var zone string
+				if n.cfg.EnableTopologyAwareRouting {
+					zone = getIngressPodZone(location.DefaultBackend)
+				} else {
+					zone = emptyZone
+				}
+				endps := getEndpointsFromSlices(location.DefaultBackend, &sp, apiv1.ProtocolTCP, zone, n.store.GetServiceEndpointsSlices)
 				// custom backend is valid only if contains at least one endpoint
 				if len(endps) > 0 {
 					name := fmt.Sprintf("custom-default-backend-%v-%v", location.DefaultBackend.GetNamespace(), location.DefaultBackend.GetName())
@@ -932,14 +970,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 			// configure traffic shaping for canary
 			if anns.Canary.Enabled {
 				upstreams[defBackend].NoServer = true
-				upstreams[defBackend].TrafficShapingPolicy = ingress.TrafficShapingPolicy{
-					Weight:        anns.Canary.Weight,
-					WeightTotal:   anns.Canary.WeightTotal,
-					Header:        anns.Canary.Header,
-					HeaderValue:   anns.Canary.HeaderValue,
-					HeaderPattern: anns.Canary.HeaderPattern,
-					Cookie:        anns.Canary.Cookie,
-				}
+				upstreams[defBackend].TrafficShapingPolicy = newTrafficShapingPolicy(anns.Canary)
 			}
 
 			if len(upstreams[defBackend].Endpoints) == 0 {
@@ -1004,13 +1035,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 				// configure traffic shaping for canary
 				if anns.Canary.Enabled {
 					upstreams[name].NoServer = true
-					upstreams[name].TrafficShapingPolicy = ingress.TrafficShapingPolicy{
-						Weight:        anns.Canary.Weight,
-						Header:        anns.Canary.Header,
-						HeaderValue:   anns.Canary.HeaderValue,
-						HeaderPattern: anns.Canary.HeaderPattern,
-						Cookie:        anns.Canary.Cookie,
-					}
+					upstreams[name].TrafficShapingPolicy = newTrafficShapingPolicy(anns.Canary)
 				}
 
 				if len(upstreams[name].Endpoints) == 0 {
@@ -1018,7 +1043,15 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 					endp, err := n.serviceEndpoints(svcKey, port.String())
 					if err != nil {
 						klog.Warningf("Error obtaining Endpoints for Service %q: %v", svcKey, err)
+						n.metricCollector.IncOrphanIngress(ing.Namespace, ing.Name, orphanMetricLabelNoService)
 						continue
+					}
+					n.metricCollector.DecOrphanIngress(ing.Namespace, ing.Name, orphanMetricLabelNoService)
+
+					if len(endp) == 0 {
+						n.metricCollector.IncOrphanIngress(ing.Namespace, ing.Name, orphanMetricLabelNoEndpoint)
+					} else {
+						n.metricCollector.DecOrphanIngress(ing.Namespace, ing.Name, orphanMetricLabelNoEndpoint)
 					}
 					upstreams[name].Endpoints = endp
 				}
@@ -1083,7 +1116,12 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 	if err != nil {
 		return upstreams, err
 	}
-
+	var zone string
+	if n.cfg.EnableTopologyAwareRouting {
+		zone = getIngressPodZone(svc)
+	} else {
+		zone = emptyZone
+	}
 	klog.V(3).Infof("Obtaining ports information for Service %q", svcKey)
 	// Ingress with an ExternalName Service and no port defined for that Service
 	if svc.Spec.Type == apiv1.ServiceTypeExternalName {
@@ -1092,7 +1130,7 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 			return upstreams, nil
 		}
 		servicePort := externalNamePorts(backendPort, svc)
-		endps := getEndpointsFromSlices(svc, servicePort, apiv1.ProtocolTCP, n.store.GetServiceEndpointsSlices)
+		endps := getEndpointsFromSlices(svc, servicePort, apiv1.ProtocolTCP, zone, n.store.GetServiceEndpointsSlices)
 		if len(endps) == 0 {
 			klog.Warningf("Service %q does not have any active Endpoint.", svcKey)
 			return upstreams, nil
@@ -1109,7 +1147,7 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 			servicePort.TargetPort.String() == backendPort ||
 			servicePort.Name == backendPort {
 
-			endps := getEndpointsFromSlices(svc, &servicePort, apiv1.ProtocolTCP, n.store.GetServiceEndpointsSlices)
+			endps := getEndpointsFromSlices(svc, &servicePort, apiv1.ProtocolTCP, zone, n.store.GetServiceEndpointsSlices)
 			if len(endps) == 0 {
 				klog.Warningf("Service %q does not have any active Endpoint.", svcKey)
 			}
@@ -1407,6 +1445,7 @@ func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) 
 	loc.EnableGlobalAuth = anns.EnableGlobalAuth
 	loc.HTTP2PushPreload = anns.HTTP2PushPreload
 	loc.Opentracing = anns.Opentracing
+	loc.Opentelemetry = anns.Opentelemetry
 	loc.Proxy = anns.Proxy
 	loc.ProxySSL = anns.ProxySSL
 	loc.RateLimit = anns.RateLimit
@@ -1421,7 +1460,6 @@ func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) 
 	loc.UsePortInRedirects = anns.UsePortInRedirects
 	loc.Connection = anns.Connection
 	loc.Logs = anns.Logs
-	loc.InfluxDB = anns.InfluxDB
 	loc.DefaultBackend = anns.DefaultBackend
 	loc.BackendProtocol = anns.BackendProtocol
 	loc.FastCGI = anns.FastCGI
@@ -1769,4 +1807,16 @@ func (n *NGINXController) getStreamSnippets(ingresses []*ingress.Ingress) []stri
 		snippets = append(snippets, i.ParsedAnnotations.StreamSnippet)
 	}
 	return snippets
+}
+
+// newTrafficShapingPolicy creates new ingress.TrafficShapingPolicy instance using canary configuration
+func newTrafficShapingPolicy(cfg canary.Config) ingress.TrafficShapingPolicy {
+	return ingress.TrafficShapingPolicy{
+		Weight:        cfg.Weight,
+		WeightTotal:   cfg.WeightTotal,
+		Header:        cfg.Header,
+		HeaderValue:   cfg.HeaderValue,
+		HeaderPattern: cfg.HeaderPattern,
+		Cookie:        cfg.Cookie,
+	}
 }

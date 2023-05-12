@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -111,7 +112,11 @@ func (f *Framework) NamespaceContent() (string, error) {
 // newIngressController deploys a new NGINX Ingress controller in a namespace
 func (f *Framework) newIngressController(namespace string, namespaceOverlay string) error {
 	// Creates an nginx deployment
-	cmd := exec.Command("./wait-for-nginx.sh", namespace, namespaceOverlay)
+	isChroot, ok := os.LookupEnv("IS_CHROOT")
+	if !ok {
+		isChroot = "false"
+	}
+	cmd := exec.Command("./wait-for-nginx.sh", namespace, namespaceOverlay, isChroot)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("unexpected error waiting for ingress controller deployment: %v.\nLogs:\n%v", err, string(out))
@@ -150,6 +155,16 @@ func (f *Framework) KubectlProxy(port int) (int, *exec.Cmd, error) {
 	}
 
 	return -1, cmd, fmt.Errorf("failed to parse port from proxy stdout: %s", output)
+}
+
+func (f *Framework) UninstallChart() error {
+	cmd := exec.Command("helm", "uninstall", "--namespace", f.Namespace, "nginx-ingress")
+	_, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("unexpected error uninstalling ingress-nginx release: %v", err)
+	}
+
+	return nil
 }
 
 func startCmdAndStreamOutput(cmd *exec.Cmd) (stdout, stderr io.ReadCloser, err error) {

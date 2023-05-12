@@ -26,11 +26,11 @@ import (
 // if an object contains invalid configurations that may represent a security risk,
 // and returning an error in this case
 func DeepInspect(obj interface{}) error {
-	switch obj.(type) {
+	switch obj := obj.(type) {
 	case *networking.Ingress:
-		return InspectIngress(obj.(*networking.Ingress))
+		return InspectIngress(obj)
 	case *corev1.Service:
-		return InspectService(obj.(*corev1.Service))
+		return InspectService(obj)
 	default:
 		klog.Warningf("received invalid object to inspect: %T", obj)
 		return nil

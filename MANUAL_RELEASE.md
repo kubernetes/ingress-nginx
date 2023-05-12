@@ -103,7 +103,7 @@ Promoting the images basically means that images, that were pushed to staging co
 
 - Fork that other project (if you don't have a fork already).
 
-- Other project to fork  [Github repo kubernetes/k8s.io](http://github.com/kubernetes/k8s.io)
+- Other project to fork  [GitHub repo kubernetes/k8s.io](http://github.com/kubernetes/k8s.io)
 
 - Fetch --all and rebase to upstream if already forked.
 
@@ -111,7 +111,7 @@ Promoting the images basically means that images, that were pushed to staging co
 
 - In the related branch, of your fork, edit the file /registry.k8s.io/images/k8s-staging-ingress-nginx/images.yaml.
 
-- For making it easier, you can edit your branch directly in the browser. But be careful about making any mistake.
+- For making, it easier, you can edit your branch directly in the browser. But be careful about making any mistake.
 
 - Insert the sha(s) & the tag(s), in a new line, in this file [Project kubernetes/k8s.io Ingress-Nginx-Controller Images](https://github.com/kubernetes/k8s.io/blob/main/k8s.gcr.io/images/k8s-staging-ingress-nginx/images.yaml)  Look at this [example PR and the diff](https://github.com/kubernetes/k8s.io/pull/2536) to see how it was done before
 
@@ -132,7 +132,7 @@ Promoting the images basically means that images, that were pushed to staging co
 
 - Make sure to get the tag and sha of the promoted image from the step before, either from cloudbuild or from [here](https://console.cloud.google.com/gcr/images/k8s-artifacts-prod/us/ingress-nginx/controller).
 
-- This involves editing of several different files. So carefully follow the steps below and double check all changes with diff/grep etc., repeatedly. Mistakes here impact endusers.
+- This involves editing of several files. So carefully follow the steps below and double check all changes with diff/grep etc., repeatedly. Mistakes here impact endusers.
 
 ### a. Make sure your git workspace is ready
 
@@ -160,7 +160,7 @@ Promoting the images basically means that images, that were pushed to staging co
   - [TAG](https://github.com/kubernetes/ingress-nginx/blob/main/TAG#L1)
 
 ### c. Edit the helm Chart
-  - Change the below mentioned [Fields in Chart.yaml](https://github.com/kubernetes/ingress-nginx/blob/main/charts/ingress-nginx/Chart.yaml)
+  - Change the below-mentioned [Fields in Chart.yaml](https://github.com/kubernetes/ingress-nginx/blob/main/charts/ingress-nginx/Chart.yaml)
     - version
     - appVersion
     - kubeVersion (**ONLY if applicable**)
@@ -168,7 +168,7 @@ Promoting the images basically means that images, that were pushed to staging co
       - artifacthub.io/prerelease: "true"
       - artifacthub.io/changes: |
         - Replace this line and other lines under this annotation with the Changelog. One process to generate the Changelog is described below
-          - Install and configure github cli as per the docs of gh-cli  https://cli.github.com/,
+          - Install and configure GitHub cli as per the docs of gh-cli  https://cli.github.com/,
           - Change dir to your clone, of your fork, of the ingress-nginx project
           - Run the below command and save the output to a txt file
 

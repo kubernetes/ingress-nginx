@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.19.4-alpine3.17 as builder
-RUN apk add git
+FROM golang:1.20.1-alpine3.17 as builder
+
+RUN apk update \
+    && apk upgrade && apk add git
 
 WORKDIR /go/src/k8s.io/ingress-nginx/images/custom-error-pages
 

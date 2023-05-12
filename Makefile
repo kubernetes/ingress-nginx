@@ -31,7 +31,7 @@ TAG ?= $(shell cat TAG)
 
 # e2e settings
 # Allow limiting the scope of the e2e tests. By default run everything
-FOCUS ?= .*
+FOCUS ?=
 # number of parallel test
 E2E_NODES ?= 7
 # run e2e test suite with tests that check for memory leaks? (default is false)
@@ -147,17 +147,16 @@ test:  ## Run go unit tests.
 .PHONY: lua-test
 lua-test: ## Run lua unit tests.
 	@build/run-in-docker.sh \
-		BUSTED_ARGS=$(BUSTED_ARGS) \
 		MAC_OS=$(MAC_OS) \
 		test/test-lua.sh
 
 .PHONY: e2e-test
 e2e-test:  ## Run e2e tests (expects access to a working Kubernetes cluster).
-	@build/run-e2e-suite.sh
+	@test/e2e/run-e2e-suite.sh
 
 .PHONY: kind-e2e-test
 kind-e2e-test:  ## Run e2e tests using kind.
-	@test/e2e/run.sh
+	@test/e2e/run-kind-e2e.sh
 
 .PHONY: kind-e2e-chart-tests
 kind-e2e-chart-tests: ## Run helm chart e2e tests

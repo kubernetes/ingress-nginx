@@ -18,7 +18,7 @@ spec:
       terminationGracePeriodSeconds: 60
       containers:
       - name: echo-service
-        image: registry.k8s.io/ingress-nginx/e2e-test-echo:v20220819-ga98c63787@sha256:778ac6d1188c8de8ecabeddd3c37b72c8adc8c712bad2bd7a81fb23a3514934c
+        image: registry.k8s.io/ingress-nginx/e2e-test-echo:v20230318-helm-chart-4.5.2-44-gfec1dbe3a@sha256:4938d1d91a2b7d19454460a8c1b010b89f6ff92d2987fd889ac3e8fc3b70d91a
         ports:
         - containerPort: 8080
         resources:

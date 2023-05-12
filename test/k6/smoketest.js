@@ -27,7 +27,7 @@ export default function () {
   const params = {
     headers: {'host': 'test.ingress-nginx-controller.ga'},
   };
-  // httpbin.org documents these requests
+  // httpbun.com documents these requests
   const req1 = {
   	method: 'GET',
   	url: 'http://test.ingress-nginx-controller.ga/ip',

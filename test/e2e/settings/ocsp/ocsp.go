@@ -85,7 +85,7 @@ var _ = framework.DescribeSetting("OCSP", func() {
 		cfsslDB, err := os.ReadFile("empty.db")
 		assert.Nil(ginkgo.GinkgoT(), err)
 
-		cmap, err := f.EnsureConfigMap(&corev1.ConfigMap{
+		f.EnsureConfigMap(&corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "ocspserve",
 				Namespace: f.Namespace,
@@ -95,8 +95,6 @@ var _ = framework.DescribeSetting("OCSP", func() {
 				"db-config.json": []byte(`{"driver":"sqlite3","data_source":"/data/empty.db"}`),
 			},
 		})
-		assert.Nil(ginkgo.GinkgoT(), err)
-		assert.NotNil(ginkgo.GinkgoT(), cmap)
 
 		d, s := ocspserveDeployment(f.Namespace)
 		f.EnsureDeployment(d)
@@ -292,7 +290,7 @@ func ocspserveDeployment(namespace string) (*appsv1.Deployment, *corev1.Service)
 						Containers: []corev1.Container{
 							{
 								Name:  name,
-								Image: "registry.k8s.io/ingress-nginx/e2e-test-cfssl@sha256:c1b273763048944dd7d22d37adfc65be4fa6a5f6068204292573c6cdc5ea3457",
+								Image: "registry.k8s.io/ingress-nginx/e2e-test-cfssl@sha256:d02c1e18f573449966999fc850f1fed3d37621bf77797562cbe77ebdb06a66ea",
 								Command: []string{
 									"/bin/bash",
 									"-c",

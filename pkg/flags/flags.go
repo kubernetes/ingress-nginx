@@ -171,10 +171,11 @@ Requires the update-status parameter.`)
 		reportStatusClasses = flags.Bool("report-status-classes", false,
 			`Use status classes (2xx, 3xx, 4xx and 5xx) instead of status codes in metrics.`)
 
-		timeBuckets         = flags.Float64Slice("time-buckets", prometheus.DefBuckets, "Set of buckets which will be used for prometheus histogram metrics such as RequestTime, ResponseTime.")
-		lengthBuckets       = flags.Float64Slice("length-buckets", prometheus.LinearBuckets(10, 10, 10), "Set of buckets which will be used for prometheus histogram metrics such as RequestLength, ResponseLength.")
-		sizeBuckets         = flags.Float64Slice("size-buckets", prometheus.ExponentialBuckets(10, 10, 7), "Set of buckets which will be used for prometheus histogram metrics such as BytesSent.")
-		monitorMaxBatchSize = flags.Int("monitor-max-batch-size", 10000, "Max batch size of NGINX metrics.")
+		timeBuckets          = flags.Float64Slice("time-buckets", prometheus.DefBuckets, "Set of buckets which will be used for prometheus histogram metrics such as RequestTime, ResponseTime.")
+		lengthBuckets        = flags.Float64Slice("length-buckets", prometheus.LinearBuckets(10, 10, 10), "Set of buckets which will be used for prometheus histogram metrics such as RequestLength, ResponseLength.")
+		sizeBuckets          = flags.Float64Slice("size-buckets", prometheus.ExponentialBuckets(10, 10, 7), "Set of buckets which will be used for prometheus histogram metrics such as BytesSent.")
+		excludeSocketMetrics = flags.StringSlice("exclude-socket-metrics", []string{}, "et of socket request metrics to exclude which won't be exported nor being calculated. E.g. 'nginx_ingress_controller_success,nginx_ingress_controller_header_duration_seconds'.")
+		monitorMaxBatchSize  = flags.Int("monitor-max-batch-size", 10000, "Max batch size of NGINX metrics.")
 
 		httpPort  = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
 		httpsPort = flags.Int("https-port", 443, `Port to use for servicing HTTPS traffic.`)
@@ -216,6 +217,8 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 		dynamicConfigurationRetries = flags.Int("dynamic-configuration-retries", 15, "Number of times to retry failed dynamic configuration before failing to sync an ingress.")
 
 		disableSyncEvents = flags.Bool("disable-sync-events", false, "Disables the creation of 'Sync' event resources")
+
+		enableTopologyAwareRouting = flags.Bool("enable-topology-aware-routing", false, "Enable topology aware hints feature, needs service object annotation service.kubernetes.io/topology-aware-hints sets to auto.")
 	)
 
 	flags.StringVar(&nginx.MaxmindMirror, "maxmind-mirror", "", `Maxmind mirror url (example: http://geoip.local/databases.`)
@@ -326,6 +329,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		MetricsPerHost:              *metricsPerHost,
 		MetricsBuckets:              histogramBuckets,
 		ReportStatusClasses:         *reportStatusClasses,
+		ExcludeSocketMetrics:        *excludeSocketMetrics,
 		MonitorMaxBatchSize:         *monitorMaxBatchSize,
 		DisableServiceExternalName:  *disableServiceExternalName,
 		EnableSSLPassthrough:        *enableSSLPassthrough,
@@ -348,6 +352,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		SyncRateLimit:               *syncRateLimit,
 		HealthCheckHost:             *healthzHost,
 		DynamicConfigurationRetries: *dynamicConfigurationRetries,
+		EnableTopologyAwareRouting:  *enableTopologyAwareRouting,
 		ListenPorts: &ngx_config.ListenPorts{
 			Default:  *defServerPort,
 			Health:   *healthzPort,

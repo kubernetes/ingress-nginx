@@ -1,4 +1,4 @@
-site_name: NGINX Ingress Controller
+site_name: Ingress-Nginx Controller
 repo_name: "kubernetes/ingress-nginx"
 repo_url: https://github.com/kubernetes/ingress-nginx
 site_url: https://kubernetes.github.io/ingress-nginx
@@ -101,6 +101,7 @@ nav:
       - Third party addons:
           - ModSecurity Web Application Firewall: "user-guide/third-party-addons/modsecurity.md"
           - OpenTracing: "user-guide/third-party-addons/opentracing.md"
+          - OpenTelemetry: "user-guide/third-party-addons/opentelemetry.md"
   - Examples:
       - Introduction: "examples/index.md"
       - Prerequisites: "examples/PREREQUISITES.md"
