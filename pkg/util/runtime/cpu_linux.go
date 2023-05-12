@@ -60,10 +60,6 @@ func NumCPU() int {
 	return int(math.Ceil(float64(cpuQuota) / float64(cpuPeriod)))
 }
 
-func IsCgroupAvaliable() bool {
-	return true
-}
-
 func getCgroupVersion() int64 {
 	// /sys/fs/cgroup/cgroup.controllers will not exist with cgroupsv1
 	if _, err := os.Stat("/sys/fs/cgroup/cgroup.controllers"); err == nil {

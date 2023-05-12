@@ -27,7 +27,3 @@ import (
 func NumCPU() int {
 	return runtime.NumCPU()
 }
-
-func IsCgroupAvaliable() bool {
-	return false
-}
