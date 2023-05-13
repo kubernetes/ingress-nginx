@@ -7,6 +7,7 @@ on:
     paths-ignore:
       - 'docs/**'
       - 'deploy/**'
+      - '**.md'
 
   push:
     branches:
@@ -14,6 +15,7 @@ on:
     paths-ignore:
       - 'docs/**'
       - 'deploy/**'
+      - '**.md'
 
   workflow_dispatch:
     inputs:
