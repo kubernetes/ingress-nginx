@@ -270,11 +270,13 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 	if !ing.DeletionTimestamp.IsZero() {
 		return nil
 	}
+
 	if n.cfg.DeepInspector {
 		if err := inspector.DeepInspect(ing); err != nil {
 			return fmt.Errorf("invalid object: %w", err)
 		}
 	}
+
 	// Do not attempt to validate an ingress that's not meant to be controlled by the current instance of the controller.
 	if ingressClass, err := n.store.GetIngressClass(ing, n.cfg.IngressClassConfiguration); ingressClass == "" {
 		klog.Warningf("ignoring ingress %v in %v based on annotation %v: %v", ing.Name, ing.ObjectMeta.Namespace, ingressClass, err)
@@ -292,6 +294,13 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 	startRender := time.Now().UnixNano() / 1000000
 	cfg := n.store.GetBackendConfiguration()
 	cfg.Resolver = n.resolver
+
+	// Adds the pathType Validation
+	if cfg.StrictValidatePathType {
+		if err := inspector.ValidatePathType(ing); err != nil {
+			return fmt.Errorf("ingress contains invalid paths: %w", err)
+		}
+	}
 
 	var arrayBadWords []string
 
