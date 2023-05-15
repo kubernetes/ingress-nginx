@@ -832,7 +832,7 @@ type Configuration struct {
 	DebugConnections []string `json:"debug-connections"`
 
 	// StrictValidatePathType enable the strict validation of Ingress Paths
-	// It enforces that pathType of type Exact or Prefix contains only
+	// It enforces that pathType of type Exact or Prefix should start with / and contain only
 	// alphanumeric chars, "-", "_", "/".In case of additional characters,
 	// like used on Rewrite configurations the user should use pathType as ImplementationSpecific
 	StrictValidatePathType bool `json:"strict-validate-path-type"`
