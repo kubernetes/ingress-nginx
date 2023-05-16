@@ -66,6 +66,9 @@ controller:
   # -- This configuration enables Topology Aware Routing feature, used together with service annotation service.kubernetes.io/topology-aware-hints="auto"
   # Defaults to false
   enableTopologyAwareRouting: false
+  # -- This configuration enables SSL Passthrough feature. See https://kubernetes.github.io/ingress-nginx/user-guide/tls/#ssl-passthrough
+  # Defaults to false
+  enableSSLPassthrough: false
   # -- This configuration defines if Ingress Controller should allow users to set
   # their own *-snippet annotations, otherwise this is forbidden / dropped
   # when users add those annotations.

@@ -54,6 +54,9 @@
 {{- if .Values.controller.enableTopologyAwareRouting }}
 - --enable-topology-aware-routing=true
 {{- end }}
+{{- if .Values.controller.enableSSLPassthrough }}
+- --enable-ssl-passthrough
+{{- end }}
 {{- range $key, $value := .Values.controller.extraArgs }}
 {{- /* Accept keys without values or with false as value */}}
 {{- if eq ($value | quote | len) 2 }}
