@@ -851,7 +851,14 @@ defaultBackend:
     ## Ref: https://kubernetes.io/docs/user-guide/services/#external-ips
     ##
     externalIPs: []
+    ## Explictly set the load balancer IP
     # loadBalancerIP: ""
+    ## Read the load balancer IP from a ConfigMap
+    # loadBalancerIP:
+    #   configMap:
+    #     namespace: default
+    #     name: loadbalancer-ip
+    #     field: ipaddress
     loadBalancerSourceRanges: []
     servicePort: 80
     type: ClusterIP

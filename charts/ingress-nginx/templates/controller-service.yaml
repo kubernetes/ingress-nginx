@@ -22,8 +22,16 @@ spec:
 {{- if .Values.controller.service.externalIPs }}
   externalIPs: {{ toYaml .Values.controller.service.externalIPs | nindent 4 }}
 {{- end }}
+{{- if .Values.controller.service.loadBalancerIP.configMap }}
+{{- $cm := (lookup "v1" "ConfigMap" .Values.controller.service.loadBalancerIP.configMap.namespace .Values.controller.service.loadBalancerIP.configMap.name) }}
+{{- if $cm }}
+{{- $ip := get $cm.data .Values.controller.service.loadBalancerIP.configMap.field }}
+  loadBalancerIP: {{ $ip | quote }}
+{{- end }}
+{{- else }}
 {{- if .Values.controller.service.loadBalancerIP }}
   loadBalancerIP: {{ .Values.controller.service.loadBalancerIP }}
+{{- end }}
 {{- end }}
 {{- if .Values.controller.service.loadBalancerSourceRanges }}
   loadBalancerSourceRanges: {{ toYaml .Values.controller.service.loadBalancerSourceRanges | nindent 4 }}
