@@ -27,9 +27,6 @@ IMAGE ?= $(REGISTRY)/controller
 ARCH := $(shell uname -m)
 MELANGE_DIR ?= melange
 APKO_DIR ?= apko
-MELANGE ?= docker run --rm --privileged -w /work -v "${PWD}":/work distroless.dev/melange:latest
-MELANGE_DETACHED ?= docker run -d -w /work --rm --privileged -v "${PWD}":/work distroless.dev/melange:latest
-APKO ?= docker run --rm -w /work -v "${PWD}":/work ko.local:ca10c03b79422ee648991e16865b62fd26bac97ed4238e7890d5097896af1840
 KEY ?= melange.rsa
 REPO ?= packages
 TEMPLATE ?= melange/nginx-template.yaml
@@ -41,27 +38,27 @@ REPO ?= $(shell pwd)/packages
 ARCHS ?="amd64,arm64,arm/v6,arm/v7,s390x"
 
 define build-package
-	docker run $(2) --rm --privileged -v "${PWD}":/work distroless.dev/melange:latest build ${MELANGE_DIR}/$(1).yaml ${MELANGE_OPTS} --empty-workspace --env-file ${TEMPLATE}
+	melange build ${MELANGE_DIR}/$(1).yaml ${MELANGE_OPTS} --empty-workspace --env-file ${TEMPLATE}
 endef
 
 keygen: ## Generate Key pair for use with signing apks
-	docker run --rm --privileged -v "${PWD}":/work distroless.dev/melange:latest keygen
+	melange keygen
 
 .PHONY:	melange
 melange: ## Build melange $FILE
-	${MELANGE} build ${MELANGE_DIR}/${FILE}.yaml ${MELANGE_OPTS} --env-file ${TEMPLATE}
+	melange build ${MELANGE_DIR}/${FILE}.yaml ${MELANGE_OPTS} --env-file ${TEMPLATE}
 
 ingress-build:
-	${MELANGE} build ${MELANGE_DIR}/${FILE}.yaml ${MELANGE_INGRESS_OPT} --template '$(shell cat ${TEMPLATE})'
+	melange build ${MELANGE_DIR}/${FILE}.yaml ${MELANGE_INGRESS_OPT} --template '$(shell cat ${TEMPLATE})'
 
 nginx-build:
-	${MELANGE} build ${MELANGE_DIR}/${FILE}.yaml --source-dir ${MELANGE_DIR}/${FILE}  ${MELANGE_OPTS} --template '$(shell cat ${TEMPLATE})'
+	melange build ${MELANGE_DIR}/${FILE}.yaml --source-dir ${MELANGE_DIR}/${FILE}  ${MELANGE_OPTS} --template '$(shell cat ${TEMPLATE})'
 
 apko-build: ## Build an apko pipeline with $KEY and $FILE
-	${APKO} build ${APKO_OPTS} $(IMAGE):$(TAG) $(IMAGE)-$(TAG).tar
+	apko build ${APKO_OPTS} $(IMAGE):$(TAG) $(IMAGE)-$(TAG).tar
 
 apko-push: ## Push apko built container $IMAGE:$TAG to $REGISTRY
-	${APKO} publish ${APKO_OPTS} $(IMAGE):$(TAG)
+	apko publish ${APKO_OPTS} $(IMAGE):$(TAG)
 
 load: ## Load apko built image into docker
 	docker load < $(IMAGE)-$(TAG).tar
