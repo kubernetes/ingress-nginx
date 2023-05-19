@@ -1,12 +1,9 @@
-{{- if and .Values.controller.autoscaling.enabled (or (eq .Values.controller.kind "Deployment") (eq .Values.controller.kind "Both")) -}}
-{{- if not .Values.controller.keda.enabled }}
-
-apiVersion: {{ .Values.controller.autoscaling.apiVersion }}
+{{- if and (or (eq .Values.controller.kind "Deployment") (eq .Values.controller.kind "Both")) .Values.controller.autoscaling.enabled (not .Values.controller.keda.enabled) -}}
+apiVersion: {{ ternary "autoscaling/v2" "autoscaling/v2beta2" (.Capabilities.APIVersions.Has "autoscaling/v2") }}
 kind: HorizontalPodAutoscaler
 metadata:
-  annotations:
   {{- with .Values.controller.autoscaling.annotations }}
-  {{- toYaml . | trimSuffix "\n" | nindent 4 }}
+  annotations: {{ toYaml . | nindent 4 }}
   {{- end }}
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
@@ -24,18 +21,18 @@ spec:
   minReplicas: {{ .Values.controller.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.controller.autoscaling.maxReplicas }}
   metrics:
-  {{- with .Values.controller.autoscaling.targetMemoryUtilizationPercentage }}
-  - type: Resource
-    resource:
-      name: memory
-      target:
-        type: Utilization
-        averageUtilization: {{ . }}
-  {{- end }}
   {{- with .Values.controller.autoscaling.targetCPUUtilizationPercentage }}
   - type: Resource
     resource:
       name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ . }}
+  {{- end }}
+  {{- with .Values.controller.autoscaling.targetMemoryUtilizationPercentage }}
+  - type: Resource
+    resource:
+      name: memory
       target:
         type: Utilization
         averageUtilization: {{ . }}
@@ -48,5 +45,3 @@ spec:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 {{- end }}
-{{- end }}
-
