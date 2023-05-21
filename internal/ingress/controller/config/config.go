@@ -596,7 +596,7 @@ type Configuration struct {
 	OtelServiceName string `json:"otel-service-name"`
 
 	// OtelSampler specifies the sampler to use for any traces created
-	// Default: AlwaysOff
+	// Default: AlwaysOn
 	OtelSampler string `json:"otel-sampler"`
 
 	// OtelSamplerRatio specifies the sampler ratio to use for any traces created
@@ -604,16 +604,19 @@ type Configuration struct {
 	OtelSamplerRatio float32 `json:"otel-sampler-ratio"`
 
 	//OtelSamplerParentBased specifies the parent based sampler to be use for any traces created
-	// Default: false
+	// Default: true
 	OtelSamplerParentBased bool `json:"otel-sampler-parent-based"`
 
 	// MaxQueueSize specifies the max queue size for uploading traces
+	// Default: 2048
 	OtelMaxQueueSize int32 `json:"otel-max-queuesize"`
 
 	// ScheduleDelayMillis specifies the max delay between uploading traces
+	// Default: 5000
 	OtelScheduleDelayMillis int32 `json:"otel-schedule-delay-millis"`
 
 	// MaxExportBatchSize specifies the max export batch size to used when uploading traces
+	// Default: 512
 	OtelMaxExportBatchSize int32 `json:"otel-max-export-batch-size"`
 
 	// ZipkinCollectorHost specifies the host to use when uploading traces
@@ -975,9 +978,12 @@ func NewDefault() Configuration {
 		OpentelemetryConfig:                    "/etc/nginx/opentelemetry.toml",
 		OtlpCollectorPort:                      "4317",
 		OtelServiceName:                        "nginx",
-		OtelSampler:                            "AlwaysOff",
+		OtelSampler:                            "AlwaysOn",
 		OtelSamplerRatio:                       0.01,
-		OtelSamplerParentBased:                 false,
+		OtelSamplerParentBased:                 true,
+		OtelScheduleDelayMillis:                5000,
+		OtelMaxExportBatchSize:                 512,
+		OtelMaxQueueSize:                       2048,
 		ZipkinCollectorPort:                    9411,
 		ZipkinServiceName:                      "nginx",
 		ZipkinSampleRate:                       1.0,
