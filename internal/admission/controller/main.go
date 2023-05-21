@@ -86,6 +86,15 @@ func (ia *IngressAdmission) HandleAdmission(obj runtime.Object) (runtime.Object,
 		return review, nil
 	}
 
+	// Adds the warnings regardless of operation being allowed or not
+	warning, err := ia.Checker.CheckWarning(&ingress)
+	if err != nil {
+		klog.ErrorS(err, "failed to get ingress warnings")
+	}
+	if len(warning) > 0 {
+		status.Warnings = warning
+	}
+
 	if err := ia.Checker.CheckIngress(&ingress); err != nil {
 		klog.ErrorS(err, "invalid ingress configuration", "ingress", fmt.Sprintf("%v/%v", review.Request.Namespace, review.Request.Name))
 		status.Allowed = false
@@ -96,22 +105,6 @@ func (ia *IngressAdmission) HandleAdmission(obj runtime.Object) (runtime.Object,
 
 		review.Response = status
 		return review, nil
-	}
-
-	warning, err := ia.Checker.CheckWarning(&ingress)
-	if err != nil {
-		klog.ErrorS(err, "failed to get ingress warnings")
-		status.Allowed = false
-		status.Result = &metav1.Status{
-			Status: metav1.StatusFailure, Code: http.StatusBadRequest, Reason: metav1.StatusReasonBadRequest,
-			Message: err.Error(),
-		}
-
-		review.Response = status
-		return review, nil
-	}
-	if len(warning) > 0 {
-		status.Warnings = warning
 	}
 
 	klog.InfoS("successfully validated configuration, accepting", "ingress", fmt.Sprintf("%v/%v", review.Request.Namespace, review.Request.Name))

@@ -263,6 +263,44 @@ func (n *NGINXController) syncIngress(interface{}) error {
 func (n *NGINXController) CheckWarning(ing *networking.Ingress) ([]string, error) {
 	warnings := make([]string, 0)
 
+	var deprecatedAnnotations = sets.NewString()
+	deprecatedAnnotations.Insert(
+		"enable-influxdb",
+		"influxdb-measurement",
+		"influxdb-port",
+		"influxdb-host",
+		"influxdb-server-name",
+		"secure-verify-ca-secret",
+		"fastcgi-params-configmap",
+		"fastcgi-index",
+	)
+
+	// Skip checks if the ingress is marked as deleted
+	if !ing.DeletionTimestamp.IsZero() {
+		return warnings, nil
+	}
+
+	anns := ing.GetAnnotations()
+	for k := range anns {
+		trimmedkey := strings.TrimPrefix(k, parser.AnnotationsPrefix+"/")
+		if deprecatedAnnotations.Has(trimmedkey) {
+			warnings = append(warnings, fmt.Sprintf("annotation %s is deprecated", k))
+		}
+	}
+
+	// Add each validation as a single warning
+	// rikatz: I know this is somehow a duplicated code from CheckIngress, but my goal was to deliver fast warning on this behavior. We
+	// can and should, tho, simplify this in the near future
+	if err := inspector.ValidatePathType(ing); err != nil {
+		if errs, is := err.(interface{ Unwrap() []error }); is {
+			for _, errW := range errs.Unwrap() {
+				warnings = append(warnings, errW.Error())
+			}
+		} else {
+			warnings = append(warnings, err.Error())
+		}
+	}
+
 	return warnings, nil
 }
 
