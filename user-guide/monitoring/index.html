@@ -9,17 +9,12 @@
 controller:
   metrics:
     enabled: true
-    service:
-      annotations:
-        prometheus.io/port: &quot;10254&quot;
-        prometheus.io/scrape: &quot;true&quot;
+  podAnnotations:
+    prometheus.io/port: &quot;10254&quot;
+    prometheus.io/scrape: &quot;true&quot;
 ..
 </code></pre></div></li> <li>If you are <strong>not using helm</strong>, you will have to edit your manifests like this:<ul> <li>Service manifest: <div class=highlight><pre><span></span><code>apiVersion: v1
 kind: Service
-metadata:
- annotations:
-   prometheus.io/scrape: &quot;true&quot;
-   prometheus.io/port: &quot;10254&quot;
 ..
 spec:
   ports:
@@ -29,16 +24,20 @@ spec:
       ..
 </code></pre></div></li> <li>Deployment manifest: <div class=highlight><pre><span></span><code>apiVersion: v1
 kind: Deployment
-metadata:
- annotations:
-   prometheus.io/scrape: &quot;true&quot;
-   prometheus.io/port: &quot;10254&quot;
 ..
 spec:
-  ports:
-    - name: prometheus
-      containerPort: 10254
-      ..
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: &quot;true&quot;
+        prometheus.io/port: &quot;10254&quot;
+    spec:
+      containers:
+        - name: controller
+          ports:
+            - name: prometheus
+              containerPort: 10254
+            ..
 </code></pre></div></li> </ul> </li> </ul> <h3 id=deploy-and-configure-prometheus-server>Deploy and configure Prometheus Server<a class=headerlink href=#deploy-and-configure-prometheus-server title="Permanent link"> ¶</a></h3> <p>Note that the kustomize bases used in this tutorial are stored in the <a href=https://github.com/kubernetes/ingress-nginx/tree/main/deploy>deploy</a> folder of the GitHub repository <a href=https://github.com/kubernetes/ingress-nginx>kubernetes/ingress-nginx</a>.</p> <ul> <li> <p>The Prometheus server must be configured so that it can discover endpoints of services. If a Prometheus server is already running in the cluster and if it is configured in a way that it can find the ingress controller pods, no extra configuration is needed.</p> </li> <li> <p>If there is no existing Prometheus server running, the rest of this tutorial will guide you through the steps needed to deploy a properly configured Prometheus server.</p> </li> <li> <p>Running the following command deploys prometheus in Kubernetes:</p> </li> </ul> <div class=highlight><pre><span></span><code>kubectl apply --kustomize github.com/kubernetes/ingress-nginx/deploy/prometheus/
 </code></pre></div> <h4 id=prometheus-dashboard>Prometheus Dashboard<a class=headerlink href=#prometheus-dashboard title="Permanent link"> ¶</a></h4> <ul> <li>Open Prometheus dashboard in a web browser:</li> </ul> <div class=highlight><pre><span></span><code><span class=go>kubectl get svc -n ingress-nginx</span>
 <span class=go>NAME                   TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                                      AGE</span>
