@@ -130,6 +130,19 @@ func (f *Framework) EnsureService(service *core.Service) *core.Service {
 	return f.GetService(service.Namespace, service.Name)
 }
 
+// EnsureServiceExists creates a Service object and returns it. If it already exists and matches the provided selectors
+// then the service object is returned, if it does not match then an error is thrown.
+func (f *Framework) EnsureServiceExists(service *core.Service) *core.Service {
+	err := createServiceWithRetries(f.KubeClientSet, service.Namespace, service)
+	if k8sErrors.IsAlreadyExists(err) {
+		err = nil
+	}
+	assert.Nil(ginkgo.GinkgoT(), err, "creating service")
+	result := f.GetService(service.Namespace, service.Name)
+	assert.Equal(ginkgo.GinkgoT(), result.Spec.Selector, service.Spec.Selector, "service already exists with different selectors")
+	return result
+}
+
 // EnsureDeployment creates a Deployment object and returns it, throws error if it already exists.
 func (f *Framework) EnsureDeployment(deployment *appsv1.Deployment) *appsv1.Deployment {
 	err := createDeploymentWithRetries(f.KubeClientSet, deployment.Namespace, deployment)
@@ -199,6 +212,24 @@ func WaitForEndpoints(kubeClientSet kubernetes.Interface, timeout time.Duration,
 			return true, nil
 		}
 
+		return false, nil
+	})
+}
+
+// WaitForMinimumEndpoints waits for a given amount of time until the number of endpoints >= expectedEndpoints.
+func WaitForMinimumEndpoints(kubeClientSet kubernetes.Interface, timeout time.Duration, name, ns string, minimumEndpoints int) error {
+	if minimumEndpoints == 0 {
+		return nil
+	}
+	return wait.PollImmediate(Poll, timeout, func() (bool, error) {
+		endpoint, err := kubeClientSet.CoreV1().Endpoints(ns).Get(context.TODO(), name, metav1.GetOptions{})
+		if k8sErrors.IsNotFound(err) {
+			return false, nil
+		}
+		assert.Nil(ginkgo.GinkgoT(), err, "getting endpoints")
+		if countReadyEndpoints(endpoint) >= minimumEndpoints {
+			return true, nil
+		}
 		return false, nil
 	})
 }
