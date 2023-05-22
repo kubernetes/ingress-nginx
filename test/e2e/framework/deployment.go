@@ -558,7 +558,7 @@ func (f *Framework) NewGRPCBinDeployment() {
 }
 
 func newDeployment(name, namespace, image string, port int32, replicas int32, command []string, args []string, env []corev1.EnvVar,
-	volumeMounts []corev1.VolumeMount, volumes []corev1.Volume, setProbe bool,  podLabels map[string]string) *appsv1.Deployment {
+	volumeMounts []corev1.VolumeMount, volumes []corev1.Volume, setProbe bool, podLabels map[string]string) *appsv1.Deployment {
 
 	if podLabels == nil {
 		podLabels = map[string]string{
