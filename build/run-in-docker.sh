@@ -44,7 +44,7 @@ function cleanup {
 }
 trap cleanup EXIT
 
-E2E_IMAGE=${E2E_IMAGE:-registry.k8s.io/ingress-nginx/e2e-test-runner:v20230314-helm-chart-4.5.2-32-g520384b11@sha256:754c62f9a5efd1ee515ee908ecc16c0c4d1dda96a8cc8019667182a55f3a9035}
+E2E_IMAGE=${E2E_IMAGE:-registry.k8s.io/ingress-nginx/e2e-test-runner:v20230522@sha256:a3deb0444d53b3f3b2d73acec8be2c3330d28d2df1ef09d0b9d7dbecdee706fb}
 
 if [[ "$RUNTIME" == podman ]]; then
   # Podman does not support both tag and digest
