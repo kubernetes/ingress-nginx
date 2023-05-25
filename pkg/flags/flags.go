@@ -20,7 +20,6 @@ import (
 	"flag"
 	"fmt"
 	"net"
-	"os"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -369,12 +368,12 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 			WatchWithoutClass:  *watchWithoutClass,
 			IngressClassByName: *ingressClassByName,
 		},
-		DisableCatchAll:           *disableCatchAll,
-		ValidationWebhook:         *validationWebhook,
-		ValidationWebhookCertPath: *validationWebhookCert,
-		ValidationWebhookKeyPath:  *validationWebhookKey,
-		InternalLoggerAddress:     *internalLoggerAddress,
-		DisableSyncEvents:         *disableSyncEvents,
+		DisableCatchAll:              *disableCatchAll,
+		ValidationWebhook:            *validationWebhook,
+		ValidationWebhookCertPath:    *validationWebhookCert,
+		ValidationWebhookKeyPath:     *validationWebhookKey,
+		InternalLoggerAddress:        *internalLoggerAddress,
+		DisableSyncEvents:            *disableSyncEvents,
 		EnableAnnotationsPrefixCheck: *enableAnnotationsPrefixCheck,
 	}
 
