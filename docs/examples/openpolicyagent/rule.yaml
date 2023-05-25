@@ -1,0 +1,14 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sBlockIngressPathType
+metadata:
+  name: implspecificisblocked
+spec:
+  match:
+    kinds:
+      - apiGroups: ["networking.k8s.io"]
+        kinds: ["Ingress"]
+  parameters:
+    namespacesExceptions:
+      - "privileged"
+    blockedTypes:
+      - "ImplementationSpecific"
