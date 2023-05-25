@@ -18,6 +18,7 @@ package controller
 
 import (
 	"fmt"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -311,7 +312,6 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 	}
 
 	for key, value := range ing.ObjectMeta.GetAnnotations() {
-
 		klog.Warningf("EnableAnnotationsPrefixCheck set to false, Ignoring annotation check.")
 		if n.cfg.EnableAnnotationsPrefixCheck && parser.AnnotationsPrefix != parser.DefaultAnnotationsPrefix {
 			if strings.HasPrefix(key, fmt.Sprintf("%s/", parser.DefaultAnnotationsPrefix)) {

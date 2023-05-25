@@ -217,13 +217,11 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 
 		dynamicConfigurationRetries = flags.Int("dynamic-configuration-retries", 15, "Number of times to retry failed dynamic configuration before failing to sync an ingress.")
 
-<<<<<<< HEAD
 		disableSyncEvents = flags.Bool("disable-sync-events", false, "Disables the creation of 'Sync' event resources")
 
 		enableTopologyAwareRouting = flags.Bool("enable-topology-aware-routing", false, "Enable topology aware hints feature, needs service object annotation service.kubernetes.io/topology-aware-hints sets to auto.")
-=======
+
 		enableAnnotationsPrefixCheck = flags.Bool("enable-annotations-prefix-check", true, "Enables check for value of legacy ingressclass annotation")
->>>>>>> 2ea8b7a8f (Add flag for disabling legacy ingress class annotation prefix check)
 	)
 
 	flags.StringVar(&nginx.MaxmindMirror, "maxmind-mirror", "", `Maxmind mirror url (example: http://geoip.local/databases.`)
