@@ -308,9 +308,10 @@ controller:
   ##
   podAnnotations: {}
   replicaCount: 1
-  # -- Define either 'minAvailable' or 'maxUnavailable', never both.
+  # -- Minimum available pods set in PodDisruptionBudget.
+  # Define either 'minAvailable' or 'maxUnavailable', never both.
   minAvailable: 1
-  # -- Define either 'minAvailable' or 'maxUnavailable', never both.
+  # -- Maximum unavalaile pods set in PodDisruptionBudget. If set, 'minAvailable' is ignored.
   # maxUnavailable: 1
 
   ## Define requests resources to avoid probe issues due to CPU utilization in busy nodes
