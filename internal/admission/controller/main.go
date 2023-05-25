@@ -33,6 +33,7 @@ import (
 // contains invalid instructions
 type Checker interface {
 	CheckIngress(ing *networking.Ingress) error
+	CheckWarning(ing *networking.Ingress) ([]string, error)
 }
 
 // IngressAdmission implements the AdmissionController interface
@@ -83,6 +84,15 @@ func (ia *IngressAdmission) HandleAdmission(obj runtime.Object) (runtime.Object,
 
 		review.Response = status
 		return review, nil
+	}
+
+	// Adds the warnings regardless of operation being allowed or not
+	warning, err := ia.Checker.CheckWarning(&ingress)
+	if err != nil {
+		klog.ErrorS(err, "failed to get ingress warnings")
+	}
+	if len(warning) > 0 {
+		status.Warnings = warning
 	}
 
 	if err := ia.Checker.CheckIngress(&ingress); err != nil {

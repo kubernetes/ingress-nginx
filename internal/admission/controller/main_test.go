@@ -38,6 +38,11 @@ func (ftc failTestChecker) CheckIngress(ing *networking.Ingress) error {
 	return nil
 }
 
+func (ftc failTestChecker) CheckWarning(ing *networking.Ingress) ([]string, error) {
+	ftc.t.Error("checker should not be called")
+	return nil, nil
+}
+
 type testChecker struct {
 	t   *testing.T
 	err error
@@ -48,6 +53,13 @@ func (tc testChecker) CheckIngress(ing *networking.Ingress) error {
 		tc.t.Errorf("CheckIngress should be called with %v ingress, but got %v", testIngressName, ing.ObjectMeta.Name)
 	}
 	return tc.err
+}
+
+func (tc testChecker) CheckWarning(ing *networking.Ingress) ([]string, error) {
+	if ing.ObjectMeta.Name != testIngressName {
+		tc.t.Errorf("CheckWarning should be called with %v ingress, but got %v", testIngressName, ing.ObjectMeta.Name)
+	}
+	return nil, tc.err
 }
 
 func TestHandleAdmission(t *testing.T) {
