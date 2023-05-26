@@ -130,3 +130,4 @@ nav:
   - Developer Guide:
       - Getting Started: "developer-guide/getting-started.md"
       - Code Overview: "developer-guide/code-overview.md"
+  - FAQ: "faq.md"
