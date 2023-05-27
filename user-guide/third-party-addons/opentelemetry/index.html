@@ -87,7 +87,7 @@
         start --&gt; ng --&gt; sa
     end</code></pre> <p>To install the example and collectors run:</p> <ol> <li> <p>Enable Ingress addon with:</p> <div class=highlight><pre><span></span><code>  <span class=nt>opentelemetry</span><span class=p>:</span>
     <span class=nt>enabled</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
-    <span class=nt>image</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">registry.k8s.io/ingress-nginx/opentelemetry:v20230107-helm-chart-4.4.2-2-g96b3d2165@sha256:331b9bebd6acfcd2d3048abbdd86555f5be76b7e3d0b5af4300b04235c6056c9</span>
+    <span class=nt>image</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">registry.k8s.io/ingress-nginx/opentelemetry:v20230527@sha256:fd7ec835f31b7b37187238eb4fdad4438806e69f413a203796263131f4f02ed0</span>
     <span class=nt>containerSecurityContext</span><span class=p>:</span>
     <span class=nt>allowPrivilegeEscalation</span><span class=p>:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
 </code></pre></div> </li> <li> <p>Enable OpenTelemetry and set the otlp-collector-host:</p> <div class=highlight><pre><span></span><code><span class="l l-Scalar l-Scalar-Plain">$ echo &#39;</span>
