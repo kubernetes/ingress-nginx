@@ -100,7 +100,7 @@ func (f *Framework) NewEchoDeployment(opts ...func(*deploymentOptions)) {
 		namespace: f.Namespace,
 		name:      EchoService,
 		replicas:  1,
-		image:     "registry.k8s.io/ingress-nginx/e2e-test-echo@sha256:4938d1d91a2b7d19454460a8c1b010b89f6ff92d2987fd889ac3e8fc3b70d91a",
+		image:     "registry.k8s.io/ingress-nginx/e2e-test-echo@sha256:6fc5aa2994c86575975bb20a5203651207029a0d28e3f491d8a127d08baadab4",
 	}
 	for _, o := range opts {
 		o(options)
