@@ -6,7 +6,7 @@ require (
 	github.com/armon/go-proxyproto v0.0.0-20210323213023-7e956b284f0a
 	github.com/eapache/channels v1.1.0
 	github.com/fsnotify/fsnotify v1.6.0
-	github.com/imdario/mergo v0.3.15
+	github.com/imdario/mergo v0.3.16
 	github.com/json-iterator/go v1.1.12
 	github.com/kylelemons/godebug v1.1.0
 	github.com/mitchellh/go-ps v1.0.0
