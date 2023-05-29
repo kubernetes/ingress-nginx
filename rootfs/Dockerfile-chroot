@@ -29,6 +29,7 @@ ARG TARGETARCH
 ARG VERSION
 ARG COMMIT_SHA
 ARG BUILD_ID=UNSET
+ARG SETCAP=false
 
 LABEL org.opencontainers.image.title="NGINX Ingress Controller for Kubernetes"
 LABEL org.opencontainers.image.documentation="https://kubernetes.github.io/ingress-nginx/"
@@ -58,7 +59,7 @@ RUN apk update \
      util-linux \
   && ln -s /usr/local/nginx/sbin/nginx /sbin/nginx \
   && adduser -S -D -H -u 101 -h /usr/local/nginx \
-    -s /sbin/nologin -G www-data -g www-data www-data 
+    -s /sbin/nologin -G www-data -g www-data www-data
 
 COPY --from=chroot /chroot /chroot
 
@@ -87,14 +88,16 @@ RUN bash -xeu -c ' \
   && echo "/lib:/usr/lib:/usr/local/lib:/modules_mount/etc/nginx/modules/otel" > /chroot/etc/ld-musl-x86_64.path
 
 RUN apk add --no-cache libcap \
-  && setcap    cap_sys_chroot,cap_net_bind_service=+ep /nginx-ingress-controller \
-  && setcap -v cap_sys_chroot,cap_net_bind_service=+ep /nginx-ingress-controller \
-  && setcap    cap_sys_chroot,cap_net_bind_service=+ep /usr/bin/unshare \
-  && setcap -v cap_sys_chroot,cap_net_bind_service=+ep /usr/bin/unshare \
+  && if [ "${SETCAP}" == "true" ]; then CAP="cap_sys_chroot,cap_net_bind_service=+ep" \
   && setcap    cap_net_bind_service=+ep /chroot/usr/local/nginx/sbin/nginx \
   && setcap -v cap_net_bind_service=+ep /chroot/usr/local/nginx/sbin/nginx \
-  && setcap    cap_sys_chroot,cap_net_bind_service=+ep /usr/bin/dumb-init \
-  && setcap -v cap_sys_chroot,cap_net_bind_service=+ep /usr/bin/dumb-init \
+     ; else CAP="cap_sys_chroot=+ep"; fi \
+  && setcap    ${CAP} /nginx-ingress-controller \
+  && setcap -v ${CAP} /nginx-ingress-controller \
+  && setcap    ${CAP} /usr/bin/unshare \
+  && setcap -v ${CAP} /usr/bin/unshare \
+  && setcap    ${CAP} /usr/bin/dumb-init \
+  && setcap -v ${CAP} /usr/bin/dumb-init \
   && apk del libcap
 
 RUN  ln -sf /chroot/etc/nginx /etc/nginx \
@@ -124,4 +127,4 @@ EXPOSE 80 443
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
 CMD ["/nginx-ingress-controller"]
- 
+

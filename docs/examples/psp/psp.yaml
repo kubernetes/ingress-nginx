@@ -11,8 +11,8 @@ metadata:
   name: ingress-nginx
   namespace: ingress-nginx
 spec:
-  allowedCapabilities:
-    - NET_BIND_SERVICE
+  allowedUnsafeSysctls:
+    - net.ipv4.ip_unprivileged_port_start
   privileged: false
   allowPrivilegeEscalation: true
   # Allow core volume types.

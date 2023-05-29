@@ -20,6 +20,7 @@ ARG TARGETARCH
 ARG VERSION
 ARG COMMIT_SHA
 ARG BUILD_ID=UNSET
+ARG SETCAP=false
 
 LABEL org.opencontainers.image.title="NGINX Ingress Controller for Kubernetes"
 LABEL org.opencontainers.image.documentation="https://kubernetes.github.io/ingress-nginx/"
@@ -64,16 +65,15 @@ RUN bash -xeu -c ' \
   # Put libs of newer modules under `/modules_mount/<other>/lib` and add that path below
   # Could get complicated arch specific paths become a need
   && echo "/lib:/usr/lib:/usr/local/lib:/modules_mount/etc/nginx/modules/otel" > /etc/ld-musl-x86_64.path
-  
 
-RUN apk add --no-cache libcap \
+RUN if [ "${SETCAP}" == "true" ]; then apk add --no-cache libcap \
   && setcap    cap_net_bind_service=+ep /nginx-ingress-controller \
   && setcap -v cap_net_bind_service=+ep /nginx-ingress-controller \
   && setcap    cap_net_bind_service=+ep /usr/local/nginx/sbin/nginx \
   && setcap -v cap_net_bind_service=+ep /usr/local/nginx/sbin/nginx \
   && setcap    cap_net_bind_service=+ep /usr/bin/dumb-init \
   && setcap -v cap_net_bind_service=+ep /usr/bin/dumb-init \
-  && apk del libcap \
+  && apk del libcap; fi \
   && ln -sf /usr/local/nginx/sbin/nginx /usr/bin/nginx
 
 USER www-data

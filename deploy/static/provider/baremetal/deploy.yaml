@@ -481,8 +481,6 @@ spec:
         securityContext:
           allowPrivilegeEscalation: true
           capabilities:
-            add:
-            - NET_BIND_SERVICE
             drop:
             - ALL
           runAsUser: 101
@@ -493,6 +491,10 @@ spec:
       dnsPolicy: ClusterFirst
       nodeSelector:
         kubernetes.io/os: linux
+      securityContext:
+        sysctls:
+          - name: net.ipv4.ip_unprivileged_port_start
+            value: "80"
       serviceAccountName: ingress-nginx
       terminationGracePeriodSeconds: 300
       volumes:

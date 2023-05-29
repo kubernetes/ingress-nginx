@@ -41,8 +41,6 @@ Container SecurityContext.
 capabilities:
   drop:
   - ALL
-  add:
-  - NET_BIND_SERVICE
   {{- if .Values.controller.image.chroot }}
   - SYS_CHROOT
   {{- end }}

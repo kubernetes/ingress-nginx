@@ -112,7 +112,8 @@ controller:
   # -- Security Context policies for controller pods
   podSecurityContext: {}
   # -- See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for notes on enabling and using sysctls
-  sysctls: {}
+  sysctls:
+    net.ipv4.ip_unprivileged_port_start: "80"
   # sysctls:
   #   "net.core.somaxconn": "8192"
 
