@@ -136,12 +136,16 @@ func (Release) NewRelease(version string) {
 
 	//controller tag
 	updateChartValue("controller.image.tag", fmt.Sprintf("v%s", releaseNotes.Version))
+	Debug("releaseNotes.ControllerImages[0].Name %s", releaseNotes.ControllerImages[0].Name)
+	Debug("releaseNotes.ControllerImages[1].Name %s", releaseNotes.ControllerImages[1].Name)
 	//controller digest
-	if releaseNotes.ControllerImages[0].Name == "controller" {
+	if releaseNotes.ControllerImages[0].Name == "ingress-nginx/controller" {
+		Debug("Updating Chart Value %s with %s", "controller.image.digest", releaseNotes.ControllerImages[0].Digest)
 		updateChartValue("controller.image.digest", releaseNotes.ControllerImages[0].Digest)
 	}
 	//controller chroot digest
-	if releaseNotes.ControllerImages[1].Name == "controller-chroot" {
+	if releaseNotes.ControllerImages[1].Name == "ingress-nginx/controller-chroot" {
+		Debug("Updating Chart Value %s with %s", "controller.image.digestChroot", releaseNotes.ControllerImages[1].Digest)
 		updateChartValue("controller.image.digestChroot", releaseNotes.ControllerImages[1].Digest)
 	}
 
