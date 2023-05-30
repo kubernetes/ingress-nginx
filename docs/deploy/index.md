@@ -59,6 +59,12 @@ It will install the controller in the `ingress-nginx` namespace, creating that n
     - if the ingress controller is not installed, it will install it,
     - if the ingress controller is already installed, it will upgrade it.
 
+**If you want a full list of values you can set while installing with Helm,** run:
+
+```console
+helm show values ingress-nginx --repo https://kubernetes.github.io/ingress-nginx
+```
+
 **If you don't have Helm** or if you prefer to use a YAML manifest, you can run the following command instead:
 
 ```console
