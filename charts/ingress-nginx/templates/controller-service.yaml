@@ -76,6 +76,15 @@ spec:
       nodePort: {{ .Values.controller.service.nodePorts.https }}
     {{- end }}
   {{- end }}
+  {{- if .Values.controller.service.exposeHealthPort }}
+    - name: health
+      port: {{ .Values.controller.service.ports.health }}
+      protocol: TCP
+      targetPort: {{ .Values.controller.service.targetPorts.health }}
+    {{- if and (semverCompare ">=1.20" .Capabilities.KubeVersion.Version) (.Values.controller.service.appProtocol) }}
+      appProtocol: https
+    {{- end }}
+  {{- end }}
   {{- range $key, $value := .Values.tcp }}
     - name: {{ if $.Values.portNamePrefix }}{{ $.Values.portNamePrefix }}-{{ end }}{{ $key }}-tcp
       port: {{ $key }}
