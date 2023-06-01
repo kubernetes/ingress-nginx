@@ -76,10 +76,9 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
     resources as if you had used Helm to install the controller.
 
 !!! attention
-  If you are running an old version of Kubernetes (1.18 or earlier), please read
-  [this paragraph](#running-on-Kubernetes-versions-older-than-1.19) for specific instructions.
-  Because of api deprecations, the default manifest may not work on your cluster.
-  Specific manifests for supported Kubernetes versions are available within a sub-folder of each provider.
+    If you are running an old version of Kubernetes (1.18 or earlier), please read [this paragraph](#running-on-Kubernetes-versions-older-than-1.19) for specific instructions.
+    Because of api deprecations, the default manifest may not work on your cluster.
+    Specific manifests for supported Kubernetes versions are available within a sub-folder of each provider.
 
 ### Pre-flight check
 
@@ -98,6 +97,7 @@ kubectl wait --namespace ingress-nginx \
   --selector=app.kubernetes.io/component=controller \
   --timeout=120s
 ```
+
 
 ### Local testing
 
@@ -121,7 +121,19 @@ Now, forward a local port to the ingress controller:
 kubectl port-forward --namespace=ingress-nginx service/ingress-nginx-controller 8080:80
 ```
 
-At this point, if you access http://demo.localdev.me:8080/, you should see an HTML page telling you "It works!".
+!!! info
+    A note on DNS & network-connection.
+    This documentation assumes that a user has awareness of the DNS and the network routing aspects involved in using ingress.
+    The port-forwarding mentioned above, is the easiest way to demo the working of ingress. The "kubectl port-forward..." command above has forwarded the port number 8080, on the localhost's tcp/ip stack, where the command was typed, to the port  number 80, of the service created by the installation of ingress-nginx controller. So now, the traffic sent to port number 8080 on localhost will reach the port number 80, of the ingress-controller's service.
+    Port-forwarding is not for a production environment use-case. But here we use port-forwarding, to simulate a HTTP request, originating from outside the cluster, to reach the service of the ingress-nginx controller, that is exposed to receive traffic from outside the cluster.
+  [This issue](https://github.com/kubernetes/ingress-nginx/issues/10014#issuecomment-1567791549described) shows a typical DNS problem and its solution.
+
+At this point, you can access your deployment using curl ;
+```console
+curl --resolve demo.localdev.me:8080:127.0.0.1 http://demo.localdev.me:8080
+```
+
+You should see a HTML response containing text like **"It works!"**.
 
 ### Online testing
 
