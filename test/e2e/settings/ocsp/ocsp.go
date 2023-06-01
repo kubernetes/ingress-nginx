@@ -68,7 +68,7 @@ var _ = framework.DescribeSetting("OCSP", func() {
 
 		var pemCertBuffer bytes.Buffer
 		pemCertBuffer.Write(leafCert)
-		pemCertBuffer.Write([]byte("\n"))
+		pemCertBuffer.WriteString("\n")
 		pemCertBuffer.Write(intermediateCa)
 
 		f.EnsureSecret(&corev1.Secret{
