@@ -15,7 +15,7 @@ ARG BASE_IMAGE
 ARG GOLANG_VERSION
 ARG ETCD_VERSION
 
-FROM golang:${GOLANG_VERSION}-alpine3.17 as GO
+FROM golang:${GOLANG_VERSION}-alpine3.18 as GO
 FROM registry.k8s.io/etcd:${ETCD_VERSION} as etcd
 
 FROM ${BASE_IMAGE}
