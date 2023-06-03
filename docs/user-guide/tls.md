@@ -33,13 +33,13 @@ for requests that do not match any of the configured server names.
 This configuration works out-of-the-box for HTTP traffic.
 For HTTPS, a certificate is naturally required.
 
-For this reason the Ingress controller provides the flag `--default-ssl-certificate`.
+For this reason the Ingress controller provides the flag `--default-ssl-certificate-secret`.
 The secret referred to by this flag contains the default certificate to be used when
 accessing the catch-all server.
 If this flag is not provided NGINX will use a self-signed certificate.
 
 For instance, if you have a TLS secret `foo-tls` in the `default` namespace,
-add `--default-ssl-certificate=default/foo-tls` in the `nginx-controller` deployment.
+add `--default-server-tls-secret=default/foo-tls` in the `nginx-controller` deployment.
 
 The default certificate will also be used for ingress `tls:` sections that do not
 have a `secretName` option.
