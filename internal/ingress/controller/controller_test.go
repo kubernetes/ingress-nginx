@@ -387,7 +387,7 @@ func TestCheckWarning(t *testing.T) {
 			t.Errorf("no error should be returned, but %s was returned", err)
 		}
 		if len(warnings) != 1 {
-			t.Errorf("expected 1 warning to occur but %d occured", len(warnings))
+			t.Errorf("expected 1 warning to occur but %d occurred", len(warnings))
 		} else {
 			t.Logf("got warning %s correctly", warnings[0])
 		}
@@ -424,7 +424,7 @@ func TestCheckWarning(t *testing.T) {
 			t.Errorf("no error should be returned, but %s was returned", err)
 		}
 		if len(warnings) != 1 {
-			t.Errorf("expected 1 warning to occur but %d occured", len(warnings))
+			t.Errorf("expected 1 warning to occur but %d occurred", len(warnings))
 		} else {
 			t.Logf("got warnings %v correctly", warnings)
 		}
@@ -441,7 +441,7 @@ func TestCheckWarning(t *testing.T) {
 				t.Errorf("no error should be returned, but %s was returned", err)
 			}
 			if len(warnings) != 4 {
-				t.Errorf("expected 4 warning to occur but %d occured", len(warnings))
+				t.Errorf("expected 4 warning to occur but %d occurred", len(warnings))
 			} else {
 				t.Logf("got warnings %v correctly", warnings)
 			}
