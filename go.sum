@@ -746,6 +746,10 @@ k8s.io/kube-openapi v0.0.0-20221012153701-172d655c2280 h1:+70TFaan3hfJzs+7VK2o+O
 k8s.io/kube-openapi v0.0.0-20221012153701-172d655c2280/go.mod h1:+Axhij7bCpeqhklhUTe3xmOn6bWxolyZEeyaFpjGtl4=
 k8s.io/utils v0.0.0-20221128185143-99ec85e7a448 h1:KTgPnR10d5zhztWptI952TNtt/4u5h3IzDXkdIMuo2Y=
 k8s.io/utils v0.0.0-20221128185143-99ec85e7a448/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
+kernel.org/pub/linux/libs/security/libcap/cap v1.2.69 h1:N0m3tKYbkRMmDobh/47ngz+AWeV7PcfXMDi8xu3Vrag=
+kernel.org/pub/linux/libs/security/libcap/cap v1.2.69/go.mod h1:Tk5Ip2TuxaWGpccL7//rAsLRH6RQ/jfqTGxuN/+i/FQ=
+kernel.org/pub/linux/libs/security/libcap/psx v1.2.69 h1:IdrOs1ZgwGw5CI+BH6GgVVlOt+LAXoPyh7enr8lfaXs=
+kernel.org/pub/linux/libs/security/libcap/psx v1.2.69/go.mod h1:+l6Ee2F59XiJ2I6WR5ObpC1utCQJZ/VLsEbQCD8RG24=
 pault.ag/go/sniff v0.0.0-20200207005214-cf7e4d167732 h1:SAElp8THCfmBdM+4lmWX5gebiSSkEr7PAYDVF91qpfg=
 pault.ag/go/sniff v0.0.0-20200207005214-cf7e4d167732/go.mod h1:lpvCfhqEHNJSSpG5R5A2EgsVzG8RTt4RfPoQuRAcDmg=
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=

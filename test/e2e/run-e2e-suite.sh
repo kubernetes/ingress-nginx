@@ -60,14 +60,14 @@ kubectl create clusterrolebinding permissive-binding \
   --user=kubelet \
   --serviceaccount=default:ingress-nginx-e2e || true
 
-VER=$(kubectl version  --client=false -o json |jq '.serverVersion.minor |tonumber')
-if [ $VER -lt 24 ]; then
-  echo -e "${BGREEN}Waiting service account...${NC}"; \
-  until kubectl get secret | grep -q -e ^ingress-nginx-e2e-token; do \
-    echo -e "waiting for api token"; \
-    sleep 3; \
-  done
-fi
+#VER=$(kubectl version  --client=false -o json |jq '.serverVersion.minor |tonumber')
+#if [ $VER -lt 24 ]; then
+#  echo -e "${BGREEN}Waiting service account...${NC}"; \
+#  until kubectl get secret | grep -q -e ^ingress-nginx-e2e-token; do \
+#    echo -e "waiting for api token"; \
+#    sleep 3; \
+#  done
+#fi
 
 echo -e "Starting the e2e test pod"
 

@@ -30,6 +30,7 @@ cleanup() {
 
 DEBUG=${DEBUG:=false}
 
+KIND_LOG_LEVEL="1"
 if [ "${DEBUG}" = "true" ]; then
   set -x
   KIND_LOG_LEVEL="6"
@@ -37,14 +38,13 @@ else
   trap cleanup EXIT
 fi
 
-KIND_LOG_LEVEL="1"
 IS_CHROOT="${IS_CHROOT:-false}"
 export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-ingress-nginx-dev}
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Use 1.0.0-dev to make sure we use the latest configuration in the helm template
-export TAG=1.0.0-dev
+export TAG="${TAG:=1.0.0-dev}"
 export ARCH=${ARCH:-amd64}
-export REGISTRY=ingress-controller
+export REGISTRY="${REGISTRY:=ingress-controller}"
 NGINX_BASE_IMAGE=$(cat "$DIR"/../../NGINX_BASE)
 export NGINX_BASE_IMAGE=$NGINX_BASE_IMAGE
 export DOCKER_CLI_EXPERIMENTAL=enabled
@@ -79,7 +79,14 @@ if [ "${SKIP_CLUSTER_CREATION}" = "false" ]; then
 
   echo "Kubernetes cluster:"
   kubectl get nodes -o wide
+  else
+    kind export kubeconfig --name "${KIND_CLUSTER_NAME}"
+    kind get clusters
 fi
+
+
+  echo "Kubernetes cluster:"
+  kubectl get nodes -o wide
 
 if [ "${SKIP_INGRESS_IMAGE_CREATION}" = "false" ]; then
   echo "[dev-env] building image"

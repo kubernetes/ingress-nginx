@@ -39,6 +39,7 @@ require (
 	k8s.io/code-generator v0.26.4
 	k8s.io/component-base v0.26.4
 	k8s.io/klog/v2 v2.100.1
+	kernel.org/pub/linux/libs/security/libcap/cap v1.2.69
 	pault.ag/go/sniff v0.0.0-20200207005214-cf7e4d167732
 	sigs.k8s.io/controller-runtime v0.14.6
 	sigs.k8s.io/mdtoc v1.1.0
@@ -118,6 +119,7 @@ require (
 	k8s.io/gengo v0.0.0-20220902162205-c0856e24416d // indirect
 	k8s.io/kube-openapi v0.0.0-20221012153701-172d655c2280 // indirect
 	k8s.io/utils v0.0.0-20221128185143-99ec85e7a448 // indirect
+	kernel.org/pub/linux/libs/security/libcap/psx v1.2.69 // indirect
 	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
 	sigs.k8s.io/kustomize/api v0.12.1 // indirect
 	sigs.k8s.io/kustomize/kyaml v0.13.9 // indirect
