@@ -92,7 +92,7 @@ var _ = framework.IngressNginxDescribe("[Flag] custom HTTP and HTTPS ports", fun
 				Expect().
 				Status(http.StatusOK).
 				Body().
-				Contains(fmt.Sprintf("x-forwarded-port=443"))
+				Contains("x-forwarded-port=443")
 		})
 
 		ginkgo.Context("when external authentication is configured", func() {
@@ -141,7 +141,7 @@ var _ = framework.IngressNginxDescribe("[Flag] custom HTTP and HTTPS ports", fun
 					Expect().
 					Status(http.StatusOK).
 					Body().
-					Contains(fmt.Sprintf("x-forwarded-port=443"))
+					Contains("x-forwarded-port=443")
 			})
 		})
 	})

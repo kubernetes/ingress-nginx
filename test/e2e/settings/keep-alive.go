@@ -17,7 +17,6 @@ limitations under the License.
 package settings
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 
@@ -41,7 +40,7 @@ var _ = framework.DescribeSetting("keep-alive keep-alive-requests", func() {
 			f.UpdateNginxConfigMapData("keep-alive", "140")
 
 			f.WaitForNginxConfiguration(func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf(`keepalive_timeout 140s;`))
+				return strings.Contains(server, `keepalive_timeout 140s;`)
 			})
 		})
 
@@ -49,7 +48,7 @@ var _ = framework.DescribeSetting("keep-alive keep-alive-requests", func() {
 			f.UpdateNginxConfigMapData("keep-alive-requests", "200")
 
 			f.WaitForNginxConfiguration(func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf(`keepalive_requests 200;`))
+				return strings.Contains(server, `keepalive_requests 200;`)
 			})
 
 		})
