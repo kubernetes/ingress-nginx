@@ -33,7 +33,7 @@ import (
 
 	"github.com/eapache/channels"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
+
 	discoveryv1 "k8s.io/api/discovery/v1"
 	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -48,7 +48,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxyssl"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/sessionaffinity"
-	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ngx_config "k8s.io/ingress-nginx/internal/ingress/controller/config"
 	"k8s.io/ingress-nginx/internal/ingress/controller/ingressclass"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
@@ -146,7 +145,7 @@ func (ntc testNginxTestCommand) Test(cfg string) ([]byte, error) {
 
 type fakeTemplate struct{}
 
-func (fakeTemplate) Write(conf config.TemplateConfig) ([]byte, error) {
+func (fakeTemplate) Write(conf ngx_config.TemplateConfig) ([]byte, error) {
 	r := []byte{}
 	for _, s := range conf.Servers {
 		if len(r) > 0 {
@@ -1529,7 +1528,7 @@ func TestGetBackendServers(t *testing.T) {
 	testCases := []struct {
 		Ingresses    []*ingress.Ingress
 		Validate     func(ingresses []*ingress.Ingress, upstreams []*ingress.Backend, servers []*ingress.Server)
-		SetConfigMap func(namespace string) *v1.ConfigMap
+		SetConfigMap func(namespace string) *corev1.ConfigMap
 	}{
 		{
 			Ingresses: []*ingress.Ingress{
@@ -2299,8 +2298,8 @@ func TestGetBackendServers(t *testing.T) {
 					t.Errorf("location cafilename should be '%s', got '%s'", ingresses[1].ParsedAnnotations.ProxySSL.CAFileName, s.Locations[0].ProxySSL.CAFileName)
 				}
 			},
-			SetConfigMap: func(ns string) *v1.ConfigMap {
-				return &v1.ConfigMap{
+			SetConfigMap: func(ns string) *corev1.ConfigMap {
+				return &corev1.ConfigMap{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:     "config",
 						SelfLink: fmt.Sprintf("/api/v1/namespaces/%s/configmaps/config", ns),
@@ -2360,8 +2359,8 @@ func TestGetBackendServers(t *testing.T) {
 					t.Errorf("backend should be upstream-default-backend, got '%s'", s.Locations[0].Backend)
 				}
 			},
-			SetConfigMap: func(ns string) *v1.ConfigMap {
-				return &v1.ConfigMap{
+			SetConfigMap: func(ns string) *corev1.ConfigMap {
+				return &corev1.ConfigMap{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:     "config",
 						SelfLink: fmt.Sprintf("/api/v1/namespaces/%s/configmaps/config", ns),
@@ -2438,8 +2437,8 @@ func TestGetBackendServers(t *testing.T) {
 				}
 
 			},
-			SetConfigMap: func(ns string) *v1.ConfigMap {
-				return &v1.ConfigMap{
+			SetConfigMap: func(ns string) *corev1.ConfigMap {
+				return &corev1.ConfigMap{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:     "config",
 						SelfLink: fmt.Sprintf("/api/v1/namespaces/%s/configmaps/config", ns),
@@ -2459,8 +2458,8 @@ func TestGetBackendServers(t *testing.T) {
 	}
 }
 
-func testConfigMap(ns string) *v1.ConfigMap {
-	return &v1.ConfigMap{
+func testConfigMap(ns string) *corev1.ConfigMap {
+	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:     "config",
 			SelfLink: fmt.Sprintf("/api/v1/namespaces/%s/configmaps/config", ns),
@@ -2469,11 +2468,11 @@ func testConfigMap(ns string) *v1.ConfigMap {
 }
 
 func newNGINXController(t *testing.T) *NGINXController {
-	ns := v1.NamespaceDefault
+	ns := corev1.NamespaceDefault
 
 	clientSet := fake.NewSimpleClientset()
 
-	configMap := &v1.ConfigMap{
+	configMap := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:     "config",
 			SelfLink: fmt.Sprintf("/api/v1/namespaces/%s/configmaps/config", ns),
@@ -2540,8 +2539,8 @@ func fakeX509Cert(dnsNames []string) *x509.Certificate {
 	}
 }
 
-func newDynamicNginxController(t *testing.T, setConfigMap func(string) *v1.ConfigMap) *NGINXController {
-	ns := v1.NamespaceDefault
+func newDynamicNginxController(t *testing.T, setConfigMap func(string) *corev1.ConfigMap) *NGINXController {
+	ns := corev1.NamespaceDefault
 
 	clientSet := fake.NewSimpleClientset()
 	configMap := setConfigMap(ns)
