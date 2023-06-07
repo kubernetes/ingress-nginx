@@ -110,19 +110,19 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "histogram_quantile(\n  0.5,\n  sum by (le)(\n    rate(\n      nginx_ingress_controller_request_duration_seconds_bucket{\n        ingress =~ \"$ingress\"\n      }[5m]\n    )\n  )\n)",
+          "expr": "histogram_quantile(\n  0.5,\n  sum by (le)(\n    rate(\n      nginx_ingress_controller_request_duration_seconds_bucket{\n        ingress =~ \"$ingress\",\n        exported_namespace =~ \"$exported_namespace\"\n      }[5m]\n    )\n  )\n)",
           "interval": "",
           "legendFormat": ".5",
           "refId": "D"
         },
         {
-          "expr": "histogram_quantile(\n  0.95,\n  sum by (le)(\n    rate(\n    nginx_ingress_controller_request_duration_seconds_bucket{\n        ingress =~ \"$ingress\"\n      }[5m]\n    )\n  )\n)",
+          "expr": "histogram_quantile(\n  0.95,\n  sum by (le)(\n    rate(\n    nginx_ingress_controller_request_duration_seconds_bucket{\n        ingress =~ \"$ingress\",\n        exported_namespace =~ \"$exported_namespace\"\n      }[5m]\n    )\n  )\n)",
           "interval": "",
           "legendFormat": ".95",
           "refId": "B"
         },
         {
-          "expr": "histogram_quantile(\n  0.99,\n  sum by (le)(\n    rate(\n      nginx_ingress_controller_request_duration_seconds_bucket{\n        ingress =~ \"$ingress\"\n      }[5m]\n    )\n  )\n)",
+          "expr": "histogram_quantile(\n  0.99,\n  sum by (le)(\n    rate(\n      nginx_ingress_controller_request_duration_seconds_bucket{\n        ingress =~ \"$ingress\",\n        exported_namespace =~ \"$exported_namespace\"\n      }[5m]\n    )\n  )\n)",
           "interval": "",
           "legendFormat": ".99",
           "refId": "A"
@@ -209,7 +209,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "histogram_quantile(\n  0.5,\n  sum by (le)(\n    rate(\n      nginx_ingress_controller_response_duration_seconds_bucket{\n        ingress =~ \"$ingress\"\n      }[5m]\n    )\n  )\n)",
+          "expr": "histogram_quantile(\n  0.5,\n  sum by (le)(\n    rate(\n      nginx_ingress_controller_response_duration_seconds_bucket{\n        ingress =~ \"$ingress\",\n        exported_namespace =~ \"$exported_namespace\"\n      }[5m]\n    )\n  )\n)",
           "instant": false,
           "interval": "",
           "intervalFactor": 1,
@@ -217,13 +217,13 @@
           "refId": "D"
         },
         {
-          "expr": "histogram_quantile(\n  0.95,\n  sum by (le)(\n    rate(\n    nginx_ingress_controller_response_duration_seconds_bucket{\n        ingress =~ \"$ingress\"\n      }[5m]\n    )\n  )\n)",
+          "expr": "histogram_quantile(\n  0.95,\n  sum by (le)(\n    rate(\n    nginx_ingress_controller_response_duration_seconds_bucket{\n        ingress =~ \"$ingress\",\n        exported_namespace =~ \"$exported_namespace\"\n      }[5m]\n    )\n  )\n)",
           "interval": "",
           "legendFormat": ".95",
           "refId": "B"
         },
         {
-          "expr": "histogram_quantile(\n  0.99,\n  sum by (le)(\n    rate(\n      nginx_ingress_controller_response_duration_seconds_bucket{\n        ingress =~ \"$ingress\"\n      }[5m]\n    )\n  )\n)",
+          "expr": "histogram_quantile(\n  0.99,\n  sum by (le)(\n    rate(\n      nginx_ingress_controller_response_duration_seconds_bucket{\n        ingress =~ \"$ingress\",\n        exported_namespace =~ \"$exported_namespace\"\n      }[5m]\n    )\n  )\n)",
           "interval": "",
           "legendFormat": ".99",
           "refId": "A"
@@ -311,7 +311,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "  sum by (method, host, path)(\n    rate(\n      nginx_ingress_controller_request_duration_seconds_count{\n        ingress =~ \"$ingress\"\n      }[5m]\n    )\n  )\n",
+          "expr": "  sum by (method, host, path)(\n    rate(\n      nginx_ingress_controller_request_duration_seconds_count{\n        ingress =~ \"$ingress\",\n        exported_namespace =~ \"$exported_namespace\"\n      }[5m]\n    )\n  )\n",
           "interval": "",
           "intervalFactor": 1,
           "legendFormat": "{{ method }} {{ host }}{{path }}",
@@ -401,7 +401,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "histogram_quantile(\n  .5,\n  sum by (le, method, host, path)(\n    rate(\n      nginx_ingress_controller_response_duration_seconds_bucket{\n        ingress =~ \"$ingress\"\n      }[5m]\n    )\n  )\n)",
+          "expr": "histogram_quantile(\n  .5,\n  sum by (le, method, host, path)(\n    rate(\n      nginx_ingress_controller_response_duration_seconds_bucket{\n        ingress =~ \"$ingress\",\n        exported_namespace =~ \"$exported_namespace\"\n      }[5m]\n    )\n  )\n)",
           "interval": "",
           "intervalFactor": 1,
           "legendFormat": "{{ method }} {{ host }}{{path }}",
@@ -491,7 +491,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by (method, host, path) (rate(nginx_ingress_controller_request_duration_seconds_count{\n  ingress =~ \"$ingress\",\n  status =~ \"[4-5].*\"\n}[5m])) / sum by (method, host, path) (rate(nginx_ingress_controller_request_duration_seconds_count{\n  ingress =~ \"$ingress\",\n}[5m]))",
+          "expr": "sum by (method, host, path) (rate(nginx_ingress_controller_request_duration_seconds_count{\n  ingress =~ \"$ingress\",\n  status =~ \"[4-5].*\",\n  exported_namespace =~ \"$exported_namespace\"\n}[5m])) / sum by (method, host, path) (rate(nginx_ingress_controller_request_duration_seconds_count{\n  ingress =~ \"$ingress\",\n  exported_namespace =~ \"$exported_namespace\"\n}[5m]))",
           "interval": "",
           "intervalFactor": 1,
           "legendFormat": "{{ method }} {{ host }}{{path }}",
@@ -581,7 +581,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by (method, host, path) (rate(nginx_ingress_controller_response_duration_seconds_sum{ingress =~ \"$ingress\"}[5m]))",
+          "expr": "sum by (method, host, path) (rate(nginx_ingress_controller_response_duration_seconds_sum{ingress =~ \"$ingress\",exported_namespace =~ \"$exported_namespace\"}[5m]))",
           "interval": "",
           "intervalFactor": 1,
           "legendFormat": "{{ method }} {{ host }}{{path }}",
@@ -670,7 +670,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "  sum (\n    rate(\n      nginx_ingress_controller_request_duration_seconds_count{\n        ingress =~ \"$ingress\",\n        status =~\"[4-5].*\",\n      }[5m]\n    )\n  ) by(method, host, path, status)\n",
+          "expr": "  sum (\n    rate(\n      nginx_ingress_controller_request_duration_seconds_count{\n        ingress =~ \"$ingress\",\n        status =~\"[4-5].*\",\n        exported_namespace =~ \"$exported_namespace\"\n      }[5m]\n    )\n  ) by(method, host, path, status)\n",
           "interval": "",
           "intervalFactor": 1,
           "legendFormat": "{{ method }} {{ host }}{{path }} {{ status }}",
@@ -759,7 +759,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum (\n  rate (\n      nginx_ingress_controller_response_size_sum {\n        ingress =~ \"$ingress\",\n      }[5m]\n  )\n)  by (method, host, path) / sum (\n  rate(\n      nginx_ingress_controller_response_size_count {\n        ingress =~ \"$ingress\",\n      }[5m]\n  )\n) by (method, host, path)\n",
+          "expr": "sum (\n  rate (\n      nginx_ingress_controller_response_size_sum {\n        ingress =~ \"$ingress\",\n        exported_namespace =~ \"$exported_namespace\"\n      }[5m]\n  )\n)  by (method, host, path) / sum (\n  rate(\n      nginx_ingress_controller_response_size_count {\n        ingress =~ \"$ingress\",\n        exported_namespace =~ \"$exported_namespace\"\n      }[5m]\n  )\n) by (method, host, path)\n",
           "hide": false,
           "instant": false,
           "interval": "",
@@ -768,7 +768,7 @@
           "refId": "D"
         },
         {
-          "expr": "    sum (rate(nginx_ingress_controller_response_size_bucket{\n        ingress =~ \"$ingress\",\n    }[5m])) by (le)\n",
+          "expr": "    sum (rate(nginx_ingress_controller_response_size_bucket{\n        ingress =~ \"$ingress\",\n        exported_namespace =~ \"$exported_namespace\"\n    }[5m])) by (le)\n",
           "hide": true,
           "legendFormat": "{{le}}",
           "refId": "A"
@@ -854,7 +854,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum (\n  rate(\n      nginx_ingress_controller_ingress_upstream_latency_seconds_sum {\n        ingress =~ \"$ingress\",\n      }[5m]\n)) / sum (\n  rate(\n      nginx_ingress_controller_ingress_upstream_latency_seconds_count {\n        ingress =~ \"$ingress\",\n      }[5m]\n  )\n)\n",
+          "expr": "sum (\n  rate(\n      nginx_ingress_controller_ingress_upstream_latency_seconds_sum {\n        ingress =~ \"$ingress\",\n        exported_namespace =~ \"$exported_namespace\"\n      }[5m]\n)) / sum (\n  rate(\n      nginx_ingress_controller_ingress_upstream_latency_seconds_count {\n        ingress =~ \"$ingress\",\n        exported_namespace =~ \"$exported_namespace\"\n      }[5m]\n  )\n)\n",
           "hide": false,
           "instant": false,
           "interval": "",
@@ -903,6 +903,7 @@
   "templating": {
     "list": [
       {
+        "allValue": ".*",
         "current": {
           "selected": false,
           "text": "Prometheus",
@@ -936,6 +937,32 @@
         "query": {
           "query": "label_values(nginx_ingress_controller_requests, ingress) ",
           "refId": "Prometheus-ingress-Variable-Query"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 2,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {},
+        "datasource": {
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "definition": "label_values(nginx_ingress_controller_requests,exported_namespace)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Ingress Namespace",
+        "multi": true,
+        "name": "exported_namespace",
+        "options": [],
+        "query": {
+          "query": "label_values(nginx_ingress_controller_requests, exported_namespace) ",
+          "refId": "Prometheus-namespace-Variable-Query"
         },
         "refresh": 1,
         "regex": "",
