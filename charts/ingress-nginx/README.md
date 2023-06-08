@@ -148,7 +148,6 @@ controller:
         # Create internal ELB(Deprecated)
         # service.beta.kubernetes.io/aws-load-balancer-internal: "true"
         # Any other annotation can be declared here.
-        # Any other annotation can be declared here.
 ```
 
 Example for GCE:
