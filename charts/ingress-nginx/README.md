@@ -148,6 +148,7 @@ controller:
         # Create internal ELB(Deprecated)
         # service.beta.kubernetes.io/aws-load-balancer-internal: "true"
         # Any other annotation can be declared here.
+        # Any other annotation can be declared here.
 ```
 
 Example for GCE:
@@ -188,7 +189,8 @@ controller:
         service.beta.kubernetes.io/oci-load-balancer-internal: "true"
         # Any other annotation can be declared here.
 ```
-Load balancer annotations of more cloud service providers can be found: [Internal load balancer](https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer).
+
+The load balancer annotations of more cloud service providers can be found: [Internal load balancer](https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer).
 
 An use case for this scenario is having a split-view DNS setup where the public zone CNAME records point to the external balancer URL while the private zone CNAME records point to the internal balancer URL. This way, you only need one ingress kubernetes object.
 
