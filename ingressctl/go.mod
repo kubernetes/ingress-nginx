@@ -3,12 +3,14 @@ module github.com/kubernetes/ingress-nginx/ingressctl
 go 1.20
 
 require (
+	github.com/codeskyblue/go-sh v0.0.0-20200712050446-30169cf553fe
 	github.com/docker/docker v24.0.2+incompatible
 	github.com/spf13/cobra v1.7.0
 )
 
 require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
+	github.com/codegangsta/inject v0.0.0-20150114235600-33e0aa1cb7c0 // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect

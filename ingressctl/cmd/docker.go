@@ -3,7 +3,10 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
 
+	"github.com/codeskyblue/go-sh"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/spf13/cobra"
@@ -26,18 +29,33 @@ var dockerListCmd = &cobra.Command{
 
 var dockerBuildCmd = &cobra.Command{
 	Use: "build",
-	Short: "build a docker container"
-	Long: "build a docker container for use with ingress-nginx"
-	Run: func(cmd *cobra.Command, args []string){
+
+	Long: "build a docker container for use with ingress-nginx",
+	Run: func(cmd *cobra.Command, args []string) {
 		dockerBuild()
 	},
-
 }
+
+var dco dockerBuildOpts
+
 func init() {
 	rootCmd.AddCommand(dockerCmd)
 	dockerCmd.AddCommand(dockerListCmd)
+	dockerCmd.AddCommand(dockerBuildCmd)
+	dockerBuildCmd.Flags().StringVar(&dco.PlatformFlag, "platformflag", "", "Setting the Docker --platform build flag")
+	dockerBuildCmd.Flags().StringSliceVar(&dco.Platform, "platforms", PLATFORMS, "comma seperated list of platforms to build for container image")
+	dockerBuildCmd.Flags().StringVar(&dco.BuildArgs.BaseImage, "base", "", "base image to build container off of")
+	dockerBuildCmd.Flags().StringVar(&dco.Path, "path", "", "container build path")
+	dockerBuildCmd.Flags().StringVar(&dco.BuildArgs.Version, "version", "", "docker tag to build")
+	dockerBuildCmd.Flags().StringVar(&dco.BuildArgs.TargetArch, "targetarch", "", "target arch to build")
+	dockerBuildCmd.Flags().StringVar(&dco.BuildArgs.CommitSHA, "commitsha", "", "build arg commit sha to add to build")
+	dockerBuildCmd.Flags().StringVar(&dco.BuildArgs.BuildId, "build-id", "", "build id to add to container metadata")
+	dockerBuildCmd.Flags().StringVar(&dco.DockerFile, "dockerfile", "", "dockerfile of image to build")
+	dockerBuildCmd.Flags().StringVar(&dco.Image.Name, "name", "", "container image name registry/name:tag@digest")
+	dockerBuildCmd.Flags().StringVar(&dco.Image.Registry, "registry", Registry, "Registry to tag image and push container registry/name:tag@digest")
+	dockerBuildCmd.Flags().StringVar(&dco.Image.Tag, "tag", "", "container tag registry/name:tag@digest")
+	dockerBuildCmd.Flags().StringVar(&dco.Image.Digest, "digest", "", "digest of container image registry/name:tag@digest")
 }
-
 func dockerList() {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
@@ -54,35 +72,91 @@ func dockerList() {
 	}
 }
 
+var PLATFORMS = []string{"amd64", "arm", "arm64", "s390x"}
+var BUILDX_PLATFORMS = "linux/amd64,linux/arm,linux/arm64,linux/s390x"
+var Registry = "gcr.io/k8s-staging-ingress-nginx"
+var PKG = "k8s.io/ingress-nginx"
+
+type dockerBuildOpts struct {
+	PlatformFlag string
+	Platform     []string
+	BuildArgs    BuildArgs
+	DockerFile   string
+	Image        Image
+	Path         string
+}
+
+type BuildArgs struct {
+	BaseImage  string
+	Version    string
+	TargetArch string
+	CommitSHA  string
+	BuildId    string
+}
+
+// ControllerImage - struct with info about controllers
+type Image struct {
+	Tag      string
+	Digest   string
+	Registry string
+	Name     string
+}
+
+func (i Image) print() string {
+	return fmt.Sprintf("%s/%s:%s@sha256:%s", i.Registry, i.Name, i.Tag, i.Digest)
+}
+
 func dockerBuild() error {
-/*
-     docker build \
-         ${PLATFORM_FLAG} ${PLATFORM} \
---no-cache \
-         --pull \
-         --build-arg BASE_IMAGE="$(BASE_IMAGE)" \
-         --build-arg VERSION="$(TAG)" \
-         --build-arg TARGETARCH="$(ARCH)" \
-         --build-arg COMMIT_SHA="$(COMMIT_SHA)" \
-         --build-arg BUILD_ID="$(BUILD_ID)" \
-         -t $(REGISTRY)/controller:$(TAG) rootfs
-*/
+	/*
+	        docker build \
+	            ${PLATFORM_FLAG} ${PLATFORM} \
+	   --no-cache \
+	            --pull \
+	            --build-arg BASE_IMAGE="$(BASE_IMAGE)" \
+	            --build-arg VERSION="$(TAG)" \
+	            --build-arg TARGETARCH="$(ARCH)" \
+	            --build-arg COMMIT_SHA="$(COMMIT_SHA)" \
+	            --build-arg BUILD_ID="$(BUILD_ID)" \
+	            -t $(REGISTRY)/controller:$(TAG) rootfs
+	*/
+	session := sh.NewSession()
+	session.ShowCMD = true
 
-     cli, err := client.NewClientWithOpts(client.FromEnv)
-     if err != nil {
-         panic(err)
-     }
+	fmt.Printf("Container Build Path: %v\n", dco.Path)
 
-	 builder := io.Reader{}
+	buildArgs := BuildArgs(dco.BuildArgs)
 
-	 options := docker.ImageCreateOptions{
+	fmt.Printf("Base image: %s\n", dco.BuildArgs.BaseImage)
 
+	fmt.Printf("Build Args: %s\n", buildArgs)
 
-	 }
-	 buildReponse, err := cli.ImageBuild(context.Background(), builder, options)
-	 if err != nil{
-		 return err
-	 }
-	 return nil
+	session.Command("docker", "build", "--no-cache", "--pull", fmt.Sprintf("%v", buildArgs), fmt.Sprintf("%s", dco.Path)).Run()
 
- }
+	return nil
+
+}
+
+func buildArgs(b *BuildArgs) string {
+
+	if b.BaseImage == "" {
+		base, err := getIngressNginxBase()
+		CheckIfError(err, "Issue Retrieving base image")
+		fmt.Printf("Base Image set %s\n", base)
+		b.BaseImage = base
+	}
+
+	buildArgString := "--build-arg BASE_IMAGE=" + b.BaseImage
+
+	return buildArgString
+}
+
+func getIngressNginxBase() (string, error) {
+	fmt.Print("GET INGRESS NGINX BASE")
+	dat, err := os.ReadFile("../NGINX_BASE")
+	CheckIfError(err, "Could not read NGINX_BASE file")
+	fmt.Printf("Get Ingress Dat: %v\n", dat)
+	datString := string(dat)
+	//remove newline
+	datString = strings.Replace(datString, "\n", "", -1)
+	return datString, nil
+}
