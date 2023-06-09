@@ -24,6 +24,15 @@ var dockerListCmd = &cobra.Command{
 	},
 }
 
+var dockerBuildCmd = &cobra.Command{
+	Use: "build",
+	Short: "build a docker container"
+	Long: "build a docker container for use with ingress-nginx"
+	Run: func(cmd *cobra.Command, args []string){
+		dockerBuild()
+	},
+
+}
 func init() {
 	rootCmd.AddCommand(dockerCmd)
 	dockerCmd.AddCommand(dockerListCmd)
@@ -44,3 +53,36 @@ func dockerList() {
 		fmt.Printf("%s %s\n", container.ID[:10], container.Image)
 	}
 }
+
+func dockerBuild() error {
+/*
+     docker build \
+         ${PLATFORM_FLAG} ${PLATFORM} \
+--no-cache \
+         --pull \
+         --build-arg BASE_IMAGE="$(BASE_IMAGE)" \
+         --build-arg VERSION="$(TAG)" \
+         --build-arg TARGETARCH="$(ARCH)" \
+         --build-arg COMMIT_SHA="$(COMMIT_SHA)" \
+         --build-arg BUILD_ID="$(BUILD_ID)" \
+         -t $(REGISTRY)/controller:$(TAG) rootfs
+*/
+
+     cli, err := client.NewClientWithOpts(client.FromEnv)
+     if err != nil {
+         panic(err)
+     }
+
+	 builder := io.Reader{}
+
+	 options := docker.ImageCreateOptions{
+
+
+	 }
+	 buildReponse, err := cli.ImageBuild(context.Background(), builder, options)
+	 if err != nil{
+		 return err
+	 }
+	 return nil
+
+ }
