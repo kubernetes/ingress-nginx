@@ -305,7 +305,6 @@ http {
     keepalive_requests {{ $cfg.KeepAliveRequests }};
 
     client_body_temp_path           /tmp/nginx/client-body;
-    fastcgi_temp_path               /tmp/nginx/fastcgi-temp;
     proxy_temp_path                 /tmp/nginx/proxy-temp;
     ajp_temp_path                   /tmp/nginx/ajp-temp;
 
@@ -1488,16 +1487,6 @@ stream {
 
             {{ range $errCode := $location.CustomHTTPErrors }}
             error_page {{ $errCode }} = @custom_{{ $location.DefaultBackendUpstreamName }}_{{ $errCode }};{{ end }}
-
-            {{ if (eq $location.BackendProtocol "FCGI") }}
-            include /etc/nginx/fastcgi_params;
-            {{ end }}
-            {{- if $location.FastCGI.Index -}}
-            fastcgi_index {{ $location.FastCGI.Index | quote }};
-            {{- end -}}
-            {{ range $k, $v := $location.FastCGI.Params }}
-            fastcgi_param {{ $k }} {{ $v | quote }};
-            {{ end }}
 
             {{ if not (empty $location.Redirect.URL) }}
             return {{ $location.Redirect.Code }} {{ $location.Redirect.URL }};

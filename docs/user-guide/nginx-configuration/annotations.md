@@ -894,7 +894,7 @@ Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
 ### Backend Protocol
 
 Using `backend-protocol` annotations is possible to indicate how NGINX should communicate with the backend service. (Replaces `secure-backends` in older versions)
-Valid Values: HTTP, HTTPS, GRPC, GRPCS, AJP and FCGI
+Valid Values: HTTP, HTTPS, GRPC, GRPCS, AJP
 
 By default NGINX uses `HTTP`.
 
