@@ -204,6 +204,10 @@
      <lastmod>2023-06-11</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
+     <loc>https://kubernetes.github.io/ingress-nginx/examples/canary/</loc>
+     <lastmod>2023-06-11</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
      <loc>https://kubernetes.github.io/ingress-nginx/developer-guide/getting-started/</loc>
      <lastmod>2023-06-11</lastmod>
      <changefreq>daily</changefreq>
