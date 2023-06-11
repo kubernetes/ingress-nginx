@@ -17,7 +17,6 @@ limitations under the License.
 package settings
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -65,12 +64,12 @@ var _ = framework.DescribeSetting("use-forwarded-headers", func() {
 			Body().
 			Raw()
 
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=myhost"))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-host=myhost"))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-proto=myproto"))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-scheme=myproto"))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-port=1234"))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-for=1.2.3.4"))
+		assert.Contains(ginkgo.GinkgoT(), body, "host=myhost")
+		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-host=myhost")
+		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-proto=myproto")
+		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-scheme=myproto")
+		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-port=1234")
+		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-for=1.2.3.4")
 
 		ginkgo.By("ensuring that first entry in X-Forwarded-Host is used as the best host")
 		body = f.HTTPTestClient().
@@ -85,8 +84,8 @@ var _ = framework.DescribeSetting("use-forwarded-headers", func() {
 			Body().
 			Raw()
 
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=myhost.com"))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-host=myhost.com"))
+		assert.Contains(ginkgo.GinkgoT(), body, "host=myhost.com")
+		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-host=myhost.com")
 	})
 
 	ginkgo.It("should not trust X-Forwarded headers when setting is false", func() {
@@ -115,16 +114,16 @@ var _ = framework.DescribeSetting("use-forwarded-headers", func() {
 			Body().
 			Raw()
 
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=forwarded-headers"))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-port=80"))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-proto=http"))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-scheme=http"))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-original-forwarded-for=1.2.3.4"))
-		assert.NotContains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=myhost"))
-		assert.NotContains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-host=myhost"))
-		assert.NotContains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-proto=myproto"))
-		assert.NotContains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-scheme=myproto"))
-		assert.NotContains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-port=1234"))
-		assert.NotContains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-for=1.2.3.4"))
+		assert.Contains(ginkgo.GinkgoT(), body, "host=forwarded-headers")
+		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-port=80")
+		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-proto=http")
+		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-scheme=http")
+		assert.Contains(ginkgo.GinkgoT(), body, "x-original-forwarded-for=1.2.3.4")
+		assert.NotContains(ginkgo.GinkgoT(), body, "host=myhost")
+		assert.NotContains(ginkgo.GinkgoT(), body, "x-forwarded-host=myhost")
+		assert.NotContains(ginkgo.GinkgoT(), body, "x-forwarded-proto=myproto")
+		assert.NotContains(ginkgo.GinkgoT(), body, "x-forwarded-scheme=myproto")
+		assert.NotContains(ginkgo.GinkgoT(), body, "x-forwarded-port=1234")
+		assert.NotContains(ginkgo.GinkgoT(), body, "x-forwarded-for=1.2.3.4")
 	})
 })
