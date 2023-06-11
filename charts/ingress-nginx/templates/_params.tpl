@@ -54,6 +54,7 @@
 {{- if .Values.controller.enableTopologyAwareRouting }}
 - --enable-topology-aware-routing=true
 {{- end }}
+- --enable-metrics={{ .Values.controller.metrics.enabled }}
 {{- range $key, $value := .Values.controller.extraArgs }}
 {{- /* Accept keys without values or with false as value */}}
 {{- if eq ($value | quote | len) 2 }}
