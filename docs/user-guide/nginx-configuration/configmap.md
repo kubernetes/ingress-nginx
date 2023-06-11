@@ -773,6 +773,11 @@ The value can either be:
 
 - round_robin: to use the default round robin loadbalancer
 - ewma: to use the Peak EWMA method for routing ([implementation](https://github.com/kubernetes/ingress-nginx/blob/main/rootfs/etc/nginx/lua/balancer/ewma.lua))
+- least_connections: to route incoming connections to the upstream with the least connections open at the time. This is
+  recommended for use with evenly-resourced upstream servers when requests have a broad distribution in time to
+  process, for example if some requests require the upstream server to make a connection to a slow external service. If
+  all requests take a fairly similar time to process or the upstream servers serve at different speeds then ewma or
+  round_robin are likely more appropriate.
 
 The default is `round_robin`.
 

@@ -9,6 +9,7 @@ local chashsubset = require("balancer.chashsubset")
 local sticky_balanced = require("balancer.sticky_balanced")
 local sticky_persistent = require("balancer.sticky_persistent")
 local ewma = require("balancer.ewma")
+local leastconn = require("balancer.leastconn")
 local string = string
 local ipairs = ipairs
 local table = table
@@ -32,6 +33,7 @@ local IMPLEMENTATIONS = {
   sticky_balanced = sticky_balanced,
   sticky_persistent = sticky_persistent,
   ewma = ewma,
+  least_connections = leastconn,
 }
 
 local PROHIBITED_LOCALHOST_PORT = configuration.prohibited_localhost_port or '10246'

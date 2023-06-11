@@ -37,7 +37,8 @@ local function reset_expected_implementations()
     ["my-dummy-app-3"] = package.loaded["balancer.sticky_persistent"],
     ["my-dummy-app-4"] = package.loaded["balancer.ewma"],
     ["my-dummy-app-5"] = package.loaded["balancer.sticky_balanced"],
-    ["my-dummy-app-6"] = package.loaded["balancer.chashsubset"]
+    ["my-dummy-app-6"] = package.loaded["balancer.chashsubset"],
+    ["my-dummy-app-7"] = package.loaded["balancer.leastconn"]
   }
 end
 
@@ -87,6 +88,10 @@ local function reset_backends()
       name = "my-dummy-app-6",
       ["load-balance"] = "ewma",                  -- upstreamHashByConfig will take priority.
       upstreamHashByConfig = { ["upstream-hash-by"] = "$request_uri", ["upstream-hash-by-subset"] = "true", }
+    },
+    {
+      name = "my-dummy-app-7",
+      ["load-balance"] = "least_connections",
     },
   }
 end
