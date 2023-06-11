@@ -435,10 +435,6 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 
-	if !(&l1.FastCGI).Equal(&l2.FastCGI) {
-		return false
-	}
-
 	match := compareInts(l1.CustomHTTPErrors, l2.CustomHTTPErrors)
 	if !match {
 		return false
