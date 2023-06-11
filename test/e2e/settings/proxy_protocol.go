@@ -71,9 +71,9 @@ var _ = framework.DescribeSetting("use-proxy-protocol", func() {
 
 		body := string(data)
 		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=%v", "proxy-protocol"))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-port=1234"))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-proto=http"))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-for=192.168.0.1"))
+		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-port=1234")
+		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-proto=http")
+		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-for=192.168.0.1")
 	})
 
 	ginkgo.It("should respect proto passed by the PROXY Protocol server port", func() {
@@ -104,9 +104,9 @@ var _ = framework.DescribeSetting("use-proxy-protocol", func() {
 
 		body := string(data)
 		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=%v", "proxy-protocol"))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-port=443"))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-proto=https"))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-for=192.168.0.1"))
+		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-port=443")
+		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-proto=https")
+		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-for=192.168.0.1")
 	})
 
 	ginkgo.It("should enable PROXY Protocol for HTTPS", func() {
@@ -146,10 +146,10 @@ var _ = framework.DescribeSetting("use-proxy-protocol", func() {
 
 		body := string(data)
 		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=%v", "proxy-protocol"))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-port=1234"))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-proto=https"))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-scheme=https"))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-for=192.168.0.1"))
+		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-port=1234")
+		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-proto=https")
+		assert.Contains(ginkgo.GinkgoT(), body, "x-scheme=https")
+		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-for=192.168.0.1")
 	})
 
 	ginkgo.It("should enable PROXY Protocol for TCP", func() {
