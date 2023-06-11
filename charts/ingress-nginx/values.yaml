@@ -368,6 +368,9 @@ controller:
     maxReplicas: 11
     pollingInterval: 30
     cooldownPeriod: 300
+    # fallback:
+    #   failureThreshold: 3
+    #   replicas: 11
     restoreToOriginalReplicaCount: false
     scaledObject:
       annotations: {}
