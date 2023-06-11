@@ -29,7 +29,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
-	core "k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -70,7 +69,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 
 		host := "echo"
 
-		svc := &core.Service{
+		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "grpcbin-test",
 				Namespace: f.Namespace,
@@ -129,7 +128,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 
 		host := "echo"
 
-		svc := &core.Service{
+		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "grpcbin-test",
 				Namespace: f.Namespace,
@@ -201,7 +200,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 
 		host := "echo"
 
-		svc := &core.Service{
+		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "grpcbin-test",
 				Namespace: f.Namespace,
