@@ -24,6 +24,7 @@ import (
 
 	networking "k8s.io/api/networking/v1"
 
+	"golang.org/x/exp/slices"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -61,6 +62,7 @@ func (a customHeaders) Parse(ing *networking.Ingress) (interface{}, error) {
 	}
 
 	var headers map[string]string
+	defBackend := a.r.GetDefaultBackend()
 
 	if clientHeadersConfigMapName != "" {
 		clientHeadersMapContents, err := a.r.GetConfigMap(clientHeadersConfigMapName)
@@ -71,6 +73,9 @@ func (a customHeaders) Parse(ing *networking.Ingress) (interface{}, error) {
 		for header := range clientHeadersMapContents.Data {
 			if !ValidHeader(header) {
 				return nil, ing_errors.NewLocationDenied("invalid client-headers in configmap")
+			}
+			if !slices.Contains(defBackend.AllowedResponseHeaders, header) {
+				return nil, ing_errors.NewLocationDenied(fmt.Sprintf("header %s is not allowed, defined allowed headers inside global-allowed-response-headers %v", header, defBackend.AllowedResponseHeaders))
 			}
 		}
 

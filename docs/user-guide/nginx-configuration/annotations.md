@@ -352,6 +352,9 @@ metadata:
   name: custom-headers-configmap
 ```
 
+!!! attention
+  First define the allowed response headers in [global-allowed-response-headers](https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/configmap.md#global-allowed-response-headers).
+
 ### Default Backend
 
 This annotation is of the form `nginx.ingress.kubernetes.io/default-backend: <svc name>` to specify a custom default backend.  This `<svc name>` is a reference to a service inside of the same namespace in which you are applying this annotation. This annotation overrides the global default backend. In case the service has [multiple ports](https://kubernetes.io/docs/concepts/services-networking/service/#multi-port-services), the first one is the one which will receive the backend traffic. 
