@@ -82,8 +82,10 @@ var _ = framework.DescribeAnnotation("custom-headers-*", func() {
 		}
 
 		f.CreateConfigMap("custom-headers", map[string]string{
-			"My-Custom-Header": "42",
+			"My-Custom-Header":        "42",
+			"My-Custom-Header-Dollar": "$remote_addr",
 		})
+		f.UpdateNginxConfigMapData("global-allowed-response-headers", "My-Custom-Header,My-Custom-Header-Dollar")
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
@@ -99,5 +101,11 @@ var _ = framework.DescribeAnnotation("custom-headers-*", func() {
 			Expect().
 			Status(http.StatusOK).
 			Header("My-Custom-Header").Contains("42")
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Header("My-Custom-Header-Dollar").Contains("$remote_addr")
 	})
 })

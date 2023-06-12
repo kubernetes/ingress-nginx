@@ -176,6 +176,9 @@ type Backend struct {
 	// By default, the NGINX ingress controller uses a list of all endpoints (Pod IP/port) in the NGINX upstream configuration.
 	// It disables that behavior and instead uses a single upstream in NGINX, the service's Cluster IP and port.
 	ServiceUpstream bool `json:"service-upstream"`
+
+	// AllowedResponseHeaders allows to define allow response headers for custom header annotation
+	AllowedResponseHeaders []string `json:"global-allowed-response-headers"`
 }
 
 type SecurityConfiguration struct {
