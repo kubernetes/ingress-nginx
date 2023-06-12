@@ -67,15 +67,31 @@ type Framework struct {
 	IngressClass string
 
 	pod *v1.Pod
+	// We use httpbun as a service that we route to in our tests through
+	// the ingress controller. We add it as part of the framework as it
+	// is used extensively
+	HTTPBunIP      string
+	HTTPBunEnabled bool
+}
+
+// WithHTTPBunEnabled deploys an instance of HTTPBun for the specific test
+func WithHTTPBunEnabled() func(*Framework) {
+	return func(f *Framework) {
+		f.HTTPBunEnabled = true
+	}
 }
 
 // NewDefaultFramework makes a new framework and sets up a BeforeEach/AfterEach for
 // you (you can write additional before/after each functions).
-func NewDefaultFramework(baseName string) *Framework {
+func NewDefaultFramework(baseName string, opts ...func(*Framework)) *Framework {
 	defer ginkgo.GinkgoRecover()
 
 	f := &Framework{
 		BaseName: baseName,
+	}
+	// set framework options
+	for _, o := range opts {
+		o(f)
 	}
 
 	ginkgo.BeforeEach(f.BeforeEach)
@@ -86,11 +102,15 @@ func NewDefaultFramework(baseName string) *Framework {
 
 // NewSimpleFramework makes a new framework that allows the usage of a namespace
 // for arbitraty tests.
-func NewSimpleFramework(baseName string) *Framework {
+func NewSimpleFramework(baseName string, opts ...func(*Framework)) *Framework {
 	defer ginkgo.GinkgoRecover()
 
 	f := &Framework{
 		BaseName: baseName,
+	}
+	// set framework options
+	for _, o := range opts {
+		o(f)
 	}
 
 	ginkgo.BeforeEach(f.CreateEnvironment)
@@ -140,6 +160,11 @@ func (f *Framework) BeforeEach() {
 	assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller pod information")
 
 	f.WaitForNginxListening(80)
+
+	// If HTTPBun is enabled deploy an instance to the namespace
+	if f.HTTPBunEnabled {
+		f.HTTPBunIP = f.NewHttpbunDeployment()
+	}
 }
 
 // AfterEach deletes the namespace, after reading its events.
