@@ -23,7 +23,6 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
-	"time"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -38,7 +37,7 @@ import (
 )
 
 var _ = framework.DescribeAnnotation("auth-*", func() {
-	f := framework.NewDefaultFramework("auth")
+	f := framework.NewDefaultFramework("auth", framework.WithHTTPBunEnabled())
 
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
@@ -390,10 +389,10 @@ http {
 			assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets), 1, "expected at least one endpoint")
 			assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets[0].Addresses), 1, "expected at least one address ready in the endpoint")
 
-			httpbunIP := e.Subsets[0].Addresses[0].IP
+			nginxIP := e.Subsets[0].Addresses[0].IP
 
 			annotations = map[string]string{
-				"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/cookies/set/alma/armud", httpbunIP),
+				"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/cookies/set/alma/armud", nginxIP),
 				"nginx.ingress.kubernetes.io/auth-signin": "http://$host/auth/start",
 			}
 
@@ -457,21 +456,8 @@ http {
 		var ing *networking.Ingress
 
 		ginkgo.BeforeEach(func() {
-			f.NewHttpbunDeployment()
-
-			err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBunService, f.Namespace, 1)
-			assert.Nil(ginkgo.GinkgoT(), err)
-
-			e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(context.TODO(), framework.HTTPBunService, metav1.GetOptions{})
-			assert.Nil(ginkgo.GinkgoT(), err)
-
-			assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets), 1, "expected at least one endpoint")
-			assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets[0].Addresses), 1, "expected at least one address ready in the endpoint")
-
-			httpbunIP := e.Subsets[0].Addresses[0].IP
-
 			annotations = map[string]string{
-				"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/basic-auth/user/password", httpbunIP),
+				"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/basic-auth/user/password", f.HTTPBunIP),
 				"nginx.ingress.kubernetes.io/auth-signin": "http://$host/auth/start",
 			}
 
@@ -650,20 +636,8 @@ http {
 		var ing *networking.Ingress
 
 		ginkgo.BeforeEach(func() {
-			f.NewHttpbunDeployment()
-
-			var httpbunIP string
-
-			err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBunService, f.Namespace, 1)
-			assert.Nil(ginkgo.GinkgoT(), err)
-
-			e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(context.TODO(), framework.HTTPBunService, metav1.GetOptions{})
-			assert.Nil(ginkgo.GinkgoT(), err)
-
-			httpbunIP = e.Subsets[0].Addresses[0].IP
-
 			annotations = map[string]string{
-				"nginx.ingress.kubernetes.io/auth-url":                   fmt.Sprintf("http://%s/basic-auth/user/password", httpbunIP),
+				"nginx.ingress.kubernetes.io/auth-url":                   fmt.Sprintf("http://%s/basic-auth/user/password", f.HTTPBunIP),
 				"nginx.ingress.kubernetes.io/auth-signin":                "http://$host/auth/start",
 				"nginx.ingress.kubernetes.io/auth-signin-redirect-param": "orig",
 			}
@@ -729,23 +703,8 @@ http {
 		barPath := "/bar"
 
 		ginkgo.BeforeEach(func() {
-			f.NewHttpbunDeployment()
-
-			err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBunService, f.Namespace, 1)
-			assert.Nil(ginkgo.GinkgoT(), err)
-
-			framework.Sleep(1 * time.Second)
-
-			e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(context.TODO(), framework.HTTPBunService, metav1.GetOptions{})
-			assert.Nil(ginkgo.GinkgoT(), err)
-
-			assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets), 1, "expected at least one endpoint")
-			assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets[0].Addresses), 1, "expected at least one address ready in the endpoint")
-
-			httpbunIP := e.Subsets[0].Addresses[0].IP
-
 			annotations := map[string]string{
-				"nginx.ingress.kubernetes.io/auth-url":            fmt.Sprintf("http://%s/basic-auth/user/password", httpbunIP),
+				"nginx.ingress.kubernetes.io/auth-url":            fmt.Sprintf("http://%s/basic-auth/user/password", f.HTTPBunIP),
 				"nginx.ingress.kubernetes.io/auth-signin":         "http://$host/auth/start",
 				"nginx.ingress.kubernetes.io/auth-cache-key":      "fixed",
 				"nginx.ingress.kubernetes.io/auth-cache-duration": "200 201 401 30m",

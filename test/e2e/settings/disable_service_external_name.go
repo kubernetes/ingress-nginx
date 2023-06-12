@@ -33,7 +33,10 @@ import (
 )
 
 var _ = framework.IngressNginxDescribe("[Flag] disable-service-external-name", func() {
-	f := framework.NewDefaultFramework("disabled-service-external-name")
+	f := framework.NewDefaultFramework(
+		"disabled-service-external-name",
+		framework.WithHTTPBunEnabled(),
+	)
 
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment(framework.WithDeploymentReplicas(2))
@@ -54,21 +57,18 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-service-external-name", f
 
 		externalhost := "echo-external-svc.com"
 
-		ip := f.NewHttpbunDeployment()
-		svc := framework.BuildNIPExternalNameService(f, ip, "echo")
-		f.EnsureService(svc)
+		f.EnsureService(framework.BuildNIPExternalNameService(f, f.HTTPBunIP, "echo"))
 
-		svcexternal := &corev1.Service{
+		f.EnsureService(&corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "external",
 				Namespace: f.Namespace,
 			},
 			Spec: corev1.ServiceSpec{
-				ExternalName: framework.BuildNIPHost(ip),
+				ExternalName: f.GetNIPHost(),
 				Type:         corev1.ServiceTypeExternalName,
 			},
-		}
-		f.EnsureService(svcexternal)
+		})
 
 		ingexternal := framework.NewSingleIngress(externalhost, "/", externalhost, f.Namespace, "external", 80, nil)
 		f.EnsureIngress(ingexternal)
