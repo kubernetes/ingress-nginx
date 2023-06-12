@@ -31,20 +31,30 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-// EchoService name of the deployment for the echo app
-const EchoService = "echo"
+const (
+	// EchoService name of the deployment for the echo app
+	EchoService = "echo"
 
-// SlowEchoService name of the deployment for the echo app
-const SlowEchoService = "slow-echo"
+	// SlowEchoService name of the deployment for the echo app
+	SlowEchoService = "slow-echo"
 
-// HTTPBunService name of the deployment for the httpbun app
-const HTTPBunService = "httpbun"
+	// HTTPBunService name of the deployment for the httpbun app
+	HTTPBunService = "httpbun"
 
-// NipService name of external service using nip.io
-const NIPService = "external-nip"
+	// NipService name of external service using nip.io
+	NIPService = "external-nip"
 
-// HTTPBunImage is the default image that is used to deploy HTTPBun with the framwork
-var HTTPBunImage = os.Getenv("HTTPBUN_IMAGE")
+	// DefaultBackendService name of default backend deployment
+	DefaultBackendService = "default-backend"
+)
+
+var (
+	// HTTPBunImage is the default image that is used to deploy HTTPBun with the framwork
+	HTTPBunImage = os.Getenv("HTTPBUN_IMAGE")
+	// DefaultBackendImage is the default image that is used to deploy custom
+	// default backend with the framwork
+	DefaultBackendImage = os.Getenv("DEFAULT_BACKEND_IMAGE")
+)
 
 // EchoImage is the default image to be used by the echo service
 const EchoImage = "registry.k8s.io/ingress-nginx/e2e-test-echo@sha256:4938d1d91a2b7d19454460a8c1b010b89f6ff92d2987fd889ac3e8fc3b70d91a" //#nosec G101
@@ -56,8 +66,16 @@ type deploymentOptions struct {
 	name           string
 	namespace      string
 	image          string
+	port           int32
 	replicas       int
+	command        []string
+	args           []string
+	env            []corev1.EnvVar
+	volumeMounts   []corev1.VolumeMount
+	volumes        []corev1.Volume
 	svcAnnotations map[string]string
+	setProbe       bool
+	probe          *corev1.HTTPGetAction
 }
 
 // WithDeploymentNamespace allows configuring the deployment's namespace
@@ -103,6 +121,13 @@ func WithImage(i string) func(*deploymentOptions) {
 	}
 }
 
+// WithProbeHandler used to set probe on deployment
+func WithProbeHandler(p *corev1.HTTPGetAction) func(*deploymentOptions) {
+	return func(o *deploymentOptions) {
+		o.probe = p
+	}
+}
+
 // NewEchoDeployment creates a new single replica deployment of the echo server image in a particular namespace
 func (f *Framework) NewEchoDeployment(opts ...func(*deploymentOptions)) {
 	options := &deploymentOptions{
@@ -139,6 +164,108 @@ func (f *Framework) NewEchoDeployment(opts ...func(*deploymentOptions)) {
 					Name:       "http",
 					Port:       80,
 					TargetPort: intstr.FromInt(80),
+					Protocol:   corev1.ProtocolTCP,
+				},
+			},
+			Selector: map[string]string{
+				"app": options.name,
+			},
+		},
+	})
+
+	err := WaitForEndpoints(
+		f.KubeClientSet,
+		DefaultTimeout,
+		options.name,
+		options.namespace,
+		options.replicas,
+	)
+	assert.Nil(ginkgo.GinkgoT(), err, "waiting for endpoints to become ready")
+}
+
+// NewDefaultBackendDeployment creates a new single replica deployment of the
+// custom errors backend in a particular namespace
+func (f *Framework) NewDefaultBackendDeployment(opts ...func(*deploymentOptions)) {
+	options := &deploymentOptions{
+		namespace: f.Namespace,
+		name:      DefaultBackendService,
+		replicas:  1,
+		image:     DefaultBackendImage,
+	}
+	for _, o := range opts {
+		o(options)
+	}
+
+	f.EnsureConfigMap(&corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      options.name,
+			Namespace: options.namespace,
+		},
+		Data: map[string]string{
+			"404": `<!DOCTYPE html><html><body>404</body></html>`,
+			"401": `<!DOCTYPE html><html><body>401</body></html>`,
+			"503": `<!DOCTYPE html><html><body>503</body></html>`,
+		},
+	})
+
+	f.EnsureDeployment(newDeployment(
+		options.name,
+		options.namespace,
+		options.image,
+		8080,
+		int32(options.replicas),
+		nil, nil, nil,
+		[]corev1.VolumeMount{
+			{
+				Name:      options.name,
+				MountPath: "/www",
+			},
+		},
+		[]corev1.Volume{
+			{
+				Name: options.name,
+				VolumeSource: corev1.VolumeSource{
+					ConfigMap: &corev1.ConfigMapVolumeSource{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: options.name,
+						},
+						Items: []corev1.KeyToPath{
+							{
+								Key:  "404",
+								Path: "404.html",
+							},
+							{
+								Key:  "401",
+								Path: "401.html",
+							},
+							{
+								Key:  "503",
+								Path: "503.html",
+							},
+						},
+					},
+				},
+			},
+		},
+		false,
+		WithProbeHandler(&corev1.HTTPGetAction{
+			Port: intstr.FromString("http"),
+			Path: "/healthz",
+		}),
+	))
+
+	f.EnsureService(&corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        options.name,
+			Namespace:   options.namespace,
+			Annotations: options.svcAnnotations,
+		},
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{
+				{
+					Name:       "http",
+					Port:       80,
+					TargetPort: intstr.FromInt(8080),
 					Protocol:   corev1.ProtocolTCP,
 				},
 			},
@@ -261,7 +388,7 @@ func (f *Framework) NewHttpbunDeployment(opts ...func(*deploymentOptions)) strin
 	e, err := f.KubeClientSet.
 		CoreV1().
 		Endpoints(f.Namespace).
-		Get(context.TODO(), HTTPBunService, metav1.GetOptions{})
+		Get(context.TODO(), options.name, metav1.GetOptions{})
 	assert.Nil(ginkgo.GinkgoT(), err, "failed to get httpbun endpoint")
 
 	return e.Subsets[0].Addresses[0].IP
@@ -486,9 +613,38 @@ func (f *Framework) NewGRPCBinDeployment() {
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for endpoints to become ready")
 }
 
-func newDeployment(name, namespace, image string, port int32, replicas int32, command []string, args []string, env []corev1.EnvVar,
-	volumeMounts []corev1.VolumeMount, volumes []corev1.Volume, setProbe bool,
+func newDeployment(
+	name, namespace, image string,
+	port int32, replicas int32,
+	command, args []string,
+	env []corev1.EnvVar,
+	volumeMounts []corev1.VolumeMount,
+	volumes []corev1.Volume,
+	setProbe bool,
+	opts ...func(*deploymentOptions),
 ) *appsv1.Deployment {
+	// TODO: we should move to using options to configure deployments to have less
+	// logic here
+	o := &deploymentOptions{
+		name:         name,
+		namespace:    namespace,
+		image:        image,
+		port:         port,
+		command:      command,
+		args:         args,
+		env:          env,
+		volumeMounts: volumeMounts,
+		volumes:      volumes,
+		setProbe:     setProbe,
+		probe: &corev1.HTTPGetAction{
+			Port: intstr.FromString("http"),
+			Path: "/",
+		},
+	}
+	for _, opt := range opts {
+		opt(o)
+	}
+
 	probe := &corev1.Probe{
 		InitialDelaySeconds: 2,
 		PeriodSeconds:       1,
@@ -496,48 +652,46 @@ func newDeployment(name, namespace, image string, port int32, replicas int32, co
 		TimeoutSeconds:      2,
 		FailureThreshold:    6,
 		ProbeHandler: corev1.ProbeHandler{
-			HTTPGet: &corev1.HTTPGetAction{
-				Port: intstr.FromString("http"),
-				Path: "/",
-			},
+			HTTPGet: o.probe,
 		},
 	}
 
 	d := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
+			Name:      o.name,
+			Namespace: o.namespace,
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: NewInt32(replicas),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app": name,
+					"app": o.name,
 				},
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app": name,
+						"app": o.name,
 					},
 				},
 				Spec: corev1.PodSpec{
 					TerminationGracePeriodSeconds: NewInt64(0),
 					Containers: []corev1.Container{
 						{
-							Name:  name,
+							Name:  o.name,
 							Image: image,
-							Env:   []corev1.EnvVar{},
+							Env:   o.env,
+							Args:  o.args,
 							Ports: []corev1.ContainerPort{
 								{
 									Name:          "http",
-									ContainerPort: port,
+									ContainerPort: o.port,
 								},
 							},
-							VolumeMounts: volumeMounts,
+							VolumeMounts: o.volumeMounts,
 						},
 					},
-					Volumes: volumes,
+					Volumes: o.volumes,
 				},
 			},
 		},
