@@ -10,12 +10,15 @@ metadata:
     {{- end }}
   name: {{ include "ingress-nginx.controller.fullname" . }}
   namespace: {{ .Release.Namespace }}
+  {{- if .Values.controller.annotations }}
+  annotations: {{ toYaml .Values.controller.annotations | nindent 4 }}
+  {{- end }}
 spec:
   selector:
     matchLabels:
       {{- include "ingress-nginx.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: controller
-  {{- if .Values.controller.minAvailable }}
+  {{- if and .Values.controller.minAvailable (not (hasKey .Values.controller "maxUnavailable")) }}
   minAvailable: {{ .Values.controller.minAvailable }}
   {{- else if .Values.controller.maxUnavailable }}
   maxUnavailable: {{ .Values.controller.maxUnavailable }}

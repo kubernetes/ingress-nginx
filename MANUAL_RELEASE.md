@@ -56,8 +56,6 @@
 
   - [cfssl](https://github.com/kubernetes/ingress-nginx/tree/main/images/cfssl)
 
-  - [fastcgi-helloserver](https://github.com/kubernetes/ingress-nginx/tree/main/images/fastcgi-helloserver)
-
   - [httpbin](https://github.com/kubernetes/ingress-nginx/tree/main/images/httpbin)
 
   - [kube-webhook-certgen](https://github.com/kubernetes/ingress-nginx/tree/main/images/kube-webhook-certgen)

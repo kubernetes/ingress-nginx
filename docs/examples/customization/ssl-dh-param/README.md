@@ -1,6 +1,6 @@
 # Custom DH parameters for perfect forward secrecy
 
-This example aims to demonstrate the deployment of an nginx ingress controller and
+This example aims to demonstrate the deployment of an Ingress-Nginx Controller and
 use a ConfigMap to configure a custom Diffie-Hellman parameters file to help with
 "Perfect Forward Secrecy".
 

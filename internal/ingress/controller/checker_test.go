@@ -109,7 +109,7 @@ func TestNginxCheck(t *testing.T) {
 			})
 
 			// pollute pid file
-			pidFile.Write([]byte(fmt.Sprint("999999")))
+			pidFile.Write([]byte("999999"))
 			pidFile.Close()
 
 			t.Run("bad pid", func(t *testing.T) {

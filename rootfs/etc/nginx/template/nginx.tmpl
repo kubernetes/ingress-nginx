@@ -188,8 +188,10 @@ http {
     geoip2 /etc/nginx/geoip/GeoLite2-Country.mmdb {
         $geoip2_country_code source=$remote_addr country iso_code;
         $geoip2_country_name source=$remote_addr country names en;
+        $geoip2_country_geoname_id source=$remote_addr country geoname_id;
         $geoip2_continent_code source=$remote_addr continent code;
         $geoip2_continent_name source=$remote_addr continent names en;
+        $geoip2_continent_geoname_id source=$remote_addr continent geoname_id;
     }
     {{ end }}
 
@@ -197,8 +199,10 @@ http {
     geoip2 /etc/nginx/geoip/GeoIP2-Country.mmdb {
         $geoip2_country_code source=$remote_addr country iso_code;
         $geoip2_country_name source=$remote_addr country names en;
+        $geoip2_country_geoname_id source=$remote_addr country geoname_id;
         $geoip2_continent_code source=$remote_addr continent code;
         $geoip2_continent_name source=$remote_addr continent names en;
+        $geoip2_continent_geoname_id source=$remote_addr continent geoname_id;
     }
     {{ end }}
 
@@ -206,7 +210,9 @@ http {
     geoip2 /etc/nginx/geoip/GeoLite2-City.mmdb {
         $geoip2_city_country_code source=$remote_addr country iso_code;
         $geoip2_city_country_name source=$remote_addr country names en;
+        $geoip2_city_country_geoname_id source=$remote_addr country geoname_id;
         $geoip2_city source=$remote_addr city names en;
+        $geoip2_city_geoname_id source=$remote_addr city geoname_id;
         $geoip2_postal_code source=$remote_addr postal code;
         $geoip2_dma_code source=$remote_addr location metro_code;
         $geoip2_latitude source=$remote_addr location latitude;
@@ -214,8 +220,10 @@ http {
         $geoip2_time_zone source=$remote_addr location time_zone;
         $geoip2_region_code source=$remote_addr subdivisions 0 iso_code;
         $geoip2_region_name source=$remote_addr subdivisions 0 names en;
+        $geoip2_region_geoname_id source=$remote_addr subdivisions 0 geoname_id;
         $geoip2_subregion_code source=$remote_addr subdivisions 1 iso_code;
         $geoip2_subregion_name source=$remote_addr subdivisions 1 names en;
+        $geoip2_subregion_geoname_id source=$remote_addr subdivisions 1 geoname_id;
     }
     {{ end }}
 
@@ -223,7 +231,9 @@ http {
     geoip2 /etc/nginx/geoip/GeoIP2-City.mmdb {
         $geoip2_city_country_code source=$remote_addr country iso_code;
         $geoip2_city_country_name source=$remote_addr country names en;
+        $geoip2_city_country_geoname_id source=$remote_addr country geoname_id;
         $geoip2_city source=$remote_addr city names en;
+        $geoip2_city_geoname_id source=$remote_addr city geoname_id;
         $geoip2_postal_code source=$remote_addr postal code;
         $geoip2_dma_code source=$remote_addr location metro_code;
         $geoip2_latitude source=$remote_addr location latitude;
@@ -231,8 +241,10 @@ http {
         $geoip2_time_zone source=$remote_addr location time_zone;
         $geoip2_region_code source=$remote_addr subdivisions 0 iso_code;
         $geoip2_region_name source=$remote_addr subdivisions 0 names en;
+        $geoip2_region_geoname_id source=$remote_addr subdivisions 0 geoname_id;
         $geoip2_subregion_code source=$remote_addr subdivisions 1 iso_code;
         $geoip2_subregion_name source=$remote_addr subdivisions 1 names en;
+        $geoip2_subregion_geoname_id source=$remote_addr subdivisions 1 geoname_id;
     }
     {{ end }}
 
@@ -293,7 +305,6 @@ http {
     keepalive_requests {{ $cfg.KeepAliveRequests }};
 
     client_body_temp_path           /tmp/nginx/client-body;
-    fastcgi_temp_path               /tmp/nginx/fastcgi-temp;
     proxy_temp_path                 /tmp/nginx/proxy-temp;
     ajp_temp_path                   /tmp/nginx/ajp-temp;
 
@@ -1476,16 +1487,6 @@ stream {
 
             {{ range $errCode := $location.CustomHTTPErrors }}
             error_page {{ $errCode }} = @custom_{{ $location.DefaultBackendUpstreamName }}_{{ $errCode }};{{ end }}
-
-            {{ if (eq $location.BackendProtocol "FCGI") }}
-            include /etc/nginx/fastcgi_params;
-            {{ end }}
-            {{- if $location.FastCGI.Index -}}
-            fastcgi_index {{ $location.FastCGI.Index | quote }};
-            {{- end -}}
-            {{ range $k, $v := $location.FastCGI.Params }}
-            fastcgi_param {{ $k }} {{ $v | quote }};
-            {{ end }}
 
             {{ if not (empty $location.Redirect.URL) }}
             return {{ $location.Redirect.Code }} {{ $location.Redirect.URL }};

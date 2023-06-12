@@ -1,4 +1,4 @@
-# Copyright 2020 The Kubernetes Authors.
+# Copyright 2020 The Kubernetes Authors. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Docker image for e2e testing.
-
 # set default shell
 SHELL=/bin/bash -o pipefail -o errexit
 
@@ -25,13 +23,13 @@ TAG ?=v$(shell date +%Y%m%d)-$(SHORT_SHA)
 
 REGISTRY ?= local
 
-IMAGE = $(REGISTRY)/e2e-test-fastcgi-helloserver
+IMAGE = $(REGISTRY)/e2e-test-httpbun
 
 # required to enable buildx
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
 # build with buildx
-PLATFORMS?=linux/amd64,linux/arm,linux/arm64
+PLATFORMS?=linux/amd64,linux/arm,linux/arm64,linux/s390x
 OUTPUT=
 PROGRESS=plain
 

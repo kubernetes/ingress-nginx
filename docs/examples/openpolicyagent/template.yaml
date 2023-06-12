@@ -1,0 +1,40 @@
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8sblockingresspathtype
+  annotations:
+    metadata.gatekeeper.sh/title: "Block a pathType usage"
+    description: >-
+      Users should not be able to use specific pathTypes
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sBlockIngressPathType
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            blockedTypes:
+              type: array
+              items: 
+                type: string 
+            namespacesExceptions:
+              type: array
+              items: 
+                type: string
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package K8sBlockIngressPathType
+
+        violation[{"msg": msg}] {
+          input.review.kind.kind == "Ingress"
+          ns := input.review.object.metadata.namespace
+          excemptNS := [good | excempts = input.parameters.namespacesExceptions[_] ; good = excempts == ns]
+          not any(excemptNS)
+          pathType := object.get(input.review.object.spec.rules[_].http.paths[_], "pathType", "")
+          blockedPath := [blocked | blockedTypes = input.parameters.blockedTypes[_] ; blocked = blockedTypes == pathType]
+          any(blockedPath)
+          msg := sprintf("pathType '%v' is not allowed in this namespace", [pathType])
+        }

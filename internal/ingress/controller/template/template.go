@@ -739,9 +739,6 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 	case "AJP":
 		proto = ""
 		proxyPass = "ajp_pass"
-	case "FCGI":
-		proto = ""
-		proxyPass = "fastcgi_pass"
 	}
 
 	upstreamName := "upstream_balancer"
@@ -1727,7 +1724,7 @@ func buildMirrorLocations(locs []*ingress.Location) string {
 	mapped := sets.Set[string]{}
 
 	for _, loc := range locs {
-		if loc.Mirror.Source == "" || loc.Mirror.Target == "" {
+		if loc.Mirror.Source == "" || loc.Mirror.Target == "" || loc.Mirror.Host == "" {
 			continue
 		}
 
@@ -1738,8 +1735,8 @@ func buildMirrorLocations(locs []*ingress.Location) string {
 		mapped.Insert(loc.Mirror.Source)
 		buffer.WriteString(fmt.Sprintf(`location = %v {
 internal;
-proxy_set_header Host %v;
-proxy_pass %v;
+proxy_set_header Host "%v";
+proxy_pass "%v";
 }
 
 `, loc.Mirror.Source, loc.Mirror.Host, loc.Mirror.Target))

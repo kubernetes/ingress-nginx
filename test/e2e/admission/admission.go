@@ -30,6 +30,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
+
+	networking "k8s.io/api/networking/v1"
 )
 
 var _ = framework.IngressNginxDescribeSerial("[Admission] admission controller", func() {
@@ -159,6 +161,41 @@ var _ = framework.IngressNginxDescribeSerial("[Admission] admission controller",
 		firstIngress := framework.NewSingleIngress("first-ingress", "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		_, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), firstIngress, metav1.CreateOptions{})
 		assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress with invalid annotation value should return an error")
+	})
+
+	ginkgo.It("should return an error if there is an invalid path and wrong pathType is set", func() {
+		host := "path-validation"
+		var (
+			exactPathType  = networking.PathTypeExact
+			prefixPathType = networking.PathTypePrefix
+			implSpecific   = networking.PathTypeImplementationSpecific
+		)
+
+		f.UpdateNginxConfigMapData("strict-validate-path-type", "true")
+
+		invalidPath := framework.NewSingleIngress("first-ingress", "/foo/bar/[a-z]{3}", host, f.Namespace, framework.EchoService, 80, nil)
+		invalidPath.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &exactPathType
+
+		_, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), invalidPath, metav1.CreateOptions{})
+		assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress with invalid path value should return an error")
+
+		invalidPath.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &prefixPathType
+		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), invalidPath, metav1.CreateOptions{})
+		assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress with invalid path value should return an error")
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/use-regex":      "true",
+			"nginx.ingress.kubernetes.io/rewrite-target": "/new/backend",
+		}
+		pathSpecific := framework.NewSingleIngress("pathspec-ingress", "/foo/bar/[a-z]{3}", host, f.Namespace, framework.EchoService, 80, annotations)
+		pathSpecific.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &implSpecific
+		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), pathSpecific, metav1.CreateOptions{})
+		assert.Nil(ginkgo.GinkgoT(), err, "creating an ingress with arbitrary path and implSpecific value should not return an error")
+
+		validPath := framework.NewSingleIngress("second-ingress", "/bloblo", host, f.Namespace, framework.EchoService, 80, nil)
+		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), validPath, metav1.CreateOptions{})
+		assert.Nil(ginkgo.GinkgoT(), err, "creating an ingress with valid path should not return an error")
+
 	})
 
 	ginkgo.It("should not return an error if the Ingress V1 definition is valid with Ingress Class", func() {

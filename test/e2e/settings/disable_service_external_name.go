@@ -50,17 +50,21 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-service-external-name", f
 	})
 
 	ginkgo.It("should ignore services of external-name type", func() {
-
 		nonexternalhost := "echo-svc.com"
 
 		externalhost := "echo-external-svc.com"
+
+		ip := f.NewHttpbunDeployment()
+		svc := framework.BuildNIPExternalNameService(f, ip, "echo")
+		f.EnsureService(svc)
+
 		svcexternal := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "external",
 				Namespace: f.Namespace,
 			},
 			Spec: corev1.ServiceSpec{
-				ExternalName: "httpbin.org",
+				ExternalName: framework.BuildNIPHost(ip),
 				Type:         corev1.ServiceTypeExternalName,
 			},
 		}

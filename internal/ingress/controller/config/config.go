@@ -600,7 +600,7 @@ type Configuration struct {
 	OtelServiceName string `json:"otel-service-name"`
 
 	// OtelSampler specifies the sampler to use for any traces created
-	// Default: AlwaysOff
+	// Default: AlwaysOn
 	OtelSampler string `json:"otel-sampler"`
 
 	// OtelSamplerRatio specifies the sampler ratio to use for any traces created
@@ -608,16 +608,19 @@ type Configuration struct {
 	OtelSamplerRatio float32 `json:"otel-sampler-ratio"`
 
 	//OtelSamplerParentBased specifies the parent based sampler to be use for any traces created
-	// Default: false
+	// Default: true
 	OtelSamplerParentBased bool `json:"otel-sampler-parent-based"`
 
 	// MaxQueueSize specifies the max queue size for uploading traces
+	// Default: 2048
 	OtelMaxQueueSize int32 `json:"otel-max-queuesize"`
 
 	// ScheduleDelayMillis specifies the max delay between uploading traces
+	// Default: 5000
 	OtelScheduleDelayMillis int32 `json:"otel-schedule-delay-millis"`
 
 	// MaxExportBatchSize specifies the max export batch size to used when uploading traces
+	// Default: 512
 	OtelMaxExportBatchSize int32 `json:"otel-max-export-batch-size"`
 
 	// ZipkinCollectorHost specifies the host to use when uploading traces
@@ -834,6 +837,12 @@ type Configuration struct {
 	// http://nginx.org/en/docs/ngx_core_module.html#debug_connection
 	// Default: ""
 	DebugConnections []string `json:"debug-connections"`
+
+	// StrictValidatePathType enable the strict validation of Ingress Paths
+	// It enforces that pathType of type Exact or Prefix should start with / and contain only
+	// alphanumeric chars, "-", "_", "/".In case of additional characters,
+	// like used on Rewrite configurations the user should use pathType as ImplementationSpecific
+	StrictValidatePathType bool `json:"strict-validate-path-type"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -975,9 +984,12 @@ func NewDefault() Configuration {
 		OpentelemetryConfig:                    "/etc/nginx/opentelemetry.toml",
 		OtlpCollectorPort:                      "4317",
 		OtelServiceName:                        "nginx",
-		OtelSampler:                            "AlwaysOff",
+		OtelSampler:                            "AlwaysOn",
 		OtelSamplerRatio:                       0.01,
-		OtelSamplerParentBased:                 false,
+		OtelSamplerParentBased:                 true,
+		OtelScheduleDelayMillis:                5000,
+		OtelMaxExportBatchSize:                 512,
+		OtelMaxQueueSize:                       2048,
 		ZipkinCollectorPort:                    9411,
 		ZipkinServiceName:                      "nginx",
 		ZipkinSampleRate:                       1.0,
@@ -1008,6 +1020,7 @@ func NewDefault() Configuration {
 		GlobalRateLimitMemcachedPoolSize:       50,
 		GlobalRateLimitStatucCode:              429,
 		DebugConnections:                       []string{},
+		StrictValidatePathType:                 false, // TODO: This will be true in future releases
 	}
 
 	if klog.V(5).Enabled() {

@@ -1,5 +1,6 @@
 <!--- Provide a general summary of your changes in the Title above --->
 <!--- Please don't @-mention people in PR or commit messages (do so in an additional comment). --->
+<!--- Please make sure you title is descriptive, it is used in the Release notes to let others know what it does ---> 
 
 ## What this PR does / why we need it:
 <!--- Why is this change required? What problem does it solve? -->
@@ -33,36 +34,3 @@ fixes #
 - [ ] I've read the [CONTRIBUTION](https://github.com/kubernetes/ingress-nginx/blob/main/CONTRIBUTING.md) guide
 - [ ] I have added unit and/or e2e tests to cover my changes.
 - [ ] All new and existing tests passed.
-- [ ] Added Release Notes.
-
-## Does my pull request need a release note?
-Any user-visible or operator-visible change qualifies for a release note. This could be a:
-
-- CLI change
-- API change
-- UI change
-- configuration schema change
-- behavioral change
-- change in non-functional attributes such as efficiency or availability, availability of a new platform
-- a warning about a deprecation
-- fix of a previous Known Issue
-- fix of a vulnerability (CVE)
-
-No release notes are required for changes to the following:
-
-- Tests
-- Build infrastructure
-- Fixes for unreleased bugs
-
-For more tips on writing good release notes, check out the [Release Notes Handbook](https://github.com/kubernetes/sig-release/tree/master/release-team/role-handbooks/release-notes)
-
-<!--
-If no, just write "NONE" in the release-note block below.
-If yes, a release note is required:
-Enter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string "action required".
-
-For more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md
--->
-```release-note
-PLACE RELEASE NOTES HERE
-```

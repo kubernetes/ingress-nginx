@@ -7,6 +7,7 @@ on:
     paths-ignore:
       - 'docs/**'
       - 'deploy/**'
+      - '**.md'
 
   push:
     branches:
@@ -14,6 +15,7 @@ on:
     paths-ignore:
       - 'docs/**'
       - 'deploy/**'
+      - '**.md'
 
   workflow_dispatch:
     inputs:
@@ -69,7 +71,7 @@ jobs:
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
 
       - name: Run Gosec Security Scanner
-        uses: securego/gosec@a459eb0ba387d9bd083d5c2e2354dbeef2465038 # v2.15.0
+        uses: securego/gosec@c5ea1b7bdd9efc3792e513258853552b0ae31e06 # v2.16.0
         with:
           # G601 for zz_generated.deepcopy.go
           # G306 TODO: Expect WriteFile permissions to be 0600 or less
@@ -87,7 +89,7 @@ jobs:
       
       - name: Set up Go
         id: go
-        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
         with:
           go-version: '1.20'
           check-latest: true
@@ -106,7 +108,7 @@ jobs:
       
       - name: Set up Go
         id: go
-        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
         with:
           go-version: '1.20'
           check-latest: true
@@ -125,7 +127,7 @@ jobs:
       
       - name: Set up Go
         id: go
-        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
         with:
           go-version: '1.20'
           check-latest: true
@@ -146,7 +148,7 @@ jobs:
 
       - name: Set up Go
         id: go
-        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
         with:
           go-version: '1.20'
           check-latest: true
@@ -167,7 +169,7 @@ jobs:
         run: |
           sudo apt-get -qq update || true
           sudo apt-get install -y pigz
-          curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.25.5/bin/linux/amd64/kubectl
+          curl -LO https://dl.k8s.io/release/v1.25.5/bin/linux/amd64/kubectl
           chmod +x ./kubectl
           sudo mv ./kubectl /usr/local/bin/kubectl
 
@@ -205,14 +207,14 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.12, v1.25.8, v1.26.3]
+        k8s: [v1.24.12, v1.25.8, v1.26.3,v1.27.1]
 
     steps:
       - name: Checkout
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
 
       - name: Setup Go
-        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
         with:
           go-version: '1.20'
           check-latest: true
@@ -280,7 +282,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.12, v1.25.8, v1.26.3]
+        k8s: [v1.24.12, v1.25.8, v1.26.3,v1.27.1]
 
     steps:
       - name: Checkout
@@ -310,7 +312,7 @@ jobs:
           kind get kubeconfig > $HOME/.kube/kind-config-kind
           make kind-e2e-test
 
-      - name: Uplaod e2e junit-reports
+      - name: Upload e2e junit-reports
         uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         if: success() || failure()
         with:
@@ -329,7 +331,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.12, v1.25.8, v1.26.3]
+        k8s: [v1.24.12, v1.25.8, v1.26.3,v1.27.1]
 
     steps:
 
@@ -389,14 +391,12 @@ jobs:
               - 'images/custom-error-pages/**'
             cfssl:
               - 'images/cfssl/**'
-            fastcgi-helloserver:
-              - 'images/fastcgi-helloserver/**'
             echo:
               - 'images/echo/**'
             go-grpc-greeter-server:
               - 'images/go-grpc-greeter-server/**'
-            httpbin:
-              - 'images/httpbin/**'
+            httpbun:
+              - 'images/httpbun/**'
             kube-webhook-certgen:
               - 'images/kube-webhook-certgen/**'
             ext-auth-example-authsvc:
@@ -410,10 +410,6 @@ jobs:
         if: ${{ steps.filter-images.outputs.cfssl == 'true' }}
         run: |
           cd images/cfssl && make build
-      - name: fastcgi-helloserver
-        if: ${{ steps.filter-images.outputs.fastcgi-helloserver == 'true' }}
-        run: |
-          cd images/fastcgi-helloserver && make build
       - name: echo image build
         if: ${{ steps.filter-images.outputs.echo == 'true' }}
         run: |
@@ -422,10 +418,10 @@ jobs:
         if: ${{ steps.filter-images.outputs.go-grpc-greeter-server == 'true' }}
         run: |
           cd images/go-grpc-greeter-server && make build
-      - name: httpbin image build
+      - name: httpbun image build
         if: ${{ steps.filter-images.outputs.httpbin == 'true' }}
         run: |
-          cd images/httpbin && make build
+          cd images/httpbun && make build
       - name: kube-webhook-certgen image build
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
         run: |
@@ -447,7 +443,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.12, v1.25.8, v1.26.3]
+        k8s: [v1.24.12, v1.25.8, v1.26.3,v1.27.1]
 
     steps:
       - name: Checkout
@@ -470,7 +466,7 @@ jobs:
       - name: Set up Go
         id: go
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
-        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
         with:
           go-version: '1.20'
           check-latest: true

@@ -1,6 +1,6 @@
- Developing for NGINX Ingress Controller
+ Developing for Ingress-Nginx Controller
 
-This document explains how to get started with developing for NGINX Ingress controller.
+This document explains how to get started with developing for Ingress-Nginx Controller.
 
 For the really new contributors, who want to contribute to the INGRESS-NGINX project, but need help with understanding some basic concepts,
 that are needed to work with the Kubernetes ingress resource, here is a link to the [New Contributors Guide](https://github.com/kubernetes/ingress-nginx/blob/main/NEW_CONTRIBUTOR.md).

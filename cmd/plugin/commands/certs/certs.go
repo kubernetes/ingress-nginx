@@ -30,7 +30,7 @@ import (
 
 // CreateCommand creates and returns this cobra subcommand
 func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
-	var pod, deployment, selector *string
+	var pod, deployment, selector, container *string
 	cmd := &cobra.Command{
 		Use:   "certs",
 		Short: "Output the certificate data stored in an ingress-nginx pod",
@@ -40,7 +40,7 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 				return err
 			}
 
-			util.PrintError(certs(flags, *pod, *deployment, *selector, host))
+			util.PrintError(certs(flags, *pod, *deployment, *selector, *container, host))
 			return nil
 		},
 	}
@@ -50,11 +50,12 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	pod = util.AddPodFlag(cmd)
 	deployment = util.AddDeploymentFlag(cmd)
 	selector = util.AddSelectorFlag(cmd)
+	container = util.AddContainerFlag(cmd)
 
 	return cmd
 }
 
-func certs(flags *genericclioptions.ConfigFlags, podName string, deployment string, selector string, host string) error {
+func certs(flags *genericclioptions.ConfigFlags, podName string, deployment string, selector string, container string, host string) error {
 	command := []string{"/dbg", "certs", "get", host}
 
 	pod, err := request.ChoosePod(flags, podName, deployment, selector)
@@ -62,7 +63,7 @@ func certs(flags *genericclioptions.ConfigFlags, podName string, deployment stri
 		return err
 	}
 
-	out, err := kubectl.PodExecString(flags, &pod, command)
+	out, err := kubectl.PodExecString(flags, &pod, container, command)
 	if err != nil {
 		return err
 	}

@@ -19,6 +19,7 @@ package framework
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"time"
 
@@ -36,14 +37,18 @@ const EchoService = "echo"
 // SlowEchoService name of the deployment for the echo app
 const SlowEchoService = "slow-echo"
 
-// HTTPBinService name of the deployment for the httpbin app
-const HTTPBinService = "httpbin"
+// HTTPBunService name of the deployment for the httpbun app
+const HTTPBunService = "httpbun"
+
+// NipService name of external service using nip.io
+const NIPService = "external-nip"
 
 type deploymentOptions struct {
 	namespace      string
 	name           string
 	replicas       int
 	svcAnnotations map[string]string
+	image          string
 }
 
 // WithDeploymentNamespace allows configuring the deployment's namespace
@@ -82,18 +87,26 @@ func WithName(n string) func(*deploymentOptions) {
 	}
 }
 
+// WithImage allows configuring the image for the deployments
+func WithImage(i string) func(*deploymentOptions) {
+	return func(o *deploymentOptions) {
+		o.image = i
+	}
+}
+
 // NewEchoDeployment creates a new single replica deployment of the echo server image in a particular namespace
 func (f *Framework) NewEchoDeployment(opts ...func(*deploymentOptions)) {
 	options := &deploymentOptions{
 		namespace: f.Namespace,
 		name:      EchoService,
 		replicas:  1,
+		image:     "registry.k8s.io/ingress-nginx/e2e-test-echo@sha256:6fc5aa2994c86575975bb20a5203651207029a0d28e3f491d8a127d08baadab4",
 	}
 	for _, o := range opts {
 		o(options)
 	}
 
-	deployment := newDeployment(options.name, options.namespace, "registry.k8s.io/ingress-nginx/e2e-test-echo@sha256:4938d1d91a2b7d19454460a8c1b010b89f6ff92d2987fd889ac3e8fc3b70d91a", 80, int32(options.replicas),
+	deployment := newDeployment(options.name, options.namespace, options.image, 80, int32(options.replicas),
 		nil, nil, nil,
 		[]corev1.VolumeMount{},
 		[]corev1.Volume{},
@@ -127,6 +140,85 @@ func (f *Framework) NewEchoDeployment(opts ...func(*deploymentOptions)) {
 
 	err := WaitForEndpoints(f.KubeClientSet, DefaultTimeout, options.name, options.namespace, options.replicas)
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for endpoints to become ready")
+}
+
+// BuildNipHost used to generate a nip host for DNS resolving
+func BuildNIPHost(ip string) string {
+	return fmt.Sprintf("%s.nip.io", ip)
+}
+
+// BuildNIPExternalNameService used to generate a service pointing to nip.io to
+// help resolve to an IP address
+func BuildNIPExternalNameService(f *Framework, ip, portName string) *corev1.Service {
+	return &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      NIPService,
+			Namespace: f.Namespace,
+		},
+		Spec: corev1.ServiceSpec{
+			ExternalName: BuildNIPHost(ip),
+			Type:         corev1.ServiceTypeExternalName,
+			Ports: []corev1.ServicePort{
+				{
+					Name:       portName,
+					Port:       80,
+					TargetPort: intstr.FromInt(80),
+					Protocol:   "TCP",
+				},
+			},
+		},
+	}
+}
+
+// NewHttpbunDeployment creates a new single replica deployment of the httpbun
+// server image in a particular namespace we return the ip for testing purposes
+func (f *Framework) NewHttpbunDeployment(opts ...func(*deploymentOptions)) string {
+	options := &deploymentOptions{
+		namespace: f.Namespace,
+		name:      HTTPBunService,
+		replicas:  1,
+		image:     "registry.k8s.io/ingress-nginx/e2e-test-httpbun:v20230505-v0.0.1",
+	}
+	for _, o := range opts {
+		o(options)
+	}
+
+	deployment := newDeployment(options.name, options.namespace, options.image, 80, int32(options.replicas),
+		nil, nil, nil,
+		[]corev1.VolumeMount{},
+		[]corev1.Volume{},
+		true,
+	)
+
+	f.EnsureDeployment(deployment)
+
+	service := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        options.name,
+			Namespace:   options.namespace,
+			Annotations: options.svcAnnotations,
+		},
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{
+				{
+					Name:       "http",
+					Port:       80,
+					TargetPort: intstr.FromInt(80),
+					Protocol:   corev1.ProtocolTCP,
+				},
+			},
+			Selector: map[string]string{
+				"app": options.name,
+			},
+		},
+	}
+
+	s := f.EnsureService(service)
+
+	err := WaitForEndpoints(f.KubeClientSet, DefaultTimeout, options.name, options.namespace, options.replicas)
+	assert.Nil(ginkgo.GinkgoT(), err, "waiting for endpoints to become ready")
+
+	return s.Spec.ClusterIPs[0]
 }
 
 // NewSlowEchoDeployment creates a new deployment of the slow echo server image in a particular namespace.
@@ -416,11 +508,6 @@ func newDeployment(name, namespace, image string, port int32, replicas int32, co
 		d.Spec.Template.Spec.Containers[0].Env = env
 	}
 	return d
-}
-
-// NewHttpbinDeployment creates a new single replica deployment of the httpbin image in a particular namespace.
-func (f *Framework) NewHttpbinDeployment() {
-	f.NewDeployment(HTTPBinService, "registry.k8s.io/ingress-nginx/e2e-test-httpbin@sha256:c6372ef57a775b95f18e19d4c735a9819f2e7bb4641e5e3f27287d831dfeb7e8", 80, 1)
 }
 
 func (f *Framework) NewDeployment(name, image string, port int32, replicas int32) {

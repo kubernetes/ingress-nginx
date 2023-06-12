@@ -29,39 +29,38 @@ namespace specific permissions defined by the `Role` named `ingress-nginx`.
 
 These permissions are granted in order for the ingress-nginx-controller to be
 able to function as an ingress across the cluster.  These permissions are
-granted to the ClusterRole named `ingress-nginx`
+granted to the `ClusterRole` named `ingress-nginx`
 
 * `configmaps`, `endpoints`, `nodes`, `pods`, `secrets`: list, watch
 * `nodes`: get
-* `services`, `ingresses`: get, list, watch
+* `services`, `ingresses`, `ingressclasses`, `endpointslices`: get, list, watch
 * `events`: create, patch
 * `ingresses/status`: update
+* `leases`: list, watch
 
 ### Namespace Permissions
 
 These permissions are granted specific to the ingress-nginx namespace.  These
-permissions are granted to the Role named `ingress-nginx`
+permissions are granted to the `Role` named `ingress-nginx`
 
 * `configmaps`, `pods`, `secrets`: get
 * `endpoints`: get
 
 Furthermore to support leader-election, the ingress-nginx-controller needs to
-have access to a `configmap` using the resourceName `ingress-controller-leader-nginx`
+have access to a `leases` using the resourceName `ingress-nginx-leader`
 
 > Note that resourceNames can NOT be used to limit requests using the “create”
 > verb because authorizers only have access to information that can be obtained
 > from the request URL, method, and headers (resource names in a “create” request
 > are part of the request body).
 
-* `configmaps`: get, update (for resourceName `ingress-controller-leader-nginx`)
-* `configmaps`: create
+* `leases`: get, update (for resourceName `ingress-controller-leader`)
+* `leases`: create
 
-This resourceName is the concatenation of the `election-id` and the
-`ingress-class` as defined by the ingress-controller, which defaults to:
+This resourceName is the `election-id` defined by the ingress-controller, which defaults to:
 
 * `election-id`: `ingress-controller-leader`
-* `ingress-class`: `nginx`
-* `resourceName` : `<election-id>-<ingress-class>`
+* `resourceName` : `<election-id>`
 
 Please adapt accordingly if you overwrite either parameter when launching the
 ingress-nginx-controller.
