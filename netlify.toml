@@ -1,0 +1,10 @@
+# netlify configuration
+[build]
+publish = "site"
+command = "make build-docs"
+# available here https://github.com/netlify/build-image/blob/focal/included_software.md#languages
+environment = { PYTHON_VERSION = "3.8" }
+
+[context.deploy-preview]
+  publish = "site/"
+  command = "make build-docs"
