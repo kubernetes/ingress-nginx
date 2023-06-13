@@ -739,6 +739,9 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 	case "AJP":
 		proto = ""
 		proxyPass = "ajp_pass"
+	case "FCGI":
+		proto = ""
+		proxyPass = "fastcgi_pass"
 	}
 
 	upstreamName := "upstream_balancer"
