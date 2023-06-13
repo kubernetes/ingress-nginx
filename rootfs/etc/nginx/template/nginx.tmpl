@@ -1492,7 +1492,7 @@ stream {
             {{ if $location.CustomHeaders }}
             # Custom Response Headers
             {{ range $k, $v := $location.CustomHeaders.Headers }}
-            more_set_headers {{ printf "%s: %s" $k $v | escapeLiteralDollar | quote }};
+            more_set_headers {{ printf "%s: %s" $k $v | quote }};
             {{ end }}
             {{ end }}
 
