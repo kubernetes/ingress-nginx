@@ -124,37 +124,50 @@ func dockerBuild() error {
 
 	fmt.Printf("Container Build Path: %v\n", dco.Path)
 
-	buildArgs := BuildArgs(dco.BuildArgs)
+	buildArgs(&dco.BuildArgs)
 
 	fmt.Printf("Base image: %s\n", dco.BuildArgs.BaseImage)
 
 	fmt.Printf("Build Args: %s\n", buildArgs)
 
-	session.Command("docker", "build", "--no-cache", "--pull", fmt.Sprintf("%v", buildArgs), fmt.Sprintf("%s", dco.Path)).Run()
+	session.Command("docker", "build", "--no-cache", "--pull",
+		"--build-arg", "BASE_IMAGE="+dco.BuildArgs.BaseImage,
+		"--build-arg", "VERSION="+dco.BuildArgs.Version,
+		"--build-arg", "TARGETARCH="+dco.BuildArgs.TargetArch,
+		"--build-arg", "COMMIT_SHA="+dco.BuildArgs.CommitSHA,
+		"--build-arg", "BUILD_ID="+dco.BuildArgs.BuildId,
+		dco.Path).Run()
 
 	return nil
 
 }
 
-func buildArgs(b *BuildArgs) string {
+func buildArgs(b *BuildArgs) {
 
 	if b.BaseImage == "" {
 		base, err := getIngressNginxBase()
 		CheckIfError(err, "Issue Retrieving base image")
-		fmt.Printf("Base Image set %s\n", base)
 		b.BaseImage = base
 	}
 
-	buildArgString := "--build-arg BASE_IMAGE=" + b.BaseImage
-
-	return buildArgString
+	if b.Version == "" {
+		b.Version = "1.0.0-dev"
+	}
+	if b.TargetArch == "" {
+		b.TargetArch = getArch()
+	}
+	if b.CommitSHA == "" {
+		sha, _ := sh.Command("git", "rev-parse", "--short", "HEAD").Output()
+		b.CommitSHA = strings.TrimSpace(string(sha))
+	}
+	if b.BuildId == "" {
+		b.BuildId = "UNSET"
+	}
 }
 
 func getIngressNginxBase() (string, error) {
-	fmt.Print("GET INGRESS NGINX BASE")
 	dat, err := os.ReadFile("../NGINX_BASE")
 	CheckIfError(err, "Could not read NGINX_BASE file")
-	fmt.Printf("Get Ingress Dat: %v\n", dat)
 	datString := string(dat)
 	//remove newline
 	datString = strings.Replace(datString, "\n", "", -1)
