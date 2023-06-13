@@ -271,8 +271,6 @@ func (n *NGINXController) CheckWarning(ing *networking.Ingress) ([]string, error
 		"influxdb-host",
 		"influxdb-server-name",
 		"secure-verify-ca-secret",
-		"fastcgi-params-configmap",
-		"fastcgi-index",
 	)
 
 	// Skip checks if the ingress is marked as deleted
