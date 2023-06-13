@@ -37,11 +37,17 @@ type Config struct {
 
 var (
 	headerRegexp = regexp.MustCompile(`^[a-zA-Z\d\-_]+$`)
+	valueRegexp  = regexp.MustCompile(`^[a-zA-Z\d\_ :;.,\/"'?!(){}[]@<>=-\+\*#$&<|~^%]+$`)
 )
 
 // ValidHeader checks is the provided string satisfies the header's name regex
 func ValidHeader(header string) bool {
 	return headerRegexp.MatchString(header)
+}
+
+// ValidValue checks is the provided string satisfies the value regex
+func ValidValue(header string) bool {
+	return valueRegexp.MatchString(header)
 }
 
 type customHeaders struct {
@@ -70,8 +76,11 @@ func (a customHeaders) Parse(ing *networking.Ingress) (interface{}, error) {
 			return nil, ing_errors.NewLocationDenied(fmt.Sprintf("unable to find configMap %q", clientHeadersConfigMapName))
 		}
 
-		for header := range clientHeadersMapContents.Data {
+		for header, value := range clientHeadersMapContents.Data {
 			if !ValidHeader(header) {
+				return nil, ing_errors.NewLocationDenied("invalid client-headers in configmap")
+			}
+			if !ValidValue(value) {
 				return nil, ing_errors.NewLocationDenied("invalid client-headers in configmap")
 			}
 			if !slices.Contains(defBackend.AllowedResponseHeaders, header) {
