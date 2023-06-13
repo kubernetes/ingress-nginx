@@ -200,6 +200,7 @@ kubectl ingress-nginx conf -n ingress-nginx --host testaddr.local
 
 ```console
 $ kubectl ingress-nginx exec -i -n ingress-nginx -- ls /etc/nginx
+fastcgi_params
 geoip
 lua
 mime.types

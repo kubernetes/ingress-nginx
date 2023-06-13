@@ -431,7 +431,7 @@ func TestCheckWarning(t *testing.T) {
 		t.Run("adding invalid annotations increases the warning count", func(t *testing.T) {
 			ing.ObjectMeta.Annotations[parser.GetAnnotationWithPrefix("enable-influxdb")] = "true"
 			ing.ObjectMeta.Annotations[parser.GetAnnotationWithPrefix("secure-verify-ca-secret")] = "true"
-			ing.ObjectMeta.Annotations[parser.GetAnnotationWithPrefix("fastcgi-index")] = "blabla"
+			ing.ObjectMeta.Annotations[parser.GetAnnotationWithPrefix("influxdb-host")] = "blabla"
 			defer func() {
 				ing.ObjectMeta.Annotations = map[string]string{}
 			}()

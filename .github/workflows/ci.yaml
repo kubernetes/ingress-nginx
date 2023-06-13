@@ -391,6 +391,8 @@ jobs:
               - 'images/custom-error-pages/**'
             cfssl:
               - 'images/cfssl/**'
+            fastcgi-helloserver:
+              - 'images/fastcgi-helloserver/**'
             echo:
               - 'images/echo/**'
             go-grpc-greeter-server:
@@ -410,6 +412,10 @@ jobs:
         if: ${{ steps.filter-images.outputs.cfssl == 'true' }}
         run: |
           cd images/cfssl && make build
+      - name: fastcgi-helloserver
+        if: ${{ steps.filter-images.outputs.fastcgi-helloserver == 'true' }}
+        run: |
+          cd images/fastcgi-helloserver && make build
       - name: echo image build
         if: ${{ steps.filter-images.outputs.echo == 'true' }}
         run: |
