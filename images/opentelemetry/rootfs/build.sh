@@ -70,6 +70,7 @@ install_grpc()
   mkdir -p $BUILD_PATH/grpc
   cd ${BUILD_PATH}/grpc
   cmake -DCMAKE_INSTALL_PREFIX=${INSTAL_DIR} \
+    -G Ninja \
     -DGRPC_GIT_TAG=${GRPC_GIT_TAG} /opt/third_party \
     -DgRPC_BUILD_GRPC_NODE_PLUGIN=OFF \
     -DgRPC_BUILD_GRPC_OBJECTIVE_C_PLUGIN=OFF \
@@ -92,6 +93,7 @@ install_otel()
   cd .build
 
   cmake -DCMAKE_BUILD_TYPE=Release \
+        -G Ninja \
         -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE  \
         -DWITH_ZIPKIN=OFF \
         -DWITH_JAEGER=OFF \
@@ -143,6 +145,7 @@ install_nginx()
   mkdir -p build
   cd build
   cmake -DCMAKE_BUILD_TYPE=Release \
+    -G Ninja \
     -DCMAKE_INSTALL_PREFIX=${INSTAL_DIR} \
     -DBUILD_SHARED_LIBS=ON \
     -DNGINX_VERSION=${NGINX_VERSION} \

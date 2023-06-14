@@ -32,7 +32,10 @@ import (
 )
 
 var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
-	f := framework.NewDefaultFramework("global-external-auth")
+	f := framework.NewDefaultFramework(
+		"global-external-auth",
+		framework.WithHTTPBunEnabled(),
+	)
 
 	host := "global-external-auth"
 
@@ -50,7 +53,6 @@ var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
-		f.NewHttpbunDeployment()
 	})
 
 	ginkgo.Context("when global external authentication is configured", func() {
@@ -307,9 +309,9 @@ http {
 			assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets), 1, "expected at least one endpoint")
 			assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets[0].Addresses), 1, "expected at least one address ready in the endpoint")
 
-			httpbunIP := e.Subsets[0].Addresses[0].IP
+			nginxIP := e.Subsets[0].Addresses[0].IP
 
-			f.UpdateNginxConfigMapData(globalExternalAuthURLSetting, fmt.Sprintf("http://%s/cookies/set/alma/armud", httpbunIP))
+			f.UpdateNginxConfigMapData(globalExternalAuthURLSetting, fmt.Sprintf("http://%s/cookies/set/alma/armud", nginxIP))
 
 			ing1 = framework.NewSingleIngress(host, "/", host, f.Namespace, "http-cookie-with-error", 80, nil)
 			f.EnsureIngress(ing1)

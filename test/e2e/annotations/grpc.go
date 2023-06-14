@@ -37,7 +37,7 @@ import (
 )
 
 var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
-	f := framework.NewDefaultFramework("grpc")
+	f := framework.NewDefaultFramework("grpc", framework.WithHTTPBunEnabled())
 
 	ginkgo.It("should use grpc_pass in the configuration file", func() {
 		f.NewGRPCFortuneTellerDeployment()
@@ -124,8 +124,6 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 
 	ginkgo.It("authorization metadata should be overwritten by external auth response headers", func() {
 		f.NewGRPCBinDeployment()
-		f.NewHttpbunDeployment()
-
 		host := "echo"
 
 		svc := &corev1.Service{
@@ -148,19 +146,8 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 		}
 		f.EnsureService(svc)
 
-		err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBunService, f.Namespace, 1)
-		assert.Nil(ginkgo.GinkgoT(), err)
-
-		e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(context.TODO(), framework.HTTPBunService, metav1.GetOptions{})
-		assert.Nil(ginkgo.GinkgoT(), err)
-
-		assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets), 1, "expected at least one endpoint")
-		assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets[0].Addresses), 1, "expected at least one address ready in the endpoint")
-
-		httpbunIP := e.Subsets[0].Addresses[0].IP
-
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/auth-url":              fmt.Sprintf("http://%s/response-headers?authorization=foo", httpbunIP),
+			"nginx.ingress.kubernetes.io/auth-url":              fmt.Sprintf("http://%s/response-headers?authorization=foo", f.HTTPBunIP),
 			"nginx.ingress.kubernetes.io/auth-response-headers": "Authorization",
 			"nginx.ingress.kubernetes.io/backend-protocol":      "GRPC",
 		}

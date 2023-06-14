@@ -271,8 +271,6 @@ func (n *NGINXController) CheckWarning(ing *networking.Ingress) ([]string, error
 		"influxdb-host",
 		"influxdb-server-name",
 		"secure-verify-ca-secret",
-		"fastcgi-params-configmap",
-		"fastcgi-index",
 	)
 
 	// Skip checks if the ingress is marked as deleted
@@ -608,7 +606,7 @@ func (n *NGINXController) getConfiguration(ingresses []*ingress.Ingress) (sets.S
 
 	for _, server := range servers {
 		// If a location is defined by a prefix string that ends with the slash character, and requests are processed by one of
-		// proxy_pass, uwsgi_pass, scgi_pass, memcached_pass, or grpc_pass, then the special processing is performed.
+		// proxy_pass, fastcgi_pass, uwsgi_pass, scgi_pass, memcached_pass, or grpc_pass, then the special processing is performed.
 		// In response to a request with URI equal to // this string, but without the trailing slash, a permanent redirect with the
 		// code 301 will be returned to the requested URI with the slash appended. If this is not desired, an exact match of the
 		// URIand location could be defined like this:
@@ -1519,6 +1517,7 @@ func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) 
 	loc.Logs = anns.Logs
 	loc.DefaultBackend = anns.DefaultBackend
 	loc.BackendProtocol = anns.BackendProtocol
+	loc.FastCGI = anns.FastCGI
 	loc.CustomHTTPErrors = anns.CustomHTTPErrors
 	loc.DisableProxyInterceptErrors = anns.DisableProxyInterceptErrors
 	loc.ModSecurity = anns.ModSecurity

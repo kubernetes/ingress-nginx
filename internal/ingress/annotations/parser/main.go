@@ -160,6 +160,7 @@ func normalizeString(input string) string {
 
 var configmapAnnotations = sets.NewString(
 	"auth-proxy-set-header",
+	"fastcgi-params-configmap",
 )
 
 // AnnotationsReferencesConfigmap checks if at least one annotation in the Ingress rule
