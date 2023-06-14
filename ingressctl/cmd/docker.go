@@ -50,7 +50,7 @@ func init() {
 	dockerBuildCmd.Flags().StringVar(&dco.BuildArgs.TargetArch, "targetarch", "", "target arch to build")
 	dockerBuildCmd.Flags().StringVar(&dco.BuildArgs.CommitSHA, "commitsha", "", "build arg commit sha to add to build")
 	dockerBuildCmd.Flags().StringVar(&dco.BuildArgs.BuildId, "build-id", "", "build id to add to container metadata")
-	dockerBuildCmd.Flags().StringVar(&dco.DockerFile, "dockerfile", "", "dockerfile of image to build")
+	dockerBuildCmd.Flags().StringVar(&dco.Dockerfile, "dockerfile", "Dockerfile", "dockerfile of image to build")
 	dockerBuildCmd.Flags().StringVar(&dco.Image.Name, "name", "", "container image name registry/name:tag@digest")
 	dockerBuildCmd.Flags().StringVar(&dco.Image.Registry, "registry", Registry, "Registry to tag image and push container registry/name:tag@digest")
 	dockerBuildCmd.Flags().StringVar(&dco.Image.Tag, "tag", "", "container tag registry/name:tag@digest")
@@ -81,7 +81,7 @@ type dockerBuildOpts struct {
 	PlatformFlag string
 	Platform     []string
 	BuildArgs    BuildArgs
-	DockerFile   string
+	Dockerfile   string
 	Image        Image
 	Path         string
 }
@@ -136,6 +136,7 @@ func dockerBuild() error {
 		"--build-arg", "TARGETARCH="+dco.BuildArgs.TargetArch,
 		"--build-arg", "COMMIT_SHA="+dco.BuildArgs.CommitSHA,
 		"--build-arg", "BUILD_ID="+dco.BuildArgs.BuildId,
+		"-f", dco.Path+dco.Dockerfile,
 		dco.Path).Run()
 
 	return nil
