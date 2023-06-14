@@ -54,7 +54,9 @@ type mockCfg struct {
 }
 
 func (m mockCfg) GetDefaultBackend() defaults.Backend {
-	return defaults.Backend{}
+	return defaults.Backend{
+		AllowedResponseHeaders: []string{"Content-Type"},
+	}
 }
 
 func (m mockCfg) GetSecret(name string) (*apiv1.Secret, error) {
@@ -332,7 +334,6 @@ func TestCustomResponseHeaders(t *testing.T) {
 
 	ec := NewAnnotationExtractor(mockObj)
 	ing := buildIngress()
-
 	fooAnns := []struct {
 		annotations map[string]string
 		headers     map[string]string
