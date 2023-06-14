@@ -14,70 +14,81 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package cmd
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/google/go-github/v48/github"
-	"golang.org/x/oauth2"
-	"gopkg.in/yaml.v3"
 	"io"
 	"net"
 	"net/http"
 	"os"
 	"text/template"
 
+	"github.com/codeskyblue/go-sh"
+	"github.com/google/go-github/v48/github"
+	"github.com/spf13/cobra"
+	"golang.org/x/oauth2"
+	"gopkg.in/yaml.v3"
+
 	"regexp"
 	"strings"
 	"time"
 )
 
-
-var INGRESS_ORG = "kubernetes"                                              // the owner so we can test from forks
-var INGRESS_REPO = "ingress-nginx"                                          // the repo to pull from
-var RELEASE_BRANCH = "main"                                                 //we only release from main
-var GITHUB_TOKEN string                                                     // the Google/gogithub lib needs an PAT to access the GitHub API
-var K8S_IO_ORG = "kubernetes"                                               //the owner or organization for the k8s.io repo
+// var INGRESS_ORG = "kubernetes"                                              // the owner so we can test from forks
+var INGRESS_ORG = "strongjz"       // the owner so we can test from forks
+var INGRESS_REPO = "ingress-nginx" // the repo to pull from
+var RELEASE_BRANCH = "main"        //we only release from main
+var GITHUB_TOKEN string            // the Google/gogithub lib needs an PAT to access the GitHub API
+// var K8S_IO_ORG = "kubernetes"                                               //the owner or organization for the k8s.io repo
+var K8S_IO_ORG = "strongjz"                                                 //the owner or organization for the k8s.io repo
 var K8S_IO_REPO = "k8s.io"                                                  //the repo that holds the images yaml for production promotion
 var INGRESS_REGISTRY = "registry.k8s.io"                                    //Container registry for storage Ingress-nginx images
 var KUSTOMIZE_INSTALL_VERSION = "sigs.k8s.io/kustomize/kustomize/v4@v4.5.4" //static deploys needs kustomize to generate the template
 
 // ingress-nginx releases start with a TAG then a cloudbuild, then a promotion through a PR, this the location of that PR
-var IMAGES_YAML = "https://raw.githubusercontent.com/kubernetes/k8s.io/main/registry.k8s.io/images/k8s-staging-ingress-nginx/images.yaml"
+var IMAGES_YAML = "https://raw.githubusercontent.com/strongjz/k8s.io/main/registry.k8s.io/images/k8s-staging-ingress-nginx/images.yaml"
 var ctx = context.Background() // Context used for GitHub Client
 
 const INDEX_DOCS = "docs/deploy/index.md" //index.md has a version of the controller and needs to updated
 const CHANGELOG = "Changelog.md"          //Name of the changelog
 
-
 var releaseCmd = &cobra.Command{
-	Use: "release",
-	Short: "Start a release"
-	Long: "Start a new release for ingress-nginx"
-	Run: func(cmd *cobra.Command, args []string){
+	Use:   "release",
+	Short: "Start a release",
+	Long:  "Start a new release for ingress-nginx",
+	Run: func(cmd *cobra.Command, args []string) {
 
-	}
+	},
 }
-
-
 
 var helmReleaseCmd = &cobra.Command{
-	Use: "helm",
+	Use:   "helm",
 	Short: "Start a new helm chart release",
-	Long: "Start a new helm chart release",
-	Run: func(cmd *cobra.Command, args []strings) {
+	Long:  "Start a new helm chart release",
+	Run: func(cmd *cobra.Command, args []string) {
 
-	}
+	},
 }
 
-func init(){
+var controllerReleaseCmd = &cobra.Command{
+	Use:   "controller",
+	Short: "Release Ingress-nginx Controller",
+	Long:  "Release a new version of ingress-nginx controller",
+	Run: func(cmd *cobra.Command, args []string) {
+
+	},
+}
+
+func init() {
 	rootCmd.AddCommand(releaseCmd)
 	releaseCmd.AddCommand(helmReleaseCmd)
 	releaseCmd.AddCommand(controllerReleaseCmd)
 
 }
+
 // ControllerImage - struct with info about controllers
 type ControllerImage struct {
 	Tag      string
@@ -122,12 +133,12 @@ func init() {
 }
 
 // PromoteImage Creates PR into the k8s.io repo for promotion of ingress from staging to production
-func (Release) PromoteImage(version, sha string) {
+func PromoteImage(version, sha string) {
 
 }
 
 // Release Create a new release of ingress nginx controller
-func (Release) NewRelease(version string) {
+func NewRelease(version string) {
 	//newRelease := Release{}
 
 	//update ingress-nginx version
@@ -142,11 +153,11 @@ func (Release) NewRelease(version string) {
 	//if the version were upgrading does not match the TAG file, lets update the TAG file
 	if tag[1:] != version {
 		Warning("RELEASE Ingress Nginx TAG %s and new version %s do not match", tag, version)
-		mg.Deps(mg.F(Tag.BumpNginx, fmt.Sprintf("v%s", version)))
+		BumpNginx(fmt.Sprintf("v%s", version))
 	}
 
 	//update git controller tag controller-v$version
-	mg.Deps(mg.F(Tag.NewControllerTag, version))
+	NewControllerTag(version)
 
 	//make release notes
 	releaseNotes, err := makeReleaseNotes(version)
@@ -172,7 +183,7 @@ func (Release) NewRelease(version string) {
 	}
 
 	//update helm chart app version
-	mg.Deps(mg.F(Helm.UpdateVersion, version))
+	//mg.Deps(mg.F(Helm.UpdateVersion, version))
 
 	releaseNotes.NewHelmChartVersion = currentChartVersion()
 
@@ -187,7 +198,7 @@ func (Release) NewRelease(version string) {
 	//update static manifest
 	CheckIfError(updateStaticManifest(), "Error Updating Static manifests")
 
-	////update e2e docs
+	//update e2e docs
 	updateE2EDocs()
 
 	//update documentation with ingress-nginx version
@@ -217,7 +228,7 @@ func updateIndexMD(old, new string) error {
 
 // runs the hack/generate-deploy-scripts.sh
 func updateE2EDocs() {
-	updates, err := sh.Output("./hack/generate-e2e-suite-doc.sh")
+	updates, err := sh.Command("./hack/generate-e2e-suite-doc.sh").Output()
 	CheckIfError(err, "Could not run update hack script")
 	err = os.WriteFile("docs/e2e-tests.md", []byte(updates), 644)
 	CheckIfError(err, "Could not write new e2e test file ")
@@ -226,23 +237,13 @@ func updateE2EDocs() {
 // The static deploy scripts use kustomize to generate them, this function ensures kustomize is installed
 func installKustomize() error {
 	Info("Install Kustomize")
-	var g0 = sh.RunCmd("go")
-	// somewhere in your main code
-	err := g0("install", KUSTOMIZE_INSTALL_VERSION)
-	if err != nil {
-		return err
-	}
-	return nil
+	return sh.Command("go", "install", KUSTOMIZE_INSTALL_VERSION).Run()
 }
 
 func updateStaticManifest() error {
 	CheckIfError(installKustomize(), "error installing kustomize")
 	//hack/generate-deploy-scripts.sh
-	err := sh.RunV("./hack/generate-deploy-scripts.sh")
-	if err != nil {
-		return err
-	}
-	return nil
+	return sh.Command("./hack/generate-deploy-scripts.sh").Run()
 }
 
 //// CreateRelease Creates a new GitHub Release
@@ -264,7 +265,7 @@ func githubClient() *github.Client {
 }
 
 // LatestCommitLogs Retrieves the commit log between the latest two controller versions.
-func (Release) LatestCommitLogs() {
+func LatestCommitLogs() {
 	commitLog := commitsBetweenTags()
 	for i, s := range commitLog {
 		Info("#%v Version %v", i, s)
@@ -274,17 +275,17 @@ func (Release) LatestCommitLogs() {
 func commitsBetweenTags() []string {
 	tags := getAllControllerTags()
 	Info("Getting Commits between %v and %v", tags[0], tags[1])
-	commitLog, err := git("log", "--full-history", "--pretty", "--oneline", fmt.Sprintf("%v..%v", tags[1], tags[0]))
+	commitLog, err := sh.Command("git", "log", "--full-history", "--pretty", "--oneline", fmt.Sprintf("%v..%v", tags[1], tags[0])).Output()
 
-	if commitLog == "" {
+	if len(commitLog) == 0 {
 		Warning("All Controller Tags is empty")
 	}
 	CheckIfError(err, "Retrieving Commit log")
-	return strings.Split(commitLog, "\n")
+	return strings.Split(string(commitLog), "\n")
 }
 
 // Generate Release Notes
-func (Release) ReleaseNotes(newVersion string) error {
+func ReleaseNotes(newVersion string) error {
 	notes, err := makeReleaseNotes(newVersion)
 	CheckIfError(err, "Creating Release Notes for version %s", newVersion)
 	Info("Release Notes %s completed", notes.Version)
@@ -512,7 +513,7 @@ func downloadFile(url string) (string, error) {
 }
 
 // Latest returns latest Github Release
-func (Release) Latest() error {
+func ReleaseLatest() error {
 	r, _, err := latestRelease()
 	if err != nil {
 		ErrorF("Latest Release error %s", err)
@@ -522,7 +523,7 @@ func (Release) Latest() error {
 	return nil
 }
 
-func (Release) ReleaseByTag(tag string) error {
+func ReleaseByTag(tag string) error {
 	r, _, err := releaseByTag(tag)
 	if err != nil {
 		ErrorF("Release retrieve tag error %s", tag, err)
@@ -545,7 +546,7 @@ func latestRelease() (*github.RepositoryRelease, *github.Response, error) {
 }
 
 // Copy Test function to copy a release
-func (Release) Copy() error {
+func ReleaseCopy() error {
 	ghClient := githubClient()
 	kRelease, _, err := ghClient.Repositories.GetLatestRelease(ctx, "kubernetes", "ingress-nginx")
 	if err != nil {
