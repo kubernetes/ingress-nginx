@@ -399,14 +399,14 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.scope.enabled | bool | `false` | Enable 'scope' or not |
 | controller.scope.namespace | string | `""` | Namespace to limit the controller to; defaults to $(POD_NAMESPACE) |
 | controller.scope.namespaceSelector | string | `""` | When scope.enabled == false, instead of watching all namespaces, we watching namespaces whose labels only match with namespaceSelector. Format like foo=bar. Defaults to empty, means watching all namespaces. |
-| controller.service.annotations | object | `{}` |  |
+| controller.service.annotations | object | `{}` | Annotations are mandatory for the load balancer to come up. Varies with the cloud service. Values passed through helm tpl engine. |
 | controller.service.appProtocol | bool | `true` | If enabled is adding an appProtocol option for Kubernetes service. An appProtocol field replacing annotations that were using for setting a backend protocol. Here is an example for AWS: service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http It allows choosing the protocol for each backend specified in the Kubernetes service. See the following GitHub issue for more details about the purpose: https://github.com/kubernetes/kubernetes/issues/40244 Will be ignored for Kubernetes versions older than 1.20 # |
 | controller.service.enableHttp | bool | `true` |  |
 | controller.service.enableHttps | bool | `true` |  |
 | controller.service.enabled | bool | `true` |  |
 | controller.service.external.enabled | bool | `true` |  |
 | controller.service.externalIPs | list | `[]` | List of IP addresses at which the controller services are available # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips # |
-| controller.service.internal.annotations | object | `{}` | Annotations are mandatory for the load balancer to come up. Varies with the cloud service. |
+| controller.service.internal.annotations | object | `{}` | Annotations are mandatory for the load balancer to come up. Varies with the cloud service. Values passed through helm tpl engine. |
 | controller.service.internal.enabled | bool | `false` | Enables an additional internal load balancer (besides the external one). |
 | controller.service.internal.loadBalancerSourceRanges | list | `[]` | Restrict access For LoadBalancer service. Defaults to 0.0.0.0/0. |
 | controller.service.internal.ports | object | `{}` | Custom port mapping for internal service |

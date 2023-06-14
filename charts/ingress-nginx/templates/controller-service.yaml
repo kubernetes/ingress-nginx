@@ -4,7 +4,7 @@ kind: Service
 metadata:
   annotations:
   {{- range $key, $value := .Values.controller.service.annotations }}
-    {{ $key }}: {{ $value | quote }}
+    {{ $key }}: {{ tpl ($value | toString) $ | quote }}
   {{- end }}
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
