@@ -38,7 +38,7 @@ function _M.call()
     return
   end
 
-   _, err = cjson.decode(backends)
+   local _, err = cjson.decode(backends)
 
   if err then
     ngx.log(ngx.ERR, "could not parse backends data: ", err)
