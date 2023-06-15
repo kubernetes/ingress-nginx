@@ -41,11 +41,6 @@ func updateAppVersion() {
 
 }
 
-// UpdateVersion Update Helm Version of the Chart
-func UpdateVersion(version string) {
-	updateVersion(version)
-}
-
 func currentChartVersion() string {
 	chart, err := chartutil.LoadChartfile(HelmChartPath)
 	CheckIfError(err, "HELM Could not Load Chart")
@@ -58,18 +53,12 @@ func currentChartAppVersion() string {
 	return chart.AppVersion
 }
 
-func updateVersion(version string) {
+// UpdateVersion Update Helm Version of the Chart
+func UpdateVersion(appVersion string) {
 	Info("HELM Reading File %v", HelmChartPath)
 
 	chart, err := chartutil.LoadChartfile(HelmChartPath)
 	CheckIfError(err, "HELM Could not Load Chart")
-
-	//Get the current tag
-	//appVersionV, err := getIngressNGINXVersion()
-	//CheckIfError(err, "HELM Issue Retrieving the Current Ingress Nginx Version")
-
-	//remove the v from TAG
-	appVersion := version
 
 	Info("HELM Ingress-Nginx App Version: %s Chart AppVersion: %s", appVersion, chart.AppVersion)
 	if appVersion == chart.AppVersion {

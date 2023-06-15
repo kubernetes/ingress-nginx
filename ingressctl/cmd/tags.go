@@ -97,6 +97,15 @@ func BumpNginx(newTag string) {
 	currentTag, err := getIngressNGINXVersion()
 	CheckIfError(err, "Getting Ingress-nginx Version")
 	bump(currentTag, newTag)
+
+	if !checkSemVer(currentTag, newTag) {
+		ErrorF("ERROR: Semver is not valid %v", newTag)
+		os.Exit(1)
+	}
+
+	Info("Updating Tag %v to %v", currentTag, newTag)
+	err = os.WriteFile("../TAG", []byte(newTag), 0666)
+	CheckIfError(err, "Error Writing New Tag File")
 }
 
 func bump(currentTag, newTag string) {
@@ -107,7 +116,7 @@ func bump(currentTag, newTag string) {
 	}
 
 	Info("Updating Tag %v to %v", currentTag, newTag)
-	err := os.WriteFile("../TAG", []byte(newTag), 0666)
+	err := os.WriteFile("TAG", []byte(newTag), 0666)
 	CheckIfError(err, "Error Writing New Tag File")
 }
 

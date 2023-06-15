@@ -38,19 +38,19 @@ import (
 )
 
 // var INGRESS_ORG = "kubernetes"                                              // the owner so we can test from forks
-var INGRESS_ORG = "strongjz"       // the owner so we can test from forks
-var INGRESS_REPO = "ingress-nginx" // the repo to pull from
-var RELEASE_BRANCH = "main"        //we only release from main
-var GITHUB_TOKEN string            // the Google/gogithub lib needs an PAT to access the GitHub API
-// var K8S_IO_ORG = "kubernetes"                                               //the owner or organization for the k8s.io repo
-var K8S_IO_ORG = "strongjz"                                                 //the owner or organization for the k8s.io repo
+var INGRESS_ORG = "strongjz"                                                // the owner so we can test from forks
+var INGRESS_REPO = "ingress-nginx"                                          // the repo to pull from
+var RELEASE_BRANCH = "main"                                                 //we only release from main
+var GITHUB_TOKEN string                                                     // the Google/gogithub lib needs an PAT to access the GitHub API
 var K8S_IO_REPO = "k8s.io"                                                  //the repo that holds the images yaml for production promotion
 var INGRESS_REGISTRY = "registry.k8s.io"                                    //Container registry for storage Ingress-nginx images
 var KUSTOMIZE_INSTALL_VERSION = "sigs.k8s.io/kustomize/kustomize/v4@v4.5.4" //static deploys needs kustomize to generate the template
 
 // ingress-nginx releases start with a TAG then a cloudbuild, then a promotion through a PR, this the location of that PR
-var IMAGES_YAML = "https://raw.githubusercontent.com/strongjz/k8s.io/main/registry.k8s.io/images/k8s-staging-ingress-nginx/images.yaml"
+var IMAGES_YAML = "https://raw.githubusercontent.com/" + INGRESS_ORG + "/k8s.io/main/registry.k8s.io/images/k8s-staging-ingress-nginx/images.yaml"
 var ctx = context.Background() // Context used for GitHub Client
+
+var version string
 
 const INDEX_DOCS = "docs/deploy/index.md" //index.md has a version of the controller and needs to updated
 const CHANGELOG = "Changelog.md"          //Name of the changelog
@@ -78,7 +78,7 @@ var controllerReleaseCmd = &cobra.Command{
 	Short: "Release Ingress-nginx Controller",
 	Long:  "Release a new version of ingress-nginx controller",
 	Run: func(cmd *cobra.Command, args []string) {
-
+		NewRelease(version)
 	},
 }
 
@@ -86,7 +86,7 @@ func init() {
 	rootCmd.AddCommand(releaseCmd)
 	releaseCmd.AddCommand(helmReleaseCmd)
 	releaseCmd.AddCommand(controllerReleaseCmd)
-
+	controllerReleaseCmd.Flags().StringVar(&version, "version", "v1.0.0-dev", "version of the controller to update")
 }
 
 // ControllerImage - struct with info about controllers
@@ -149,7 +149,7 @@ func NewRelease(version string) {
 	tag, err := getIngressNGINXVersion()
 	CheckIfError(err, "RELEASE Retrieving the current Ingress Nginx Version")
 
-	Info("RELEASE Checking Current Version %s to New Version %s", tag, version)
+	Info("RELEASE Checking Current Version %s to New Version %s", tag[1:], version)
 	//if the version were upgrading does not match the TAG file, lets update the TAG file
 	if tag[1:] != version {
 		Warning("RELEASE Ingress Nginx TAG %s and new version %s do not match", tag, version)
@@ -183,7 +183,7 @@ func NewRelease(version string) {
 	}
 
 	//update helm chart app version
-	//mg.Deps(mg.F(Helm.UpdateVersion, version))
+	UpdateVersion(version)
 
 	releaseNotes.NewHelmChartVersion = currentChartVersion()
 

@@ -11,7 +11,7 @@ var DEBUG bool
 
 func init() {
 	DEBUG = false
-	debugENV := os.Getenv("MAGE_DEBUG")
+	debugENV := os.Getenv("DEBUG")
 	if debugENV == "true" {
 		DEBUG = true
 	}
