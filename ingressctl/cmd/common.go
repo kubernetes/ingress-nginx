@@ -32,7 +32,7 @@ func CheckIfError(err error, format string, args ...interface{}) {
 		return
 	}
 
-	fmt.Printf("\x1b[31;1m%s ERROR %s %s\x1b[0m\n", timeStamp(), fmt.Sprintf(format, args...), err)
+	fmt.Printf("\x1b[31;1m%s ERROR: %s %s\x1b[0m\n", timeStamp(), fmt.Sprintf(format, args...), err)
 	os.Exit(1)
 }
 

@@ -37,33 +37,41 @@ import (
 	"time"
 )
 
-// var INGRESS_ORG = "kubernetes"                                              // the owner so we can test from forks
 var INGRESS_ORG = "strongjz"                                                // the owner so we can test from forks
 var INGRESS_REPO = "ingress-nginx"                                          // the repo to pull from
 var RELEASE_BRANCH = "main"                                                 //we only release from main
 var GITHUB_TOKEN string                                                     // the Google/gogithub lib needs an PAT to access the GitHub API
 var K8S_IO_REPO = "k8s.io"                                                  //the repo that holds the images yaml for production promotion
+var K8S_IO_BRANCH = "testing"                                               //branch to pull the k8s.io promoter yaml for controller tags
 var INGRESS_REGISTRY = "registry.k8s.io"                                    //Container registry for storage Ingress-nginx images
 var KUSTOMIZE_INSTALL_VERSION = "sigs.k8s.io/kustomize/kustomize/v4@v4.5.4" //static deploys needs kustomize to generate the template
 
 // ingress-nginx releases start with a TAG then a cloudbuild, then a promotion through a PR, this the location of that PR
-var IMAGES_YAML = "https://raw.githubusercontent.com/" + INGRESS_ORG + "/k8s.io/main/registry.k8s.io/images/k8s-staging-ingress-nginx/images.yaml"
+var IMAGES_YAML = "https://raw.githubusercontent.com/" + INGRESS_ORG + "/" + K8S_IO_REPO + "/testing/registry.k8s.io/images/k8s-staging-ingress-nginx/images.yaml"
 var ctx = context.Background() // Context used for GitHub Client
 
+// version - the version of the ingress-nginx controller to release
 var version string
 
-const INDEX_DOCS = "docs/deploy/index.md" //index.md has a version of the controller and needs to updated
-const CHANGELOG = "Changelog.md"          //Name of the changelog
+// Documents that get updated for a controller release
+var INDEX_DOCS = "docs/deploy/index.md"        //index.md has a version of the controller and needs to updated
+var CHANGELOG = "Changelog.md"                 //Name of the changelog
+var CHANGELOG_PATH = "changelog"               //folder for saving the new changelogs
+var CHANGELOG_TEMPLATE = "Changelog.md.gotmpl" //path to go template for controller change log
 
+// Documents that get updated for the ingress-nginx helm chart release
+var CHART_PATH = "charts/ingress-nginx/"                          //path to the ingress-nginx helm chart
+var CHART_CHANGELOG_PATH = CHART_PATH + "changelog"               //folder path to the helm chart changelog
+var CHART_CHANGELOG_TEMPLATE = CHART_PATH + "changelog.md.gotmpl" //go template for the ingress-nginx helm chart
+
+// releaseCmd - release root command for controller and helm charts
 var releaseCmd = &cobra.Command{
 	Use:   "release",
 	Short: "Start a release",
 	Long:  "Start a new release for ingress-nginx",
-	Run: func(cmd *cobra.Command, args []string) {
-
-	},
 }
 
+// helmReleaseCmd - release subcommand to release a new version of the ingress-nginx helm chart
 var helmReleaseCmd = &cobra.Command{
 	Use:   "helm",
 	Short: "Start a new helm chart release",
@@ -73,6 +81,7 @@ var helmReleaseCmd = &cobra.Command{
 	},
 }
 
+// controllerReleaseCmd - release subcommand to update all the files for a controller release
 var controllerReleaseCmd = &cobra.Command{
 	Use:   "controller",
 	Short: "Release Ingress-nginx Controller",
@@ -83,6 +92,8 @@ var controllerReleaseCmd = &cobra.Command{
 }
 
 func init() {
+
+	GITHUB_TOKEN = os.Getenv("GITHUB_TOKEN")
 	rootCmd.AddCommand(releaseCmd)
 	releaseCmd.AddCommand(helmReleaseCmd)
 	releaseCmd.AddCommand(controllerReleaseCmd)
@@ -107,15 +118,15 @@ type IngressRelease struct {
 
 // ReleaseNote - All the pieces of information/documents that get updated during a release
 type ReleaseNote struct {
-	Version                   string
-	NewControllerVersion      string
-	PreviousControllerVersion string
-	ControllerImages          []ControllerImage
-	DepUpdates                []string
-	Updates                   []string
-	HelmUpdates               []string
-	NewHelmChartVersion       string
-	PreviousHelmChartVersion  string
+	Version                   string            //released version
+	NewControllerVersion      string            //the new controller version being release
+	PreviousControllerVersion string            //the previous controller tag/release
+	ControllerImages          []ControllerImage //the full image digests
+	DepUpdates                []string          //list of dependabot updates to put in the changelog
+	Updates                   []string          //updates with no category
+	HelmUpdates               []string          //updates to the ingress-nginx helm chart
+	NewHelmChartVersion       string            //update to the helm chart version
+	PreviousHelmChartVersion  string            //previous helm chart version
 }
 
 // IMAGES_YAML returns this data structure
@@ -127,25 +138,21 @@ type ImageElement struct {
 	Dmap map[string][]string `json:"dmap"`
 }
 
-// init will set the GitHub token from the committers/releasers env var
-func init() {
-	GITHUB_TOKEN = os.Getenv("GITHUB_TOKEN")
-}
-
 // PromoteImage Creates PR into the k8s.io repo for promotion of ingress from staging to production
 func PromoteImage(version, sha string) {
+
+	//TODO
 
 }
 
 // Release Create a new release of ingress nginx controller
 func NewRelease(version string) {
-	//newRelease := Release{}
 
 	//update ingress-nginx version
 	//This is the step that kicks all the release process
 	//it is already done, so it kicks off the gcloud build of the controller images
-	//mg.Deps(mg.F(Tag.BumpNginx, version))
 
+	//the version to release and the current version in TAG should match
 	tag, err := getIngressNGINXVersion()
 	CheckIfError(err, "RELEASE Retrieving the current Ingress Nginx Version")
 
@@ -160,23 +167,25 @@ func NewRelease(version string) {
 	NewControllerTag(version)
 
 	//make release notes
-	releaseNotes, err := makeReleaseNotes(version)
+	releaseNotes, err := ReleaseNotes(version)
 	CheckIfError(err, "RELEASE Creating Release Notes for version %s", version)
 	Info("RELEASE Release Notes %s completed", releaseNotes.Version)
 
 	//update chart values.yaml new controller tag and image digest
 	releaseNotes.PreviousHelmChartVersion = currentChartVersion()
 
-	//controller tag
+	//update the Helm Chart appVersion aka the controller tag
 	updateChartValue("controller.image.tag", fmt.Sprintf("v%s", releaseNotes.Version))
 	Debug("releaseNotes.ControllerImages[0].Name %s", releaseNotes.ControllerImages[0].Name)
 	Debug("releaseNotes.ControllerImages[1].Name %s", releaseNotes.ControllerImages[1].Name)
-	//controller digest
+
+	//Record the ingress-nginx controller digests
 	if releaseNotes.ControllerImages[0].Name == "ingress-nginx/controller" {
 		Debug("Updating Chart Value %s with %s", "controller.image.digest", releaseNotes.ControllerImages[0].Digest)
 		updateChartValue("controller.image.digest", releaseNotes.ControllerImages[0].Digest)
 	}
-	//controller chroot digest
+
+	//Record the ingress-nginx controller chroot digest
 	if releaseNotes.ControllerImages[1].Name == "ingress-nginx/controller-chroot" {
 		Debug("Updating Chart Value %s with %s", "controller.image.digestChroot", releaseNotes.ControllerImages[1].Digest)
 		updateChartValue("controller.image.digestChroot", releaseNotes.ControllerImages[1].Digest)
@@ -206,9 +215,7 @@ func NewRelease(version string) {
 
 	//keeping these manual for now
 	//git commit TODO
-	//make Pull Request TODO
-	//make release TODO
-	//mg.Deps(mg.F(Release.CreateRelease, version))
+	//Create Pull Request TODO
 }
 
 // the index.md doc needs the controller version updated
@@ -246,14 +253,16 @@ func updateStaticManifest() error {
 	return sh.Command("./hack/generate-deploy-scripts.sh").Run()
 }
 
-//// CreateRelease Creates a new GitHub Release
-//func (Release) CreateRelease(name string) {
-//	releaser, err := gh_release.NewReleaser(INGRESS_ORG, INGRESS_REPO, GITHUB_TOKEN)
-//	CheckIfError(err, "GitHub Release Client error")
-//	newRelease, err := releaser.Create(fmt.Sprintf("controller-%s", name))
-//	CheckIfError(err, "Create release error")
-//	Info("New Release: Tag %v, ID: %v", newRelease.TagName, newRelease.ID)
-//}
+/*
+// CreateRelease Creates a new GitHub Release
+func CreateRelease(name string) {
+	releaser, err := gh_release.NewReleaser(INGRESS_ORG, INGRESS_REPO, GITHUB_TOKEN)
+	CheckIfError(err, "GitHub Release Client error")
+	newRelease, err := releaser.Create(fmt.Sprintf("controller-%s", name))
+	CheckIfError(err, "Create release error")
+	Info("New Release: Tag %v, ID: %v", newRelease.TagName, newRelease.ID)
+}
+*/
 
 // Returns a GitHub client ready for use
 func githubClient() *github.Client {
@@ -285,14 +294,7 @@ func commitsBetweenTags() []string {
 }
 
 // Generate Release Notes
-func ReleaseNotes(newVersion string) error {
-	notes, err := makeReleaseNotes(newVersion)
-	CheckIfError(err, "Creating Release Notes for version %s", newVersion)
-	Info("Release Notes %s completed", notes.Version)
-	return nil
-}
-
-func makeReleaseNotes(newVersion string) (*ReleaseNote, error) {
+func ReleaseNotes(newVersion string) (*ReleaseNote, error) {
 	var newReleaseNotes = ReleaseNote{}
 
 	newReleaseNotes.Version = newVersion
@@ -343,13 +345,14 @@ func makeReleaseNotes(newVersion string) (*ReleaseNote, error) {
 
 		}
 	}
+
 	helmUpdates = append(helmUpdates, fmt.Sprintf("Update Ingress-Nginx version %s", newReleaseNotes.NewControllerVersion))
 
 	newReleaseNotes.Updates = allUpdates
 	newReleaseNotes.DepUpdates = depUpdates
 	newReleaseNotes.HelmUpdates = helmUpdates
 
-	//controller_image_digests
+	// Get the latest controller image digests from k8s.io promoter
 	imagesYaml, err := downloadFile(IMAGES_YAML)
 	if err != nil {
 		ErrorF("Could not download file %s : %s", IMAGES_YAML, err)
@@ -414,14 +417,14 @@ func (i ControllerImage) print() string {
 
 func (r ReleaseNote) template() {
 	// Files are provided as a slice of strings.
-	changelogTemplate, err := os.ReadFile("Changelog.md.gotmpl")
+	changelogTemplate, err := os.ReadFile(CHANGELOG_TEMPLATE)
 	if err != nil {
 		ErrorF("Could not read changelog template file %s", err)
 	}
 	Debug("ChangeLog Templates %s", string(changelogTemplate))
 	t := template.Must(template.New("changelog").Parse(string(changelogTemplate)))
 	// create a new file
-	file, err := os.Create(fmt.Sprintf("changelog/Changelog-%s.md", r.Version))
+	file, err := os.Create(fmt.Sprintf("%s/Changelog-%s.md", CHANGELOG_PATH, r.Version))
 	if err != nil {
 		ErrorF("Could not create changelog file %s", err)
 	}
@@ -435,14 +438,15 @@ func (r ReleaseNote) template() {
 
 func (r ReleaseNote) helmTemplate() {
 	// Files are provided as a slice of strings.
-	changelogTemplate, err := os.ReadFile("charts/ingress-nginx/changelog.md.gotmpl")
+	changelogTemplate, err := os.ReadFile(CHART_CHANGELOG_TEMPLATE)
 	if err != nil {
 		ErrorF("Could not read changelog template file %s", err)
 	}
 	Debug("ChangeLog Templates %s", string(changelogTemplate))
 	t := template.Must(template.New("changelog").Parse(string(changelogTemplate)))
 	// create a new file
-	file, err := os.Create(fmt.Sprintf("charts/ingress-nginx/changelog/Changelog-%s.md", r.NewHelmChartVersion))
+	fileName := fmt.Sprintf("%s/Changelog-%s.md", CHART_CHANGELOG_PATH, r.NewHelmChartVersion)
+	file, err := os.Create(fileName)
 	if err != nil {
 		ErrorF("Could not create changelog file %s", err)
 	}
@@ -548,7 +552,7 @@ func latestRelease() (*github.RepositoryRelease, *github.Response, error) {
 // Copy Test function to copy a release
 func ReleaseCopy() error {
 	ghClient := githubClient()
-	kRelease, _, err := ghClient.Repositories.GetLatestRelease(ctx, "kubernetes", "ingress-nginx")
+	kRelease, _, err := ghClient.Repositories.GetLatestRelease(ctx, INGRESS_ORG, INGRESS_REPO)
 	if err != nil {
 		ErrorF("Get Release from kubernetes %s", err)
 		return err
@@ -564,9 +568,9 @@ func ReleaseCopy() error {
 		GenerateReleaseNotes:   kRelease.GenerateReleaseNotes,
 	}
 
-	sRelease, _, err = ghClient.Repositories.CreateRelease(ctx, "strongjz", "ingress-nginx", sRelease)
+	sRelease, _, err = ghClient.Repositories.CreateRelease(ctx, INGRESS_ORG, INGRESS_REPO, sRelease)
 	if err != nil {
-		ErrorF("Creating Strongjz release %s", err)
+		ErrorF("Creating %s/%s release %s", INGRESS_ORG, INGRESS_REPO, err)
 		return err
 	}
 	Info("Copied over Kubernetes Release %v to Strongjz %v", &kRelease.Name, &sRelease.Name)
