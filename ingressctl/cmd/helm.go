@@ -29,8 +29,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const HelmChartPath = "../charts/ingress-nginx/Chart.yaml"
-const HelmChartValues = "../charts/ingress-nginx/values.yaml"
+var HelmChartPath = path + "/charts/ingress-nginx/Chart.yaml"
+var HelmChartValues = path + "/charts/ingress-nginx/values.yaml"
+var HELM_DOCS_VERSION = "github.com/norwoodj/helm-docs/cmd/helm-docs@v1.11.0"
 
 // UpdateAppVersion Updates the Helm App Version of Ingress Nginx Controller
 func UpdateAppVersion() {
@@ -142,20 +143,17 @@ func updateChartValue(key, value string) {
 	Info("HELM Ingress Nginx Helm Chart update %s %s", key, value)
 }
 
-func Helmdocs() error {
-	return runHelmDocs()
-}
-func runHelmDocs() error {
+func HelmDocs() error {
 	err := installHelmDocs()
 	if err != nil {
 		return err
 	}
-	return sh.Command("helm-docs", "--chart-search-root=${PWD}/charts").Run()
+	return sh.Command("helm-docs", fmt.Sprintf("--chart-search-root=%s", CHART_PATH)).Run()
 }
 
 func installHelmDocs() error {
 	Info("HELM Install HelmDocs")
-	return sh.Command("go", "install", "github.com/norwoodj/helm-docs/cmd/helm-docs@v1.11.0").Run()
+	return sh.Command("go", "install", HELM_DOCS_VERSION).Run()
 }
 
 func parsePath(key string) []string {

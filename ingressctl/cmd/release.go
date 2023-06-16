@@ -52,17 +52,20 @@ var ctx = context.Background() // Context used for GitHub Client
 
 // version - the version of the ingress-nginx controller to release
 var version string
+var path = "../"
 
 // Documents that get updated for a controller release
-var INDEX_DOCS = "docs/deploy/index.md"        //index.md has a version of the controller and needs to updated
-var CHANGELOG = "Changelog.md"                 //Name of the changelog
-var CHANGELOG_PATH = "changelog"               //folder for saving the new changelogs
-var CHANGELOG_TEMPLATE = "Changelog.md.gotmpl" //path to go template for controller change log
+var INDEX_DOCS = path + "docs/deploy/index.md"        //index.md has a version of the controller and needs to updated
+var CHANGELOG = path + "Changelog.md"                 //Name of the changelog
+var CHANGELOG_PATH = path + "changelog"               //folder for saving the new changelogs
+var CHANGELOG_TEMPLATE = path + "Changelog.md.gotmpl" //path to go template for controller change log
 
 // Documents that get updated for the ingress-nginx helm chart release
-var CHART_PATH = "charts/ingress-nginx/"                          //path to the ingress-nginx helm chart
+var CHART_PATH = path + "charts/ingress-nginx/"                   //path to the ingress-nginx helm chart
 var CHART_CHANGELOG_PATH = CHART_PATH + "changelog"               //folder path to the helm chart changelog
 var CHART_CHANGELOG_TEMPLATE = CHART_PATH + "changelog.md.gotmpl" //go template for the ingress-nginx helm chart
+
+//Scripts listing
 
 // releaseCmd - release root command for controller and helm charts
 var releaseCmd = &cobra.Command{
@@ -95,6 +98,7 @@ func init() {
 
 	GITHUB_TOKEN = os.Getenv("GITHUB_TOKEN")
 	rootCmd.AddCommand(releaseCmd)
+	releaseCmd.Flags().StringVar(&path, "path", "../", "path to root ingress-nginx repo")
 	releaseCmd.AddCommand(helmReleaseCmd)
 	releaseCmd.AddCommand(controllerReleaseCmd)
 	controllerReleaseCmd.Flags().StringVar(&version, "version", "v1.0.0-dev", "version of the controller to update")
@@ -181,13 +185,13 @@ func NewRelease(version string) {
 
 	//Record the ingress-nginx controller digests
 	if releaseNotes.ControllerImages[0].Name == "ingress-nginx/controller" {
-		Debug("Updating Chart Value %s with %s", "controller.image.digest", releaseNotes.ControllerImages[0].Digest)
+		Debug("RELEASE Updating Chart Value %s with %s", "controller.image.digest", releaseNotes.ControllerImages[0].Digest)
 		updateChartValue("controller.image.digest", releaseNotes.ControllerImages[0].Digest)
 	}
 
 	//Record the ingress-nginx controller chroot digest
 	if releaseNotes.ControllerImages[1].Name == "ingress-nginx/controller-chroot" {
-		Debug("Updating Chart Value %s with %s", "controller.image.digestChroot", releaseNotes.ControllerImages[1].Digest)
+		Debug("RELEASE Updating Chart Value %s with %s", "controller.image.digestChroot", releaseNotes.ControllerImages[1].Digest)
 		updateChartValue("controller.image.digestChroot", releaseNotes.ControllerImages[1].Digest)
 	}
 
@@ -200,12 +204,12 @@ func NewRelease(version string) {
 	updateChartReleaseNotes(releaseNotes.HelmUpdates)
 
 	//Run helm docs update
-	CheckIfError(runHelmDocs(), "Error Updating Helm Docs ")
+	CheckIfError(HelmDocs(), "RELEASE Error Updating Helm Docs ")
 
 	releaseNotes.helmTemplate()
 
 	//update static manifest
-	CheckIfError(updateStaticManifest(), "Error Updating Static manifests")
+	CheckIfError(updateStaticManifest(), "RELEASE Error Updating Static manifests")
 
 	//update e2e docs
 	updateE2EDocs()
@@ -220,14 +224,14 @@ func NewRelease(version string) {
 
 // the index.md doc needs the controller version updated
 func updateIndexMD(old, new string) error {
-	Info("Updating Deploy docs with new version")
+	Info("RELEASE Updating Deploy docs with new version")
 	data, err := os.ReadFile(INDEX_DOCS)
-	CheckIfError(err, "Could not read INDEX_DOCS file %s", INDEX_DOCS)
+	CheckIfError(err, "RELEASE Could not read INDEX_DOCS file %s", INDEX_DOCS)
 	datString := string(data)
 	datString = strings.Replace(datString, old, new, -1)
 	err = os.WriteFile(INDEX_DOCS, []byte(datString), 644)
 	if err != nil {
-		ErrorF("Could not write new %s %s", INDEX_DOCS, err)
+		ErrorF("RELEASE Could not write new %s %s", INDEX_DOCS, err)
 		return err
 	}
 	return nil
@@ -235,9 +239,9 @@ func updateIndexMD(old, new string) error {
 
 // runs the hack/generate-deploy-scripts.sh
 func updateE2EDocs() {
-	updates, err := sh.Command("./hack/generate-e2e-suite-doc.sh").Output()
+	updates, err := sh.Command(path + "hack/generate-e2e-suite-doc.sh").Output()
 	CheckIfError(err, "Could not run update hack script")
-	err = os.WriteFile("docs/e2e-tests.md", []byte(updates), 644)
+	err = os.WriteFile(path+"docs/e2e-tests.md", []byte(updates), 644)
 	CheckIfError(err, "Could not write new e2e test file ")
 }
 
@@ -250,7 +254,7 @@ func installKustomize() error {
 func updateStaticManifest() error {
 	CheckIfError(installKustomize(), "error installing kustomize")
 	//hack/generate-deploy-scripts.sh
-	return sh.Command("./hack/generate-deploy-scripts.sh").Run()
+	return sh.Command(path + "/hack/generate-deploy-scripts.sh").Run()
 }
 
 /*
