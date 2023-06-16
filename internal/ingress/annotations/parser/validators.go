@@ -59,7 +59,8 @@ var SizeRegex = regexp.MustCompile("^(?i)[0-9]+[bkmg]?$")
 var (
 	// URLIsValidRegex is used on full URLs, containing query strings (:, ? and &)
 	URLIsValidRegex = regexp.MustCompile("^[" + alphaNumericChars + urlEnabledChars + "]*$")
-	// BasicChars is alphanumeric and ".", "-", "_", "~" and ":", usually used on simple host:port/path composition
+	// BasicChars is alphanumeric and ".", "-", "_", "~" and ":", usually used on simple host:port/path composition.
+	// This combination can also be used on fields that may contain characters like / (as ns/name)
 	BasicCharsRegex = regexp.MustCompile("^[/" + alphaNumericChars + "]*$")
 	// ExtendedChars is alphanumeric and ".", "-", "_", "~" and ":" plus "," and spaces, usually used on simple host:port/path composition
 	ExtendedChars = regexp.MustCompile("^[/" + extendedAlphaNumeric + "]*$")
