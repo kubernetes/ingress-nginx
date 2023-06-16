@@ -2468,6 +2468,149 @@ func TestGetBackendServers(t *testing.T) {
 				}
 			},
 		},
+		{
+			Ingresses: []*ingress.Ingress{
+				{
+					Ingress: networking.Ingress{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "example",
+						},
+						Spec: networking.IngressSpec{
+							Rules: []networking.IngressRule{
+								{
+									Host: "example.com",
+									IngressRuleValue: networking.IngressRuleValue{
+										HTTP: &networking.HTTPIngressRuleValue{
+											Paths: []networking.HTTPIngressPath{
+												{
+													Path:     "/a",
+													PathType: &pathTypeExact,
+													Backend: networking.IngressBackend{
+														Service: &networking.IngressServiceBackend{
+															Name: "http-svc-1",
+															Port: networking.ServiceBackendPort{
+																Number: 80,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					ParsedAnnotations: &annotations.Ingress{},
+				},
+				{
+					Ingress: networking.Ingress{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "example",
+						},
+						Spec: networking.IngressSpec{
+							Rules: []networking.IngressRule{
+								{
+									Host: "example.com",
+									IngressRuleValue: networking.IngressRuleValue{
+										HTTP: &networking.HTTPIngressRuleValue{
+											Paths: []networking.HTTPIngressPath{
+												{
+													Path:     "/a",
+													PathType: &pathTypePrefix,
+													Backend: networking.IngressBackend{
+														Service: &networking.IngressServiceBackend{
+															Name: "http-svc-2",
+															Port: networking.ServiceBackendPort{
+																Number: 80,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					ParsedAnnotations: &annotations.Ingress{},
+				},
+				{
+					Ingress: networking.Ingress{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "example",
+						},
+						Spec: networking.IngressSpec{
+							Rules: []networking.IngressRule{
+								{
+									Host: "example.com",
+									IngressRuleValue: networking.IngressRuleValue{
+										HTTP: &networking.HTTPIngressRuleValue{
+											Paths: []networking.HTTPIngressPath{
+												{
+													Path:     "/a",
+													PathType: &pathTypePrefix,
+													Backend: networking.IngressBackend{
+														Service: &networking.IngressServiceBackend{
+															Name: "http-svc-3",
+															Port: networking.ServiceBackendPort{
+																Number: 80,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					ParsedAnnotations: &annotations.Ingress{},
+				},
+			},
+			Validate: func(ingresses []*ingress.Ingress, upstreams []*ingress.Backend, servers []*ingress.Server) {
+				if len(servers) != 2 {
+					t.Errorf("servers count should be 2, got %d", len(servers))
+					return
+				}
+
+				s := servers[0]
+				if s.Hostname != "_" {
+					t.Errorf("server hostname should be '_', got '%s'", s.Hostname)
+				}
+				if len(s.Locations) != 1 {
+					t.Errorf("servers locations count should be 1, got %d", len(s.Locations))
+					return
+				}
+				if !s.Locations[0].IsDefBackend {
+					t.Errorf("server location 0 should be default backend")
+				}
+				if s.Locations[0].Backend != defUpstreamName {
+					t.Errorf("location backend should be '%s', got '%s'", defUpstreamName, s.Locations[0].Backend)
+				}
+
+				s = servers[1]
+				if s.Hostname != "example.com" {
+					t.Errorf("server hostname should be 'example.com', got '%s'", s.Hostname)
+				}
+				if len(s.Locations) != 3 {
+					t.Errorf("servers locations count should be 2, got %d", len(s.Locations))
+					return
+				}
+				if s.Locations[0].Backend != "example-http-svc-1-80" {
+					t.Errorf("location 0 backend should be 'example-http-svc-1-80', got '%s'", s.Locations[0].Backend)
+				}
+				if s.Locations[1].Backend != "example-http-svc-2-80" {
+					t.Errorf("location 1 backend should be 'example-http-svc-2-80', got '%s'", s.Locations[1].Backend)
+				}
+				if s.Locations[2].Backend != defUpstreamName {
+					t.Errorf("location 2 backend should be '%s', got '%s'", defUpstreamName, s.Locations[2].Backend)
+				}
+			},
+			SetConfigMap: testConfigMap,
+		},
 	}
 
 	for _, testCase := range testCases {
