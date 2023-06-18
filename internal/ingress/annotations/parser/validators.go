@@ -63,7 +63,7 @@ var (
 	// This combination can also be used on fields that may contain characters like / (as ns/name)
 	BasicCharsRegex = regexp.MustCompile("^[/" + alphaNumericChars + "]*$")
 	// ExtendedChars is alphanumeric and ".", "-", "_", "~" and ":" plus "," and spaces, usually used on simple host:port/path composition
-	ExtendedChars = regexp.MustCompile("^[/" + extendedAlphaNumeric + "]*$")
+	ExtendedCharsRegex = regexp.MustCompile("^[/" + extendedAlphaNumeric + "]*$")
 	// CharsWithSpace is like basic chars, but includes the space character
 	CharsWithSpace = regexp.MustCompile("^[/" + alphaNumericChars + " ]*$")
 	// NGINXVariable allows entries with alphanumeric characters, -, _ and the special "$"

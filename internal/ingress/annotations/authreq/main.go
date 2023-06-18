@@ -27,7 +27,6 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-	"k8s.io/ingress-nginx/internal/ingress/errors"
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/pkg/util/sets"
@@ -111,7 +110,7 @@ var authReqAnnotations = parser.Annotation{
 			Documentation: `This annotation specifies a duration in seconds which an idle keepalive connection to an upstream server will stay open`,
 		},
 		authReqCacheDuration: {
-			Validator:     parser.ValidateRegex(*parser.ExtendedChars, false),
+			Validator:     parser.ValidateRegex(*parser.ExtendedCharsRegex, false),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskMedium,
 			Documentation: `This annotation allows to specify a caching time for auth responses based on their response codes, e.g. 200 202 30m`,
@@ -306,7 +305,7 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	authMethod, err := parser.GetStringAnnotation(authReqMethodAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
-		if errors.IsValidationError(err) {
+		if ing_errors.IsValidationError(err) {
 			return nil, ing_errors.NewLocationDenied("invalid HTTP method")
 		}
 	}
@@ -314,7 +313,7 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 	// Optional Parameters
 	signIn, err := parser.GetStringAnnotation(authReqSigninAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
-		if errors.IsValidationError(err) {
+		if ing_errors.IsValidationError(err) {
 			klog.Warningf("%s value is invalid: %s", authReqSigninAnnotation, err)
 		}
 		klog.V(3).InfoS("auth-signin annotation is undefined and will not be set")
@@ -322,7 +321,7 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	signInRedirectParam, err := parser.GetStringAnnotation(authReqSigninRedirParamAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
-		if errors.IsValidationError(err) {
+		if ing_errors.IsValidationError(err) {
 			klog.Warningf("%s value is invalid: %s", authReqSigninRedirParamAnnotation, err)
 		}
 		klog.V(3).Infof("auth-signin-redirect-param annotation is undefined and will not be set")
@@ -335,7 +334,7 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	authCacheKey, err := parser.GetStringAnnotation(authReqCacheKeyAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
-		if errors.IsValidationError(err) {
+		if ing_errors.IsValidationError(err) {
 			klog.Warningf("%s value is invalid: %s", authReqCacheKeyAnnotation, err)
 		}
 		klog.V(3).InfoS("auth-cache-key annotation is undefined and will not be set")
@@ -379,7 +378,7 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 	}
 
 	durstr, err := parser.GetStringAnnotation(authReqCacheDuration, ing, a.annotationConfig.Annotations)
-	if err != nil && errors.IsValidationError(err) {
+	if err != nil && ing_errors.IsValidationError(err) {
 		return nil, fmt.Errorf("%s contains invalid value", authReqCacheDuration)
 	}
 	authCacheDuration, err := ParseStringToCacheDurations(durstr)
@@ -389,7 +388,7 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	responseHeaders := []string{}
 	hstr, err := parser.GetStringAnnotation(authReqResponseHeadersAnnotation, ing, a.annotationConfig.Annotations)
-	if err != nil && errors.IsValidationError(err) {
+	if err != nil && ing_errors.IsValidationError(err) {
 		return nil, ing_errors.NewLocationDenied("validation error")
 	}
 	if len(hstr) != 0 {
@@ -445,12 +444,12 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 	}
 
 	requestRedirect, err := parser.GetStringAnnotation(authReqRequestRedirectAnnotation, ing, a.annotationConfig.Annotations)
-	if err != nil && errors.IsValidationError(err) {
+	if err != nil && ing_errors.IsValidationError(err) {
 		return nil, fmt.Errorf("%s is invalid: %w", authReqRequestRedirectAnnotation, err)
 	}
 
 	alwaysSetCookie, err := parser.GetBoolAnnotation(authReqAlwaysSetCookieAnnotation, ing, a.annotationConfig.Annotations)
-	if err != nil && errors.IsValidationError(err) {
+	if err != nil && ing_errors.IsValidationError(err) {
 		return nil, fmt.Errorf("%s is invalid: %w", authReqAlwaysSetCookieAnnotation, err)
 	}
 
