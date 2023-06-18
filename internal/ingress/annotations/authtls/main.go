@@ -160,7 +160,9 @@ func (a authTLS) Parse(ing *networking.Ingress) (interface{}, error) {
 	if ns == "" {
 		ns = ing.Namespace
 	}
-	if ns != ing.Namespace {
+	secCfg := a.r.GetSecurityConfiguration()
+	// We don't accept different namespaces for secrets.
+	if !secCfg.AllowCrossNamespaceResources && ns != ing.Namespace {
 		return &Config{}, ing_errors.NewLocationDenied("cross namespace secrets are not supported")
 	}
 

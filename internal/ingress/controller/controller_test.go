@@ -73,6 +73,13 @@ func (fis fakeIngressStore) GetBackendConfiguration() ngx_config.Configuration {
 	return fis.configuration
 }
 
+func (fis fakeIngressStore) GetSecurityConfiguration() defaults.SecurityConfiguration {
+	return defaults.SecurityConfiguration{
+		AnnotationsRisk:              fis.configuration.AnnotationsRisk,
+		AllowCrossNamespaceResources: fis.configuration.AllowCrossNamespaceResources,
+	}
+}
+
 func (fakeIngressStore) GetConfigMap(key string) (*corev1.ConfigMap, error) {
 	return nil, fmt.Errorf("test error")
 }

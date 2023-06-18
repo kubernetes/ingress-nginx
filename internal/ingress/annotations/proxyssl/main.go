@@ -199,7 +199,9 @@ func (p proxySSL) Parse(ing *networking.Ingress) (interface{}, error) {
 		return &Config{}, ing_errors.NewLocationDenied(err.Error())
 	}
 
-	if ns != ing.Namespace {
+	secCfg := p.r.GetSecurityConfiguration()
+	// We don't accept different namespaces for secrets.
+	if !secCfg.AllowCrossNamespaceResources && ns != ing.Namespace {
 		return &Config{}, ing_errors.NewLocationDenied("cross namespace secrets are not supported")
 	}
 

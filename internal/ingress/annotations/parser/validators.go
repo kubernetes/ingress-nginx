@@ -33,10 +33,10 @@ import (
 type AnnotationValidator func(string) error
 
 const (
-	AnnotationRiskLow      AnnotationRisk = "Low"
-	AnnotationRiskMedium   AnnotationRisk = "Medium"
-	AnnotationRiskHigh     AnnotationRisk = "High"
-	AnnotationRiskCritical AnnotationRisk = "Critical"
+	AnnotationRiskLow AnnotationRisk = iota
+	AnnotationRiskMedium
+	AnnotationRiskHigh
+	AnnotationRiskCritical
 )
 
 var (

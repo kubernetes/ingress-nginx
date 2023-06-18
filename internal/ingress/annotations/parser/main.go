@@ -54,7 +54,7 @@ var (
 // AnnotationRisk is a subset of risk that an annotation may represent.
 // Based on the Risk, the admin will be able to allow or disallow users to set it
 // on their ingress objects
-type AnnotationRisk string
+type AnnotationRisk int
 
 type AnnotationFields map[string]AnnotationConfig
 
