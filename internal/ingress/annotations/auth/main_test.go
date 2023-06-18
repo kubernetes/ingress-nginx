@@ -26,6 +26,7 @@ import (
 	api "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -79,13 +80,18 @@ type mockSecret struct {
 }
 
 func (m mockSecret) GetSecret(name string) (*api.Secret, error) {
-	if name != "default/demo-secret" {
+	if name != "default/demo-secret" && name != "otherns/demo-secret" {
 		return nil, fmt.Errorf("there is no secret with name %v", name)
+	}
+
+	ns, _, err := cache.SplitMetaNamespaceKey(name)
+	if err != nil {
+		return nil, err
 	}
 
 	return &api.Secret{
 		ObjectMeta: meta_v1.ObjectMeta{
-			Namespace: api.NamespaceDefault,
+			Namespace: ns,
 			Name:      "demo-secret",
 		},
 		Data: map[string][]byte{"auth": []byte("foo:$apr1$OFG3Xybp$ckL0FHDAkoXYIlH9.cysT0")},
@@ -155,6 +161,25 @@ func TestIngressInvalidDifferentNamespace(t *testing.T) {
 	_, err := NewParser(dir, &mockSecret{}).Parse(ing)
 	if err.Error() != expected.Error() {
 		t.Errorf("expected '%v' but got '%v'", expected, err)
+	}
+}
+
+func TestIngressInvalidDifferentNamespaceAllowed(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix(authTypeAnnotation)] = "basic"
+	data[parser.GetAnnotationWithPrefix(AuthSecretAnnotation)] = "otherns/demo-secret"
+	ing.SetAnnotations(data)
+
+	_, dir, _ := dummySecretContent(t)
+	defer os.RemoveAll(dir)
+
+	r := mockSecret{}
+	r.AllowCrossNamespace = true
+	_, err := NewParser(dir, r).Parse(ing)
+	if err != nil {
+		t.Errorf("not expecting an error")
 	}
 }
 

@@ -129,8 +129,10 @@ func (a fastcgi) Parse(ing *networking.Ingress) (interface{}, error) {
 			Reason: fmt.Errorf("error reading configmap name from annotation: %w", err),
 		}
 	}
+	secCfg := a.r.GetSecurityConfiguration()
 
-	if cmns != "" && cmns != ing.Namespace {
+	// We don't accept different namespaces for secrets.
+	if cmns != "" && !secCfg.AllowCrossNamespaceResources && cmns != ing.Namespace {
 		return fcgiConfig, fmt.Errorf("different namespace is not supported on fast_cgi param configmap")
 	}
 

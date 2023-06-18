@@ -182,8 +182,9 @@ func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 	if sns == "" {
 		sns = ing.Namespace
 	}
+	secCfg := a.r.GetSecurityConfiguration()
 	// We don't accept different namespaces for secrets.
-	if sns != ing.Namespace {
+	if !secCfg.AllowCrossNamespaceResources && sns != ing.Namespace {
 		return nil, ing_errors.LocationDenied{
 			Reason: fmt.Errorf("cross namespace usage of secrets is not allowed"),
 		}

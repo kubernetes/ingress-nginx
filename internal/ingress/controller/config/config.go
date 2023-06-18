@@ -97,6 +97,17 @@ type Configuration struct {
 	// If disabled, only snippets added via ConfigMap are added to ingress.
 	AllowSnippetAnnotations bool `json:"allow-snippet-annotations"`
 
+	// AllowCrossNamespaceResources enables users to consume cross namespace resource on annotations
+	// Case disabled, attempts to use secrets or configmaps from a namespace different from Ingress will
+	// be denied
+	// This valid will default to `false` on future releases
+	AllowCrossNamespaceResources bool `json:"allow-cross-namespace-resources"`
+
+	// AnnotationsRisk represents the risk accepted on an annotation. If the risk is, for instance `Medium`, annotations
+	// with risk High and Critical will not be accepted.
+	// Default Risk is Critical by default, but this may be changed in future releases
+	AnnotationsRisk string `json:"annotations-risk"`
+
 	// AnnotationValueWordBlocklist defines words that should not be part of an user annotation value
 	// (can be used to run arbitrary code or configs, for example) and that should be dropped.
 	// This list should be separated by "," character
@@ -853,8 +864,10 @@ func NewDefault() Configuration {
 
 	cfg := Configuration{
 		AllowSnippetAnnotations:          true,
+		AllowCrossNamespaceResources:     true,
 		AllowBackendServerHeader:         false,
 		AnnotationValueWordBlocklist:     "",
+		AnnotationsRisk:                  "Critical",
 		AccessLogPath:                    "/var/log/nginx/access.log",
 		AccessLogParams:                  "",
 		EnableAccessLogForDefaultBackend: false,
