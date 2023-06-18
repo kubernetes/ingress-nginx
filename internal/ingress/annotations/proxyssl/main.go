@@ -221,7 +221,7 @@ func (p proxySSL) Parse(ing *networking.Ingress) (interface{}, error) {
 	config.Protocols, err = parser.GetStringAnnotation(proxySSLProtocolsAnnotation, ing, p.annotationConfig.Annotations)
 	if err != nil {
 		if errors.IsValidationError(err) {
-			klog.Warningf("invalid value passed to proxy-ssl-protocolos, defaulting to %s", defaultProxySSLProtocols)
+			klog.Warningf("invalid value passed to proxy-ssl-protocols, defaulting to %s", defaultProxySSLProtocols)
 		}
 		config.Protocols = defaultProxySSLProtocols
 	} else {

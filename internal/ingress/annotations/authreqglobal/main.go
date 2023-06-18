@@ -34,7 +34,7 @@ var globalAuthAnnotations = parser.Annotation{
 			Validator:     parser.ValidateBool,
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskLow,
-			Documentation: `Defines if the gloabl external authentication should be enabled.`,
+			Documentation: `Defines if the global external authentication should be enabled.`,
 		},
 	},
 }
