@@ -47,7 +47,7 @@ import (
 	_ "k8s.io/ingress-nginx/test/e2e/settings"
 	_ "k8s.io/ingress-nginx/test/e2e/settings/modsecurity"
 	_ "k8s.io/ingress-nginx/test/e2e/settings/ocsp"
-	// _ "k8s.io/ingress-nginx/test/e2e/settings/validations" // Test is not working, need to check the cross namespace stuff
+	_ "k8s.io/ingress-nginx/test/e2e/settings/validations"
 
 	_ "k8s.io/ingress-nginx/test/e2e/ssl"
 	_ "k8s.io/ingress-nginx/test/e2e/status"

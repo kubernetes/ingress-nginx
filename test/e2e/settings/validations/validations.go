@@ -18,93 +18,69 @@ package annotations
 
 import (
 	"context"
-	"fmt"
-	"net/http"
-	"strings"
 
 	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/crypto/bcrypt"
 
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-func buildSecret(username, password, name, namespace string) *corev1.Secret {
-	//out, err := exec.Command("openssl", "passwd", "-crypt", password).CombinedOutput()
-	out, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	encpass := fmt.Sprintf("%v:%s\n", username, out)
-	assert.Nil(ginkgo.GinkgoT(), err)
+var _ = framework.IngressNginxDescribeSerial("annotation validations", func() {
+	f := framework.NewDefaultFramework("validations")
 
-	return &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:                       name,
-			Namespace:                  namespace,
-			DeletionGracePeriodSeconds: framework.NewInt64(1),
-		},
-		Data: map[string][]byte{
-			"auth": []byte(encpass),
-		},
-		Type: corev1.SecretTypeOpaque,
-	}
-}
-
-var _ = framework.DescribeAnnotation("annotation validations", func() {
-	f := framework.NewDefaultFramework("annotations-validations")
-
-	ginkgo.BeforeEach(func() {
-		f.NewEchoDeployment()
-		otherns := &corev1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "otherns",
-			},
-		}
-		_, err := f.KubeClientSet.CoreV1().Namespaces().Create(context.Background(), otherns, metav1.CreateOptions{})
-		assert.Nil(ginkgo.GinkgoT(), err, "creating namespace")
-	})
-
-	ginkgo.AfterEach(func() {
-		err := f.KubeClientSet.CoreV1().Namespaces().Delete(context.Background(), "otherns", metav1.DeleteOptions{})
-		assert.Nil(ginkgo.GinkgoT(), err, "deleting namespace")
-	})
-
-	ginkgo.It("should return status code 401 when authentication is configured but Authorization header is not configured", func() {
+	ginkgo.It("should allow ingress based on their risk on webhooks", func() {
 		host := "annotation-validations"
-		// Allow cross namespace consumption
-		f.UpdateNginxConfigMapData("allow-cross-namespace-resources", "true")
+
+		// Low and Medium Risk annotations should be allowed, the rest should be denied
+		f.UpdateNginxConfigMapData("annotations-risk", "Medium")
 		// Sleep a while just to guarantee that the configmap is applied
 		framework.Sleep()
 
-		s := f.EnsureSecret(buildSecret("foo", "bar", "test", "otherns"))
-
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/auth-type":   "basic",
-			"nginx.ingress.kubernetes.io/auth-secret": fmt.Sprintf("%s/%s", s.Namespace, s.Name),
-			"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
+			"nginx.ingress.kubernetes.io/default-backend":       "default/bla", // low risk
+			"nginx.ingress.kubernetes.io/denylist-source-range": "1.1.1.1/32",  // medium risk
 		}
 
+		ginkgo.By("allow ingress with low/medium risk annotations")
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		_, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), ing, metav1.CreateOptions{})
+		assert.Nil(ginkgo.GinkgoT(), err, "creating ingress with allowed annotations should not trigger an error")
 
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, "server_name annotation-validations")
-			})
+		ginkgo.By("block ingress with risky annotations")
+		annotations["nginx.ingress.kubernetes.io/modsecurity-transaction-id"] = "bla123"      // High should be blocked
+		annotations["nginx.ingress.kubernetes.io/modsecurity-snippet"] = "some random stuff;" // High should be blocked
+		ing = framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
+		assert.NotNil(ginkgo.GinkgoT(), err, "creating ingress with risky annotations should trigger an error")
 
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			Expect().
-			Status(http.StatusUnauthorized).
-			Body().Contains("401 Authorization Required")
+	})
 
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithBasicAuth("foo", "bar").
-			Expect().
-			Status(http.StatusOK)
+	ginkgo.It("should allow ingress based on their risk on webhooks", func() {
+		host := "annotation-validations"
+
+		// Low and Medium Risk annotations should be allowed, the rest should be denied
+		f.UpdateNginxConfigMapData("annotations-risk", "Medium")
+		// Sleep a while just to guarantee that the configmap is applied
+		framework.Sleep()
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/default-backend":       "default/bla", // low risk
+			"nginx.ingress.kubernetes.io/denylist-source-range": "1.1.1.1/32",  // medium risk
+		}
+
+		ginkgo.By("allow ingress with low/medium risk annotations")
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		_, err := f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), ing, metav1.CreateOptions{})
+		assert.Nil(ginkgo.GinkgoT(), err, "creating ingress with allowed annotations should not trigger an error")
+
+		ginkgo.By("block ingress with risky annotations")
+		annotations["nginx.ingress.kubernetes.io/modsecurity-transaction-id"] = "bla123"      // High should be blocked
+		annotations["nginx.ingress.kubernetes.io/modsecurity-snippet"] = "some random stuff;" // High should be blocked
+		ing = framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
+		assert.NotNil(ginkgo.GinkgoT(), err, "creating ingress with risky annotations should trigger an error")
+
 	})
 })
