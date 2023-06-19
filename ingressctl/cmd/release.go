@@ -50,6 +50,8 @@ var ctx = context.Background() // Context used for GitHub Client
 
 // version - the version of the ingress-nginx controller to release
 var version string
+var helmChartVersion string
+
 var path = "../"
 
 // Documents that get updated for a controller release
@@ -78,7 +80,10 @@ var helmReleaseCmd = &cobra.Command{
 	Short: "Start a new helm chart release",
 	Long:  "Start a new helm chart release",
 	Run: func(cmd *cobra.Command, args []string) {
-
+		var newReleaseNotes = ReleaseNote{}
+		newReleaseNotes.Version = version
+		newReleaseNotes.NewHelmChartVersion = helmChartVersion
+		ReleaseHelmChart(&newReleaseNotes)
 	},
 }
 
@@ -88,7 +93,10 @@ var controllerReleaseCmd = &cobra.Command{
 	Short: "Release Ingress-nginx Controller",
 	Long:  "Release a new version of ingress-nginx controller",
 	Run: func(cmd *cobra.Command, args []string) {
-		ControllerNewRelease(version)
+		var newReleaseNotes = ReleaseNote{}
+		newReleaseNotes.Version = version
+		newReleaseNotes.NewHelmChartVersion = helmChartVersion
+		ControllerNewRelease(&newReleaseNotes)
 	},
 }
 
@@ -96,10 +104,11 @@ func init() {
 
 	GITHUB_TOKEN = os.Getenv("GITHUB_TOKEN")
 	rootCmd.AddCommand(releaseCmd)
-	releaseCmd.Flags().StringVar(&path, "path", "../", "path to root ingress-nginx repo")
+	releaseCmd.PersistentFlags().StringVar(&path, "path", "../", "path to root ingress-nginx repo")
+	releaseCmd.PersistentFlags().StringVar(&version, "version", "v1.0.0-dev", "version of the controller to update")
+	releaseCmd.PersistentFlags().StringVar(&helmChartVersion, "helm-chart-version", "v1.0.0-dev", "version of the Helm Version to update")
 	releaseCmd.AddCommand(helmReleaseCmd)
 	releaseCmd.AddCommand(controllerReleaseCmd)
-	controllerReleaseCmd.Flags().StringVar(&version, "version", "v1.0.0-dev", "version of the controller to update")
 }
 
 // ControllerImage - struct with info about controllers
@@ -135,7 +144,7 @@ func PromoteImage(version, sha string) {
 }
 
 // Release Create a new release of ingress nginx controller
-func ControllerNewRelease(version string) {
+func ControllerNewRelease(releaseNotes *ReleaseNote) {
 
 	//update ingress-nginx version
 	//This is the step that kicks all the release process
@@ -147,21 +156,38 @@ func ControllerNewRelease(version string) {
 
 	Info("RELEASE Checking Current Version %s to New Version %s", tag[1:], version)
 	//if the version were upgrading does not match the TAG file, lets update the TAG file
-	if tag[1:] != version {
-		Warning("RELEASE Ingress Nginx TAG %s and new version %s do not match", tag, version)
-		BumpNginx(fmt.Sprintf("v%s", version))
+	if tag[1:] != releaseNotes.Version {
+		Warning("RELEASE Ingress Nginx TAG %s and new version %s do not match", tag, releaseNotes.Version)
+		BumpNginx(fmt.Sprintf("v%s", releaseNotes.Version))
 	}
 
 	//update git controller tag controller-v$version
-	NewControllerTag(version)
+	NewControllerTag(releaseNotes.Version)
 
 	//make release notes
-	releaseNotes, err := ControllerReleaseNotes(version)
-	CheckIfError(err, "RELEASE Creating Release Notes for version %s", version)
+	ControllerReleaseNotes(releaseNotes)
+	CheckIfError(err, "RELEASE Creating Release Notes for version %s", releaseNotes.Version)
 	Info("RELEASE Release Notes %s completed", releaseNotes.Version)
 
 	Debug("releaseNotes.ControllerImages[0].Name %s", releaseNotes.ControllerImages[0].Name)
 	Debug("releaseNotes.ControllerImages[1].Name %s", releaseNotes.ControllerImages[1].Name)
+
+	//update static manifest
+	CheckIfError(updateStaticManifest(), "RELEASE Error Updating Static manifests")
+
+	//update e2e docs
+	updateE2EDocs()
+
+	//update documentation with ingress-nginx version
+	CheckIfError(updateIndexMD(releaseNotes.PreviousControllerVersion, releaseNotes.NewControllerVersion), "Error Updating %s", INDEX_DOCS)
+
+	ReleaseHelmChart(releaseNotes)
+}
+
+func ReleaseHelmChart(releaseNotes *ReleaseNote) {
+	Info("RELEASE - releasing Helm Chart Version %s AppVersion: %s", releaseNotes.HelmChartVersion, releaseNotes.Version)
+	_, _, helmUpdates := getCommitUpdates(releaseNotes.Version)
+	releaseNotes.HelmUpdates = helmUpdates
 
 	//Record the ingress-nginx controller digests
 	if releaseNotes.ControllerImages[0].Name == "ingress-nginx/controller" {
@@ -182,7 +208,7 @@ func ControllerNewRelease(version string) {
 	releaseNotes.PreviousHelmChartVersion = currentChartVersion()
 
 	//update helm chart app version
-	UpdateVersion(version)
+	UpdateVersion(releaseNotes.Version, releaseNotes.HelmChartVersion)
 
 	releaseNotes.NewHelmChartVersion = currentChartVersion()
 
@@ -194,18 +220,6 @@ func ControllerNewRelease(version string) {
 
 	releaseNotes.helmTemplate()
 
-	//update static manifest
-	CheckIfError(updateStaticManifest(), "RELEASE Error Updating Static manifests")
-
-	//update e2e docs
-	updateE2EDocs()
-
-	//update documentation with ingress-nginx version
-	CheckIfError(updateIndexMD(releaseNotes.PreviousControllerVersion, releaseNotes.NewControllerVersion), "Error Updating %s", INDEX_DOCS)
-
-	//keeping these manual for now
-	//git commit TODO
-	//Create Pull Request TODO
 }
 
 // the index.md doc needs the controller version updated

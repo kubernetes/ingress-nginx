@@ -12,6 +12,7 @@ import (
 // ReleaseNote - All the pieces of information/documents that get updated during a release
 type ReleaseNote struct {
 	Version                   string            //released version
+	HelmChartVersion          string            //version to update helm chart
 	NewControllerVersion      string            //the new controller version being release
 	PreviousControllerVersion string            //the previous controller tag/release
 	ControllerImages          []ControllerImage //the full image digests
@@ -23,36 +24,33 @@ type ReleaseNote struct {
 }
 
 // Generate Release Notes
-func ControllerReleaseNotes(newVersion string) (*ReleaseNote, error) {
-	var newReleaseNotes = ReleaseNote{}
+func ControllerReleaseNotes(releaseNotes *ReleaseNote) error {
 
-	newReleaseNotes.Version = newVersion
 	allControllerTags := getAllControllerTags()
 
 	//new version
-	newReleaseNotes.NewControllerVersion = allControllerTags[0]
-	newControllerVersion := fmt.Sprintf("controller-v%s", newVersion)
+	releaseNotes.NewControllerVersion = allControllerTags[0]
+	newControllerVersion := fmt.Sprintf("controller-v%s", releaseNotes.Version)
 
 	//the newControllerVersion should match the latest tag
 	if newControllerVersion != allControllerTags[0] {
-		return nil, errors.New(fmt.Sprintf("Generating release new version %s didnt match the current latest tag %s", newControllerVersion, allControllerTags[0]))
+		return errors.New(fmt.Sprintf("Generating release new version %s didnt match the current latest tag %s", newControllerVersion, allControllerTags[0]))
 	}
 	//previous version
-	newReleaseNotes.PreviousControllerVersion = allControllerTags[1]
+	releaseNotes.PreviousControllerVersion = allControllerTags[1]
 
-	Info("New Version: %s Old Version: %s", newReleaseNotes.NewControllerVersion, newReleaseNotes.PreviousControllerVersion)
+	Info("New Version: %s Old Version: %s", releaseNotes.NewControllerVersion, releaseNotes.PreviousControllerVersion)
 
-	allUpdates, depUpdates, helmUpdates := getCommitUpdates(newVersion)
+	allUpdates, depUpdates, _ := getCommitUpdates(releaseNotes.Version)
 
-	newReleaseNotes.Updates = allUpdates
-	newReleaseNotes.DepUpdates = depUpdates
-	newReleaseNotes.HelmUpdates = helmUpdates
+	releaseNotes.Updates = allUpdates
+	releaseNotes.DepUpdates = depUpdates
 
 	// Get the latest controller image digests from k8s.io promoter
 	imagesYaml, err := downloadFile(IMAGES_YAML)
 	if err != nil {
 		ErrorF("Could not download file %s : %s", IMAGES_YAML, err)
-		return nil, err
+		return err
 	}
 	Debug("%s", imagesYaml)
 
@@ -61,20 +59,20 @@ func ControllerReleaseNotes(newVersion string) (*ReleaseNote, error) {
 	err = yaml.Unmarshal([]byte(imagesYaml), &data)
 	if err != nil {
 		ErrorF("Could not unmarshal images yaml %s", err)
-		return nil, err
+		return err
 	}
 
 	//controller
-	controllerDigest := findImageDigest(data, "controller", newVersion)
+	controllerDigest := findImageDigest(data, "controller", releaseNotes.Version)
 	if len(controllerDigest) == 0 {
 		ErrorF("Controller Digest could not be found")
-		return nil, errors.New("Controller digest could not be found")
+		return errors.New("Controller digest could not be found")
 	}
 
-	controllerChrootDigest := findImageDigest(data, "controller-chroot", newVersion)
+	controllerChrootDigest := findImageDigest(data, "controller-chroot", releaseNotes.Version)
 	if len(controllerChrootDigest) == 0 {
 		ErrorF("Controller Chroot Digest could not be found")
-		return nil, errors.New("Controller Chroot digest could not be found")
+		return errors.New("Controller Chroot digest could not be found")
 	}
 
 	Debug("Latest Controller Digest %v", controllerDigest)
@@ -83,28 +81,28 @@ func ControllerReleaseNotes(newVersion string) (*ReleaseNote, error) {
 		Digest:   controllerDigest,
 		Registry: INGRESS_REGISTRY,
 		Name:     "ingress-nginx/controller",
-		Tag:      fmt.Sprintf("v%s", newReleaseNotes.Version),
+		Tag:      fmt.Sprintf("v%s", releaseNotes.Version),
 	}
 
 	c2 := ControllerImage{
 		Digest:   controllerChrootDigest,
 		Registry: INGRESS_REGISTRY,
 		Name:     "ingress-nginx/controller-chroot",
-		Tag:      fmt.Sprintf("v%s", newReleaseNotes.Version),
+		Tag:      fmt.Sprintf("v%s", releaseNotes.Version),
 	}
 
-	newReleaseNotes.ControllerImages = append(newReleaseNotes.ControllerImages, c1)
-	newReleaseNotes.ControllerImages = append(newReleaseNotes.ControllerImages, c2)
-	Debug("New Release Controller Images %s %s", newReleaseNotes.ControllerImages[0].Digest, newReleaseNotes.ControllerImages[1].Digest)
+	releaseNotes.ControllerImages = append(releaseNotes.ControllerImages, c1)
+	releaseNotes.ControllerImages = append(releaseNotes.ControllerImages, c2)
+	Debug("New Release Controller Images %s %s", releaseNotes.ControllerImages[0].Digest, releaseNotes.ControllerImages[1].Digest)
 
 	if DEBUG {
-		newReleaseNotes.printRelease()
+		releaseNotes.printRelease()
 	}
 
 	//write it all out to the changelog file
-	newReleaseNotes.template()
+	releaseNotes.template()
 
-	return &newReleaseNotes, nil
+	return nil
 }
 
 func getCommitUpdates(newVersion string) ([]string, []string, []string) {

@@ -22,7 +22,6 @@ import (
 	"os"
 	"strings"
 
-	semver "github.com/blang/semver/v4"
 	"github.com/codeskyblue/go-sh"
 	"github.com/helm/helm/pkg/chartutil"
 	yamlpath "github.com/vmware-labs/yaml-jsonpath/pkg/yamlpath"
@@ -35,10 +34,6 @@ var HELM_DOCS_VERSION = "github.com/norwoodj/helm-docs/cmd/helm-docs@v1.11.0"
 
 // UpdateAppVersion Updates the Helm App Version of Ingress Nginx Controller
 func UpdateAppVersion() {
-	updateAppVersion()
-}
-
-func updateAppVersion() {
 
 }
 
@@ -54,8 +49,8 @@ func currentChartAppVersion() string {
 	return chart.AppVersion
 }
 
-// UpdateVersion Update Helm Version of the Chart
-func UpdateVersion(appVersion string) {
+// UpdateVersion Update Helm AppVersion Version of the Chart
+func UpdateVersion(version, appVersion string) {
 	Info("HELM Reading File %v", HelmChartPath)
 
 	chart, err := chartutil.LoadChartfile(HelmChartPath)
@@ -69,14 +64,7 @@ func UpdateVersion(appVersion string) {
 
 	//Update the helm chart
 	chart.AppVersion = appVersion
-	cTag, err := semver.Make(chart.Version)
-	CheckIfError(err, "HELM Creating Chart Version: %v", err)
-
-	if err = cTag.IncrementPatch(); err != nil {
-		ErrorF("HELM Incrementing Chart Version: %v", err)
-		os.Exit(1)
-	}
-	chart.Version = cTag.String()
+	chart.Version = version
 	Info("HELM Updated Chart Version: %v", chart.Version)
 
 	err = chartutil.SaveChartfile(HelmChartPath, chart)
