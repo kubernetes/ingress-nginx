@@ -100,3 +100,8 @@ func (r1 *Config) Equal(r2 *Config) bool {
 func (a connection) GetDocumentation() parser.AnnotationFields {
 	return a.annotationConfig.Annotations
 }
+
+func (a connection) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, connectionHeadersAnnotations.Annotations)
+}

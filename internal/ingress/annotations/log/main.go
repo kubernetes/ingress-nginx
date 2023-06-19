@@ -100,3 +100,8 @@ func (l log) Parse(ing *networking.Ingress) (interface{}, error) {
 func (l log) GetDocumentation() parser.AnnotationFields {
 	return l.annotationConfig.Annotations
 }
+
+func (a log) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, logAnnotations.Annotations)
+}

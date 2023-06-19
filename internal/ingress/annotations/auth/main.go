@@ -275,3 +275,8 @@ func dumpSecretAuthMap(filename string, secret *api.Secret) error {
 func (a auth) GetDocumentation() parser.AnnotationFields {
 	return a.annotationConfig.Annotations
 }
+
+func (a auth) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, authSecretAnnotations.Annotations)
+}

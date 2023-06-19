@@ -149,3 +149,8 @@ func (c opentelemetry) Parse(ing *networking.Ingress) (interface{}, error) {
 func (c opentelemetry) GetDocumentation() parser.AnnotationFields {
 	return c.annotationConfig.Annotations
 }
+
+func (a opentelemetry) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, otelAnnotations.Annotations)
+}

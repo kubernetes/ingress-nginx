@@ -173,3 +173,8 @@ func (a globalratelimit) Parse(ing *networking.Ingress) (interface{}, error) {
 func (a globalratelimit) GetDocumentation() parser.AnnotationFields {
 	return a.annotationConfig.Annotations
 }
+
+func (a globalratelimit) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, globalRateLimitAnnotationConfig.Annotations)
+}

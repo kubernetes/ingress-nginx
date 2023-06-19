@@ -66,3 +66,8 @@ func (a portInRedirect) Parse(ing *networking.Ingress) (interface{}, error) {
 func (a portInRedirect) GetDocumentation() parser.AnnotationFields {
 	return a.annotationConfig.Annotations
 }
+
+func (a portInRedirect) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, portsInRedirectAnnotations.Annotations)
+}

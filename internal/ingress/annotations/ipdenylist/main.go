@@ -123,3 +123,8 @@ func (a ipdenylist) Parse(ing *networking.Ingress) (interface{}, error) {
 func (a ipdenylist) GetDocumentation() parser.AnnotationFields {
 	return a.annotationConfig.Annotations
 }
+
+func (a ipdenylist) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, denylistAnnotations.Annotations)
+}

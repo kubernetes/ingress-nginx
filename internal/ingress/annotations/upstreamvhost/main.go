@@ -63,3 +63,8 @@ func (a upstreamVhost) Parse(ing *networking.Ingress) (interface{}, error) {
 func (a upstreamVhost) GetDocumentation() parser.AnnotationFields {
 	return a.annotationConfig.Annotations
 }
+
+func (a upstreamVhost) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, upstreamVhostAnnotations.Annotations)
+}

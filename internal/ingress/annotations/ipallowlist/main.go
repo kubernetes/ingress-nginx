@@ -126,3 +126,8 @@ func (a ipallowlist) Parse(ing *networking.Ingress) (interface{}, error) {
 func (a ipallowlist) GetDocumentation() parser.AnnotationFields {
 	return a.annotationConfig.Annotations
 }
+
+func (a ipallowlist) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, allowlistAnnotations.Annotations)
+}

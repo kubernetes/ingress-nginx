@@ -221,3 +221,90 @@ func Test_checkAnnotation(t *testing.T) {
 		})
 	}
 }
+
+func TestCheckAnnotationRisk(t *testing.T) {
+
+	tests := []struct {
+		name        string
+		annotations map[string]string
+		maxrisk     AnnotationRisk
+		config      AnnotationFields
+		wantErr     bool
+	}{
+		{
+			name:    "high risk should not be accepted with maximum medium",
+			maxrisk: AnnotationRiskMedium,
+			annotations: map[string]string{
+				"nginx.ingress.kubernetes.io/bla": "blo",
+				"nginx.ingress.kubernetes.io/bli": "bl3",
+			},
+			config: AnnotationFields{
+				"bla": {
+					Risk: AnnotationRiskHigh,
+				},
+				"bli": {
+					Risk: AnnotationRiskMedium,
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name:    "high risk should  be accepted with maximum critical",
+			maxrisk: AnnotationRiskCritical,
+			annotations: map[string]string{
+				"nginx.ingress.kubernetes.io/bla": "blo",
+				"nginx.ingress.kubernetes.io/bli": "bl3",
+			},
+			config: AnnotationFields{
+				"bla": {
+					Risk: AnnotationRiskHigh,
+				},
+				"bli": {
+					Risk: AnnotationRiskMedium,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:    "low risk should  be accepted with maximum low",
+			maxrisk: AnnotationRiskLow,
+			annotations: map[string]string{
+				"nginx.ingress.kubernetes.io/bla": "blo",
+				"nginx.ingress.kubernetes.io/bli": "bl3",
+			},
+			config: AnnotationFields{
+				"bla": {
+					Risk: AnnotationRiskLow,
+				},
+				"bli": {
+					Risk: AnnotationRiskLow,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:    "critical risk should  be accepted with maximum critical",
+			maxrisk: AnnotationRiskCritical,
+			annotations: map[string]string{
+				"nginx.ingress.kubernetes.io/bla": "blo",
+				"nginx.ingress.kubernetes.io/bli": "bl3",
+			},
+			config: AnnotationFields{
+				"bla": {
+					Risk: AnnotationRiskCritical,
+				},
+				"bli": {
+					Risk: AnnotationRiskCritical,
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := CheckAnnotationRisk(tt.annotations, tt.maxrisk, tt.config); (err != nil) != tt.wantErr {
+				t.Errorf("CheckAnnotationRisk() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}

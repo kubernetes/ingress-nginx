@@ -30,12 +30,15 @@ import (
 
 // DefaultAnnotationsPrefix defines the common prefix used in the nginx ingress controller
 const (
-	DefaultAnnotationsPrefix = "nginx.ingress.kubernetes.io"
+	DefaultAnnotationsPrefix           = "nginx.ingress.kubernetes.io"
+	DefaultDisableAnnotationValidation = true
 )
 
 var (
 	// AnnotationsPrefix is the mutable attribute that the controller explicitly refers to
 	AnnotationsPrefix = DefaultAnnotationsPrefix
+	// DisableAnnotationValidation is the mutable attribute for enabling or disabling the validation functions
+	DisableAnnotationValidation = DefaultDisableAnnotationValidation
 )
 
 // AnnotationGroup defines the group that this annotation may belong
@@ -92,6 +95,7 @@ type Annotation struct {
 type IngressAnnotation interface {
 	Parse(ing *networking.Ingress) (interface{}, error)
 	GetDocumentation() AnnotationFields
+	Validate(anns map[string]string) error
 }
 
 type ingAnnotations map[string]string
@@ -187,6 +191,23 @@ func GetFloatAnnotation(name string, ing *networking.Ingress, fields AnnotationF
 // GetAnnotationWithPrefix returns the prefix of ingress annotations
 func GetAnnotationWithPrefix(suffix string) string {
 	return fmt.Sprintf("%v/%v", AnnotationsPrefix, suffix)
+}
+
+func TrimAnnotationPrefix(annotation string) string {
+	return strings.TrimPrefix(annotation, AnnotationsPrefix+"/")
+}
+
+func StringRiskToRisk(risk string) AnnotationRisk {
+	switch strings.ToLower(risk) {
+	case "critical":
+		return AnnotationRiskCritical
+	case "high":
+		return AnnotationRiskHigh
+	case "medium":
+		return AnnotationRiskMedium
+	default:
+		return AnnotationRiskLow
+	}
 }
 
 func normalizeString(input string) string {

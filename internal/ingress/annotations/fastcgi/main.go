@@ -160,3 +160,8 @@ func (a fastcgi) Parse(ing *networking.Ingress) (interface{}, error) {
 func (a fastcgi) GetDocumentation() parser.AnnotationFields {
 	return a.annotationConfig.Annotations
 }
+
+func (a fastcgi) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, fastCGIAnnotations.Annotations)
+}

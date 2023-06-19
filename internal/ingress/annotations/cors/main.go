@@ -259,3 +259,8 @@ func (c cors) Parse(ing *networking.Ingress) (interface{}, error) {
 func (c cors) GetDocumentation() parser.AnnotationFields {
 	return c.annotationConfig.Annotations
 }
+
+func (a cors) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, corsAnnotation.Annotations)
+}

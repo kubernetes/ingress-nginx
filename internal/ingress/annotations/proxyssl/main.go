@@ -259,3 +259,8 @@ func (p proxySSL) Parse(ing *networking.Ingress) (interface{}, error) {
 func (p proxySSL) GetDocumentation() parser.AnnotationFields {
 	return p.annotationConfig.Annotations
 }
+
+func (a proxySSL) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, proxySSLAnnotation.Annotations)
+}

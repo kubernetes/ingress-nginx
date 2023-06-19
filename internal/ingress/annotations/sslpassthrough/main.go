@@ -65,3 +65,8 @@ func (a sslpt) Parse(ing *networking.Ingress) (interface{}, error) {
 func (a sslpt) GetDocumentation() parser.AnnotationFields {
 	return a.annotationConfig.Annotations
 }
+
+func (a sslpt) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, sslPassthroughAnnotations.Annotations)
+}

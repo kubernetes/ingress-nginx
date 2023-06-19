@@ -67,3 +67,8 @@ func (a loadbalancing) Parse(ing *networking.Ingress) (interface{}, error) {
 func (a loadbalancing) GetDocumentation() parser.AnnotationFields {
 	return a.annotationConfig.Annotations
 }
+
+func (a loadbalancing) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, loadBalanceAnnotations.Annotations)
+}

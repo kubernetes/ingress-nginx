@@ -61,3 +61,8 @@ func (h2pp http2PushPreload) Parse(ing *networking.Ingress) (interface{}, error)
 func (h2pp http2PushPreload) GetDocumentation() parser.AnnotationFields {
 	return h2pp.annotationConfig.Annotations
 }
+
+func (a http2PushPreload) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, http2PushPreloadAnnotations.Annotations)
+}

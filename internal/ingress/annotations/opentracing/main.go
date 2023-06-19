@@ -106,3 +106,8 @@ func (s opentracing) Parse(ing *networking.Ingress) (interface{}, error) {
 func (s opentracing) GetDocumentation() parser.AnnotationFields {
 	return s.annotationConfig.Annotations
 }
+
+func (a opentracing) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, opentracingAnnotations.Annotations)
+}
