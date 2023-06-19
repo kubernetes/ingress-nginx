@@ -61,7 +61,7 @@ func UpdateVersion(appVersion string) {
 	chart, err := chartutil.LoadChartfile(HelmChartPath)
 	CheckIfError(err, "HELM Could not Load Chart")
 
-	Info("HELM Ingress-Nginx App Version: %s Chart AppVersion: %s", appVersion, chart.AppVersion)
+	Info("HELM Ingress-Nginx NEW Chart App Version: %s Previous Chart AppVersion: %s", appVersion, chart.AppVersion)
 	if appVersion == chart.AppVersion {
 		Warning("HELM Ingress NGINX Version didnt change Ingress-Nginx App Version: %s Chart AppVersion: %s", appVersion, chart.AppVersion)
 		return
@@ -77,7 +77,7 @@ func UpdateVersion(appVersion string) {
 		os.Exit(1)
 	}
 	chart.Version = cTag.String()
-	Debug("HELM Updated Chart Version: %v", chart.Version)
+	Info("HELM Updated Chart Version: %v", chart.Version)
 
 	err = chartutil.SaveChartfile(HelmChartPath, chart)
 	CheckIfError(err, "HELM Saving new Chart")
@@ -148,6 +148,7 @@ func HelmDocs() error {
 	if err != nil {
 		return err
 	}
+	Info("HELM - Running Helm Docs")
 	return sh.Command("helm-docs", fmt.Sprintf("--chart-search-root=%s", CHART_PATH)).Run()
 }
 
