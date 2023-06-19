@@ -67,3 +67,8 @@ func (a authReqGlobal) Parse(ing *networking.Ingress) (interface{}, error) {
 func (a authReqGlobal) GetDocumentation() parser.AnnotationFields {
 	return a.annotationConfig.Annotations
 }
+
+func (a authReqGlobal) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, globalAuthAnnotations.Annotations)
+}

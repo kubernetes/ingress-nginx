@@ -37,7 +37,7 @@ var aliasAnnotation = parser.Annotation{
 		serverAliasAnnotation: {
 			Validator: parser.ValidateArrayOfServerName,
 			Scope:     parser.AnnotationScopeIngress,
-			Risk:      parser.AnnotationRiskLow, // Low, as it allows regexes but on a very limited set
+			Risk:      parser.AnnotationRiskHigh, // High as this allows regex chars
 			Documentation: `this annotation can be used to define additional server 
 			aliases for this Ingress`,
 		},
@@ -85,4 +85,9 @@ func (a alias) Parse(ing *networking.Ingress) (interface{}, error) {
 	sort.Strings(l)
 
 	return l, nil
+}
+
+func (a alias) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, aliasAnnotation.Annotations)
 }

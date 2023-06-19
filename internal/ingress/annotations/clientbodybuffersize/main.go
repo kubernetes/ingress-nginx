@@ -64,3 +64,8 @@ func (cbbs clientBodyBufferSize) GetDocumentation() parser.AnnotationFields {
 func (cbbs clientBodyBufferSize) Parse(ing *networking.Ingress) (interface{}, error) {
 	return parser.GetStringAnnotation(clientBodyBufferSizeAnnotation, ing, cbbs.annotationConfig.Annotations)
 }
+
+func (a clientBodyBufferSize) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, clientBodyBufferSizeConfig.Annotations)
+}

@@ -161,3 +161,8 @@ func (a mirror) Parse(ing *networking.Ingress) (interface{}, error) {
 func (a mirror) GetDocumentation() parser.AnnotationFields {
 	return a.annotationConfig.Annotations
 }
+
+func (a mirror) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, mirrorAnnotation.Annotations)
+}

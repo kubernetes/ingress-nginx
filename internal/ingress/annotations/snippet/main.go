@@ -62,3 +62,8 @@ func (a snippet) Parse(ing *networking.Ingress) (interface{}, error) {
 func (a snippet) GetDocumentation() parser.AnnotationFields {
 	return a.annotationConfig.Annotations
 }
+
+func (a snippet) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, configurationSnippetAnnotations.Annotations)
+}

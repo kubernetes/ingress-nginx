@@ -17,6 +17,7 @@ limitations under the License.
 package parser
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -25,7 +26,7 @@ import (
 
 	networking "k8s.io/api/networking/v1"
 	machineryvalidation "k8s.io/apimachinery/pkg/api/validation"
-	"k8s.io/ingress-nginx/internal/ingress/errors"
+	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/net"
 	"k8s.io/klog/v2"
 )
@@ -189,12 +190,12 @@ func checkAnnotation(name string, ing *networking.Ingress, fields AnnotationFiel
 	}
 
 	if ing == nil || len(ing.GetAnnotations()) == 0 {
-		return "", errors.ErrMissingAnnotations
+		return "", ing_errors.ErrMissingAnnotations
 	}
 
 	annotationFullName := GetAnnotationWithPrefix(name)
 	if annotationFullName == "" {
-		return "", errors.ErrInvalidAnnotationName
+		return "", ing_errors.ErrInvalidAnnotationName
 	}
 
 	annotationValue := ing.GetAnnotations()[annotationFullName]
@@ -213,13 +214,24 @@ func checkAnnotation(name string, ing *networking.Ingress, fields AnnotationFiel
 			}
 		}
 		// We don't run validation against empty values
-		if annotationValue != "" {
+		if annotationValue != "" && !DisableAnnotationValidation {
 			if err := validateFunc(annotationValue); err != nil {
 				klog.Warningf("validation error on ingress %s/%s: annotation %s contains invalid value %s", ing.GetNamespace(), ing.GetName(), name, annotationValue)
-				return "", errors.NewValidationError(annotationFullName)
+				return "", ing_errors.NewValidationError(annotationFullName)
 			}
 		}
 	}
 
 	return annotationFullName, nil
+}
+
+func CheckAnnotationRisk(annotations map[string]string, maxrisk AnnotationRisk, config AnnotationFields) error {
+	var err error
+	for annotation := range annotations {
+		annPure := TrimAnnotationPrefix(annotation)
+		if cfg, ok := config[annPure]; ok && cfg.Risk > maxrisk {
+			err = errors.Join(err, fmt.Errorf("annotation %s is too risky for environment", annotation))
+		}
+	}
+	return err
 }

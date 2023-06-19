@@ -153,3 +153,8 @@ func (a modSecurity) Parse(ing *networking.Ingress) (interface{}, error) {
 func (a modSecurity) GetDocumentation() parser.AnnotationFields {
 	return a.annotationConfig.Annotations
 }
+
+func (a modSecurity) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, modsecurityAnnotation.Annotations)
+}

@@ -357,3 +357,8 @@ func (a proxy) Parse(ing *networking.Ingress) (interface{}, error) {
 func (a proxy) GetDocumentation() parser.AnnotationFields {
 	return a.annotationConfig.Annotations
 }
+
+func (a proxy) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, proxyAnnotations.Annotations)
+}

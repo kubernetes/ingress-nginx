@@ -502,3 +502,8 @@ func ParseStringToCacheDurations(input string) ([]string, error) {
 func (a authReq) GetDocumentation() parser.AnnotationFields {
 	return a.annotationConfig.Annotations
 }
+
+func (a authReq) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, authReqAnnotations.Annotations)
+}

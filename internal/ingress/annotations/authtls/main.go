@@ -215,3 +215,8 @@ func (a authTLS) Parse(ing *networking.Ingress) (interface{}, error) {
 func (a authTLS) GetDocumentation() parser.AnnotationFields {
 	return a.annotationConfig.Annotations
 }
+
+func (a authTLS) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, authTLSAnnotations.Annotations)
+}

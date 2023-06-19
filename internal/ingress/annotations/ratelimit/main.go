@@ -294,3 +294,8 @@ func encode(s string) string {
 func (a ratelimit) GetDocumentation() parser.AnnotationFields {
 	return a.annotationConfig.Annotations
 }
+
+func (a ratelimit) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, rateLimitAnnotations.Annotations)
+}

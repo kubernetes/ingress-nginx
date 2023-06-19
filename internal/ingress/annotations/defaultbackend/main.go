@@ -75,3 +75,8 @@ func (db backend) Parse(ing *networking.Ingress) (interface{}, error) {
 func (db backend) GetDocumentation() parser.AnnotationFields {
 	return db.annotationConfig.Annotations
 }
+
+func (a backend) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, defaultBackendAnnotations.Annotations)
+}

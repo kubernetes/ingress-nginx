@@ -103,3 +103,8 @@ func (sc sslCipher) Parse(ing *networking.Ingress) (interface{}, error) {
 func (sc sslCipher) GetDocumentation() parser.AnnotationFields {
 	return sc.annotationConfig.Annotations
 }
+
+func (a sslCipher) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, sslCipherAnnotations.Annotations)
+}

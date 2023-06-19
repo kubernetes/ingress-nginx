@@ -66,7 +66,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // Parse parses the annotations contained in the ingress to use
 // custom http errors
 func (e customhttperrors) Parse(ing *networking.Ingress) (interface{}, error) {
-	c, err := parser.GetStringAnnotation("custom-http-errors", ing, e.annotationConfig.Annotations)
+	c, err := parser.GetStringAnnotation(customHTTPErrorsAnnotation, ing, e.annotationConfig.Annotations)
 	if err != nil {
 		return nil, err
 	}
@@ -86,4 +86,9 @@ func (e customhttperrors) Parse(ing *networking.Ingress) (interface{}, error) {
 
 func (e customhttperrors) GetDocumentation() parser.AnnotationFields {
 	return e.annotationConfig.Annotations
+}
+
+func (a customhttperrors) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, customHTTPErrorsAnnotations.Annotations)
 }

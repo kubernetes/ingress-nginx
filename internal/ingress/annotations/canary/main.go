@@ -188,3 +188,8 @@ func (c canary) Parse(ing *networking.Ingress) (interface{}, error) {
 func (c canary) GetDocumentation() parser.AnnotationFields {
 	return c.annotationConfig.Annotations
 }
+
+func (a canary) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, CanaryAnnotations.Annotations)
+}

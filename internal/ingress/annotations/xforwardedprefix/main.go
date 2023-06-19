@@ -61,3 +61,8 @@ func (cbbs xforwardedprefix) Parse(ing *networking.Ingress) (interface{}, error)
 func (cbbs xforwardedprefix) GetDocumentation() parser.AnnotationFields {
 	return cbbs.annotationConfig.Annotations
 }
+
+func (a xforwardedprefix) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, xForwardedForAnnotations.Annotations)
+}

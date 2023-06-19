@@ -180,6 +180,9 @@ func (e Extractor) Extract(ing *networking.Ingress) (*Ingress, error) {
 
 	data := make(map[string]interface{})
 	for name, annotationParser := range e.annotations {
+		if err := annotationParser.Validate(ing.GetAnnotations()); err != nil {
+			return nil, errors.NewRiskyAnnotations(name)
+		}
 		val, err := annotationParser.Parse(ing)
 		klog.V(5).InfoS("Parsing Ingress annotation", "name", name, "ingress", klog.KObj(ing), "value", val)
 		if err != nil {

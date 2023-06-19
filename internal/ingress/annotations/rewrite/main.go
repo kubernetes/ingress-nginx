@@ -208,3 +208,8 @@ func (a rewrite) Parse(ing *networking.Ingress) (interface{}, error) {
 func (a rewrite) GetDocumentation() parser.AnnotationFields {
 	return a.annotationConfig.Annotations
 }
+
+func (a rewrite) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, rewriteAnnotations.Annotations)
+}

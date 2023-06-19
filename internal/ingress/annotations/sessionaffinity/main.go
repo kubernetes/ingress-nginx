@@ -297,3 +297,8 @@ func (a affinity) Parse(ing *networking.Ingress) (interface{}, error) {
 func (a affinity) GetDocumentation() parser.AnnotationFields {
 	return a.annotationConfig.Annotations
 }
+
+func (a affinity) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	return parser.CheckAnnotationRisk(anns, maxrisk, sessionAffinityAnnotations.Annotations)
+}
