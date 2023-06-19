@@ -41,17 +41,17 @@ type Backend struct {
 	// Defines a timeout for establishing a connection with a proxied server.
 	// It should be noted that this timeout cannot usually exceed 75 seconds.
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_connect_timeout
-	ProxyConnectTimeout int `json:"proxy-connect-timeout"`
+	ProxyConnectTimeout string `json:"proxy-connect-timeout"`
 
 	// Timeout in seconds for reading a response from the proxied server. The timeout is set only between
 	// two successive read operations, not for the transmission of the whole response
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout
-	ProxyReadTimeout int `json:"proxy-read-timeout"`
+	ProxyReadTimeout string `json:"proxy-read-timeout"`
 
 	// Timeout in seconds for transmitting a request to the proxied server. The timeout is set only between
 	// two successive write operations, not for the transmission of the whole request.
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_send_timeout
-	ProxySendTimeout int `json:"proxy-send-timeout"`
+	ProxySendTimeout string `json:"proxy-send-timeout"`
 
 	// Sets the number of the buffers used for reading a response from the proxied server
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffers

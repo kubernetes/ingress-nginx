@@ -1443,9 +1443,9 @@ stream {
             {{ $proxySetHeader }} {{ $k }}                    {{ $v | quote }};
             {{ end }}
 
-            proxy_connect_timeout                   {{ $location.Proxy.ConnectTimeout }}s;
-            proxy_send_timeout                      {{ $location.Proxy.SendTimeout }}s;
-            proxy_read_timeout                      {{ $location.Proxy.ReadTimeout }}s;
+            proxy_connect_timeout                   {{ $location.Proxy.ConnectTimeout }};
+            proxy_send_timeout                      {{ $location.Proxy.SendTimeout }};
+            proxy_read_timeout                      {{ $location.Proxy.ReadTimeout }};
 
             proxy_buffering                         {{ $location.Proxy.ProxyBuffering }};
             proxy_buffer_size                       {{ $location.Proxy.BufferSize }};

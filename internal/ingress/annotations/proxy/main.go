@@ -162,9 +162,9 @@ var proxyAnnotations = parser.Annotation{
 // Config returns the proxy timeout to use in the upstream server/s
 type Config struct {
 	BodySize             string `json:"bodySize"`
-	ConnectTimeout       int    `json:"connectTimeout"`
-	SendTimeout          int    `json:"sendTimeout"`
-	ReadTimeout          int    `json:"readTimeout"`
+	ConnectTimeout       string `json:"connectTimeout"`
+	SendTimeout          string `json:"sendTimeout"`
+	ReadTimeout          string `json:"readTimeout"`
 	BuffersNumber        int    `json:"buffersNumber"`
 	BufferSize           string `json:"bufferSize"`
 	CookieDomain         string `json:"cookieDomain"`
@@ -266,16 +266,20 @@ func (a proxy) Parse(ing *networking.Ingress) (interface{}, error) {
 	var err error
 
 	config.ConnectTimeout, err = parser.GetIntAnnotation(proxyConnectTimeoutAnnotation, ing, a.annotationConfig.Annotations)
+
 	if err != nil {
 		config.ConnectTimeout = defBackend.ProxyConnectTimeout
 	}
 
+
 	config.SendTimeout, err = parser.GetIntAnnotation(proxySendTimeoutAnnotation, ing, a.annotationConfig.Annotations)
+
 	if err != nil {
 		config.SendTimeout = defBackend.ProxySendTimeout
 	}
 
 	config.ReadTimeout, err = parser.GetIntAnnotation(proxyReadTimeoutAnnotation, ing, a.annotationConfig.Annotations)
+
 	if err != nil {
 		config.ReadTimeout = defBackend.ProxyReadTimeout
 	}

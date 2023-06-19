@@ -952,9 +952,9 @@ func NewDefault() Configuration {
 		ProxyStreamNextUpstreamTries:     3,
 		Backend: defaults.Backend{
 			ProxyBodySize:            bodySize,
-			ProxyConnectTimeout:      5,
-			ProxyReadTimeout:         60,
-			ProxySendTimeout:         60,
+			ProxyConnectTimeout:      "5s",
+			ProxyReadTimeout:         "60s",
+			ProxySendTimeout:         "60s",
 			ProxyBuffersNumber:       4,
 			ProxyBufferSize:          "4k",
 			ProxyCookieDomain:        "off",
