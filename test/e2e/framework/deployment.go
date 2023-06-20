@@ -219,7 +219,14 @@ func (f *Framework) NewHttpbunDeployment(opts ...func(*deploymentOptions)) strin
 		options.image,
 		80,
 		int32(options.replicas),
-		nil, nil, nil,
+		nil, nil,
+		//Required to get hostname information
+		[]corev1.EnvVar{
+			{
+				Name:  "HTTPBUN_INFO_ENABLED",
+				Value: "1",
+			},
+		},
 		[]corev1.VolumeMount{},
 		[]corev1.Volume{},
 		true,
