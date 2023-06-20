@@ -21,7 +21,7 @@
 				"name": "kubernetes-dashboard-m3qc0",
 				"uid": "b9511631-5176-11e7-b3db-080027494b5d",
 				"resourceVersion": "3700964"
-			}			
+			}
 		}],
 		"SessionAffinity": {
 			"name": "",
@@ -135,9 +135,9 @@
 			},
 			"proxy": {
 				"bodySize": "1g",
-				"connectTimeout": 5,
-				"sendTimeout": 60,
-				"readTimeout": 60,
+				"connectTimeout": "5s",
+				"sendTimeout": "60s",
+				"readTimeout": "60s",
 				"bufferSize": "4k",
 				"cookieDomain": "off",
 				"cookiePath": "off"
@@ -235,9 +235,9 @@
 			},
 			"proxy": {
 				"bodySize": "1g",
-				"connectTimeout": 5,
-				"sendTimeout": 60,
-				"readTimeout": 60,
+				"connectTimeout": "5s",
+				"sendTimeout": "60s",
+				"readTimeout": "60s",
 				"bufferSize": "4k",
 				"cookieDomain": "off",
 				"cookiePath": "off"

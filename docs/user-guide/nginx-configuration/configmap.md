@@ -181,9 +181,9 @@ The following table shows a configuration option's name, type, and the default v
 |[location-snippet](#location-snippet)|string|""||
 |[custom-http-errors](#custom-http-errors)|[]int|[]int{}||
 |[proxy-body-size](#proxy-body-size)|string|"1m"||
-|[proxy-connect-timeout](#proxy-connect-timeout)|int|5||
-|[proxy-read-timeout](#proxy-read-timeout)|int|60||
-|[proxy-send-timeout](#proxy-send-timeout)|int|60||
+|[proxy-connect-timeout](#proxy-connect-timeout)|string|5s||
+|[proxy-read-timeout](#proxy-read-timeout)|string|60s||
+|[proxy-send-timeout](#proxy-send-timeout)|string|60s||
 |[proxy-buffers-number](#proxy-buffers-number)|int|4||
 |[proxy-buffer-size](#proxy-buffer-size)|string|"4k"||
 |[proxy-cookie-path](#proxy-cookie-path)|string|"off"||

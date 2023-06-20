@@ -143,22 +143,20 @@ func (a ingAnnotations) parseInt(name string) (int, error) {
 func (a ingAnnotations) parseTimeout(name string) (string, error) {
 	val, ok := a[name]
 	if ok {
-		setUnits, _ := regexp.Compile("(\\d+)(s|ms)$")
-
-		if setUnits.MatchString(name) {
-			return name, nil
-		}
-
-		noUnits, _ := regexp.Compile("\\d+$")
-
-		if noUnits.MatchString(name) {
-			return fmt.Sprintf("%ss", name), nil
-		}
-
-		if name == "" {
+		s := normalizeString(val)
+		if len(s) == 0 {
 			return "0", errors.NewInvalidAnnotationContent(name, val)
 		}
 
+		setUnits, _ := regexp.Compile(`(\d+)(s|ms)?$`)
+		if setUnits.MatchString(s) {
+			return s, nil
+		}
+
+		noUnits, _ := regexp.Compile(`\d+$`)
+		if noUnits.MatchString(s) {
+			return fmt.Sprintf("%ss", s), nil
+		}
 	}
 	return "0", errors.ErrMissingAnnotations
 }
@@ -204,9 +202,8 @@ func GetIntAnnotation(name string, ing *networking.Ingress, fields AnnotationFie
 }
 
 // GetTimeoutAnnotation extracts a string from an Ingress annotation, special format 10s
-func GetTimeoutAnnotation(name string, ing *networking.Ingress) (string, error) {
-	v := GetAnnotationWithPrefix(name)
-	err := checkAnnotation(v, ing)
+func GetTimeoutAnnotation(name string, ing *networking.Ingress, fields AnnotationFields) (string, error) {
+	v, err := checkAnnotation(name, ing, fields)
 	if err != nil {
 		return "", err
 	}

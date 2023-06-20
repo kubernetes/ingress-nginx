@@ -41,7 +41,7 @@ var _ = framework.DescribeSetting("proxy-send-timeout", func() {
 		proxySendTimeout := "20"
 
 		cm := make(map[string]string)
-		cm["proxy-send-timeout"] = proxySendTimeout
+		cm["proxy-send-timeout"] = fmt.Sprintf("%ss", proxySendTimeout)
 		f.SetNginxConfigMapData(cm)
 
 		f.WaitForNginxServer(host,

@@ -115,9 +115,9 @@ var _ = framework.DescribeAnnotation("proxy-*", func() {
 	})
 
 	ginkgo.It("should set valid proxy timeouts", func() {
-		proxyConnectTimeout := "50"
-		proxySendTimeout := "20"
-		proxyReadtimeout := "20"
+		proxyConnectTimeout := "5s"
+		proxySendTimeout := "60s"
+		proxyReadtimeout := "60s"
 
 		annotations := make(map[string]string)
 		annotations["nginx.ingress.kubernetes.io/proxy-connect-timeout"] = proxyConnectTimeout
@@ -129,9 +129,9 @@ var _ = framework.DescribeAnnotation("proxy-*", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("proxy_connect_timeout %ss;", proxyConnectTimeout)) &&
-					strings.Contains(server, fmt.Sprintf("proxy_send_timeout %ss;", proxySendTimeout)) &&
-					strings.Contains(server, fmt.Sprintf("proxy_read_timeout %ss;", proxyReadtimeout))
+				return strings.Contains(server, fmt.Sprintf("proxy_connect_timeout %s;", proxyConnectTimeout)) &&
+					strings.Contains(server, fmt.Sprintf("proxy_send_timeout %s;", proxySendTimeout)) &&
+					strings.Contains(server, fmt.Sprintf("proxy_read_timeout %s;", proxyReadtimeout))
 			})
 	})
 
@@ -150,9 +150,9 @@ var _ = framework.DescribeAnnotation("proxy-*", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return !strings.Contains(server, fmt.Sprintf("proxy_connect_timeout %ss;", proxyConnectTimeout)) &&
-					!strings.Contains(server, fmt.Sprintf("proxy_send_timeout %ss;", proxySendTimeout)) &&
-					!strings.Contains(server, fmt.Sprintf("proxy_read_timeout %ss;", proxyReadtimeout))
+				return !strings.Contains(server, fmt.Sprintf("proxy_connect_timeout %s;", proxyConnectTimeout)) &&
+					!strings.Contains(server, fmt.Sprintf("proxy_send_timeout %s;", proxySendTimeout)) &&
+					!strings.Contains(server, fmt.Sprintf("proxy_read_timeout %s;", proxyReadtimeout))
 			})
 	})
 

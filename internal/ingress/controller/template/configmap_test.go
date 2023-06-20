@@ -55,8 +55,8 @@ func TestProxyTimeoutParsing(t *testing.T) {
 func TestMergeConfigMapToStruct(t *testing.T) {
 	conf := map[string]string{
 		"custom-http-errors":            "300,400,demo",
-		"proxy-read-timeout":            "1",
-		"proxy-send-timeout":            "2",
+		"proxy-read-timeout":            "1s",
+		"proxy-send-timeout":            "2s",
 		"skip-access-log-urls":          "/log,/demo,/test",
 		"use-proxy-protocol":            "true",
 		"disable-access-log":            "true",
@@ -85,8 +85,8 @@ func TestMergeConfigMapToStruct(t *testing.T) {
 	def.AccessLogPath = "/var/log/test/access.log"
 	def.ErrorLogPath = "/var/log/test/error.log"
 	def.SkipAccessLogURLs = []string{"/log", "/demo", "/test"}
-	def.ProxyReadTimeout = 1
-	def.ProxySendTimeout = 2
+	def.ProxyReadTimeout = "1s"
+	def.ProxySendTimeout = "2s"
 	def.UseProxyProtocol = true
 	def.GzipDisable = "msie6"
 	def.GzipLevel = 9

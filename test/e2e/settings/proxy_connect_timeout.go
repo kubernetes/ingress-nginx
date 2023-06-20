@@ -41,7 +41,7 @@ var _ = framework.DescribeSetting("proxy-connect-timeout", func() {
 		proxyConnectTimeout := "50"
 
 		cm := make(map[string]string)
-		cm["proxy-connect-timeout"] = proxyConnectTimeout
+		cm["proxy-connect-timeout"] = fmt.Sprintf("%ss", proxyConnectTimeout)
 		f.SetNginxConfigMapData(cm)
 
 		f.WaitForNginxServer(host,

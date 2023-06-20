@@ -83,9 +83,9 @@ type mockBackend struct {
 
 func (m mockBackend) GetDefaultBackend() defaults.Backend {
 	return defaults.Backend{
-		ProxyConnectTimeout:      10,
-		ProxySendTimeout:         15,
-		ProxyReadTimeout:         20,
+		ProxyConnectTimeout:      "10s",
+		ProxySendTimeout:         "15s",
+		ProxyReadTimeout:         "20s",
 		ProxyBuffersNumber:       4,
 		ProxyBufferSize:          "10k",
 		ProxyBodySize:            "3k",
@@ -104,8 +104,8 @@ func TestProxy(t *testing.T) {
 
 	data := map[string]string{}
 	data[parser.GetAnnotationWithPrefix("proxy-connect-timeout")] = "1"
-	data[parser.GetAnnotationWithPrefix("proxy-send-timeout")] = "2"
-	data[parser.GetAnnotationWithPrefix("proxy-read-timeout")] = "3"
+	data[parser.GetAnnotationWithPrefix("proxy-send-timeout")] = "15s"
+	data[parser.GetAnnotationWithPrefix("proxy-read-timeout")] = "20s"
 	data[parser.GetAnnotationWithPrefix("proxy-buffers-number")] = "8"
 	data[parser.GetAnnotationWithPrefix("proxy-buffer-size")] = "1k"
 	data[parser.GetAnnotationWithPrefix("proxy-body-size")] = "2k"
@@ -126,14 +126,14 @@ func TestProxy(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected a Config type")
 	}
-	if p.ConnectTimeout != 1 {
+	if p.ConnectTimeout != "1" {
 		t.Errorf("expected 1 as connect-timeout but returned %v", p.ConnectTimeout)
 	}
-	if p.SendTimeout != 2 {
-		t.Errorf("expected 2 as send-timeout but returned %v", p.SendTimeout)
+	if p.SendTimeout != "15s" {
+		t.Errorf("expected 15s as send-timeout but returned %v", p.SendTimeout)
 	}
-	if p.ReadTimeout != 3 {
-		t.Errorf("expected 3 as read-timeout but returned %v", p.ReadTimeout)
+	if p.ReadTimeout != "20s" {
+		t.Errorf("expected 20s as read-timeout but returned %v", p.ReadTimeout)
 	}
 	if p.BuffersNumber != 8 {
 		t.Errorf("expected 8 as proxy-buffers-number but returned %v", p.BuffersNumber)
@@ -172,8 +172,8 @@ func TestProxyComplex(t *testing.T) {
 
 	data := map[string]string{}
 	data[parser.GetAnnotationWithPrefix("proxy-connect-timeout")] = "1"
-	data[parser.GetAnnotationWithPrefix("proxy-send-timeout")] = "2"
-	data[parser.GetAnnotationWithPrefix("proxy-read-timeout")] = "3"
+	data[parser.GetAnnotationWithPrefix("proxy-send-timeout")] = "15s"
+	data[parser.GetAnnotationWithPrefix("proxy-read-timeout")] = "20s"
 	data[parser.GetAnnotationWithPrefix("proxy-buffers-number")] = "8"
 	data[parser.GetAnnotationWithPrefix("proxy-buffer-size")] = "1k"
 	data[parser.GetAnnotationWithPrefix("proxy-body-size")] = "2k"
@@ -194,14 +194,14 @@ func TestProxyComplex(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected a Config type")
 	}
-	if p.ConnectTimeout != 1 {
+	if p.ConnectTimeout != "1" {
 		t.Errorf("expected 1 as connect-timeout but returned %v", p.ConnectTimeout)
 	}
-	if p.SendTimeout != 2 {
-		t.Errorf("expected 2 as send-timeout but returned %v", p.SendTimeout)
+	if p.SendTimeout != "15s" {
+		t.Errorf("expected 15s as send-timeout but returned %v", p.SendTimeout)
 	}
-	if p.ReadTimeout != 3 {
-		t.Errorf("expected 3 as read-timeout but returned %v", p.ReadTimeout)
+	if p.ReadTimeout != "20s" {
+		t.Errorf("expected 20s as read-timeout but returned %v", p.ReadTimeout)
 	}
 	if p.BuffersNumber != 8 {
 		t.Errorf("expected 8 as proxy-buffers-number but returned %v", p.BuffersNumber)
@@ -249,14 +249,14 @@ func TestProxyWithNoAnnotation(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected a Config type")
 	}
-	if p.ConnectTimeout != 10 {
-		t.Errorf("expected 10 as connect-timeout but returned %v", p.ConnectTimeout)
+	if p.ConnectTimeout != "10s" {
+		t.Errorf("expected 10s as connect-timeout but returned %v", p.ConnectTimeout)
 	}
-	if p.SendTimeout != 15 {
-		t.Errorf("expected 15 as send-timeout but returned %v", p.SendTimeout)
+	if p.SendTimeout != "15s" {
+		t.Errorf("expected 15s as send-timeout but returned %v", p.SendTimeout)
 	}
-	if p.ReadTimeout != 20 {
-		t.Errorf("expected 20 as read-timeout but returned %v", p.ReadTimeout)
+	if p.ReadTimeout != "20s" {
+		t.Errorf("expected 20s as read-timeout but returned %v", p.ReadTimeout)
 	}
 	if p.BuffersNumber != 4 {
 		t.Errorf("expected 4 as buffer-number but returned %v", p.BuffersNumber)

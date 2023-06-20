@@ -41,7 +41,7 @@ var _ = framework.DescribeSetting("proxy-read-timeout", func() {
 		proxyReadtimeout := "20"
 
 		cm := make(map[string]string)
-		cm["proxy-read-timeout"] = proxyReadtimeout
+		cm["proxy-read-timeout"] = fmt.Sprintf("%ss", proxyReadtimeout)
 		f.SetNginxConfigMapData(cm)
 
 		f.WaitForNginxServer(host,

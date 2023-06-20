@@ -285,9 +285,9 @@
 			},
 			"proxy": {
 				"bodySize": "1m",
-				"connectTimeout": 5,
-				"sendTimeout": 60,
-				"readTimeout": 60,
+				"connectTimeout": "5s",
+				"sendTimeout": "60s",
+				"readTimeout": "60s",
 				"bufferSize": "4k",
 				"cookieDomain": "off",
 				"cookiePath": "off",
@@ -392,9 +392,9 @@
 			},
 			"proxy": {
 				"bodySize": "1m",
-				"connectTimeout": 5,
-				"sendTimeout": 60,
-				"readTimeout": 60,
+				"connectTimeout": "5s",
+				"sendTimeout": "60s",
+				"readTimeout": "60s",
 				"bufferSize": "4k",
 				"cookieDomain": "off",
 				"cookiePath": "off",
@@ -470,9 +470,9 @@
 			},
 			"proxy": {
 				"bodySize": "1m",
-				"connectTimeout": 5,
-				"sendTimeout": 60,
-				"readTimeout": 60,
+				"connectTimeout": "5s",
+				"sendTimeout": "60s",
+				"readTimeout": "60s",
 				"bufferSize": "4k",
 				"cookieDomain": "off",
 				"cookiePath": "off",
@@ -582,9 +582,9 @@
 			},
 			"proxy": {
 				"bodySize": "1m",
-				"connectTimeout": 5,
-				"sendTimeout": 60,
-				"readTimeout": 60,
+				"connectTimeout": "5s",
+				"sendTimeout": "60s",
+				"readTimeout": "60s",
 				"bufferSize": "4k",
 				"cookieDomain": "off",
 				"cookiePath": "off",
@@ -631,9 +631,9 @@
 			},
 			"proxy": {
 				"bodySize": "1m",
-				"connectTimeout": 5,
-				"sendTimeout": 60,
-				"readTimeout": 60,
+				"connectTimeout": "5s",
+				"sendTimeout": "60s",
+				"readTimeout": "60s",
 				"bufferSize": "4k",
 				"cookieDomain": "off",
 				"cookiePath": "off",
@@ -648,7 +648,7 @@
 				"validationDepth": 0
 			},
 			"use-port-in-redirects": false,
-			"configuration-snippet": "",			
+			"configuration-snippet": "",
 			"rateLimit": {
 				"connections": {
 					"name": "",

@@ -265,20 +265,17 @@ func (a proxy) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	var err error
 
-	config.ConnectTimeout, err = parser.GetIntAnnotation(proxyConnectTimeoutAnnotation, ing, a.annotationConfig.Annotations)
-
+	config.ConnectTimeout, err = parser.GetTimeoutAnnotation(proxyConnectTimeoutAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		config.ConnectTimeout = defBackend.ProxyConnectTimeout
 	}
 
-
-	config.SendTimeout, err = parser.GetIntAnnotation(proxySendTimeoutAnnotation, ing, a.annotationConfig.Annotations)
-
+	config.SendTimeout, err = parser.GetTimeoutAnnotation(proxySendTimeoutAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		config.SendTimeout = defBackend.ProxySendTimeout
 	}
 
-	config.ReadTimeout, err = parser.GetIntAnnotation(proxyReadTimeoutAnnotation, ing, a.annotationConfig.Annotations)
+	config.ReadTimeout, err = parser.GetTimeoutAnnotation(proxyReadTimeoutAnnotation, ing, a.annotationConfig.Annotations)
 
 	if err != nil {
 		config.ReadTimeout = defBackend.ProxyReadTimeout
