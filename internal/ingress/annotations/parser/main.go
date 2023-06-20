@@ -31,7 +31,7 @@ import (
 // DefaultAnnotationsPrefix defines the common prefix used in the nginx ingress controller
 const (
 	DefaultAnnotationsPrefix           = "nginx.ingress.kubernetes.io"
-	DefaultDisableAnnotationValidation = true
+	DefaultDisableAnnotationValidation = false
 )
 
 var (
