@@ -152,7 +152,7 @@ Requires the update-status parameter.`)
 		annotationsPrefix = flags.String("annotations-prefix", parser.DefaultAnnotationsPrefix,
 			`Prefix of the Ingress annotations specific to the NGINX controller.`)
 
-		disableAnnotationValidation = flags.Bool("disable-annotation-validation", parser.DefaultDisableAnnotationValidation,
+		disableAnnotationValidation = flags.Bool("disable-annotation-validation", true,
 			`Prefix of the Ingress annotations specific to the NGINX controller.`)
 
 		enableSSLChainCompletion = flags.Bool("enable-ssl-chain-completion", false,
