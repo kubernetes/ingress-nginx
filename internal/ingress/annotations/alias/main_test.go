@@ -36,18 +36,20 @@ func TestParse(t *testing.T) {
 	}
 
 	testCases := []struct {
-		annotations map[string]string
-		expected    []string
-		wantErr     bool
+		annotations    map[string]string
+		expected       []string
+		skipValidation bool
+		wantErr        bool
 	}{
-		{map[string]string{annotation: "a.com, b.com, ,    c.com"}, []string{"a.com", "b.com", "c.com"}, false},
-		{map[string]string{annotation: "www.example.com"}, []string{"www.example.com"}, false},
-		{map[string]string{annotation: "*.example.com,www.example.*"}, []string{"*.example.com", "www.example.*"}, false},
-		{map[string]string{annotation: `~^www\d+\.example\.com$`}, []string{`~^www\d+\.example\.com$`}, false},
-		{map[string]string{annotation: `www.xpto;lala`}, []string{}, true},
-		{map[string]string{annotation: ""}, []string{}, true},
-		{map[string]string{}, []string{}, true},
-		{nil, []string{}, true},
+		{map[string]string{annotation: "a.com, b.com, ,    c.com"}, []string{"a.com", "b.com", "c.com"}, false, false},
+		{map[string]string{annotation: "www.example.com"}, []string{"www.example.com"}, false, false},
+		{map[string]string{annotation: "*.example.com,www.example.*"}, []string{"*.example.com", "www.example.*"}, false, false},
+		{map[string]string{annotation: `~^www\d+\.example\.com$`}, []string{`~^www\d+\.example\.com$`}, false, false},
+		{map[string]string{annotation: `www.xpto;lala`}, []string{}, false, true},
+		{map[string]string{annotation: `www.xpto;lala`}, []string{"www.xpto;lala"}, true, false}, // When we skip validation no error should happen
+		{map[string]string{annotation: ""}, []string{}, false, true},
+		{map[string]string{}, []string{}, false, true},
+		{nil, []string{}, false, true},
 	}
 
 	ing := &networking.Ingress{
@@ -60,6 +62,12 @@ func TestParse(t *testing.T) {
 
 	for _, testCase := range testCases {
 		ing.SetAnnotations(testCase.annotations)
+		if testCase.skipValidation {
+			parser.DisableAnnotationValidation = true
+		}
+		defer func() {
+			parser.DisableAnnotationValidation = false
+		}()
 		result, err := ap.Parse(ing)
 		if (err != nil) != testCase.wantErr {
 			t.Errorf("ParseAliasAnnotation() annotation: %s, error = %v, wantErr %v", testCase.annotations, err, testCase.wantErr)
