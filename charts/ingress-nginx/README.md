@@ -144,7 +144,7 @@ controller:
       enabled: true
       annotations:
         # Create internal NLB
-        service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+        service.beta.kubernetes.io/aws-load-balancer-scheme: "internal"
         # Create internal ELB(Deprecated)
         # service.beta.kubernetes.io/aws-load-balancer-internal: "true"
         # Any other annotation can be declared here.
