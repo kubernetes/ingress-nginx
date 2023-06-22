@@ -426,6 +426,8 @@ controller:
     # -- Used by cloud providers to connect the resulting `LoadBalancer` to a pre-existing static IP according to https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
     loadBalancerIP: ""
     loadBalancerSourceRanges: []
+    # -- Used by cloud providers to select a load balancer implementation other than the cloud provider default. https://kubernetes.io/docs/concepts/services-networking/service/#load-balancer-class
+    loadBalancerClass: ""
     enableHttp: true
     enableHttps: true
     ## Set external traffic policy to: "Local" to preserve source IP on providers supporting it.
