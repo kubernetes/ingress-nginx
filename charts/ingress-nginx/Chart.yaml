@@ -1,8 +1,10 @@
 annotations:
   artifacthub.io/changes: |
-     - "helm: Fix opentelemetry module installation for daemonset (#9792)"
-     - "Update charts/* to keep project name display aligned (#9931)"
-     - "Update Ingress-Nginx version controller-v1.8.0"
+     - "add distroless otel init (#10035)"
+     - "add support for keda fallback settings (#9993)"
+     - "Update Internal Load Balancer docs (#10062)"
+     - "fix broken kubernetes.io/user-guide/ docs links (#10055)"
+     - "ensured hpa mem spec before cpu spec (#10043)"
   artifacthub.io/prerelease: "false"
 apiVersion: v2
 appVersion: 1.8.0
