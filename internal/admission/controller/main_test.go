@@ -67,7 +67,7 @@ func TestHandleAdmission(t *testing.T) {
 		Checker: failTestChecker{t: t},
 	}
 
-	result, err := adm.HandleAdmission(&admissionv1.AdmissionReview{
+	_, err := adm.HandleAdmission(&admissionv1.AdmissionReview{
 		Request: &admissionv1.AdmissionRequest{
 			Kind: v1.GroupVersionKind{Group: "", Version: "v1", Kind: "Pod"},
 		},
@@ -76,12 +76,12 @@ func TestHandleAdmission(t *testing.T) {
 		t.Fatalf("with a non ingress resource, the check should not pass")
 	}
 
-	result, err = adm.HandleAdmission(nil)
+	_, err = adm.HandleAdmission(nil)
 	if err == nil {
 		t.Fatalf("with a nil AdmissionReview request, the check should not pass")
 	}
 
-	result, err = adm.HandleAdmission(&admissionv1.AdmissionReview{
+	result, err := adm.HandleAdmission(&admissionv1.AdmissionReview{
 		Request: &admissionv1.AdmissionRequest{
 			Kind: v1.GroupVersionKind{Group: networking.GroupName, Version: "v1", Kind: "Ingress"},
 			Object: runtime.RawExtension{
