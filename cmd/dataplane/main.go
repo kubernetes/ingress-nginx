@@ -18,10 +18,10 @@ package main
 
 import (
 	"fmt"
-	"net/http"
-	"os"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
+	"net/http"
+	"os"
 
 	"k8s.io/klog/v2"
 
