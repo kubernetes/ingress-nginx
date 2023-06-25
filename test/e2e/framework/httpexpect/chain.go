@@ -36,19 +36,3 @@ func (c *chain) fail(message string, args ...interface{}) {
 	c.failbit = true
 	c.reporter.Errorf(message, args...)
 }
-
-func (c *chain) reset() {
-	c.failbit = false
-}
-
-func (c *chain) assertFailed(r Reporter) {
-	if !c.failbit {
-		r.Errorf("expected chain is failed, but it's ok")
-	}
-}
-
-func (c *chain) assertOK(r Reporter) {
-	if c.failbit {
-		r.Errorf("expected chain is ok, but it's failed")
-	}
-}

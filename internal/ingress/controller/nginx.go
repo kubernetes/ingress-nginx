@@ -249,7 +249,6 @@ type NGINXController struct {
 	store store.Storer
 
 	metricCollector    metric.Collector
-	admissionCollector metric.Collector
 
 	validationWebhookServer *http.Server
 
@@ -797,45 +796,6 @@ func (n *NGINXController) setupSSLProxy() {
 			go n.Proxy.Handle(conn)
 		}
 	}()
-}
-
-// Helper function to clear Certificates from the ingress configuration since they should be ignored when
-// checking if the new configuration changes can be applied dynamically if dynamic certificates is on
-func clearCertificates(config *ingress.Configuration) {
-	var clearedServers []*ingress.Server
-	for _, server := range config.Servers {
-		copyOfServer := *server
-		copyOfServer.SSLCert = nil
-		clearedServers = append(clearedServers, &copyOfServer)
-	}
-	config.Servers = clearedServers
-}
-
-// Helper function to clear endpoints from the ingress configuration since they should be ignored when
-// checking if the new configuration changes can be applied dynamically.
-func clearL4serviceEndpoints(config *ingress.Configuration) {
-	var clearedTCPL4Services []ingress.L4Service
-	var clearedUDPL4Services []ingress.L4Service
-	for _, service := range config.TCPEndpoints {
-		copyofService := ingress.L4Service{
-			Port:      service.Port,
-			Backend:   service.Backend,
-			Endpoints: []ingress.Endpoint{},
-			Service:   nil,
-		}
-		clearedTCPL4Services = append(clearedTCPL4Services, copyofService)
-	}
-	for _, service := range config.UDPEndpoints {
-		copyofService := ingress.L4Service{
-			Port:      service.Port,
-			Backend:   service.Backend,
-			Endpoints: []ingress.Endpoint{},
-			Service:   nil,
-		}
-		clearedUDPL4Services = append(clearedUDPL4Services, copyofService)
-	}
-	config.TCPEndpoints = clearedTCPL4Services
-	config.UDPEndpoints = clearedUDPL4Services
 }
 
 // configureDynamically encodes new Backends in JSON format and POSTs the

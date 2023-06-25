@@ -1186,15 +1186,16 @@ func buildAuthSignURLLocation(location, authSignURL string) string {
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+var random *rand.Rand
 
 func init() {
-	rand.Seed(time.Now().UnixNano())
+	random = rand.New(rand.NewSource(time.Now().UnixNano()))
 }
 
 func randomString() string {
 	b := make([]rune, 32)
 	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))] // #nosec
+		b[i] = letters[random.Intn(len(letters))] // #nosec
 	}
 
 	return string(b)
