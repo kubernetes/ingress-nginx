@@ -93,6 +93,7 @@ image-chroot: clean-chroot-image ## Build image for a particular arch.
 		--build-arg TARGETARCH="$(ARCH)" \
 		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
 		--build-arg BUILD_ID="$(BUILD_ID)" \
+		--build-arg SETCAP="$(SETCAP)" \
 		-t $(REGISTRY)/controller-chroot:$(TAG) rootfs -f rootfs/Dockerfile-chroot
 
 .PHONY: clean-image
