@@ -1,4 +1,4 @@
-{{- if or (and .Values.controller.autoscaling.enabled (gt (.Values.controller.autoscaling.minReplicas | int) 1)) (and (not .Values.controller.autoscaling.enabled) (gt (.Values.controller.replicaCount | int) 1)) }}
+{{- if or (and .Values.controller.autoscaling.enabled (gt (.Values.controller.autoscaling.minReplicas | int) 1)) (and (not .Values.controller.autoscaling.enabled) (gt (.Values.controller.replicaCount | int) 1))  (and .Values.controller.keda.enabled (gt (.Values.controller.keda.minReplicas | int) 1)) }}
 apiVersion: {{ ternary "policy/v1" "policy/v1beta1" (semverCompare ">=1.21.0-0" .Capabilities.KubeVersion.Version) }}
 kind: PodDisruptionBudget
 metadata:
