@@ -13,7 +13,10 @@ jobs:
       repository-projects: write
       issues: write
     steps:
-      - uses: actions/add-to-project@31b3f3ccdc584546fc445612dec3f38ff5edb41c # v0.5.0
+      - uses: peter-evans/create-or-update-project-card@2384ab088fea261837be59baa1ba295694c4e74a
         with:
-          project-url: https://github.com/orgs/kubernetes/projects/104
-          github-token: ${{ secrets.PROJECT_WRITER }}
+          project-location: organization
+          project-number: 104
+          issue-number: ${{ github.event.number }}
+          column-name: "Needs Triage"
+          token: ${{ secrets.PROJECT_WRITER }}
