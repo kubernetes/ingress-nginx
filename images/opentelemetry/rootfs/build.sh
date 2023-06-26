@@ -70,6 +70,7 @@ install_grpc()
   mkdir -p $BUILD_PATH/grpc
   cd ${BUILD_PATH}/grpc
   cmake -DCMAKE_INSTALL_PREFIX=${INSTAL_DIR} \
+    -G Ninja \
     -DGRPC_GIT_TAG=${GRPC_GIT_TAG} /opt/third_party \
     -DgRPC_BUILD_GRPC_NODE_PLUGIN=OFF \
     -DgRPC_BUILD_GRPC_OBJECTIVE_C_PLUGIN=OFF \
@@ -92,6 +93,7 @@ install_otel()
   cd .build
 
   cmake -DCMAKE_BUILD_TYPE=Release \
+        -G Ninja \
         -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE  \
         -DWITH_ZIPKIN=OFF \
         -DWITH_JAEGER=OFF \
@@ -100,9 +102,9 @@ install_otel()
         -DBUILD_SHARED_LIBS=OFF \
         -DWITH_OTLP=ON \
         -DWITH_OTLP_GRPC=ON \
-        -DWITH_EXAMPLES=OFF \
-        -DWITH_ABSEIL=ON \
         -DWITH_OTLP_HTTP=OFF \
+        -DWITH_ABSEIL=OFF \
+        -DWITH_EXAMPLES=OFF \
         ..
   cmake --build . -j ${CORES} --target install
 }
@@ -126,7 +128,7 @@ install_nginx()
   export NGINX_VERSION=1.21.6
 
   # Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp-contrib/compare/2656a4...main
-  export OPENTELEMETRY_CONTRIB_COMMIT=6467ec2e4d67b08b44580b7eb7a298786f4eef91
+  export OPENTELEMETRY_CONTRIB_COMMIT=1ec94c82095bab61f06c7393b6f3272469d285af
 
   mkdir -p /etc/nginx
   cd "$BUILD_PATH"
@@ -143,6 +145,7 @@ install_nginx()
   mkdir -p build
   cd build
   cmake -DCMAKE_BUILD_TYPE=Release \
+    -G Ninja \
     -DCMAKE_INSTALL_PREFIX=${INSTAL_DIR} \
     -DBUILD_SHARED_LIBS=ON \
     -DNGINX_VERSION=${NGINX_VERSION} \

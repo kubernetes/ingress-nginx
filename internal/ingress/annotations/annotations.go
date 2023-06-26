@@ -20,6 +20,7 @@ import (
 	"github.com/imdario/mergo"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/opentelemetry"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxyssl"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/sslcipher"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/streamsnippet"
@@ -43,7 +44,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/fastcgi"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/globalratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/http2pushpreload"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/ipdenylist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/loadbalancing"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
@@ -56,7 +57,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/redirect"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/rewrite"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/satisfy"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/secureupstream"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/serversnippet"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/serviceupstream"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/sessionaffinity"
@@ -93,6 +93,7 @@ type Ingress struct {
 	EnableGlobalAuth   bool
 	HTTP2PushPreload   bool
 	Opentracing        opentracing.Config
+	Opentelemetry      opentelemetry.Config
 	Proxy              proxy.Config
 	ProxySSL           proxyssl.Config
 	RateLimit          ratelimit.Config
@@ -100,7 +101,6 @@ type Ingress struct {
 	Redirect           redirect.Config
 	Rewrite            rewrite.Config
 	Satisfy            string
-	SecureUpstream     secureupstream.Config
 	ServerSnippet      string
 	ServiceUpstream    bool
 	SessionAffinity    sessionaffinity.Config
@@ -110,10 +110,10 @@ type Ingress struct {
 	LoadBalancing      string
 	UpstreamVhost      string
 	Whitelist          ipwhitelist.SourceRange
+	Denylist           ipdenylist.SourceRange
 	XForwardedPrefix   string
 	SSLCipher          sslcipher.Config
 	Logs               log.Config
-	InfluxDB           influxdb.Config
 	ModSecurity        modsecurity.Config
 	Mirror             mirror.Config
 	StreamSnippet      string
@@ -143,6 +143,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"EnableGlobalAuth":     authreqglobal.NewParser(cfg),
 			"HTTP2PushPreload":     http2pushpreload.NewParser(cfg),
 			"Opentracing":          opentracing.NewParser(cfg),
+			"Opentelemetry":        opentelemetry.NewParser(cfg),
 			"Proxy":                proxy.NewParser(cfg),
 			"ProxySSL":             proxyssl.NewParser(cfg),
 			"RateLimit":            ratelimit.NewParser(cfg),
@@ -150,7 +151,6 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"Redirect":             redirect.NewParser(cfg),
 			"Rewrite":              rewrite.NewParser(cfg),
 			"Satisfy":              satisfy.NewParser(cfg),
-			"SecureUpstream":       secureupstream.NewParser(cfg),
 			"ServerSnippet":        serversnippet.NewParser(cfg),
 			"ServiceUpstream":      serviceupstream.NewParser(cfg),
 			"SessionAffinity":      sessionaffinity.NewParser(cfg),
@@ -160,10 +160,10 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"LoadBalancing":        loadbalancing.NewParser(cfg),
 			"UpstreamVhost":        upstreamvhost.NewParser(cfg),
 			"Whitelist":            ipwhitelist.NewParser(cfg),
+			"Denylist":             ipdenylist.NewParser(cfg),
 			"XForwardedPrefix":     xforwardedprefix.NewParser(cfg),
 			"SSLCipher":            sslcipher.NewParser(cfg),
 			"Logs":                 log.NewParser(cfg),
-			"InfluxDB":             influxdb.NewParser(cfg),
 			"BackendProtocol":      backendprotocol.NewParser(cfg),
 			"ModSecurity":          modsecurity.NewParser(cfg),
 			"Mirror":               mirror.NewParser(cfg),

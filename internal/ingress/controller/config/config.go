@@ -215,16 +215,19 @@ type Configuration struct {
 
 	// https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_field_size
 	// HTTP2MaxFieldSize Limits the maximum size of an HPACK-compressed request header field
+	// NOTE: Deprecated
 	HTTP2MaxFieldSize string `json:"http2-max-field-size,omitempty"`
 
 	// https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_header_size
 	// HTTP2MaxHeaderSize Limits the maximum size of the entire request header list after HPACK decompression
+	// NOTE: Deprecated
 	HTTP2MaxHeaderSize string `json:"http2-max-header-size,omitempty"`
 
 	// http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_requests
 	// HTTP2MaxRequests Sets the maximum number of requests (including push requests) that can be served
 	// through one HTTP/2 connection, after which the next client request will lead to connection closing
 	// and the need of establishing a new connection.
+	// NOTE: Deprecated
 	HTTP2MaxRequests int `json:"http2-max-requests,omitempty"`
 
 	// http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_concurrent_streams
@@ -438,6 +441,11 @@ type Configuration struct {
 	// Default: true
 	UseHTTP2 bool `json:"use-http2,omitempty"`
 
+	// Disables gzipping of responses for requests with "User-Agent" header fields matching any of
+	// the specified regular expressions.
+	// http://nginx.org/en/docs/http/ngx_http_gzip_module.html#gzip_disable
+	GzipDisable string `json:"gzip-disable,omitempty"`
+
 	// gzip Compression Level that will be used
 	GzipLevel int `json:"gzip-level,omitempty"`
 
@@ -562,6 +570,57 @@ type Configuration struct {
 	// If false, incoming span headers will be rejected
 	// Default: true
 	OpentracingTrustIncomingSpan bool `json:"opentracing-trust-incoming-span"`
+
+	// EnableOpentelemetry enables the nginx Opentelemetry extension
+	// By default this is disabled
+	EnableOpentelemetry bool `json:"enable-opentelemetry"`
+
+	// OpentelemetryConfig sets the opentelemetry config file
+	// Default: /etc/nginx/opentelemetry.toml
+	OpentelemetryConfig string `json:"opentelemetry-config"`
+
+	// OpentelemetryOperationName specifies a custom name for the server span
+	OpentelemetryOperationName string `json:"opentelemetry-operation-name"`
+
+	// OpentelemetryTrustIncomingSpan sets whether or not to trust incoming trace spans
+	// If false, incoming span headers will be rejected
+	// Default: true
+	OpentelemetryTrustIncomingSpan bool `json:"opentelemetry-trust-incoming-span"`
+
+	// OtlpCollectorHost specifies the host to use when uploading traces
+	OtlpCollectorHost string `json:"otlp-collector-host"`
+
+	// OtlpCollectorPort specifies the port to use when uploading traces
+	// Default: 4317
+	OtlpCollectorPort string `json:"otlp-collector-port"`
+
+	// OtelServiceName specifies the service name to use for any traces created
+	// Default: nginx
+	OtelServiceName string `json:"otel-service-name"`
+
+	// OtelSampler specifies the sampler to use for any traces created
+	// Default: AlwaysOn
+	OtelSampler string `json:"otel-sampler"`
+
+	// OtelSamplerRatio specifies the sampler ratio to use for any traces created
+	// Default: 0.01
+	OtelSamplerRatio float32 `json:"otel-sampler-ratio"`
+
+	//OtelSamplerParentBased specifies the parent based sampler to be use for any traces created
+	// Default: true
+	OtelSamplerParentBased bool `json:"otel-sampler-parent-based"`
+
+	// MaxQueueSize specifies the max queue size for uploading traces
+	// Default: 2048
+	OtelMaxQueueSize int32 `json:"otel-max-queuesize"`
+
+	// ScheduleDelayMillis specifies the max delay between uploading traces
+	// Default: 5000
+	OtelScheduleDelayMillis int32 `json:"otel-schedule-delay-millis"`
+
+	// MaxExportBatchSize specifies the max export batch size to used when uploading traces
+	// Default: 512
+	OtelMaxExportBatchSize int32 `json:"otel-max-export-batch-size"`
 
 	// ZipkinCollectorHost specifies the host to use when uploading traces
 	ZipkinCollectorHost string `json:"zipkin-collector-host"`
@@ -777,6 +836,12 @@ type Configuration struct {
 	// http://nginx.org/en/docs/ngx_core_module.html#debug_connection
 	// Default: ""
 	DebugConnections []string `json:"debug-connections"`
+
+	// StrictValidatePathType enable the strict validation of Ingress Paths
+	// It enforces that pathType of type Exact or Prefix should start with / and contain only
+	// alphanumeric chars, "-", "_", "/".In case of additional characters,
+	// like used on Rewrite configurations the user should use pathType as ImplementationSpecific
+	StrictValidatePathType bool `json:"strict-validate-path-type"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -794,7 +859,6 @@ func NewDefault() Configuration {
 	defGlobalExternalAuth := GlobalExternalAuth{"", "", "", "", "", append(defResponseHeaders, ""), "", "", "", []string{}, map[string]string{}, false}
 
 	cfg := Configuration{
-
 		AllowSnippetAnnotations:          true,
 		AllowBackendServerHeader:         false,
 		AnnotationValueWordBlocklist:     "",
@@ -821,9 +885,9 @@ func NewDefault() Configuration {
 		ComputeFullForwardedFor:          false,
 		ProxyAddOriginalURIHeader:        false,
 		GenerateRequestID:                true,
-		HTTP2MaxFieldSize:                "4k",
-		HTTP2MaxHeaderSize:               "16k",
-		HTTP2MaxRequests:                 1000,
+		HTTP2MaxFieldSize:                "",
+		HTTP2MaxHeaderSize:               "",
+		HTTP2MaxRequests:                 0,
 		HTTP2MaxConcurrentStreams:        128,
 		HTTPRedirectCode:                 308,
 		HSTS:                             true,
@@ -835,7 +899,7 @@ func NewDefault() Configuration {
 		GzipMinLength:                    256,
 		GzipTypes:                        gzipTypes,
 		KeepAlive:                        75,
-		KeepAliveRequests:                100,
+		KeepAliveRequests:                1000,
 		LargeClientHeaderBuffers:         "4 8k",
 		LogFormatEscapeJSON:              false,
 		LogFormatStream:                  logFormatStream,
@@ -895,6 +959,7 @@ func NewDefault() Configuration {
 			PreserveTrailingSlash:    false,
 			SSLRedirect:              true,
 			CustomHTTPErrors:         []int{},
+			DenylistSourceRange:      []string{},
 			WhitelistSourceRange:     []string{},
 			SkipAccessLogURLs:        []string{},
 			LimitRate:                0,
@@ -912,6 +977,16 @@ func NewDefault() Configuration {
 		BindAddressIpv4:                        defBindAddress,
 		BindAddressIpv6:                        defBindAddress,
 		OpentracingTrustIncomingSpan:           true,
+		OpentelemetryTrustIncomingSpan:         true,
+		OpentelemetryConfig:                    "/etc/nginx/opentelemetry.toml",
+		OtlpCollectorPort:                      "4317",
+		OtelServiceName:                        "nginx",
+		OtelSampler:                            "AlwaysOn",
+		OtelSamplerRatio:                       0.01,
+		OtelSamplerParentBased:                 true,
+		OtelScheduleDelayMillis:                5000,
+		OtelMaxExportBatchSize:                 512,
+		OtelMaxQueueSize:                       2048,
 		ZipkinCollectorPort:                    9411,
 		ZipkinServiceName:                      "nginx",
 		ZipkinSampleRate:                       1.0,
@@ -942,6 +1017,7 @@ func NewDefault() Configuration {
 		GlobalRateLimitMemcachedPoolSize:       50,
 		GlobalRateLimitStatucCode:              429,
 		DebugConnections:                       []string{},
+		StrictValidatePathType:                 false, // TODO: This will be true in future releases
 	}
 
 	if klog.V(5).Enabled() {

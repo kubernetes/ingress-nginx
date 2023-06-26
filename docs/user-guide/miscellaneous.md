@@ -27,12 +27,12 @@ Support for websockets is provided by NGINX out of the box. No special configura
 
 The only requirement to avoid the close of connections is the increase of the values of `proxy-read-timeout` and `proxy-send-timeout`.
 
-The default value of this settings is `60 seconds`.
+The default value of these settings is `60 seconds`.
 
 A more adequate value to support websockets is a value higher than one hour (`3600`).
 
 !!! Important
-    If the NGINX ingress controller is exposed with a service `type=LoadBalancer` make sure the protocol between the loadbalancer and NGINX is TCP.
+    If the Ingress-Nginx Controller is exposed with a service `type=LoadBalancer` make sure the protocol between the loadbalancer and NGINX is TCP.
 
 ## Optimizing TLS Time To First Byte (TTTFB)
 
@@ -52,4 +52,4 @@ The previous behavior can be restored using `retry-non-idempotent=true` in the c
 
 ## Why endpoints and not services
 
-The NGINX ingress controller does not use [Services](http://kubernetes.io/docs/user-guide/services) to route traffic to the pods. Instead it uses the Endpoints API in order to bypass [kube-proxy](http://kubernetes.io/docs/admin/kube-proxy/) to allow NGINX features like session affinity and custom load balancing algorithms. It also removes some overhead, such as conntrack entries for iptables DNAT.
+The Ingress-Nginx Controller does not use [Services](http://kubernetes.io/docs/user-guide/services) to route traffic to the pods. Instead it uses the Endpoints API in order to bypass [kube-proxy](http://kubernetes.io/docs/admin/kube-proxy/) to allow NGINX features like session affinity and custom load balancing algorithms. It also removes some overhead, such as conntrack entries for iptables DNAT.

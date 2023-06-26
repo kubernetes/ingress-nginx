@@ -1,0 +1,34 @@
+# TODO: remove the need to use fullnameOverride
+fullnameOverride: nginx-ingress
+controller:
+  image:
+    repository: ingress-controller/controller
+    chroot: true
+    tag: 1.0.0-dev
+    digest:
+    digestChroot:
+  scope:
+    # Necessary to allow the ingress controller to get the topology information from the nodes
+    enabled: false
+  config:
+    worker-processes: "1"
+  readinessProbe:
+    initialDelaySeconds: 3
+    periodSeconds: 1
+  livenessProbe:
+    initialDelaySeconds: 3
+    periodSeconds: 1
+  service:
+    type: NodePort
+  extraArgs:
+    # e2e tests do not require information about ingress status
+    update-status: "false"
+  terminationGracePeriodSeconds: 1
+  admissionWebhooks:
+    enabled: false
+
+  enableTopologyAwareRouting: true
+
+rbac:
+  create: true
+  scope: false

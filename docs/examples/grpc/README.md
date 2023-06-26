@@ -20,7 +20,7 @@ This example demonstrates how to route traffic to a gRPC service through the Ing
 
 - As an example gRPC application, we can use this app <https://github.com/grpc/grpc-go/blob/91e0aeb192456225adf27966d04ada4cf8599915/examples/features/reflection/server/main.go>.
 
-- To create a container image for this app, you can use [this Dockerfile](https://github.com/kubernetes/ingress-nginx/blob/5a52d99ae85cfe5ef9535291b8326b0006e75066/images/go-grpc-greeter-server/rootfs/Dockerfile). 
+- To create a container image for this app, you can use [this Dockerfile](https://github.com/kubernetes/ingress-nginx/blob/main/images/go-grpc-greeter-server/rootfs/Dockerfile). 
 
 - If you use the Dockerfile mentioned above, to create a image, then you can use the following example Kubernetes manifest to create a deployment resource that uses that image. If necessary edit this manifest to suit your needs.
 

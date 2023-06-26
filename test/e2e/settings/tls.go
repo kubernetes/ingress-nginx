@@ -112,7 +112,7 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 			f.UpdateNginxConfigMapData(hstsMaxAge, "86400")
 
 			f.WaitForNginxConfiguration(func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf(`hsts_max_age = 86400,`))
+				return strings.Contains(server, `hsts_max_age = 86400,`)
 			})
 
 			f.HTTPTestClientWithTLSConfig(tlsConfig).
@@ -131,7 +131,7 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 			})
 
 			f.WaitForNginxConfiguration(func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf(`hsts_include_subdomains = false,`))
+				return strings.Contains(server, `hsts_include_subdomains = false,`)
 			})
 
 			f.HTTPTestClientWithTLSConfig(tlsConfig).
@@ -151,7 +151,7 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 			})
 
 			f.WaitForNginxConfiguration(func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf(`hsts_preload = true,`))
+				return strings.Contains(server, `hsts_preload = true,`)
 			})
 
 			f.HTTPTestClientWithTLSConfig(tlsConfig).

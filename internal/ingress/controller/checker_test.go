@@ -109,7 +109,7 @@ func TestNginxCheck(t *testing.T) {
 			})
 
 			// pollute pid file
-			pidFile.Write([]byte(fmt.Sprint("999999")))
+			pidFile.Write([]byte("999999"))
 			pidFile.Close()
 
 			t.Run("bad pid", func(t *testing.T) {
@@ -122,7 +122,7 @@ func TestNginxCheck(t *testing.T) {
 }
 
 func callHealthz(expErr bool, healthzPath string, mux *http.ServeMux) error {
-	req, err := http.NewRequest("GET", healthzPath, nil)
+	req, err := http.NewRequest(http.MethodGet, healthzPath, nil)
 	if err != nil {
 		return fmt.Errorf("healthz error: %v", err)
 	}

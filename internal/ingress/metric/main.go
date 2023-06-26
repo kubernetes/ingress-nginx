@@ -43,6 +43,8 @@ type Collector interface {
 
 	IncCheckCount(string, string)
 	IncCheckErrorCount(string, string)
+	IncOrphanIngress(string, string, string)
+	DecOrphanIngress(string, string, string)
 
 	RemoveMetrics(ingresses, endpoints, certificates []string)
 
@@ -50,7 +52,7 @@ type Collector interface {
 	SetSSLInfo(servers []*ingress.Server)
 
 	// SetHosts sets the hostnames that are being served by the ingress controller
-	SetHosts(sets.String)
+	SetHosts(set sets.Set[string])
 
 	Start(string)
 	Stop(string)
@@ -69,7 +71,7 @@ type collector struct {
 }
 
 // NewCollector creates a new metric collector the for ingress controller
-func NewCollector(metricsPerHost, reportStatusClasses bool, registry *prometheus.Registry, ingressclass string, buckets collectors.HistogramBuckets) (Collector, error) {
+func NewCollector(metricsPerHost, reportStatusClasses bool, registry *prometheus.Registry, ingressclass string, buckets collectors.HistogramBuckets, excludedSocketMetrics []string) (Collector, error) {
 	podNamespace := os.Getenv("POD_NAMESPACE")
 	if podNamespace == "" {
 		podNamespace = "default"
@@ -87,7 +89,7 @@ func NewCollector(metricsPerHost, reportStatusClasses bool, registry *prometheus
 		return nil, err
 	}
 
-	s, err := collectors.NewSocketCollector(podName, podNamespace, ingressclass, metricsPerHost, reportStatusClasses, buckets)
+	s, err := collectors.NewSocketCollector(podName, podNamespace, ingressclass, metricsPerHost, reportStatusClasses, buckets, excludedSocketMetrics)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +183,15 @@ func (c *collector) SetSSLInfo(servers []*ingress.Server) {
 	c.ingressController.SetSSLInfo(servers)
 }
 
-func (c *collector) SetHosts(hosts sets.String) {
+func (c *collector) IncOrphanIngress(namespace string, name string, orphanityType string) {
+	c.ingressController.IncOrphanIngress(namespace, name, orphanityType)
+}
+
+func (c *collector) DecOrphanIngress(namespace string, name string, orphanityType string) {
+	c.ingressController.DecOrphanIngress(namespace, name, orphanityType)
+}
+
+func (c *collector) SetHosts(hosts sets.Set[string]) {
 	c.socket.SetHosts(hosts)
 }
 

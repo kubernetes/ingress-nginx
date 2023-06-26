@@ -1,6 +1,6 @@
 # Installation Guide
 
-There are multiple ways to install the NGINX ingress controller:
+There are multiple ways to install the Ingress-Nginx Controller:
 
 - with [Helm](https://helm.sh), using the project repository chart;
 - with `kubectl apply`, using YAML manifests;
@@ -59,10 +59,16 @@ It will install the controller in the `ingress-nginx` namespace, creating that n
     - if the ingress controller is not installed, it will install it,
     - if the ingress controller is already installed, it will upgrade it.
 
+**If you want a full list of values that you can set, while installing with Helm,** then run:
+
+```console
+helm show values ingress-nginx --repo https://kubernetes.github.io/ingress-nginx
+```
+
 **If you don't have Helm** or if you prefer to use a YAML manifest, you can run the following command instead:
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.5.1/deploy/static/provider/cloud/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.0/deploy/static/provider/cloud/deploy.yaml
 ```
 
 !!! info
@@ -70,10 +76,9 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
     resources as if you had used Helm to install the controller.
 
 !!! attention
-  If you are running an old version of Kubernetes (1.18 or earlier), please read
-  [this paragraph](#running-on-Kubernetes-versions-older-than-1.19) for specific instructions.
-  Because of api deprecations, the default manifest may not work on your cluster.
-  Specific manifests for supported Kubernetes versions are available within a sub-folder of each provider.
+    If you are running an old version of Kubernetes (1.18 or earlier), please read [this paragraph](#running-on-Kubernetes-versions-older-than-1.19) for specific instructions.
+    Because of api deprecations, the default manifest may not work on your cluster.
+    Specific manifests for supported Kubernetes versions are available within a sub-folder of each provider.
 
 ### Pre-flight check
 
@@ -92,6 +97,7 @@ kubectl wait --namespace ingress-nginx \
   --selector=app.kubernetes.io/component=controller \
   --timeout=120s
 ```
+
 
 ### Local testing
 
@@ -115,7 +121,19 @@ Now, forward a local port to the ingress controller:
 kubectl port-forward --namespace=ingress-nginx service/ingress-nginx-controller 8080:80
 ```
 
-At this point, if you access http://demo.localdev.me:8080/, you should see an HTML page telling you "It works!".
+!!! info
+    A note on DNS & network-connection.
+    This documentation assumes that a user has awareness of the DNS and the network routing aspects involved in using ingress.
+    The port-forwarding mentioned above, is the easiest way to demo the working of ingress. The "kubectl port-forward..." command above has forwarded the port number 8080, on the localhost's tcp/ip stack, where the command was typed, to the port  number 80, of the service created by the installation of ingress-nginx controller. So now, the traffic sent to port number 8080 on localhost will reach the port number 80, of the ingress-controller's service.
+    Port-forwarding is not for a production environment use-case. But here we use port-forwarding, to simulate a HTTP request, originating from outside the cluster, to reach the service of the ingress-nginx controller, that is exposed to receive traffic from outside the cluster.
+  [This issue](https://github.com/kubernetes/ingress-nginx/issues/10014#issuecomment-1567791549described) shows a typical DNS problem and its solution.
+
+At this point, you can access your deployment using curl ;
+```console
+curl --resolve demo.localdev.me:8080:127.0.0.1 http://demo.localdev.me:8080
+```
+
+You should see a HTML response containing text like **"It works!"**.
 
 ### Online testing
 
@@ -192,9 +210,9 @@ doesn't work, you might have to fall back to the `kubectl port-forward` method d
 
 Rancher Desktop provides Kubernetes and Container Management on the desktop. Kubernetes is enabled by default in Rancher Desktop. 
 
-Rancher Desktop uses K3s under the hood, which in turn uses Traefik as the default ingress controller for the Kubernetes cluster. To use NGINX ingress controller in place of the default Traefik, disable Traefik from Preference > Kubernetes menu.
+Rancher Desktop uses K3s under the hood, which in turn uses Traefik as the default ingress controller for the Kubernetes cluster. To use Ingress-Nginx Controller in place of the default Traefik, disable Traefik from Preference > Kubernetes menu.
 
-Once traefik is disabled, the NGINX ingress controller can be installed on Rancher Desktop using the default [quick start](#quick-start) instructions. Follow the instructions described in the [local testing section](#local-testing) to try a sample.
+Once traefik is disabled, the Ingress-Nginx Controller can be installed on Rancher Desktop using the default [quick start](#quick-start) instructions. Follow the instructions described in the [local testing section](#local-testing) to try a sample.
 
 ### Cloud deployments
 
@@ -214,7 +232,7 @@ options of various cloud providers.
 
 #### AWS
 
-In AWS, we use a Network load balancer (NLB) to expose the NGINX Ingress controller behind a Service of `Type=LoadBalancer`.
+In AWS, we use a Network load balancer (NLB) to expose the Ingress-Nginx Controller behind a Service of `Type=LoadBalancer`.
 
 !!! info
     The provided templates illustrate the setup for legacy in-tree service load balancer for AWS NLB.
@@ -225,7 +243,7 @@ In AWS, we use a Network load balancer (NLB) to expose the NGINX Ingress control
 ##### Network Load Balancer (NLB)
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.5.1/deploy/static/provider/aws/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.0/deploy/static/provider/aws/deploy.yaml
 ```
 
 ##### TLS termination in AWS Load Balancer (NLB)
@@ -233,10 +251,10 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 By default, TLS is terminated in the ingress controller. But it is also possible to terminate TLS in the Load Balancer. 
 This section explains how to do that on AWS using an NLB.
 
-1. Download the [deploy.yaml](https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.5.1/deploy/static/provider/aws/nlb-with-tls-termination/deploy.yaml) template
+1. Download the [deploy.yaml](https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.0/deploy/static/provider/aws/nlb-with-tls-termination/deploy.yaml) template
 
   ```console
-  wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.5.1/deploy/static/provider/aws/nlb-with-tls-termination/deploy.yaml
+  wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.0/deploy/static/provider/aws/nlb-with-tls-termination/deploy.yaml
   ```
 
 2. Edit the file and change the VPC CIDR in use for the Kubernetes cluster:
@@ -282,7 +300,7 @@ Then, the ingress controller can be installed like this:
 
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.5.1/deploy/static/provider/cloud/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.0/deploy/static/provider/cloud/deploy.yaml
 ```
 
 !!! warning
@@ -299,7 +317,7 @@ Proxy-protocol is supported in GCE check the [Official Documentations on how to 
 #### Azure
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.5.1/deploy/static/provider/cloud/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.0/deploy/static/provider/cloud/deploy.yaml
 ```
 
 More information with regard to Azure annotations for ingress controller can be found in the [official AKS documentation](https://docs.microsoft.com/en-us/azure/aks/ingress-internal-ip#create-an-ingress-controller).
@@ -307,7 +325,7 @@ More information with regard to Azure annotations for ingress controller can be 
 #### Digital Ocean
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.5.1/deploy/static/provider/do/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.0/deploy/static/provider/do/deploy.yaml
 ```
 - By default the service object of the ingress-nginx-controller for Digital-Ocean, only configures one annotation. Its this one `service.beta.kubernetes.io/do-loadbalancer-enable-proxy-protocol: "true"`. While this makes the service functional, it was reported that the Digital-Ocean LoadBalancer graphs shows `no data`, unless a few other annotations are also configured. Some of these other annotations require values that can not be generic and hence not forced in a out-of-the-box installation. These annotations and a discussion on them is well documented in [this issue](https://github.com/kubernetes/ingress-nginx/issues/8965). Please refer to the issue to add annotations, with values specific to user, to get graphs of the DO-LB populated with data.
 
@@ -315,7 +333,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 #### Scaleway
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.5.1/deploy/static/provider/scw/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.0/deploy/static/provider/scw/deploy.yaml
 ```
 
 #### Exoscale
@@ -330,7 +348,7 @@ The full list of annotations supported by Exoscale is available in the Exoscale 
 #### Oracle Cloud Infrastructure
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.5.1/deploy/static/provider/cloud/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.0/deploy/static/provider/cloud/deploy.yaml
 ```
 
 A 
@@ -357,7 +375,7 @@ For quick testing, you can use a
 This should work on almost every cluster, but it will typically use a port in the range 30000-32767.
 
 ```console
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.5.1/deploy/static/provider/baremetal/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.0/deploy/static/provider/baremetal/deploy.yaml
 ```
 
 For more information about bare metal deployments (and how to use port 80 instead of a random port in the 30000-32767 range),
@@ -419,14 +437,14 @@ Here is how these Ingress versions are supported in Kubernetes:
 - from Kubernetes 1.19 to 1.21, both `v1beta1` and `v1` Ingress resources are supported
 - in Kubernetes 1.22 and above, only `v1` Ingress resources are supported
 
-And here is how these Ingress versions are supported in NGINX Ingress Controller:
+And here is how these Ingress versions are supported in Ingress-Nginx Controller:
 - before version 1.0, only `v1beta1` Ingress resources are supported
 - in version 1.0 and above, only `v1` Ingress resources are
 
 As a result, if you're running Kubernetes 1.19 or later, you should be able to use the latest version of the NGINX 
 Ingress Controller; but if you're using an old version of Kubernetes (1.18 or earlier) you will have to use version 0.X 
-of the NGINX Ingress Controller (e.g. version 0.49).
+of the Ingress-Nginx Controller (e.g. version 0.49).
 
-The Helm chart of the NGINX Ingress Controller switched to version 1 in version 4 of the chart. In other words, if 
+The Helm chart of the Ingress-Nginx Controller switched to version 1 in version 4 of the chart. In other words, if 
 you're running Kubernetes 1.19 or earlier, you should use version 3.X of the chart (this can be done by adding 
-`--version='<4'` to the `helm install` command).
+`--version='<4'` to the `helm install` command ).

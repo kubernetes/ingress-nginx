@@ -4,7 +4,7 @@ Ingress-nginx supports a rich collection of prometheus metrics.  If you have pro
 
 This folder contains two dashboards that you can import.
 
-## 1. NGINX Ingress Controller
+## 1. Ingress-Nginx Controller
 
 ![Dashboard](screenshot.png)
 

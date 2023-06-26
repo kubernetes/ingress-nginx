@@ -143,13 +143,14 @@ func ValidMethod(method string) bool {
 
 // ValidHeader checks is the provided string satisfies the header's name regex
 func ValidHeader(header string) bool {
-	return headerRegexp.Match([]byte(header))
+	return headerRegexp.MatchString(header)
 }
 
 // ValidCacheDuration checks if the provided string is a valid cache duration
 // spec: [code ...] [time ...];
 // with: code is an http status code
-//       time must match the time regex and may appear multiple times, e.g. `1h 30m`
+//
+//	time must match the time regex and may appear multiple times, e.g. `1h 30m`
 func ValidCacheDuration(duration string) bool {
 	elements := strings.Split(duration, " ")
 	seenDuration := false
@@ -158,13 +159,13 @@ func ValidCacheDuration(duration string) bool {
 		if len(element) == 0 {
 			continue
 		}
-		if statusCodeRegex.Match([]byte(element)) {
+		if statusCodeRegex.MatchString(element) {
 			if seenDuration {
 				return false // code after duration
 			}
 			continue
 		}
-		if durationRegex.Match([]byte(element)) {
+		if durationRegex.MatchString(element) {
 			seenDuration = true
 		}
 	}

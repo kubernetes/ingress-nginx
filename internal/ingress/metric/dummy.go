@@ -41,6 +41,12 @@ func (dc DummyCollector) IncReloadCount() {}
 // IncReloadErrorCount ...
 func (dc DummyCollector) IncReloadErrorCount() {}
 
+// IncOrphanIngress ...
+func (dc DummyCollector) IncOrphanIngress(string, string, string) {}
+
+// DecOrphanIngress ...
+func (dc DummyCollector) DecOrphanIngress(string, string, string) {}
+
 // IncCheckCount ...
 func (dc DummyCollector) IncCheckCount(string, string) {}
 
@@ -63,7 +69,7 @@ func (dc DummyCollector) SetSSLInfo([]*ingress.Server) {}
 func (dc DummyCollector) SetSSLExpireTime([]*ingress.Server) {}
 
 // SetHosts ...
-func (dc DummyCollector) SetHosts(hosts sets.String) {}
+func (dc DummyCollector) SetHosts(hosts sets.Set[string]) {}
 
 // OnStartedLeading indicates the pod is not the current leader
 func (dc DummyCollector) OnStartedLeading(electionID string) {}
