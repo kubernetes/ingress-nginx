@@ -1083,12 +1083,11 @@ func datadogOpentracingCfg(cfg ngx_config.Configuration) (string, error) {
 		"operation_name_override": cfg.DatadogOperationNameOverride,
 	}
 
-	// Omit "sample_rate" if the configuration's sample rate is set to the
-	// default sentinel value DatadogDynamicSampleRate (-1).
+	// Omit "sample_rate" if the configuration's sample rate is unset (nil).
 	// Omitting "sample_rate" from the plugin JSON indicates to the tracer that
 	// it should use dynamic rates instead of a configured rate.
-	if cfg.DatadogSampleRate != ngx_config.DatadogDynamicSampleRate {
-		jsn["sample_rate"] = cfg.DatadogSampleRate
+	if cfg.DatadogSampleRate != nil {
+		jsn["sample_rate"] = *cfg.DatadogSampleRate
 	}
 
 	jsnBytes, err := json.Marshal(jsn)
