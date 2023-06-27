@@ -29,7 +29,7 @@ spec:
   loadBalancerSourceRanges: {{ toYaml .Values.controller.service.loadBalancerSourceRanges | nindent 4 }}
 {{- end }}
 {{- if .Values.controller.service.loadBalancerClass }}
-  loadBalancerClass: {{ toYaml .Values.controller.service.loadBalancerClass }}
+  loadBalancerClass: {{ .Values.controller.service.loadBalancerClass }}
 {{- end }}
 {{- if .Values.controller.service.externalTrafficPolicy }}
   externalTrafficPolicy: {{ .Values.controller.service.externalTrafficPolicy }}
