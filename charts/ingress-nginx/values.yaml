@@ -478,7 +478,9 @@ controller:
       enabled: false
       # -- Annotations are mandatory for the load balancer to come up. Varies with the cloud service.
       annotations: {}
-      # loadBalancerIP: ""
+
+      # -- Used by cloud providers to connect the resulting internal LoadBalancer to a pre-existing static IP. Make sure to add to the service the needed annotation to specify the subnet which the static IP belongs to. For instance, `networking.gke.io/internal-load-balancer-subnet` for GCP and `service.beta.kubernetes.io/aws-load-balancer-subnets` for AWS.
+      loadBalancerIP: ""
 
       # -- Restrict access For LoadBalancer service. Defaults to 0.0.0.0/0.
       loadBalancerSourceRanges: []
