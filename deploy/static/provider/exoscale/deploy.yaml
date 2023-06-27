@@ -416,10 +416,6 @@ spec:
       app.kubernetes.io/component: controller
       app.kubernetes.io/instance: ingress-nginx
       app.kubernetes.io/name: ingress-nginx
-  strategy:
-    rollingUpdate:
-      maxUnavailable: 1
-    type: RollingUpdate
   template:
     metadata:
       labels:
@@ -514,6 +510,10 @@ spec:
       - name: webhook-cert
         secret:
           secretName: ingress-nginx-admission
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
 ---
 apiVersion: batch/v1
 kind: Job
