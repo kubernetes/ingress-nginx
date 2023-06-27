@@ -1388,12 +1388,10 @@ stream {
             {{ end }}
 
             {{/* By default use vhost as Host to upstream, but allow overrides */}}
-            {{ if not (eq $proxySetHeader "grpc_set_header") }}
             {{ if not (empty $location.UpstreamVhost) }}
             {{ $proxySetHeader }} Host                   {{ $location.UpstreamVhost | quote }};
             {{ else }}
             {{ $proxySetHeader }} Host                   $best_http_host;
-            {{ end }}
             {{ end }}
 
             # Pass the extracted client certificate to the backend

@@ -120,6 +120,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 
 		metadata := res.GetMetadata()
 		assert.Equal(ginkgo.GinkgoT(), metadata["content-type"].Values[0], "application/grpc")
+		assert.Equal(ginkgo.GinkgoT(), metadata[":authority"].Values[0], host)
 	})
 
 	ginkgo.It("authorization metadata should be overwritten by external auth response headers", func() {
