@@ -1051,16 +1051,6 @@ const jaegerTmpl = `{
   }
 }`
 
-const datadogTmpl = `{
-  "service": "{{ .DatadogServiceName }}",
-  "agent_host": "{{ .DatadogCollectorHost }}",
-  "agent_port": {{ .DatadogCollectorPort }},
-  "environment": "{{ .DatadogEnvironment }}",
-  "operation_name_override": "{{ .DatadogOperationNameOverride }}",
-  "sample_rate": {{ .DatadogSampleRate }},
-  "dd.priority.sampling": {{ .DatadogPrioritySampling }}
-}`
-
 const otelTmpl = `
 exporter = "otlp"
 processor = "batch"
@@ -1084,37 +1074,66 @@ ratio = {{ .OtelSamplerRatio }}
 parent_based = {{ .OtelSamplerParentBased }}
 `
 
-func createOpentracingCfg(cfg ngx_config.Configuration) error {
-	var tmpl *template.Template
-	var err error
+func datadogOpentracingCfg(cfg ngx_config.Configuration) (string, error) {
+	jsn := map[string]interface{}{
+		"service": cfg.DatadogServiceName,
+		"agent_host": cfg.DatadogCollectorHost,
+		"agent_port": cfg.DatadogCollectorPort,
+		"environment": cfg.DatadogEnvironment,
+		"operation_name_override": cfg.DatadogOperationNameOverride,
+	}
 
-	if cfg.ZipkinCollectorHost != "" {
-		tmpl, err = template.New("zipkin").Parse(zipkinTmpl)
-		if err != nil {
-			return err
-		}
-	} else if cfg.JaegerCollectorHost != "" || cfg.JaegerEndpoint != "" {
-		tmpl, err = template.New("jaeger").Parse(jaegerTmpl)
-		if err != nil {
-			return err
-		}
-	} else if cfg.DatadogCollectorHost != "" {
-		tmpl, err = template.New("datadog").Parse(datadogTmpl)
-		if err != nil {
-			return err
-		}
-	} else {
-		tmpl, _ = template.New("empty").Parse("{}")
+	// Omit "sample_rate" if the configuration's sample rate is set to the
+	// default sentinel value DatadogDynamicSampleRate (-1).
+	// Omitting "sample_rate" from the plugin JSON indicates to the tracer that
+	// it should use dynamic rates instead of a configured rate.
+	if cfg.DatadogSampleRate != ngx_config.DatadogDynamicSampleRate {
+		jsn["sample_rate"] = cfg.DatadogSampleRate
+	}
+
+	jsnBytes, err := json.Marshal(jsn)
+	if err != nil {
+		return "", err
+	}
+
+	return string(jsnBytes), nil
+}
+
+func opentracingCfgFromTemplate(cfg ngx_config.Configuration, tmplName string, tmplText string) (string, error) {
+	tmpl, err := template.New(tmplName).Parse(tmplText)
+	if err != nil {
+		return "", err
 	}
 
 	tmplBuf := bytes.NewBuffer(make([]byte, 0))
 	err = tmpl.Execute(tmplBuf, cfg)
 	if err != nil {
+		return "", err
+	}
+
+	return tmplBuf.String(), nil
+}
+
+func createOpentracingCfg(cfg ngx_config.Configuration) error {
+	var fileContent string
+	var err error
+
+	if cfg.ZipkinCollectorHost != "" {
+		fileContent, err = opentracingCfgFromTemplate(cfg, "zipkin", zipkinTmpl)
+	} else if cfg.JaegerCollectorHost != "" || cfg.JaegerEndpoint != "" {
+		fileContent, err = opentracingCfgFromTemplate(cfg, "jaeger", jaegerTmpl)
+	} else if cfg.DatadogCollectorHost != "" {
+		fileContent, err = datadogOpentracingCfg(cfg)
+	} else {
+		fileContent = "{}"
+	}
+
+	if err != nil {
 		return err
 	}
 
 	// Expand possible environment variables before writing the configuration to file.
-	expanded := os.ExpandEnv(tmplBuf.String())
+	expanded := os.ExpandEnv(fileContent)
 
 	return os.WriteFile("/etc/nginx/opentracing.json", []byte(expanded), file.ReadWriteByUser)
 }

@@ -87,6 +87,11 @@ const (
 	// Parameters for a shared memory zone that will keep states for various keys.
 	// http://nginx.org/en/docs/http/ngx_http_limit_conn_module.html#limit_conn_zone
 	defaultLimitConnZoneVariable = "$binary_remote_addr"
+
+	// Default sentinel value for Configuration.DatadogSampleRate, indicating
+	// that the Datadog tracer should consult the Datadog Agent for sampling
+	// rates rather than use a configured value.
+	DatadogDynamicSampleRate = -1.0
 )
 
 // Configuration represents the content of nginx.conf file
@@ -706,15 +711,8 @@ type Configuration struct {
 	// Default: nginx.handle
 	DatadogOperationNameOverride string `json:"datadog-operation-name-override"`
 
-	// DatadogPrioritySampling specifies to use client-side sampling
-	// If true disables client-side sampling (thus ignoring sample_rate) and enables distributed
-	// priority sampling, where traces are sampled based on a combination of user-assigned
-	// Default: true
-	DatadogPrioritySampling bool `json:"datadog-priority-sampling"`
-
 	// DatadogSampleRate specifies sample rate for any traces created.
-	// This is effective only when datadog-priority-sampling is false
-	// Default: 1.0
+	// Default: use a dynamic rate instead
 	DatadogSampleRate float32 `json:"datadog-sample-rate"`
 
 	// MainSnippet adds custom configuration to the main section of the nginx configuration
@@ -1001,8 +999,7 @@ func NewDefault() Configuration {
 		DatadogEnvironment:                     "prod",
 		DatadogCollectorPort:                   8126,
 		DatadogOperationNameOverride:           "nginx.handle",
-		DatadogSampleRate:                      1.0,
-		DatadogPrioritySampling:                true,
+		DatadogSampleRate:                      DatadogDynamicSampleRate,
 		LimitReqStatusCode:                     503,
 		LimitConnStatusCode:                    503,
 		SyslogPort:                             514,
