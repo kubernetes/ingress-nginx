@@ -1075,7 +1075,7 @@ parent_based = {{ .OtelSamplerParentBased }}
 `
 
 func datadogOpentracingCfg(cfg ngx_config.Configuration) (string, error) {
-	jsn := map[string]interface{}{
+	m := map[string]interface{}{
 		"service": cfg.DatadogServiceName,
 		"agent_host": cfg.DatadogCollectorHost,
 		"agent_port": cfg.DatadogCollectorPort,
@@ -1087,15 +1087,15 @@ func datadogOpentracingCfg(cfg ngx_config.Configuration) (string, error) {
 	// Omitting "sample_rate" from the plugin JSON indicates to the tracer that
 	// it should use dynamic rates instead of a configured rate.
 	if cfg.DatadogSampleRate != nil {
-		jsn["sample_rate"] = *cfg.DatadogSampleRate
+		m["sample_rate"] = *cfg.DatadogSampleRate
 	}
 
-	jsnBytes, err := json.Marshal(jsn)
+	buf, err := json.Marshal(m)
 	if err != nil {
 		return "", err
 	}
 
-	return string(jsnBytes), nil
+	return string(buf), nil
 }
 
 func opentracingCfgFromTemplate(cfg ngx_config.Configuration, tmplName string, tmplText string) (string, error) {
@@ -1114,17 +1114,17 @@ func opentracingCfgFromTemplate(cfg ngx_config.Configuration, tmplName string, t
 }
 
 func createOpentracingCfg(cfg ngx_config.Configuration) error {
-	var fileContent string
+	var configData string
 	var err error
 
 	if cfg.ZipkinCollectorHost != "" {
-		fileContent, err = opentracingCfgFromTemplate(cfg, "zipkin", zipkinTmpl)
+		configData, err = opentracingCfgFromTemplate(cfg, "zipkin", zipkinTmpl)
 	} else if cfg.JaegerCollectorHost != "" || cfg.JaegerEndpoint != "" {
-		fileContent, err = opentracingCfgFromTemplate(cfg, "jaeger", jaegerTmpl)
+		configData, err = opentracingCfgFromTemplate(cfg, "jaeger", jaegerTmpl)
 	} else if cfg.DatadogCollectorHost != "" {
-		fileContent, err = datadogOpentracingCfg(cfg)
+		configData, err = datadogOpentracingCfg(cfg)
 	} else {
-		fileContent = "{}"
+		configData = "{}"
 	}
 
 	if err != nil {
@@ -1132,7 +1132,7 @@ func createOpentracingCfg(cfg ngx_config.Configuration) error {
 	}
 
 	// Expand possible environment variables before writing the configuration to file.
-	expanded := os.ExpandEnv(fileContent)
+	expanded := os.ExpandEnv(configData)
 
 	return os.WriteFile("/etc/nginx/opentracing.json", []byte(expanded), file.ReadWriteByUser)
 }
