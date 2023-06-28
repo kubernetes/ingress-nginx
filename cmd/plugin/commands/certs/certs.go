@@ -46,7 +46,9 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	}
 
 	cmd.Flags().String("host", "", "Get the cert for this hostname")
-	cobra.MarkFlagRequired(cmd.Flags(), "host")
+	if err := cobra.MarkFlagRequired(cmd.Flags(), "host"); err != nil {
+		fmt.Printf("error marking flag as required: %v", err)
+	}
 	pod = util.AddPodFlag(cmd)
 	deployment = util.AddDeploymentFlag(cmd)
 	selector = util.AddSelectorFlag(cmd)

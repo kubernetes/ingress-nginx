@@ -92,7 +92,11 @@ func TestStore(t *testing.T) {
 
 	emptySelector, _ := labels.Parse("")
 
-	defer te.Stop()
+	defer func() {
+		if err := te.Stop(); err != nil {
+			t.Errorf("error: %v", err)
+		}
+	}()
 
 	clientSet, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
@@ -1377,14 +1381,18 @@ func TestUpdateSecretIngressMap(t *testing.T) {
 			Namespace: "testns",
 		},
 	}
-	s.listers.Ingress.Add(ingTpl)
+	if err := s.listers.Ingress.Add(ingTpl); err != nil {
+		t.Errorf("error adding the Ingress template: %v", err)
+	}
 
 	t.Run("with TLS secret", func(t *testing.T) {
 		ing := ingTpl.DeepCopy()
 		ing.Spec = networking.IngressSpec{
 			TLS: []networking.IngressTLS{{SecretName: "tls"}},
 		}
-		s.listers.Ingress.Update(ing)
+		if err := s.listers.Ingress.Update(ing); err != nil {
+			t.Errorf("error updating the Ingress: %v", err)
+		}
 		s.updateSecretIngressMap(ing)
 
 		if l := s.secretIngressMap.Len(); !(l == 1 && s.secretIngressMap.Has("testns/tls")) {
@@ -1397,7 +1405,9 @@ func TestUpdateSecretIngressMap(t *testing.T) {
 		ing.ObjectMeta.SetAnnotations(map[string]string{
 			parser.GetAnnotationWithPrefix("auth-secret"): "auth",
 		})
-		s.listers.Ingress.Update(ing)
+		if err := s.listers.Ingress.Update(ing); err != nil {
+			t.Errorf("error updating the Ingress: %v", err)
+		}
 		s.updateSecretIngressMap(ing)
 
 		if l := s.secretIngressMap.Len(); !(l == 1 && s.secretIngressMap.Has("testns/auth")) {
@@ -1410,7 +1420,9 @@ func TestUpdateSecretIngressMap(t *testing.T) {
 		ing.ObjectMeta.SetAnnotations(map[string]string{
 			parser.GetAnnotationWithPrefix("auth-secret"): "otherns/auth",
 		})
-		s.listers.Ingress.Update(ing)
+		if err := s.listers.Ingress.Update(ing); err != nil {
+			t.Errorf("error updating the Ingress: %v", err)
+		}
 		s.updateSecretIngressMap(ing)
 
 		if l := s.secretIngressMap.Len(); !(l == 1 && s.secretIngressMap.Has("otherns/auth")) {
@@ -1423,7 +1435,9 @@ func TestUpdateSecretIngressMap(t *testing.T) {
 		ing.ObjectMeta.SetAnnotations(map[string]string{
 			parser.GetAnnotationWithPrefix("auth-secret"): "ns/name/garbage",
 		})
-		s.listers.Ingress.Update(ing)
+		if err := s.listers.Ingress.Update(ing); err != nil {
+			t.Errorf("error updating the Ingress: %v", err)
+		}
 		s.updateSecretIngressMap(ing)
 
 		if l := s.secretIngressMap.Len(); l != 0 {
@@ -1457,7 +1471,9 @@ func TestListIngresses(t *testing.T) {
 			},
 		},
 	}
-	s.listers.IngressWithAnnotation.Add(ingressToIgnore)
+	if err := s.listers.IngressWithAnnotation.Add(ingressToIgnore); err != nil {
+		t.Errorf("error adding the Ingress: %v", err)
+	}
 
 	ingressWithoutPath := &ingress.Ingress{
 		Ingress: networking.Ingress{
@@ -1492,8 +1508,9 @@ func TestListIngresses(t *testing.T) {
 			},
 		},
 	}
-	s.listers.IngressWithAnnotation.Add(ingressWithoutPath)
-
+	if err := s.listers.IngressWithAnnotation.Add(ingressWithoutPath); err != nil {
+		t.Errorf("error adding the Ingress: %v", err)
+	}
 	ingressWithNginxClassAnnotation := &ingress.Ingress{
 		Ingress: networking.Ingress{
 			ObjectMeta: metav1.ObjectMeta{
@@ -1531,8 +1548,9 @@ func TestListIngresses(t *testing.T) {
 			},
 		},
 	}
-	s.listers.IngressWithAnnotation.Add(ingressWithNginxClassAnnotation)
-
+	if err := s.listers.IngressWithAnnotation.Add(ingressWithNginxClassAnnotation); err != nil {
+		t.Errorf("error adding the Ingress: %v", err)
+	}
 	ingresses := s.ListIngresses()
 
 	if s := len(ingresses); s != 3 {
