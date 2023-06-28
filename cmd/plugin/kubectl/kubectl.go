@@ -77,7 +77,7 @@ func execToWriter(args []string, writer io.Writer) error {
 		return err
 	}
 
-	go func ()  {
+	go func() {
 		if _, err := io.Copy(writer, op); err != nil {
 			fmt.Printf("Error copying output: %v\n", err)
 		}
