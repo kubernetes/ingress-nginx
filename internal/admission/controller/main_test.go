@@ -114,7 +114,9 @@ func TestHandleAdmission(t *testing.T) {
 		err: fmt.Errorf("this is a test error"),
 	}
 
-	adm.HandleAdmission(review)
+	if _, err := adm.HandleAdmission(review); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	if review.Response.Allowed {
 		t.Fatalf("when the checker returns an error, the request should not be allowed")
 	}
@@ -124,7 +126,9 @@ func TestHandleAdmission(t *testing.T) {
 		err: nil,
 	}
 
-	adm.HandleAdmission(review)
+	if _, err := adm.HandleAdmission(review); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	if !review.Response.Allowed {
 		t.Fatalf("when the checker returns no error, the request should be allowed")
 	}

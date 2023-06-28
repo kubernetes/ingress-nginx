@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"math/rand"
+	"crypto/rand"
 	"testing"
 	"time"
 

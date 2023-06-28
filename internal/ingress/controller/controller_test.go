@@ -158,7 +158,7 @@ func (fakeTemplate) Write(conf ngx_config.TemplateConfig) ([]byte, error) {
 
 func TestCheckIngress(t *testing.T) {
 	defer func() {
-		filepath.Walk(os.TempDir(), func(path string, info os.FileInfo, err error) error {
+		err := filepath.Walk(os.TempDir(), func(path string, info os.FileInfo, err error) error {
 			if info.IsDir() && os.TempDir() != path {
 				return filepath.SkipDir
 			}
@@ -167,6 +167,9 @@ func TestCheckIngress(t *testing.T) {
 			}
 			return nil
 		})
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
 	}()
 
 	err := file.CreateRequiredDirectories()
@@ -176,9 +179,13 @@ func TestCheckIngress(t *testing.T) {
 
 	// Ensure no panic with wrong arguments
 	var nginx *NGINXController
-	nginx.CheckIngress(nil)
+	if err := nginx.CheckIngress(nil); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	nginx = newNGINXController(t)
-	nginx.CheckIngress(nil)
+	if err := nginx.CheckIngress(nil); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	nginx.metricCollector = metric.DummyCollector{}
 
 	nginx.t = fakeTemplate{}
