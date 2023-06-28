@@ -22,7 +22,7 @@ fi
 set -o nounset
 set -o pipefail
 
-K8S_VERSION="1.22"
+K8S_VERSION="1.26"
 
 DIR=$(cd $(dirname "${BASH_SOURCE}")/.. && pwd -P)
 
