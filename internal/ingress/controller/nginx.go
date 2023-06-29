@@ -1076,10 +1076,10 @@ parent_based = {{ .OtelSamplerParentBased }}
 
 func datadogOpentracingCfg(cfg ngx_config.Configuration) (string, error) {
 	m := map[string]interface{}{
-		"service": cfg.DatadogServiceName,
-		"agent_host": cfg.DatadogCollectorHost,
-		"agent_port": cfg.DatadogCollectorPort,
-		"environment": cfg.DatadogEnvironment,
+		"service":                 cfg.DatadogServiceName,
+		"agent_host":              cfg.DatadogCollectorHost,
+		"agent_port":              cfg.DatadogCollectorPort,
+		"environment":             cfg.DatadogEnvironment,
 		"operation_name_override": cfg.DatadogOperationNameOverride,
 	}
 
