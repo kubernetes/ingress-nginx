@@ -103,9 +103,7 @@ func TestNginxCheck(t *testing.T) {
 				}
 			}()
 			go func() {
-				if err := cmd.Wait(); err != nil {
-					t.Errorf("unexpected error waiting for the process: %v", err)
-				}
+				cmd.Wait() //nolint:errcheck
 			}()
 
 			if _, err := pidFile.Write([]byte(fmt.Sprintf("%v", pid))); err != nil {
@@ -123,9 +121,7 @@ func TestNginxCheck(t *testing.T) {
 			})
 
 			// pollute pid file
-			if _, err := pidFile.Write([]byte("999999")); err != nil {
-				t.Errorf("unexpected error polluting the pid file: %v", err)
-			}
+			pidFile.Write([]byte("999999")) //nolint:errcheck
 			pidFile.Close()
 
 			t.Run("bad pid", func(t *testing.T) {

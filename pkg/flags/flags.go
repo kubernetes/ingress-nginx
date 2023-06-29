@@ -228,17 +228,8 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 	flags.IntVar(&nginx.MaxmindRetriesCount, "maxmind-retries-count", 1, "Number of attempts to download the GeoIP DB.")
 	flags.DurationVar(&nginx.MaxmindRetriesTimeout, "maxmind-retries-timeout", time.Second*0, "Maxmind downloading delay between 1st and 2nd attempt, 0s - do not retry to download if something went wrong.")
 
-	if err := flag.Set("logtostderr", "true"); err != nil {
-		return false, nil, err
-	}
 	flags.AddGoFlagSet(flag.CommandLine)
 	if err := flags.Parse(os.Args); err != nil {
-		return false, nil, err
-	}
-
-	// Workaround for this issue:
-	// https://github.com/kubernetes/kubernetes/issues/17162
-	if err := flag.CommandLine.Parse([]string{}); err != nil {
 		return false, nil, err
 	}
 
