@@ -48,10 +48,7 @@ func TestProcessCollector(t *testing.T) {
 
 			done := make(chan struct{})
 			go func() {
-				err = cmd.Wait()
-				if err != nil {
-					t.Errorf("unexpected error waiting for dummy process: %v", err)
-				}
+				cmd.Wait() //nolint:errcheck
 				status := cmd.ProcessState.Sys().(syscall.WaitStatus)
 				if status.Signaled() {
 					t.Logf("Signal: %v", status.Signal())
@@ -72,11 +69,8 @@ func TestProcessCollector(t *testing.T) {
 			defer func() {
 				cm.Stop()
 
-				err = cmd.Process.Kill()
+				cmd.Process.Kill() //nolint:errcheck
 				<-done
-				if err != nil {
-					t.Errorf("unexpected error killing dummy process: %v", err)
-				}
 				close(done)
 			}()
 

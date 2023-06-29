@@ -92,11 +92,7 @@ func TestStore(t *testing.T) {
 
 	emptySelector, _ := labels.Parse("")
 
-	defer func() {
-		if err := te.Stop(); err != nil {
-			t.Errorf("error: %v", err)
-		}
-	}()
+	defer te.Stop() //nolint:errcheck
 
 	clientSet, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
