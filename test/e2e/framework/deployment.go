@@ -47,7 +47,7 @@ const NIPService = "external-nip"
 var HTTPBunImage = os.Getenv("HTTPBUN_IMAGE")
 
 // EchoImage is the default image to be used by the echo service
-const EchoImage = "registry.k8s.io/ingress-nginx/e2e-test-echo@sha256:4938d1d91a2b7d19454460a8c1b010b89f6ff92d2987fd889ac3e8fc3b70d91a"
+const EchoImage = "registry.k8s.io/ingress-nginx/e2e-test-echo@sha256:d9c4240efb797beeaa7d4a28314a6c982469da1de0a62645c4c72d4f3fa338ee"
 
 // TODO: change all Deployment functions to use these options
 // in order to reduce complexity and have a unified API accross the
@@ -220,7 +220,7 @@ func (f *Framework) NewHttpbunDeployment(opts ...func(*deploymentOptions)) strin
 		80,
 		int32(options.replicas),
 		nil, nil,
-		//Required to get hostname information
+		// Required to get hostname information
 		[]corev1.EnvVar{
 			{
 				Name:  "HTTPBUN_INFO_ENABLED",
@@ -494,7 +494,8 @@ func (f *Framework) NewGRPCBinDeployment() {
 }
 
 func newDeployment(name, namespace, image string, port int32, replicas int32, command []string, args []string, env []corev1.EnvVar,
-	volumeMounts []corev1.VolumeMount, volumes []corev1.Volume, setProbe bool) *appsv1.Deployment {
+	volumeMounts []corev1.VolumeMount, volumes []corev1.Volume, setProbe bool,
+) *appsv1.Deployment {
 	probe := &corev1.Probe{
 		InitialDelaySeconds: 2,
 		PeriodSeconds:       1,
