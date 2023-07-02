@@ -736,9 +736,6 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 	case "GRPCS":
 		proto = "grpcs://"
 		proxyPass = "grpc_pass"
-	case "AJP":
-		proto = ""
-		proxyPass = "ajp_pass"
 	case "FCGI":
 		proto = ""
 		proxyPass = "fastcgi_pass"

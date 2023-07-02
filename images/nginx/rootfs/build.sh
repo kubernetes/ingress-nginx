@@ -80,11 +80,6 @@ export LUA_CJSON_VERSION=2.1.0.10
 # Check for recent changes: https://github.com/leev/ngx_http_geoip2_module/compare/3.3...master
 export GEOIP2_VERSION=a26c6beed77e81553686852dceb6c7fdacc5970d
 
-# Check for recent changes: https://github.com/msva/nginx_ajp_module/compare/fcbb2ccca4901d317ecd7a9dabb3fec9378ff40f...master
-# This is a fork from https://github.com/yaoweibin/nginx_ajp_module
-# Since it has not been updated and is not compatible with NGINX 1.21
-export NGINX_AJP_VERSION=fcbb2ccca4901d317ecd7a9dabb3fec9378ff40f
-
 # Check for recent changes: https://github.com/openresty/luajit2/compare/v2.1-20220411...v2.1-agentzh
 export LUAJIT_VERSION=2.1-20220411
 
@@ -270,9 +265,6 @@ get_src 8d39c6b23f941a2d11571daaccc04e69539a3fcbcc50a631837560d5861a7b96 \
 
 get_src 4c1933434572226942c65b2f2b26c8a536ab76aa771a3c7f6c2629faa764976b \
         "https://github.com/leev/ngx_http_geoip2_module/archive/$GEOIP2_VERSION.tar.gz"
-
-get_src 778fcca851bd69dabfb382dc827d2ee07662f7eca36b5e66e67d5512bad75ef8 \
-        "https://github.com/msva/nginx_ajp_module/archive/$NGINX_AJP_VERSION.tar.gz"
 
 get_src 5d16e623d17d4f42cc64ea9cfb69ca960d313e12f5d828f785dd227cc483fcbd \
         "https://github.com/openresty/lua-resty-upload/archive/v$LUA_RESTY_UPLOAD_VERSION.tar.gz"
@@ -633,7 +625,6 @@ WITH_MODULES=" \
   --add-module=$BUILD_PATH/lua-nginx-module-$LUA_NGX_VERSION \
   --add-module=$BUILD_PATH/stream-lua-nginx-module-$LUA_STREAM_NGX_VERSION \
   --add-module=$BUILD_PATH/lua-upstream-nginx-module-$LUA_UPSTREAM_VERSION \
-  --add-module=$BUILD_PATH/nginx_ajp_module-${NGINX_AJP_VERSION} \
   --add-dynamic-module=$BUILD_PATH/nginx-http-auth-digest-$NGINX_DIGEST_AUTH \
   --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/opentracing \
   --add-dynamic-module=$BUILD_PATH/ModSecurity-nginx-$MODSECURITY_VERSION \

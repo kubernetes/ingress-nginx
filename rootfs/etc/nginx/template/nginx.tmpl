@@ -307,7 +307,6 @@ http {
     client_body_temp_path           /tmp/nginx/client-body;
     fastcgi_temp_path               /tmp/nginx/fastcgi-temp;
     proxy_temp_path                 /tmp/nginx/proxy-temp;
-    ajp_temp_path                   /tmp/nginx/ajp-temp;
 
     client_header_buffer_size       {{ $cfg.ClientHeaderBufferSize }};
     client_header_timeout           {{ $cfg.ClientHeaderTimeout }}s;
