@@ -48,7 +48,7 @@ func TestProcessCollector(t *testing.T) {
 
 			done := make(chan struct{})
 			go func() {
-				cmd.Wait()
+				cmd.Wait() //nolint:errcheck
 				status := cmd.ProcessState.Sys().(syscall.WaitStatus)
 				if status.Signaled() {
 					t.Logf("Signal: %v", status.Signal())
@@ -69,7 +69,7 @@ func TestProcessCollector(t *testing.T) {
 			defer func() {
 				cm.Stop()
 
-				cmd.Process.Kill()
+				cmd.Process.Kill() //nolint:errcheck
 				<-done
 				close(done)
 			}()

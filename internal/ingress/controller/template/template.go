@@ -18,13 +18,14 @@ package template
 
 import (
 	"bytes"
+	"crypto/rand"
 	"crypto/sha1" // #nosec
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/rand" // #nosec
+	"math/big"
 	"net"
 	"net/url"
 	"os"
@@ -34,7 +35,6 @@ import (
 	"strconv"
 	"strings"
 	text_template "text/template"
-	"time"
 
 	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -1184,14 +1184,15 @@ func buildAuthSignURLLocation(location, authSignURL string) string {
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
 func randomString() string {
 	b := make([]rune, 32)
 	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))] // #nosec
+		idx, err := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
+		if err != nil {
+			klog.Errorf("unexpected error generating random index: %v", err)
+			return ""
+		}
+		b[i] = letters[idx.Int64()]
 	}
 
 	return string(b)

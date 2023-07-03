@@ -767,7 +767,9 @@ func BenchmarkTemplateWithData(b *testing.B) {
 	}
 
 	for i := 0; i < b.N; i++ {
-		ngxTpl.Write(dat)
+		if _, err := ngxTpl.Write(dat); err != nil {
+			b.Errorf("unexpected error writing template: %v", err)
+		}
 	}
 }
 

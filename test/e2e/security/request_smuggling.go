@@ -79,7 +79,9 @@ func smugglingRequest(host, addr string, port int) (string, error) {
 
 	defer conn.Close()
 
-	conn.SetDeadline(time.Now().Add(time.Second * 10))
+	if err := conn.SetDeadline(time.Now().Add(time.Second * 10)); err != nil {
+		return "", err
+	}
 
 	_, err = fmt.Fprintf(conn, "GET /echo HTTP/1.1\r\nHost: %v\r\nContent-Length: 56\r\n\r\nGET /_hidden/index.html HTTP/1.1\r\nHost: notlocalhost\r\n\r\n", host)
 	if err != nil {
