@@ -56,15 +56,8 @@ type deploymentOptions struct {
 	name           string
 	namespace      string
 	image          string
-	port           int32
 	replicas       int
-	command        []string
-	args           []string
-	env            []corev1.EnvVar
-	volumeMounts   []corev1.VolumeMount
-	volumes        []corev1.Volume
 	svcAnnotations map[string]string
-	setProbe       bool
 }
 
 // WithDeploymentNamespace allows configuring the deployment's namespace

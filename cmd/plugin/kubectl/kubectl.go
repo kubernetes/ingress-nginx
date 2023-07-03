@@ -77,7 +77,9 @@ func execToWriter(args []string, writer io.Writer) error {
 		return err
 	}
 
-	go io.Copy(writer, op)
+	go func() {
+		io.Copy(writer, op) //nolint:errcheck
+	}()
 	err = cmd.Run()
 	if err != nil {
 		return err
