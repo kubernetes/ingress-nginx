@@ -374,6 +374,7 @@ type IngressChartValue struct {
 			LoadBalancerSourceRanges []interface{} `yaml:"loadBalancerSourceRanges"`
 			EnableHTTP               bool          `yaml:"enableHttp"`
 			EnableHTTPS              bool          `yaml:"enableHttps"`
+			EnableHTTP2              bool          `yaml:"enableHttp2"`
 			IPFamilyPolicy           string        `yaml:"ipFamilyPolicy"`
 			IPFamilies               []string      `yaml:"ipFamilies"`
 			Ports                    struct {
