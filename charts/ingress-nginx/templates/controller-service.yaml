@@ -64,13 +64,17 @@ spec:
       nodePort: {{ .Values.controller.service.nodePorts.http }}
     {{- end }}
   {{- end }}
-  {{- if .Values.controller.service.enableHttps }}
+  {{- if or (.Values.controller.service.enableHttps) (.Values.controller.service.enableHttp2) }}
     - name: https
       port: {{ .Values.controller.service.ports.https }}
       protocol: TCP
       targetPort: {{ .Values.controller.service.targetPorts.https }}
     {{- if and (semverCompare ">=1.20" .Capabilities.KubeVersion.Version) (.Values.controller.service.appProtocol) }}
+    {{- if (.Values.controller.service.enableHttp2) }}
+      appProtocol: http2
+    {{- else }}
       appProtocol: https
+    {{- end }}
     {{- end }}
     {{- if (and $setNodePorts (not (empty .Values.controller.service.nodePorts.https))) }}
       nodePort: {{ .Values.controller.service.nodePorts.https }}
