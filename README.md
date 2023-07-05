@@ -38,6 +38,7 @@ the versions listed. Ingress-Nginx versions may work on older versions but the p
 
 |    | Ingress-NGINX version | k8s supported version        | Alpine Version | Nginx Version | Helm Chart Version |
 |:--:|-----------------------|------------------------------|----------------|---------------|--------------------|
+| 🔄 | **v1.8.1**            | 1.27,1.26, 1.25, 1.24        | 3.18.2         | 1.21.6        | 4.7.*              |
 | 🔄 | **v1.8.0**            | 1.27,1.26, 1.25, 1.24        | 3.18.0         | 1.21.6        | 4.7.*              |
 | 🔄 | **v1.7.1**            | 1.27,1.26, 1.25, 1.24        | 3.17.2         | 1.21.6        | 4.6.*              |
 | 🔄 | **v1.7.0**            | 1.26, 1.25, 1.24             | 3.17.2         | 1.21.6        | 4.6.*              |
@@ -77,11 +78,11 @@ Thanks for taking the time to join our community and start contributing!
   - Read [`CONTRIBUTING.md`](CONTRIBUTING.md) for information about setting up your environment, the workflow that we
     expect, and instructions on the developer certificate of origin that we require.
   - Join our Kubernetes Slack channel for developer discussion : [#ingress-nginx-dev](https://kubernetes.slack.com/archives/C021E147ZA4).
-  - Submit GitHub issues for any feature enhancements, bugs or documentation problems. 
+  - Submit GitHub issues for any feature enhancements, bugs or documentation problems.
     - Please make sure to read the [Issue Reporting Checklist](https://github.com/kubernetes/ingress-nginx/blob/main/CONTRIBUTING.md#issue-reporting-guidelines) before opening an issue. Issues not conforming to the guidelines **may be closed immediately**.
   - Join our [ingress-nginx-dev mailing list](https://groups.google.com/a/kubernetes.io/g/ingress-nginx-dev/c/ebbBMo-zX-w)
 
-- **Support**: 
+- **Support**:
   - Join the [#ingress-nginx-users](https://kubernetes.slack.com/messages/CANQGM8BA/) channel inside the [Kubernetes Slack](http://slack.kubernetes.io/) to ask questions or get support from the maintainers and other users.
   - The [GitHub issues](https://github.com/kubernetes/ingress-nginx/issues) in the repository are **exclusively** for bug reports and feature requests.
   - **Discuss**: Tweet using the `#IngressNginx` hashtag or sharing with us [@IngressNginx](https://twitter.com/IngressNGINX).
