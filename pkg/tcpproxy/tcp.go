@@ -119,7 +119,9 @@ func (p *TCPProxy) Handle(conn net.Conn) {
 
 func pipe(client, server net.Conn) {
 	doCopy := func(s, c net.Conn, cancel chan<- bool) {
-		io.Copy(s, c)
+		if _, err := io.Copy(s, c); err != nil {
+			klog.Errorf("Error copying data: %v", err)
+		}
 		cancel <- true
 	}
 

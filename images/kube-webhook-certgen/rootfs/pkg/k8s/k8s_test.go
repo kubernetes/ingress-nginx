@@ -3,8 +3,8 @@ package k8s
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"errors"
-	"math/rand"
 	"testing"
 	"time"
 

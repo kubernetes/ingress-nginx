@@ -17,14 +17,12 @@ limitations under the License.
 package settings
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
@@ -33,7 +31,7 @@ var _ = framework.IngressNginxDescribe("[Flag] custom HTTP and HTTPS ports", fun
 
 	host := "forwarded-headers"
 
-	f := framework.NewDefaultFramework("forwarded-port-headers")
+	f := framework.NewDefaultFramework("forwarded-port-headers", framework.WithHTTPBunEnabled())
 
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
@@ -92,27 +90,14 @@ var _ = framework.IngressNginxDescribe("[Flag] custom HTTP and HTTPS ports", fun
 				Expect().
 				Status(http.StatusOK).
 				Body().
-				Contains(fmt.Sprintf("x-forwarded-port=443"))
+				Contains("x-forwarded-port=443")
 		})
 
 		ginkgo.Context("when external authentication is configured", func() {
 
 			ginkgo.It("should set the X-Forwarded-Port header to 443", func() {
-				f.NewHttpbunDeployment()
-
-				err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBunService, f.Namespace, 1)
-				assert.Nil(ginkgo.GinkgoT(), err)
-
-				e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(context.TODO(), framework.HTTPBunService, metav1.GetOptions{})
-				assert.Nil(ginkgo.GinkgoT(), err)
-
-				assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets), 1, "expected at least one endpoint")
-				assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets[0].Addresses), 1, "expected at least one address ready in the endpoint")
-
-				httpbunIP := e.Subsets[0].Addresses[0].IP
-
 				annotations := map[string]string{
-					"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/basic-auth/user/password", httpbunIP),
+					"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/basic-auth/user/password", f.HTTPBunIP),
 					"nginx.ingress.kubernetes.io/auth-signin": "http://$host/auth/start",
 				}
 
@@ -141,7 +126,7 @@ var _ = framework.IngressNginxDescribe("[Flag] custom HTTP and HTTPS ports", fun
 					Expect().
 					Status(http.StatusOK).
 					Body().
-					Contains(fmt.Sprintf("x-forwarded-port=443"))
+					Contains("x-forwarded-port=443")
 			})
 		})
 	})

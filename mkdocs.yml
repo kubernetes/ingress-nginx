@@ -127,6 +127,7 @@ nav:
       - TLS termination: "examples/tls-termination/README.md"
       - Pod Security Policy (PSP): "examples/psp/README.md"
       - Open Policy Agent rules: "examples/openpolicyagent/README.md"
+      - Canary Deployments: "examples/canary/README.md"
   - Developer Guide:
       - Getting Started: "developer-guide/getting-started.md"
       - Code Overview: "developer-guide/code-overview.md"

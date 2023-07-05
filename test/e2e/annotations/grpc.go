@@ -29,7 +29,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
-	core "k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -38,7 +37,7 @@ import (
 )
 
 var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
-	f := framework.NewDefaultFramework("grpc")
+	f := framework.NewDefaultFramework("grpc", framework.WithHTTPBunEnabled())
 
 	ginkgo.It("should use grpc_pass in the configuration file", func() {
 		f.NewGRPCFortuneTellerDeployment()
@@ -70,7 +69,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 
 		host := "echo"
 
-		svc := &core.Service{
+		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "grpcbin-test",
 				Namespace: f.Namespace,
@@ -121,15 +120,14 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 
 		metadata := res.GetMetadata()
 		assert.Equal(ginkgo.GinkgoT(), metadata["content-type"].Values[0], "application/grpc")
+		assert.Equal(ginkgo.GinkgoT(), metadata[":authority"].Values[0], host)
 	})
 
 	ginkgo.It("authorization metadata should be overwritten by external auth response headers", func() {
 		f.NewGRPCBinDeployment()
-		f.NewHttpbunDeployment()
-
 		host := "echo"
 
-		svc := &core.Service{
+		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "grpcbin-test",
 				Namespace: f.Namespace,
@@ -149,19 +147,8 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 		}
 		f.EnsureService(svc)
 
-		err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBunService, f.Namespace, 1)
-		assert.Nil(ginkgo.GinkgoT(), err)
-
-		e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(context.TODO(), framework.HTTPBunService, metav1.GetOptions{})
-		assert.Nil(ginkgo.GinkgoT(), err)
-
-		assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets), 1, "expected at least one endpoint")
-		assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets[0].Addresses), 1, "expected at least one address ready in the endpoint")
-
-		httpbunIP := e.Subsets[0].Addresses[0].IP
-
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/auth-url":              fmt.Sprintf("http://%s/response-headers?authorization=foo", httpbunIP),
+			"nginx.ingress.kubernetes.io/auth-url":              fmt.Sprintf("http://%s/response-headers?authorization=foo", f.HTTPBunIP),
 			"nginx.ingress.kubernetes.io/auth-response-headers": "Authorization",
 			"nginx.ingress.kubernetes.io/backend-protocol":      "GRPC",
 		}
@@ -201,7 +188,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 
 		host := "echo"
 
-		svc := &core.Service{
+		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "grpcbin-test",
 				Namespace: f.Namespace,

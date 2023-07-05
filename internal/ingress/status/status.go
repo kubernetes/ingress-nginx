@@ -95,10 +95,13 @@ func (s statusSync) Run(stopCh chan struct{}) {
 
 	// when this instance is the leader we need to enqueue
 	// an item to trigger the update of the Ingress status.
-	wait.PollUntil(time.Duration(UpdateInterval)*time.Second, func() (bool, error) {
+	err := wait.PollUntil(time.Duration(UpdateInterval)*time.Second, func() (bool, error) {
 		s.syncQueue.EnqueueTask(task.GetDummyObject("sync status"))
 		return false, nil
 	}, stopCh)
+	if err != nil {
+		klog.ErrorS(err, "error running poll")
+	}
 }
 
 // Shutdown stops the sync. In case the instance is the leader it will remove the current IP

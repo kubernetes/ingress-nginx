@@ -76,7 +76,10 @@ func TestNginxCheck(t *testing.T) {
 			})
 
 			// create pid file
-			os.MkdirAll("/tmp/nginx", file.ReadWriteExecuteByUser)
+			if err := os.MkdirAll("/tmp/nginx", file.ReadWriteExecuteByUser); err != nil {
+				t.Errorf("unexpected error creating pid file: %v", err)
+			}
+
 			pidFile, err := os.Create(nginx.PID)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
@@ -90,14 +93,23 @@ func TestNginxCheck(t *testing.T) {
 
 			// start dummy process to use the PID
 			cmd := exec.Command("sleep", "3600")
-			cmd.Start()
+			if err := cmd.Start(); err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
 			pid := cmd.Process.Pid
-			defer cmd.Process.Kill()
+			defer func() {
+				if err := cmd.Process.Kill(); err != nil {
+					t.Errorf("unexpected error killing the process: %v", err)
+				}
+			}()
 			go func() {
-				cmd.Wait()
+				cmd.Wait() //nolint:errcheck
 			}()
 
-			pidFile.Write([]byte(fmt.Sprintf("%v", pid)))
+			if _, err := pidFile.Write([]byte(fmt.Sprintf("%v", pid))); err != nil {
+				t.Errorf("unexpected error writing the pid file: %v", err)
+			}
+
 			pidFile.Close()
 
 			healthz.InstallPathHandler(mux, tt.healthzPath, n)
@@ -109,7 +121,7 @@ func TestNginxCheck(t *testing.T) {
 			})
 
 			// pollute pid file
-			pidFile.Write([]byte(fmt.Sprint("999999")))
+			pidFile.Write([]byte("999999")) //nolint:errcheck
 			pidFile.Close()
 
 			t.Run("bad pid", func(t *testing.T) {

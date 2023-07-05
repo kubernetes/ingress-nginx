@@ -18,13 +18,14 @@ package template
 
 import (
 	"bytes"
+	"crypto/rand"
 	"crypto/sha1" // #nosec
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/rand" // #nosec
+	"math/big"
 	"net"
 	"net/url"
 	"os"
@@ -34,7 +35,6 @@ import (
 	"strconv"
 	"strings"
 	text_template "text/template"
-	"time"
 
 	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -736,9 +736,6 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 	case "GRPCS":
 		proto = "grpcs://"
 		proxyPass = "grpc_pass"
-	case "AJP":
-		proto = ""
-		proxyPass = "ajp_pass"
 	case "FCGI":
 		proto = ""
 		proxyPass = "fastcgi_pass"
@@ -1187,14 +1184,15 @@ func buildAuthSignURLLocation(location, authSignURL string) string {
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
 func randomString() string {
 	b := make([]rune, 32)
 	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))] // #nosec
+		idx, err := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
+		if err != nil {
+			klog.Errorf("unexpected error generating random index: %v", err)
+			return ""
+		}
+		b[i] = letters[idx.Int64()]
 	}
 
 	return string(b)
@@ -1727,7 +1725,7 @@ func buildMirrorLocations(locs []*ingress.Location) string {
 	mapped := sets.Set[string]{}
 
 	for _, loc := range locs {
-		if loc.Mirror.Source == "" || loc.Mirror.Target == "" {
+		if loc.Mirror.Source == "" || loc.Mirror.Target == "" || loc.Mirror.Host == "" {
 			continue
 		}
 
@@ -1738,8 +1736,8 @@ func buildMirrorLocations(locs []*ingress.Location) string {
 		mapped.Insert(loc.Mirror.Source)
 		buffer.WriteString(fmt.Sprintf(`location = %v {
 internal;
-proxy_set_header Host %v;
-proxy_pass %v;
+proxy_set_header Host "%v";
+proxy_pass "%v";
 }
 
 `, loc.Mirror.Source, loc.Mirror.Host, loc.Mirror.Target))

@@ -59,7 +59,9 @@ func TestEndpointSliceLister(t *testing.T) {
 				},
 			},
 		}
-		el.Add(endpointSlice)
+		if err := el.Add(endpointSlice); err != nil {
+			t.Errorf("unexpected error %v", err)
+		}
 		endpointSlice = &discoveryv1.EndpointSlice{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "namespace",
@@ -69,7 +71,9 @@ func TestEndpointSliceLister(t *testing.T) {
 				},
 			},
 		}
-		el.Add(endpointSlice)
+		if err := el.Add(endpointSlice); err != nil {
+			t.Errorf("unexpected error %v", err)
+		}
 		endpointSlice = &discoveryv1.EndpointSlice{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "namespace",
@@ -79,7 +83,9 @@ func TestEndpointSliceLister(t *testing.T) {
 				},
 			},
 		}
-		el.Add(endpointSlice)
+		if err := el.Add(endpointSlice); err != nil {
+			t.Errorf("unexpected error %v", err)
+		}
 		eps, err := el.MatchByKey(key)
 
 		if err != nil {
@@ -108,7 +114,9 @@ func TestEndpointSliceLister(t *testing.T) {
 				},
 			},
 		}
-		el.Add(endpointSlice)
+		if err := el.Add(endpointSlice); err != nil {
+			t.Errorf("unexpected error %v", err)
+		}
 		endpointSlice2 := &discoveryv1.EndpointSlice{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: ns2,
@@ -118,7 +126,9 @@ func TestEndpointSliceLister(t *testing.T) {
 				},
 			},
 		}
-		el.Add(endpointSlice2)
+		if err := el.Add(endpointSlice2); err != nil {
+			t.Errorf("unexpected error %v", err)
+		}
 		eps, err := el.MatchByKey(key)
 		if err != nil {
 			t.Errorf("unexpeted error %v", err)

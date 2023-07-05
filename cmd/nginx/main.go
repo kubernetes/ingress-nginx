@@ -19,7 +19,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"math/rand" // #nosec
 	"net/http"
 	"os"
 	"path/filepath"
@@ -53,8 +52,6 @@ import (
 
 func main() {
 	klog.InitFlags(nil)
-
-	rand.Seed(time.Now().UnixNano())
 
 	fmt.Println(version.String())
 

@@ -59,7 +59,9 @@ func TestFileWatcher(t *testing.T) {
 		t.Fatalf("expected no events before writing a file")
 	case <-timeoutChan:
 	}
-	os.WriteFile(f.Name(), []byte{}, ReadWriteByUser)
+	if err := os.WriteFile(f.Name(), []byte{}, ReadWriteByUser); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	select {
 	case <-events:
 	case <-timeoutChan:

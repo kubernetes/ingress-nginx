@@ -36,7 +36,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/informers"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -405,7 +404,10 @@ func New(
 			return
 		}
 
-		store.listers.IngressWithAnnotation.Delete(ing)
+		if err := store.listers.IngressWithAnnotation.Delete(ing); err != nil {
+			klog.ErrorS(err, "Error while deleting ingress from store", "ingress", klog.KObj(ing))
+			return
+		}
 
 		key := k8s.MetaNamespaceKey(ing)
 		store.secretIngressMap.Delete(key)
@@ -794,14 +796,26 @@ func New(
 		},
 	}
 
-	store.informers.Ingress.AddEventHandler(ingEventHandler)
-	if !icConfig.IgnoreIngressClass {
-		store.informers.IngressClass.AddEventHandler(ingressClassEventHandler)
+	if _, err := store.informers.Ingress.AddEventHandler(ingEventHandler); err != nil {
+		klog.Errorf("Error adding ingress event handler: %v", err)
 	}
-	store.informers.EndpointSlice.AddEventHandler(epsEventHandler)
-	store.informers.Secret.AddEventHandler(secrEventHandler)
-	store.informers.ConfigMap.AddEventHandler(cmEventHandler)
-	store.informers.Service.AddEventHandler(serviceHandler)
+	if !icConfig.IgnoreIngressClass {
+		if _, err := store.informers.IngressClass.AddEventHandler(ingressClassEventHandler); err != nil {
+			klog.Errorf("Error adding ingress class event handler: %v", err)
+		}
+	}
+	if _, err := store.informers.EndpointSlice.AddEventHandler(epsEventHandler); err != nil {
+		klog.Errorf("Error adding endpoint slice event handler: %v", err)
+	}
+	if _, err := store.informers.Secret.AddEventHandler(secrEventHandler); err != nil {
+		klog.Errorf("Error adding secret event handler: %v", err)
+	}
+	if _, err := store.informers.ConfigMap.AddEventHandler(cmEventHandler); err != nil {
+		klog.Errorf("Error adding configmap event handler: %v", err)
+	}
+	if _, err := store.informers.Service.AddEventHandler(serviceHandler); err != nil {
+		klog.Errorf("Error adding service event handler: %v", err)
+	}
 
 	// do not wait for informers to read the configmap configuration
 	ns, name, _ := k8s.ParseNameNS(configmap)
@@ -1138,7 +1152,7 @@ func (s *k8sStore) Run(stopCh chan struct{}) {
 var runtimeScheme = k8sruntime.NewScheme()
 
 func init() {
-	utilruntime.Must(networkingv1.AddToScheme(runtimeScheme))
+	runtime.Must(networkingv1.AddToScheme(runtimeScheme))
 }
 
 func toIngress(obj interface{}) (*networkingv1.Ingress, bool) {
