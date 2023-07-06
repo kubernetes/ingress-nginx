@@ -26,11 +26,7 @@ import (
 )
 
 var _ = framework.DescribeAnnotation("cors-*", func() {
-	f := framework.NewDefaultFramework("cors")
-
-	ginkgo.BeforeEach(func() {
-		f.NewEchoDeployment(framework.WithDeploymentReplicas(2))
-	})
+	f := framework.NewDefaultFramework("cors", framework.WithHTTPBunEnabled())
 
 	ginkgo.It("should enable cors", func() {
 		host := "cors.foo.com"
@@ -38,8 +34,14 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			"nginx.ingress.kubernetes.io/enable-cors": "true",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngress(
+			host,
+			"/info",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations))
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
@@ -53,7 +55,7 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			})
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusOK)
@@ -66,8 +68,14 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			"nginx.ingress.kubernetes.io/cors-allow-methods": "POST, GET",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngress(
+			host,
+			"/info",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations))
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
@@ -82,8 +90,14 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			"nginx.ingress.kubernetes.io/cors-max-age": "200",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngress(
+			host,
+			"/info",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations))
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
@@ -98,8 +112,14 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			"nginx.ingress.kubernetes.io/cors-allow-credentials": "false",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngress(
+			host,
+			"/info",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations))
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
@@ -115,18 +135,24 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			"nginx.ingress.kubernetes.io/cors-allow-origin": "https://origin.cors.com:8080",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngress(
+			host,
+			"/info",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations))
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
 			Headers().ContainsKey("Access-Control-Allow-Origin")
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
@@ -141,8 +167,14 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			"nginx.ingress.kubernetes.io/cors-allow-headers": "DNT, User-Agent",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngress(
+			host,
+			"/info",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations))
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
@@ -157,8 +189,14 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			"nginx.ingress.kubernetes.io/cors-expose-headers": "X-CustomResponseHeader, X-CustomSecondHeader",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngress(
+			host,
+			"/info",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations))
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
@@ -174,18 +212,24 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			"nginx.ingress.kubernetes.io/cors-allow-origin": "https://origin.cors.com:8080, https://origin2.cors.com",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngress(
+			host,
+			"/info",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations))
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
 			Headers().ContainsKey("Access-Control-Allow-Origin")
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
@@ -201,12 +245,18 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			"nginx.ingress.kubernetes.io/cors-allow-origin": "http://origin2.cors.com, https://origin.com",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngress(
+			host,
+			"/info",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations))
 
 		// the client should still receive a response but browsers should block the request
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
@@ -223,25 +273,31 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			"nginx.ingress.kubernetes.io/cors-allow-origin": "origin.cors.com:8080, https://origin2.cors.com, https://origin.com",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngress(
+			host,
+			"/info",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations))
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", badOrigin).
 			Expect().
 			Headers().NotContainsKey("Access-Control-Allow-Origin")
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin1).
 			Expect().
 			Headers().ContainsKey("Access-Control-Allow-Origin")
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin1).
 			Expect().
@@ -249,14 +305,14 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			ValueEqual("Access-Control-Allow-Origin", []string{origin1})
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin2).
 			Expect().
 			Headers().ContainsKey("Access-Control-Allow-Origin")
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin2).
 			Expect().
@@ -271,17 +327,23 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			"nginx.ingress.kubernetes.io/cors-allow-origin": "*",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngress(
+			host,
+			"/info",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations))
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			Expect().
 			Headers().ContainsKey("Access-Control-Allow-Origin")
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusOK).Headers().
@@ -294,17 +356,23 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			"nginx.ingress.kubernetes.io/enable-cors": "true",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngress(
+			host,
+			"/info",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations))
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			Expect().
 			Headers().ContainsKey("Access-Control-Allow-Origin")
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusOK).Headers().
@@ -318,17 +386,23 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			"nginx.ingress.kubernetes.io/cors-allow-origin": "*, foo.bar.com",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngress(
+			host,
+			"/info",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations))
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			Expect().
 			Headers().ContainsKey("Access-Control-Allow-Origin")
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusOK).Headers().
@@ -343,12 +417,18 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			"nginx.ingress.kubernetes.io/cors-allow-origin": "https://foo.bar.com",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngress(
+			host,
+			"/info",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations))
 
 		// the client should still receive a response but browsers should block the request
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
@@ -363,19 +443,25 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			"nginx.ingress.kubernetes.io/cors-allow-origin": "http://origin.cors.com:8080, http://origin.com:8080",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngress(
+			host,
+			"/info",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations))
 
 		// the client should still receive a response but browsers should block the request
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
 			Headers().ContainsKey("Access-Control-Allow-Origin")
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
@@ -391,11 +477,17 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			"nginx.ingress.kubernetes.io/cors-allow-origin": "https://origin2.cors.com, http://origin.com",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngress(
+			host,
+			"/info",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations))
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
@@ -410,12 +502,18 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			"nginx.ingress.kubernetes.io/cors-allow-origin": "http://origin.cors.com:8080, http://origin.com:8080",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngress(
+			host,
+			"/info",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations))
 
 		// the client should still receive a response but browsers should block the request
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
@@ -431,18 +529,24 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			"nginx.ingress.kubernetes.io/cors-allow-origin": "http://*.origin.cors.com, http://*.origin.com:8080",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngress(
+			host,
+			"/info",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations))
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
 			Headers().ContainsKey("Access-Control-Allow-Origin")
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
@@ -450,14 +554,14 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			ValueEqual("Access-Control-Allow-Origin", []string{origin})
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin2).
 			Expect().
 			Headers().ContainsKey("Access-Control-Allow-Origin")
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin2).
 			Expect().
@@ -473,12 +577,18 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			"nginx.ingress.kubernetes.io/cors-allow-origin": "http://*.origin.cors.com, http://*.origin.com:8080",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngress(
+			host,
+			"/info",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations))
 
 		// the client should still receive a response but browsers should block the request
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
@@ -493,18 +603,24 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			"nginx.ingress.kubernetes.io/cors-allow-origin": "http://origin.cors.com:8080, http://*.origin.com:8080",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngress(
+			host,
+			"/info",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations))
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
 			Headers().ContainsKey("Access-Control-Allow-Origin")
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
@@ -520,12 +636,18 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			"nginx.ingress.kubernetes.io/cors-allow-origin": "http://origin.cors.com:8080, http://*.origin.com:8080",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngress(
+			host,
+			"/info",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations))
 
 		// the client should still receive a response but browsers should block the request
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
@@ -541,26 +663,32 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			"nginx.ingress.kubernetes.io/cors-allow-origin": "http://origin.cors.com:8080, http://*.origin.com:8080",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngress(
+			host,
+			"/info",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations))
 
 		// the client should still receive a response but browsers should block the request
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", badOrigin).
 			Expect().
 			Headers().NotContainsKey("Access-Control-Allow-Origin")
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
 			Headers().ContainsKey("Access-Control-Allow-Origin")
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
@@ -578,19 +706,25 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			"nginx.ingress.kubernetes.io/cors-allow-origin": "      ",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngress(
+			host,
+			"/info",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations))
 
 		// the client should still receive a response but browsers should block the request
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
 			Headers().ContainsKey("Access-Control-Allow-Origin")
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
@@ -598,14 +732,14 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			ValueEqual("Access-Control-Allow-Origin", []string{"*"})
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin2).
 			Expect().
 			Headers().ContainsKey("Access-Control-Allow-Origin")
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin2).
 			Expect().
@@ -613,14 +747,14 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			ValueEqual("Access-Control-Allow-Origin", []string{"*"})
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin3).
 			Expect().
 			Headers().ContainsKey("Access-Control-Allow-Origin")
 
 		f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			WithHeader("Origin", origin3).
 			Expect().
