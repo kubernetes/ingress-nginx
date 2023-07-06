@@ -24,10 +24,9 @@ set -o pipefail
 
 DIR=$(cd $(dirname "${BASH_SOURCE}") && pwd -P)
 
-export TAG=1.0.0-dev
-export REGISTRY=${REGISTRY:-ingress-controller}
-
-DEV_IMAGE=${REGISTRY}/controller:${TAG}
+TAG=${TAG:-1.0.0-dev}
+REGISTRY=${REGISTRY:-ingress-controller}
+DEV_IMAGE=${DEV_IMAGE:-${REGISTRY}/controller:${TAG}}
 
 if ! command -v kind &> /dev/null; then
   echo "kind is not installed"
@@ -47,10 +46,6 @@ fi
 
 HELM_VERSION=$(helm version 2>&1 | cut -f1 -d"," | grep -oE '[0-9]+\.[0-9]+\.[0-9]+') || true
 echo $HELM_VERSION
-if [[ ${HELM_VERSION} -lt 3.10.0 ]]; then
-  echo "Please upgrade helm to v3.10.0 or higher"
-  exit 1
-fi
 
 KUBE_CLIENT_VERSION=$(kubectl version --client --short 2>/dev/null | grep Client | awk '{print $3}' | cut -d. -f2) || true
 if [[ ${KUBE_CLIENT_VERSION} -lt 24 ]]; then
@@ -58,9 +53,14 @@ if [[ ${KUBE_CLIENT_VERSION} -lt 24 ]]; then
   exit 1
 fi
 
-echo "[dev-env] building image"
-make build image
-docker tag "${REGISTRY}/controller:${TAG}" "${DEV_IMAGE}"
+USE_EXISTING_IMAGE=${USE_EXISTING_IMAGE:-false}
+if [[ "${USE_EXISTING_IMAGE}" == "true" ]]; then
+  docker tag "${REGISTRY}/controller:${TAG}" "${DEV_IMAGE}"
+else
+  echo "[dev-env] building image"
+  make build image
+  docker tag "${REGISTRY}/controller:${TAG}" "${DEV_IMAGE}"
+fi
 
 export K8S_VERSION=${K8S_VERSION:-v1.26.3@sha256:61b92f38dff6ccc29969e7aa154d34e38b89443af1a2c14e6cfbd2df6419c66f}
 
