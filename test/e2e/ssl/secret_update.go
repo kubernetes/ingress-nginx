@@ -73,9 +73,8 @@ var _ = framework.IngressNginxDescribe("[SSL] secret update", func() {
 
 		dummySecret.Data["some-key"] = []byte("some value")
 
-		if _, err := f.KubeClientSet.CoreV1().Secrets(f.Namespace).Update(context.TODO(), dummySecret, metav1.UpdateOptions{}); err != nil {
-			assert.Nil(ginkgo.GinkgoT(), err, "updating secret")
-		}
+		_, err = f.KubeClientSet.CoreV1().Secrets(f.Namespace).Update(context.TODO(), dummySecret, metav1.UpdateOptions{})
+		assert.Nil(ginkgo.GinkgoT(), err, "updating secret")
 
 		assert.NotContains(ginkgo.GinkgoT(), log, fmt.Sprintf("starting syncing of secret %v/dummy", f.Namespace))
 		assert.NotContains(ginkgo.GinkgoT(), log, fmt.Sprintf("error obtaining PEM from secret %v/dummy", f.Namespace))

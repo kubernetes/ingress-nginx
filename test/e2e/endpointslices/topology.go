@@ -76,9 +76,8 @@ var _ = framework.IngressNginxDescribeSerial("[TopologyHints] topology aware rou
 		status, err := f.ExecIngressPod(curlCmd)
 		assert.Nil(ginkgo.GinkgoT(), err)
 		var backends []map[string]interface{}
-		if err := json.Unmarshal([]byte(status), &backends); err != nil {
-			assert.Nil(ginkgo.GinkgoT(), err)
-		}
+		err = json.Unmarshal([]byte(status), &backends)
+		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error unmarshalling backends")
 		gotBackends := 0
 		for _, bck := range backends {
 			if strings.Contains(bck["name"].(string), "topology") {
