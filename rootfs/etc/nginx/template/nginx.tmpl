@@ -764,7 +764,7 @@ stream {
     lua_package_path "/etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/?.lua;;";
 
     lua_shared_dict tcp_udp_configuration_data 5M;
-    
+
     {{ buildResolvers $cfg.Resolver $cfg.DisableIpv6DNS }}
 
     init_by_lua_block {
@@ -1133,7 +1133,12 @@ stream {
             proxy_set_header            X-Scheme                $pass_access_scheme;
             {{ end }}
 
+            {{ if eq $externalAuth.Host "127.0.0.1" }}
+            proxy_set_header            Host                    $http_host;
+            proxy_ssl_name              $http_host;
+            {{ else }}
             proxy_set_header            Host                    {{ $externalAuth.Host }};
+            {{ end }}
             proxy_set_header            X-Original-URL          $scheme://$http_host$request_uri;
             proxy_set_header            X-Original-Method       $request_method;
             proxy_set_header            X-Sent-From             "nginx-ingress-controller";
