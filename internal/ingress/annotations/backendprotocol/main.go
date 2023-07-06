@@ -26,7 +26,7 @@ import (
 )
 
 var (
-	validProtocols = []string{"auto_http", "http", "https", "ajp", "grpc", "grpcs", "fcgi"}
+	validProtocols = []string{"auto_http", "http", "https", "grpc", "grpcs", "fcgi"}
 )
 
 const (
