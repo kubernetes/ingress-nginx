@@ -90,6 +90,8 @@ func ValidateArrayOfServerName(value string) error {
 	return nil
 }
 
+// ValidateServerName validates if the passed value is an acceptable server name. The server name
+// can contain regex characters, as those are accepted values on nginx configuration
 func ValidateServerName(value string) error {
 	value = strings.TrimSpace(value)
 	if !IsValidRegex.MatchString(value) {
@@ -144,7 +146,7 @@ func ValidateInt(value string) error {
 	return err
 }
 
-// ValidateInt validates if the specified value is an array of IPs and CIDRs
+// ValidateCIDRs validates if the specified value is an array of IPs and CIDRs
 func ValidateCIDRs(value string) error {
 	_, err := net.ParseCIDRs(value)
 	return err
