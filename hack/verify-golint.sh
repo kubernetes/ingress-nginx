@@ -24,4 +24,11 @@ cd "${KUBE_ROOT}"
 
 LINT=${LINT:-golangci-lint}
 
+if ! command -v ${LINT} >/dev/null 2>&1; then
+  echo "${LINT} is missing. Installing it now."
+  # See: https://golangci-lint.run/usage/install/#local-installation
+  curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.53.3
+  LINT=$(go env GOPATH)/bin/golangci-lint
+fi
+
 ${LINT} run
