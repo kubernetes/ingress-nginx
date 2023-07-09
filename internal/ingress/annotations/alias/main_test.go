@@ -63,10 +63,10 @@ func TestParse(t *testing.T) {
 	for _, testCase := range testCases {
 		ing.SetAnnotations(testCase.annotations)
 		if testCase.skipValidation {
-			parser.DisableAnnotationValidation = true
+			parser.EnableAnnotationValidation = false
 		}
 		defer func() {
-			parser.DisableAnnotationValidation = false
+			parser.EnableAnnotationValidation = true
 		}()
 		result, err := ap.Parse(ing)
 		if (err != nil) != testCase.wantErr {

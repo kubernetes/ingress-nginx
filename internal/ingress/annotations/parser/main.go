@@ -30,15 +30,15 @@ import (
 
 // DefaultAnnotationsPrefix defines the common prefix used in the nginx ingress controller
 const (
-	DefaultAnnotationsPrefix           = "nginx.ingress.kubernetes.io"
-	DefaultDisableAnnotationValidation = false
+	DefaultAnnotationsPrefix          = "nginx.ingress.kubernetes.io"
+	DefaultEnableAnnotationValidation = true
 )
 
 var (
 	// AnnotationsPrefix is the mutable attribute that the controller explicitly refers to
 	AnnotationsPrefix = DefaultAnnotationsPrefix
-	// DisableAnnotationValidation is the mutable attribute for enabling or disabling the validation functions
-	DisableAnnotationValidation = DefaultDisableAnnotationValidation
+	// Enable is the mutable attribute for enabling or disabling the validation functions
+	EnableAnnotationValidation = DefaultEnableAnnotationValidation
 )
 
 // AnnotationGroup defines the group that this annotation may belong

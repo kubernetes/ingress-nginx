@@ -319,6 +319,55 @@ jobs:
           name: e2e-test-reports-${{ matrix.k8s }}
           path: 'test/junitreports/report*.xml'
 
+  kubernetes-validations:
+    name: Kubernetes with Validations
+    runs-on: ubuntu-latest
+    needs:
+      - changes
+      - build
+    if: |
+      (needs.changes.outputs.go == 'true') || ${{ inputs.run_e2e }}
+
+    strategy:
+      matrix:
+        k8s: [v1.27.1]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+
+      - name: cache
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          name: docker.tar.gz
+
+      - name: Create Kubernetes ${{ matrix.k8s }} cluster
+        id: kind
+        run: |
+          kind create cluster --image=kindest/node:${{ matrix.k8s }} --config test/e2e/kind.yaml
+
+      - name: Load images from cache
+        run: |
+          echo "loading docker images..."
+          pigz -dc docker.tar.gz | docker load
+
+      - name: Run e2e tests
+        env:
+          KIND_CLUSTER_NAME: kind
+          SKIP_CLUSTER_CREATION: true
+          SKIP_IMAGE_CREATION: true
+          ENABLE_VALIDATIONS: true
+        run: |
+          kind get kubeconfig > $HOME/.kube/kind-config-kind
+          make kind-e2e-test
+
+      - name: Upload e2e junit-reports
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        if: success() || failure()
+        with:
+          name: e2e-test-reports-${{ matrix.k8s }}
+          path: 'test/junitreports/report*.xml'
+
 
   kubernetes-chroot:
     name: Kubernetes chroot

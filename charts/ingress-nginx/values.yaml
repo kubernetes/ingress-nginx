@@ -15,6 +15,7 @@ commonLabels: {}
 
 controller:
   name: controller
+  enableValidations: false
   image:
     ## Keep false as default for now!
     chroot: false
