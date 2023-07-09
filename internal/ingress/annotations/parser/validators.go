@@ -216,7 +216,7 @@ func checkAnnotation(name string, ing *networking.Ingress, fields AnnotationFiel
 			}
 		}
 		// We don't run validation against empty values
-		if !DisableAnnotationValidation && annotationValue != "" {
+		if EnableAnnotationValidation && annotationValue != "" {
 			if err := validateFunc(annotationValue); err != nil {
 				klog.Warningf("validation error on ingress %s/%s: annotation %s contains invalid value %s", ing.GetNamespace(), ing.GetName(), name, annotationValue)
 				return "", ing_errors.NewValidationError(annotationFullName)

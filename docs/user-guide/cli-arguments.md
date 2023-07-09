@@ -15,7 +15,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--default-backend-service`        | Service used to serve HTTP requests not matching any known server name (catch-all). Takes the form "namespace/name". The controller configures NGINX to forward requests to the first port of this Service. |
 | `--default-server-port`            | Port to use for exposing the default server (catch-all). (default 8181) |
 | `--default-ssl-certificate`        | Secret containing a SSL certificate to be used by the default HTTPS server (catch-all). Takes the form "namespace/name". |
-| `--disable-annotation-validation`  | If true, will disable the annotation validation feature. This value will be defaulted to false on a future release. |
+| `--enable-annotation-validation`  | If true, will enable the annotation validation feature. This value will be defaulted to true on a future release. |
 | `--disable-catch-all`              | Disable support for catch-all Ingresses. (default false) |
 | `--disable-full-test` | Disable full test of all merged ingresses at the admission stage and tests the template of the ingress being created or updated  (full test of all ingresses is enabled by default). |
 | `--disable-svc-external-name` | Disable support for Services of type ExternalName. (default false) |
