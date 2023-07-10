@@ -708,7 +708,7 @@ type Configuration struct {
 
 	// DatadogSampleRate specifies sample rate for any traces created.
 	// Default: use a dynamic rate instead
-	DatadogSampleRate *float32 `json:"datadog-sample-rate,omitempty"`
+	DatadogSampleRate *float32 `json:"datadog-sample-rate",omitempty`
 
 	// MainSnippet adds custom configuration to the main section of the nginx configuration
 	MainSnippet string `json:"main-snippet"`
