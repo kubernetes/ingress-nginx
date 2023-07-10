@@ -34,15 +34,13 @@ const (
 	mirrorHostAnnotation        = "mirror-host"
 )
 
-var (
-	OnOffRegex = regexp.MustCompile(`^(on|off)$`)
-)
+var OnOffRegex = regexp.MustCompile(`^(on|off)$`)
 
 var mirrorAnnotation = parser.Annotation{
 	Group: "mirror",
 	Annotations: parser.AnnotationFields{
 		mirrorRequestBodyAnnotation: {
-			Validator:     parser.ValidateRegex(*OnOffRegex, true),
+			Validator:     parser.ValidateRegex(OnOffRegex, true),
 			Scope:         parser.AnnotationScopeIngress,
 			Risk:          parser.AnnotationRiskLow,
 			Documentation: `This annotation defines if the request-body should be sent to the mirror backend. Can be 'on' or 'off'`,

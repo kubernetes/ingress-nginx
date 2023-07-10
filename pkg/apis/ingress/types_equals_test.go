@@ -84,15 +84,18 @@ func TestL4ServiceElementsMatch(t *testing.T) {
 		{[]L4Service{{Port: 80}}, []L4Service{{Port: 80}}, true},
 		{
 			[]L4Service{
-				{Port: 80, Endpoints: []Endpoint{{Address: "1.1.1.1"}}}},
+				{Port: 80, Endpoints: []Endpoint{{Address: "1.1.1.1"}}},
+			},
 			[]L4Service{{Port: 80}},
 			false,
 		},
 		{
 			[]L4Service{
-				{Port: 80, Endpoints: []Endpoint{{Address: "1.1.1.1"}, {Address: "1.1.1.2"}}}},
+				{Port: 80, Endpoints: []Endpoint{{Address: "1.1.1.1"}, {Address: "1.1.1.2"}}},
+			},
 			[]L4Service{
-				{Port: 80, Endpoints: []Endpoint{{Address: "1.1.1.2"}, {Address: "1.1.1.1"}}}},
+				{Port: 80, Endpoints: []Endpoint{{Address: "1.1.1.2"}, {Address: "1.1.1.1"}}},
+			},
 			true,
 		},
 		{

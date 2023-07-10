@@ -101,7 +101,7 @@ func (l log) GetDocumentation() parser.AnnotationFields {
 	return l.annotationConfig.Annotations
 }
 
-func (a log) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+func (l log) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(l.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, logAnnotations.Annotations)
 }

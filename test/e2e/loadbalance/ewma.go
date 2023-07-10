@@ -35,12 +35,13 @@ var _ = framework.DescribeSetting("[Load Balancer] EWMA", func() {
 		f.NewEchoDeployment(framework.WithDeploymentReplicas(3))
 		f.SetNginxConfigMapData(map[string]string{
 			"worker-processes": "2",
-			"load-balance":     "ewma"},
+			"load-balance":     "ewma",
+		},
 		)
 	})
 
 	ginkgo.It("does not fail requests", func() {
-		host := "load-balance.com"
+		host := loadBalanceHost
 
 		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
 		f.WaitForNginxServer(host,

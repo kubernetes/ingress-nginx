@@ -64,5 +64,4 @@ var _ = framework.DescribeSetting("proxy-send-timeout", func() {
 				return !strings.Contains(server, fmt.Sprintf("proxy_send_timeout %ss;", proxySendTimeout))
 			})
 	})
-
 })

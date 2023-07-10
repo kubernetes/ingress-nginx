@@ -47,16 +47,16 @@ func PrintError(e error) {
 }
 
 // ParseVersionString returns the major, minor, and patch numbers of a version string
-func ParseVersionString(v string) (int, int, int, error) {
+func ParseVersionString(v string) (major, minor, patch int, err error) {
 	parts := versionRegex.FindStringSubmatch(v)
 
 	if len(parts) != 4 {
 		return 0, 0, 0, fmt.Errorf("could not parse %v as a version string (like 0.20.3)", v)
 	}
 
-	major, _ := strconv.Atoi(parts[1])
-	minor, _ := strconv.Atoi(parts[2])
-	patch, _ := strconv.Atoi(parts[3])
+	major, _ = strconv.Atoi(parts[1])
+	minor, _ = strconv.Atoi(parts[2])
+	patch, _ = strconv.Atoi(parts[3])
 
 	return major, minor, patch, nil
 }
@@ -90,7 +90,7 @@ func isVersionLessThan(a, b string) bool {
 
 // PodInDeployment returns whether a pod is part of a deployment with the given name
 // a pod is considered to be in {deployment} if it is owned by a replicaset with a name of format {deployment}-otherchars
-func PodInDeployment(pod apiv1.Pod, deployment string) bool {
+func PodInDeployment(pod *apiv1.Pod, deployment string) bool {
 	for _, owner := range pod.OwnerReferences {
 		if owner.Controller == nil || !*owner.Controller || owner.Kind != "ReplicaSet" {
 			continue
@@ -138,7 +138,7 @@ func AddContainerFlag(cmd *cobra.Command) *string {
 // GetNamespace takes a set of kubectl flag values and returns the namespace we should be operating in
 func GetNamespace(flags *genericclioptions.ConfigFlags) string {
 	namespace, _, err := flags.ToRawKubeConfigLoader().Namespace()
-	if err != nil || len(namespace) == 0 {
+	if err != nil || namespace == "" {
 		namespace = apiv1.NamespaceDefault
 	}
 	return namespace

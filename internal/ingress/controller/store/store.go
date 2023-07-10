@@ -105,7 +105,7 @@ type Storer interface {
 	Run(stopCh chan struct{})
 
 	// GetIngressClass validates given ingress against ingress class configuration and returns the ingress class.
-	GetIngressClass(ing *networkingv1.Ingress, icConfig *ingressclass.IngressClassConfiguration) (string, error)
+	GetIngressClass(ing *networkingv1.Ingress, icConfig *ingressclass.Configuration) (string, error)
 }
 
 // EventType type of event associated with an informer
@@ -242,7 +242,9 @@ type k8sStore struct {
 	defaultSSLCertificate string
 }
 
-// New creates a new object store to be used in the ingress controller
+// New creates a new object store to be used in the ingress controller.
+//
+//nolint:gocyclo // Ignore function complexity error.
 func New(
 	namespace string,
 	namespaceSelector labels.Selector,
@@ -252,9 +254,9 @@ func New(
 	updateCh *channels.RingChannel,
 	disableCatchAll bool,
 	deepInspector bool,
-	icConfig *ingressclass.IngressClassConfiguration,
-	disableSyncEvents bool) Storer {
-
+	icConfig *ingressclass.Configuration,
+	disableSyncEvents bool,
+) Storer {
 	store := &k8sStore{
 		informers:             &Informer{},
 		listers:               &Lister{},
@@ -474,7 +476,8 @@ func New(
 				_, errOld = store.GetIngressClass(oldIng, icConfig)
 				classCur, errCur = store.GetIngressClass(curIng, icConfig)
 			}
-			if errOld != nil && errCur == nil {
+			switch {
+			case errOld != nil && errCur == nil:
 				if hasCatchAllIngressRule(curIng.Spec) && disableCatchAll {
 					klog.InfoS("ignoring update for catch-all ingress because of --disable-catch-all", "ingress", klog.KObj(curIng))
 					return
@@ -482,11 +485,11 @@ func New(
 
 				klog.InfoS("creating ingress", "ingress", klog.KObj(curIng), "ingressclass", classCur)
 				recorder.Eventf(curIng, corev1.EventTypeNormal, "Sync", "Scheduled for sync")
-			} else if errOld == nil && errCur != nil {
+			case errOld == nil && errCur != nil:
 				klog.InfoS("removing ingress because of unknown ingressclass", "ingress", klog.KObj(curIng))
 				ingDeleteHandler(old)
 				return
-			} else if errCur == nil && !reflect.DeepEqual(old, cur) {
+			case errCur == nil && !reflect.DeepEqual(old, cur):
 				if hasCatchAllIngressRule(curIng.Spec) && disableCatchAll {
 					klog.InfoS("ignoring update for catch-all ingress and delete old one because of --disable-catch-all", "ingress", klog.KObj(curIng))
 					ingDeleteHandler(old)
@@ -494,7 +497,7 @@ func New(
 				}
 
 				recorder.Eventf(curIng, corev1.EventTypeNormal, "Sync", "Scheduled for sync")
-			} else {
+			default:
 				klog.V(3).InfoS("No changes on ingress. Skipping update", "ingress", klog.KObj(curIng))
 				return
 			}
@@ -837,10 +840,10 @@ func hasCatchAllIngressRule(spec networkingv1.IngressSpec) bool {
 	return spec.DefaultBackend != nil
 }
 
-func checkBadAnnotationValue(annotations map[string]string, badwords string) error {
+func checkBadAnnotationValue(annotationMap map[string]string, badwords string) error {
 	arraybadWords := strings.Split(strings.TrimSpace(badwords), ",")
 
-	for annotation, value := range annotations {
+	for annotation, value := range annotationMap {
 		if strings.HasPrefix(annotation, fmt.Sprintf("%s/", parser.AnnotationsPrefix)) {
 			for _, forbiddenvalue := range arraybadWords {
 				if strings.Contains(value, forbiddenvalue) {
@@ -999,7 +1002,7 @@ func (s *k8sStore) GetService(key string) (*corev1.Service, error) {
 	return s.listers.Service.ByKey(key)
 }
 
-func (s *k8sStore) GetIngressClass(ing *networkingv1.Ingress, icConfig *ingressclass.IngressClassConfiguration) (string, error) {
+func (s *k8sStore) GetIngressClass(ing *networkingv1.Ingress, icConfig *ingressclass.Configuration) (string, error) {
 	// First we try ingressClassName
 	if !icConfig.IgnoreIngressClass && ing.Spec.IngressClassName != nil {
 		iclass, err := s.listers.IngressClass.ByKey(*ing.Spec.IngressClassName)
@@ -1010,11 +1013,11 @@ func (s *k8sStore) GetIngressClass(ing *networkingv1.Ingress, icConfig *ingressc
 	}
 
 	// Then we try annotation
-	if ingressclass, ok := ing.GetAnnotations()[ingressclass.IngressKey]; ok {
-		if ingressclass != icConfig.AnnotationValue {
+	if class, ok := ing.GetAnnotations()[ingressclass.IngressKey]; ok {
+		if class != icConfig.AnnotationValue {
 			return "", fmt.Errorf("ingress class annotation is not equal to the expected by Ingress Controller")
 		}
-		return ingressclass, nil
+		return class, nil
 	}
 
 	// Then we accept if the WithoutClass is enabled

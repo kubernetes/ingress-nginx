@@ -50,7 +50,6 @@ var _ = framework.DescribeSetting("keep-alive keep-alive-requests", func() {
 			f.WaitForNginxConfiguration(func(server string) bool {
 				return strings.Contains(server, `keepalive_requests 200;`)
 			})
-
 		})
 	})
 

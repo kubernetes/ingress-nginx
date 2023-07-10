@@ -98,7 +98,7 @@ var _ = framework.IngressNginxDescribe("[SSL] secret update", func() {
 				return strings.Contains(server, "server_name invalid-ssl") &&
 					strings.Contains(server, "listen 443")
 			})
-
+		//nolint:gosec // Ignore certificate validation in testing
 		resp := f.HTTPTestClientWithTLSConfig(&tls.Config{ServerName: host, InsecureSkipVerify: true}).
 			GET("/").
 			WithURL(f.GetURL(framework.HTTPS)).

@@ -91,6 +91,8 @@ const (
 )
 
 // ReadConfig obtains the configuration defined by the user merged with the defaults.
+//
+//nolint:gocyclo // Ignore function complexity error
 func ReadConfig(src map[string]string) config.Configuration {
 	conf := map[string]string{}
 	// we need to copy the configmap data because the content is altered
@@ -116,12 +118,12 @@ func ReadConfig(src map[string]string) config.Configuration {
 	luaSharedDicts := make(map[string]int)
 	debugConnectionsList := make([]string, 0)
 
-	//parse lua shared dict values
+	// parse lua shared dict values
 	if val, ok := conf[luaSharedDictsKey]; ok {
 		delete(conf, luaSharedDictsKey)
 		lsd := splitAndTrimSpace(val, ",")
 		for _, v := range lsd {
-			v = strings.Replace(v, " ", "", -1)
+			v = strings.ReplaceAll(v, " ", "")
 			results := strings.SplitN(v, ":", 2)
 			dictName := results[0]
 			size := dictStrToKb(results[1])
@@ -196,7 +198,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 				if ing_net.IsIPV6(ns) {
 					bindAddressIpv6List = append(bindAddressIpv6List, fmt.Sprintf("[%v]", ns))
 				} else {
-					bindAddressIpv4List = append(bindAddressIpv4List, fmt.Sprintf("%v", ns))
+					bindAddressIpv4List = append(bindAddressIpv4List, ns.String())
 				}
 			} else {
 				klog.Warningf("%v is not a valid textual representation of an IP address", i)
@@ -250,7 +252,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	if val, ok := conf[globalAuthMethod]; ok {
 		delete(conf, globalAuthMethod)
 
-		if len(val) != 0 && !authreq.ValidMethod(val) {
+		if val != "" && !authreq.ValidMethod(val) {
 			klog.Warningf("Global auth location denied - %v.", "invalid HTTP method")
 		} else {
 			to.GlobalExternalAuth.Method = val
@@ -286,7 +288,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	if val, ok := conf[globalAuthResponseHeaders]; ok {
 		delete(conf, globalAuthResponseHeaders)
 
-		if len(val) != 0 {
+		if val != "" {
 			harr := splitAndTrimSpace(val, ",")
 			for _, header := range harr {
 				if !authreq.ValidHeader(header) {
@@ -385,8 +387,8 @@ func ReadConfig(src map[string]string) config.Configuration {
 	if val, ok := conf[debugConnections]; ok {
 		delete(conf, debugConnections)
 		for _, i := range splitAndTrimSpace(val, ",") {
-			validIp := net.ParseIP(i)
-			if validIp != nil {
+			validIP := net.ParseIP(i)
+			if validIP != nil {
 				debugConnectionsList = append(debugConnectionsList, i)
 			} else {
 				_, _, err := net.ParseCIDR(i)
@@ -415,14 +417,14 @@ func ReadConfig(src map[string]string) config.Configuration {
 	to.DisableIpv6DNS = !ing_net.IsIPv6Enabled()
 	to.LuaSharedDicts = luaSharedDicts
 
-	config := &mapstructure.DecoderConfig{
+	decoderConfig := &mapstructure.DecoderConfig{
 		Metadata:         nil,
 		WeaklyTypedInput: true,
 		Result:           &to,
 		TagName:          "json",
 	}
 
-	decoder, err := mapstructure.NewDecoder(config)
+	decoder, err := mapstructure.NewDecoder(decoderConfig)
 	if err != nil {
 		klog.Warningf("unexpected error merging defaults: %v", err)
 	}
@@ -456,6 +458,7 @@ func filterErrors(codes []int) []int {
 	return fa
 }
 
+//nolint:unparam // Ignore `sep` always receives `,` error
 func splitAndTrimSpace(s, sep string) []string {
 	f := func(c rune) bool {
 		return strings.EqualFold(string(c), sep)
@@ -475,7 +478,7 @@ func dictStrToKb(sizeStr string) int {
 		return -1
 	}
 	size, _ := strconv.Atoi(sizeMatch[1]) // validated already with regex
-	if sizeMatch[2] == "" || strings.ToLower(sizeMatch[2]) == "m" {
+	if sizeMatch[2] == "" || strings.EqualFold(sizeMatch[2], "m") {
 		size *= 1024
 	}
 	return size

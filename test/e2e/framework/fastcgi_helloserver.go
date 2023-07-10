@@ -75,7 +75,7 @@ func (f *Framework) NewNewFastCGIHelloServerDeploymentWithReplicas(replicas int3
 
 	d := f.EnsureDeployment(deployment)
 
-	err := waitForPodsReady(f.KubeClientSet, DefaultTimeout, int(replicas), f.Namespace, metav1.ListOptions{
+	err := waitForPodsReady(f.KubeClientSet, DefaultTimeout, int(replicas), f.Namespace, &metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(d.Spec.Template.ObjectMeta.Labels)).String(),
 	})
 	assert.Nil(ginkgo.GinkgoT(), err, "failed to wait for to become ready")

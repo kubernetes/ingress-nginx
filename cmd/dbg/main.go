@@ -114,7 +114,6 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
 }
 
 func backendsAll() {
@@ -185,7 +184,11 @@ func backendsGet(name string) {
 	for _, backendi := range backends {
 		backend := backendi.(map[string]interface{})
 		if backend["name"].(string) == name {
-			printed, _ := json.MarshalIndent(backend, "", "  ")
+			printed, err := json.MarshalIndent(backend, "", "  ")
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
 			fmt.Println(string(printed))
 			return
 		}
@@ -213,18 +216,7 @@ func certGet(host string) {
 }
 
 func general() {
-	//TODO: refactor to obtain ingress-nginx pod count from the api server
-	/*
-		statusCode, body, requestErr := nginx.NewGetStatusRequest(generalPath)
-		if requestErr != nil {
-			fmt.Println(requestErr)
-			return
-		}
-		if statusCode != 200 {
-			fmt.Printf("Nginx returned code %v\n", statusCode)
-			return
-		}
-	*/
+	// TODO: refactor to obtain ingress-nginx pod count from the api server
 
 	var prettyBuffer bytes.Buffer
 	indentErr := json.Indent(&prettyBuffer, []byte("{}"), "", "  ")

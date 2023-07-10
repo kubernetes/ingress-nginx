@@ -139,8 +139,8 @@ func createURL(mirror, licenseKey, dbName string) string {
 }
 
 func downloadDatabase(dbName string) error {
-	url := createURL(MaxmindMirror, MaxmindLicenseKey, dbName)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	newURL := createURL(MaxmindMirror, MaxmindLicenseKey, dbName)
+	req, err := http.NewRequest(http.MethodGet, newURL, http.NoBody)
 	if err != nil {
 		return err
 	}
@@ -175,8 +175,7 @@ func downloadDatabase(dbName string) error {
 			return err
 		}
 
-		switch header.Typeflag {
-		case tar.TypeReg:
+		if header.Typeflag == tar.TypeReg {
 			if !strings.HasSuffix(header.Name, mmdbFile) {
 				continue
 			}
@@ -186,11 +185,11 @@ func downloadDatabase(dbName string) error {
 				return err
 			}
 
-			defer outFile.Close()
-
 			if _, err := io.CopyN(outFile, tarReader, header.Size); err != nil {
 				return err
 			}
+
+			outFile.Close()
 
 			return nil
 		}

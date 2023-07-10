@@ -30,10 +30,12 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
+const fooHost = "foo"
+
 var _ = framework.IngressNginxDescribe("[SSL] [Flag] default-ssl-certificate", func() {
 	f := framework.NewDefaultFramework("default-ssl-certificate")
 	var tlsConfig *tls.Config
-	secretName := "my-custom-cert"
+	secretName := "my-custom-cert" //nolint:gosec // Ignore the gosec error in testing
 	service := framework.EchoService
 	port := 80
 
@@ -78,7 +80,7 @@ var _ = framework.IngressNginxDescribe("[SSL] [Flag] default-ssl-certificate", f
 	})
 
 	ginkgo.It("uses default ssl certificate for host based ingress when configured certificate does not match host", func() {
-		host := "foo"
+		host := fooHost
 
 		ing := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, service, port, nil))
 		_, err := framework.CreateIngressTLSSecret(f.KubeClientSet,

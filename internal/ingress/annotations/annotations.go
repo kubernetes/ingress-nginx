@@ -86,7 +86,7 @@ type Ingress struct {
 	CorsConfig           cors.Config
 	CustomHTTPErrors     []int
 	DefaultBackend       *apiv1.Service
-	//TODO: Change this back into an error when https://github.com/imdario/mergo/issues/100 is resolved
+	// TODO: Change this back into an error when https://github.com/imdario/mergo/issues/100 is resolved
 	FastCGI            fastcgi.Config
 	Denied             *string
 	ExternalAuth       authreq.Config

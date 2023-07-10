@@ -40,7 +40,7 @@ var rewriteAnnotations = parser.Annotation{
 	Group: "rewrite",
 	Annotations: parser.AnnotationFields{
 		rewriteTargetAnnotation: {
-			Validator: parser.ValidateRegex(*parser.RegexPathWithCapture, false),
+			Validator: parser.ValidateRegex(parser.RegexPathWithCapture, false),
 			Scope:     parser.AnnotationScopeIngress,
 			Risk:      parser.AnnotationRiskMedium,
 			Documentation: `This annotation allows to specify the target URI where the traffic must be redirected. It can contain regular characters and captured 
@@ -72,7 +72,7 @@ var rewriteAnnotations = parser.Annotation{
 			the pathType should also be defined as 'ImplementationSpecific'.`,
 		},
 		appRootAnnotation: {
-			Validator:     parser.ValidateRegex(*parser.RegexPathWithCapture, false),
+			Validator:     parser.ValidateRegex(parser.RegexPathWithCapture, false),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskMedium,
 			Documentation: `This annotation defines the Application Root that the Controller must redirect if it's in / context`,

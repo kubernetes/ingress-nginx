@@ -69,7 +69,7 @@ func (p *TCPProxy) Handle(conn net.Conn) {
 	}
 
 	proxy := p.Default
-	hostname, err := parser.GetHostname(data[:])
+	hostname, err := parser.GetHostname(data)
 	if err == nil {
 		klog.V(4).InfoS("TLS Client Hello", "host", hostname)
 		proxy = p.Get(hostname)

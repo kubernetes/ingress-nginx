@@ -38,7 +38,8 @@ func TestParse(t *testing.T) {
 		annotations map[string]string
 		expected    string
 	}{
-		{map[string]string{annotation: "server { listen: 8000; proxy_pass 127.0.0.1:80}"},
+		{
+			map[string]string{annotation: "server { listen: 8000; proxy_pass 127.0.0.1:80}"},
 			"server { listen: 8000; proxy_pass 127.0.0.1:80}",
 		},
 		{map[string]string{annotation: "false"}, "false"},

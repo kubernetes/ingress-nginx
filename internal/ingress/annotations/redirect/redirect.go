@@ -54,14 +54,14 @@ var redirectAnnotations = parser.Annotation{
 			Documentation: `In some scenarios is required to redirect from www.domain.com to domain.com or vice versa. To enable this feature use this annotation.`,
 		},
 		temporalRedirectAnnotation: {
-			Validator: parser.ValidateRegex(*parser.URLIsValidRegex, false),
+			Validator: parser.ValidateRegex(parser.URLIsValidRegex, false),
 			Scope:     parser.AnnotationScopeLocation,
 			Risk:      parser.AnnotationRiskMedium, // Medium, as it allows arbitrary URLs that needs to be validated
 			Documentation: `This annotation allows you to return a temporal redirect (Return Code 302) instead of sending data to the upstream. 
 			For example setting this annotation to https://www.google.com would redirect everything to Google with a Return Code of 302 (Moved Temporarily).`,
 		},
 		permanentRedirectAnnotation: {
-			Validator: parser.ValidateRegex(*parser.URLIsValidRegex, false),
+			Validator: parser.ValidateRegex(parser.URLIsValidRegex, false),
 			Scope:     parser.AnnotationScopeLocation,
 			Risk:      parser.AnnotationRiskMedium, // Medium, as it allows arbitrary URLs that needs to be validated
 			Documentation: `This annotation allows to return a permanent redirect (Return Code 301) instead of sending data to the upstream. 
@@ -174,11 +174,11 @@ func isValidURL(s string) error {
 	return nil
 }
 
-func (a redirect) GetDocumentation() parser.AnnotationFields {
-	return a.annotationConfig.Annotations
+func (r redirect) GetDocumentation() parser.AnnotationFields {
+	return r.annotationConfig.Annotations
 }
 
-func (a redirect) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+func (r redirect) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(r.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, redirectAnnotations.Annotations)
 }

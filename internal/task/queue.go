@@ -28,9 +28,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 )
 
-var (
-	keyFunc = cache.DeletionHandlingMetaNamespaceKeyFunc
-)
+var keyFunc = cache.DeletionHandlingMetaNamespaceKeyFunc
 
 // Queue manages a time work queue through an independent worker that invokes the
 // given sync function for every work item inserted.
@@ -168,7 +166,7 @@ func NewTaskQueue(syncFn func(interface{}) error) *Queue {
 	return NewCustomTaskQueue(syncFn, nil)
 }
 
-// NewCustomTaskQueue ...
+// NewCustomTaskQueue creates a new custom task queue with the given sync function.
 func NewCustomTaskQueue(syncFn func(interface{}) error, fn func(interface{}) (interface{}, error)) *Queue {
 	q := &Queue{
 		queue:      workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),

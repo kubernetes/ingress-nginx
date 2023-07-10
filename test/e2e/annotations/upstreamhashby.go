@@ -40,11 +40,11 @@ func startIngress(f *framework.Framework, annotations map[string]string) map[str
 		})
 
 	err := wait.Poll(framework.Poll, framework.DefaultTimeout, func() (bool, error) {
-
 		resp := f.HTTPTestClient().
 			GET("/").
 			WithHeader("Host", host).
 			Expect().Raw()
+		defer resp.Body.Close()
 
 		if resp.StatusCode == http.StatusOK {
 			return true, nil

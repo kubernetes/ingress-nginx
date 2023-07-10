@@ -100,7 +100,6 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 	})
 
 	ginkgo.It("[BAD_ANNOTATIONS] should allow an ingress if there is a default blocklist config in place", func() {
-
 		hostValid := "custom-allowed-value-test"
 		annotationsValid := map[string]string{
 			"nginx.ingress.kubernetes.io/configuration-snippet": `
@@ -159,6 +158,5 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusNotFound)
-
 	})
 })

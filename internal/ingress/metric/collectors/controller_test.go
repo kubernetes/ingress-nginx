@@ -106,7 +106,6 @@ func TestControllerCounters(t *testing.T) {
 		{
 			name: "should set SSL certificates infos metrics",
 			test: func(cm *Controller) {
-
 				servers := []*ingress.Server{
 					{
 						Hostname: "demo",
@@ -143,7 +142,6 @@ func TestControllerCounters(t *testing.T) {
 		{
 			name: "should ignore certificates without serial number",
 			test: func(cm *Controller) {
-
 				servers := []*ingress.Server{
 					{
 						Hostname: "demo",
@@ -168,7 +166,6 @@ func TestControllerCounters(t *testing.T) {
 		{
 			name: "should ignore certificates with nil x509 pointer",
 			test: func(cm *Controller) {
-
 				servers := []*ingress.Server{
 					{
 						Hostname: "demo",
@@ -193,7 +190,6 @@ func TestControllerCounters(t *testing.T) {
 		{
 			name: "should ignore servers without certificates",
 			test: func(cm *Controller) {
-
 				servers := []*ingress.Server{
 					{
 						Hostname: "demo",

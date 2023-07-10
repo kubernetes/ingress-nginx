@@ -270,9 +270,9 @@ func TestCors(t *testing.T) {
 		if r.CorsAllowCredentials != foo.credentials {
 			t.Errorf("Returned %v but expected %v for Cors Credentials", r.CorsAllowCredentials, foo.credentials)
 		}
-
 	}
 }
+
 func TestCustomHTTPErrors(t *testing.T) {
 	ec := NewAnnotationExtractor(mockCfg{})
 	ing := buildIngress()

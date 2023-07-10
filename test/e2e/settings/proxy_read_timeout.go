@@ -64,5 +64,4 @@ var _ = framework.DescribeSetting("proxy-read-timeout", func() {
 				return !strings.Contains(server, fmt.Sprintf("proxy_read_timeout %ss;", proxyReadtimeout))
 			})
 	})
-
 })

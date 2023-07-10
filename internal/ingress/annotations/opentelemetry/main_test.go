@@ -26,6 +26,8 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
+const enableAnnotation = "true"
+
 func buildIngress() *networking.Ingress {
 	defaultBackend := networking.IngressBackend{
 		Service: &networking.IngressServiceBackend{
@@ -73,7 +75,7 @@ func TestIngressAnnotationOpentelemetrySetTrue(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix(enableOpenTelemetryAnnotation)] = "true"
+	data[parser.GetAnnotationWithPrefix(enableOpenTelemetryAnnotation)] = enableAnnotation
 	ing.SetAnnotations(data)
 
 	val, _ := NewParser(&resolver.Mock{}).Parse(ing)
@@ -123,8 +125,8 @@ func TestIngressAnnotationOpentelemetryTrustSetTrue(t *testing.T) {
 
 	data := map[string]string{}
 	opName := "foo-op"
-	data[parser.GetAnnotationWithPrefix(enableOpenTelemetryAnnotation)] = "true"
-	data[parser.GetAnnotationWithPrefix(otelTrustSpanAnnotation)] = "true"
+	data[parser.GetAnnotationWithPrefix(enableOpenTelemetryAnnotation)] = enableAnnotation
+	data[parser.GetAnnotationWithPrefix(otelTrustSpanAnnotation)] = enableAnnotation
 	data[parser.GetAnnotationWithPrefix(otelOperationNameAnnotation)] = opName
 	ing.SetAnnotations(data)
 
@@ -163,7 +165,7 @@ func TestIngressAnnotationOpentelemetryWithBadOpName(t *testing.T) {
 
 	data := map[string]string{}
 	opName := "fooxpto_123$la;"
-	data[parser.GetAnnotationWithPrefix(enableOpenTelemetryAnnotation)] = "true"
+	data[parser.GetAnnotationWithPrefix(enableOpenTelemetryAnnotation)] = enableAnnotation
 	data[parser.GetAnnotationWithPrefix(otelOperationNameAnnotation)] = opName
 	ing.SetAnnotations(data)
 

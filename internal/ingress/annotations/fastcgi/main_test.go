@@ -155,7 +155,6 @@ func TestParseFastCGIInvalidParamsConfigMapAnnotation(t *testing.T) {
 
 	invalidConfigMapList := []string{"unknown/configMap", "unknown/config/map"}
 	for _, configmap := range invalidConfigMapList {
-
 		data := map[string]string{}
 		data[parser.GetAnnotationWithPrefix("fastcgi-params-configmap")] = configmap
 		ing.SetAnnotations(data)
@@ -239,11 +238,9 @@ func TestParseFastCGIParamsConfigMapAnnotationWithDifferentNS(t *testing.T) {
 	if err == nil {
 		t.Errorf("Different namespace configmap should return an error")
 	}
-
 }
 
 func TestConfigEquality(t *testing.T) {
-
 	var nilConfig *Config
 
 	config := Config{
@@ -297,7 +294,6 @@ func TestConfigEquality(t *testing.T) {
 }
 
 func Test_fastcgi_Parse(t *testing.T) {
-
 	tests := []struct {
 		name          string
 		index         string
@@ -378,7 +374,6 @@ func Test_fastcgi_Parse(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
 			ing := buildIngress()
 
 			data := map[string]string{}

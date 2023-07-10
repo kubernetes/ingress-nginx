@@ -33,7 +33,7 @@ import (
 )
 
 // ParseNameNS parses a string searching a namespace and name
-func ParseNameNS(input string) (string, string, error) {
+func ParseNameNS(input string) (ns, name string, err error) {
 	nsName := strings.Split(input, "/")
 	if len(nsName) != 2 {
 		return "", "", fmt.Errorf("invalid format (namespace/name) found in '%v'", input)

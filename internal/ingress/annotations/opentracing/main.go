@@ -89,13 +89,13 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 	}
 }
 
-func (s opentracing) Parse(ing *networking.Ingress) (interface{}, error) {
-	enabled, err := parser.GetBoolAnnotation(enableOpentracingAnnotation, ing, s.annotationConfig.Annotations)
+func (o opentracing) Parse(ing *networking.Ingress) (interface{}, error) {
+	enabled, err := parser.GetBoolAnnotation(enableOpentracingAnnotation, ing, o.annotationConfig.Annotations)
 	if err != nil {
 		return &Config{}, nil
 	}
 
-	trustSpan, err := parser.GetBoolAnnotation(opentracingTrustSpanAnnotation, ing, s.annotationConfig.Annotations)
+	trustSpan, err := parser.GetBoolAnnotation(opentracingTrustSpanAnnotation, ing, o.annotationConfig.Annotations)
 	if err != nil {
 		return &Config{Set: true, Enabled: enabled}, nil
 	}
@@ -103,11 +103,11 @@ func (s opentracing) Parse(ing *networking.Ingress) (interface{}, error) {
 	return &Config{Set: true, Enabled: enabled, TrustSet: true, TrustEnabled: trustSpan}, nil
 }
 
-func (s opentracing) GetDocumentation() parser.AnnotationFields {
-	return s.annotationConfig.Annotations
+func (o opentracing) GetDocumentation() parser.AnnotationFields {
+	return o.annotationConfig.Annotations
 }
 
-func (a opentracing) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+func (o opentracing) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(o.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, opentracingAnnotations.Annotations)
 }

@@ -26,6 +26,8 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
+const enableAnnotation = "true"
+
 func buildIngress() *networking.Ingress {
 	defaultBackend := networking.IngressBackend{
 		Service: &networking.IngressServiceBackend{
@@ -73,7 +75,7 @@ func TestIngressAnnotationOpentracingSetTrue(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix(enableOpentracingAnnotation)] = "true"
+	data[parser.GetAnnotationWithPrefix(enableOpentracingAnnotation)] = enableAnnotation
 	ing.SetAnnotations(data)
 
 	val, _ := NewParser(&resolver.Mock{}).Parse(ing)
@@ -110,8 +112,8 @@ func TestIngressAnnotationOpentracingTrustSetTrue(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix(enableOpentracingAnnotation)] = "true"
-	data[parser.GetAnnotationWithPrefix(opentracingTrustSpanAnnotation)] = "true"
+	data[parser.GetAnnotationWithPrefix(enableOpentracingAnnotation)] = enableAnnotation
+	data[parser.GetAnnotationWithPrefix(opentracingTrustSpanAnnotation)] = enableAnnotation
 	ing.SetAnnotations(data)
 
 	val, _ := NewParser(&resolver.Mock{}).Parse(ing)

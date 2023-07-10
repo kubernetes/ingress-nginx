@@ -112,7 +112,7 @@ var _ = framework.DescribeSetting("OCSP", func() {
 				return strings.Contains(server, fmt.Sprintf(`server_name %v`, host))
 			})
 
-		tlsConfig := &tls.Config{ServerName: host, InsecureSkipVerify: true}
+		tlsConfig := &tls.Config{ServerName: host, InsecureSkipVerify: true} //nolint:gosec // Ignore the gosec error in testing
 		f.HTTPTestClientWithTLSConfig(tlsConfig).
 			GET("/").
 			WithURL(f.GetURL(framework.HTTPS)).
@@ -195,7 +195,7 @@ const configTemplate = `
 
 func prepareCertificates(namespace string) error {
 	config := fmt.Sprintf(configTemplate, namespace)
-	err := os.WriteFile("cfssl_config.json", []byte(config), 0644)
+	err := os.WriteFile("cfssl_config.json", []byte(config), 0o600)
 	if err != nil {
 		return fmt.Errorf("creating cfssl_config.json file: %v", err)
 	}

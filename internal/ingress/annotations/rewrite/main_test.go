@@ -194,6 +194,7 @@ func TestForceSSLRedirect(t *testing.T) {
 		t.Errorf("Expected true but returned false")
 	}
 }
+
 func TestAppRoot(t *testing.T) {
 	ap := NewParser(mockBackend{redirect: true})
 

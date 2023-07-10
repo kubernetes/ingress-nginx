@@ -57,14 +57,14 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 
 // Parse parses the annotations contained in the ingress to use
 // a custom default backend
-func (db backend) Parse(ing *networking.Ingress) (interface{}, error) {
-	s, err := parser.GetStringAnnotation(defaultBackendAnnotation, ing, db.annotationConfig.Annotations)
+func (b backend) Parse(ing *networking.Ingress) (interface{}, error) {
+	s, err := parser.GetStringAnnotation(defaultBackendAnnotation, ing, b.annotationConfig.Annotations)
 	if err != nil {
 		return nil, err
 	}
 
 	name := fmt.Sprintf("%v/%v", ing.Namespace, s)
-	svc, err := db.r.GetService(name)
+	svc, err := b.r.GetService(name)
 	if err != nil {
 		return nil, fmt.Errorf("unexpected error reading service %s: %w", name, err)
 	}
@@ -72,11 +72,11 @@ func (db backend) Parse(ing *networking.Ingress) (interface{}, error) {
 	return svc, nil
 }
 
-func (db backend) GetDocumentation() parser.AnnotationFields {
-	return db.annotationConfig.Annotations
+func (b backend) GetDocumentation() parser.AnnotationFields {
+	return b.annotationConfig.Annotations
 }
 
-func (a backend) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+func (b backend) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(b.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, defaultBackendAnnotations.Annotations)
 }

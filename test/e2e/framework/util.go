@@ -49,24 +49,24 @@ func nowStamp() string {
 	return time.Now().Format(time.StampMilli)
 }
 
-func log(level string, format string, args ...interface{}) {
+func logf(level, format string, args ...interface{}) {
 	fmt.Fprintf(ginkgo.GinkgoWriter, nowStamp()+": "+level+": "+format+"\n", args...)
 }
 
 // Logf logs to the INFO logs.
 func Logf(format string, args ...interface{}) {
-	log("INFO", format, args...)
+	logf("INFO", format, args...)
 }
 
 // Failf logs to the INFO logs and fails the test.
 func Failf(format string, args ...interface{}) {
 	msg := fmt.Sprintf(format, args...)
-	log("INFO", msg)
+	logf("INFO", msg)
 	ginkgo.Fail(nowStamp()+": "+msg, 1)
 }
 
 // RestclientConfig deserializes the contents of a kubeconfig file into a Config object.
-func RestclientConfig(config, context string) (*api.Config, error) {
+func RestclientConfig(config, newContext string) (*api.Config, error) {
 	Logf(">>> config: %s\n", config)
 	if config == "" {
 		return nil, fmt.Errorf("config file must be specified to load client config")
@@ -75,9 +75,9 @@ func RestclientConfig(config, context string) (*api.Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error loading config: %v", err.Error())
 	}
-	if context != "" {
-		Logf(">>> context: %s\n", context)
-		c.CurrentContext = context
+	if newContext != "" {
+		Logf(">>> context: %s\n", newContext)
+		c.CurrentContext = newContext
 	}
 	return c, nil
 }
@@ -114,13 +114,11 @@ func createNamespace(baseName string, labels map[string]string, c kubernetes.Int
 
 // CreateKubeNamespace creates a new namespace in the cluster
 func CreateKubeNamespace(baseName string, c kubernetes.Interface) (string, error) {
-
 	return createNamespace(baseName, nil, c)
 }
 
 // CreateKubeNamespaceWithLabel creates a new namespace with given labels in the cluster
 func CreateKubeNamespaceWithLabel(baseName string, labels map[string]string, c kubernetes.Interface) (string, error) {
-
 	return createNamespace(baseName, labels, c)
 }
 
@@ -150,7 +148,7 @@ func CreateIngressClass(namespace string, c kubernetes.Interface) (string, error
 			},
 		}, metav1.CreateOptions{})
 	if err != nil {
-		return "", fmt.Errorf("Unexpected error creating IngressClass %s: %v", icname, err)
+		return "", fmt.Errorf("unexpected error creating IngressClass %s: %v", icname, err)
 	}
 
 	_, err = c.RbacV1().ClusterRoles().Create(context.TODO(), &rbacv1.ClusterRole{
@@ -162,7 +160,7 @@ func CreateIngressClass(namespace string, c kubernetes.Interface) (string, error
 		}},
 	}, metav1.CreateOptions{})
 	if err != nil {
-		return "", fmt.Errorf("Unexpected error creating IngressClass ClusterRole %s: %v", icname, err)
+		return "", fmt.Errorf("unexpected error creating IngressClass ClusterRole %s: %v", icname, err)
 	}
 
 	_, err = c.RbacV1().ClusterRoleBindings().Create(context.TODO(), &rbacv1.ClusterRoleBinding{
@@ -184,7 +182,7 @@ func CreateIngressClass(namespace string, c kubernetes.Interface) (string, error
 		},
 	}, metav1.CreateOptions{})
 	if err != nil {
-		return "", fmt.Errorf("Unexpected error creating IngressClass ClusterRoleBinding %s: %v", icname, err)
+		return "", fmt.Errorf("unexpected error creating IngressClass ClusterRoleBinding %s: %v", icname, err)
 	}
 	return ic.Name, nil
 }
@@ -200,16 +198,16 @@ func deleteIngressClass(c kubernetes.Interface, ingressclass string) error {
 	}
 	err = c.NetworkingV1().IngressClasses().Delete(context.TODO(), ingressclass, deleteOptions)
 	if err != nil {
-		return fmt.Errorf("Unexpected error deleting IngressClass %s: %v", ingressclass, err)
+		return fmt.Errorf("unexpected error deleting IngressClass %s: %v", ingressclass, err)
 	}
 
 	err = c.RbacV1().ClusterRoleBindings().Delete(context.TODO(), ingressclass, deleteOptions)
 	if err != nil {
-		return fmt.Errorf("Unexpected error deleting IngressClass ClusterRoleBinding %s: %v", ingressclass, err)
+		return fmt.Errorf("unexpected error deleting IngressClass ClusterRoleBinding %s: %v", ingressclass, err)
 	}
 	err = c.RbacV1().ClusterRoles().Delete(context.TODO(), ingressclass, deleteOptions)
 	if err != nil {
-		return fmt.Errorf("Unexpected error deleting IngressClass ClusterRole %s: %v", ingressclass, err)
+		return fmt.Errorf("unexpected error deleting IngressClass ClusterRole %s: %v", ingressclass, err)
 	}
 
 	return nil
@@ -267,10 +265,10 @@ func WaitForPodRunningInNamespace(c kubernetes.Interface, pod *corev1.Pod) error
 	if pod.Status.Phase == corev1.PodRunning {
 		return nil
 	}
-	return waitTimeoutForPodRunningInNamespace(c, pod.Name, pod.Namespace, DefaultTimeout)
+	return waitTimeoutForPodRunningInNamespace(c, pod.Name, pod.Namespace)
 }
 
-func waitTimeoutForPodRunningInNamespace(c kubernetes.Interface, podName, namespace string, timeout time.Duration) error {
+func waitTimeoutForPodRunningInNamespace(c kubernetes.Interface, podName, namespace string) error {
 	return wait.Poll(Poll, DefaultTimeout, podRunning(c, podName, namespace))
 }
 

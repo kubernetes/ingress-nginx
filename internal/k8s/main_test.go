@@ -17,7 +17,6 @@ limitations under the License.
 package k8s
 
 import (
-	"os"
 	"testing"
 
 	apiv1 "k8s.io/api/core/v1"
@@ -203,7 +202,8 @@ func TestGetNodeIP(t *testing.T) {
 					},
 				},
 			}}}),
-			"demo", "10.0.0.2", true},
+			"demo", "10.0.0.2", true,
+		},
 	}
 
 	for _, fk := range fKNodes {
@@ -216,32 +216,32 @@ func TestGetNodeIP(t *testing.T) {
 
 func TestGetIngressPod(t *testing.T) {
 	// POD_NAME & POD_NAMESPACE not exist
-	os.Setenv("POD_NAME", "")
-	os.Setenv("POD_NAMESPACE", "")
+	t.Setenv("POD_NAME", "")
+	t.Setenv("POD_NAMESPACE", "")
 	err := GetIngressPod(testclient.NewSimpleClientset())
 	if err == nil {
 		t.Errorf("expected an error but returned nil")
 	}
 
 	// POD_NAME not exist
-	os.Setenv("POD_NAME", "")
-	os.Setenv("POD_NAMESPACE", apiv1.NamespaceDefault)
+	t.Setenv("POD_NAME", "")
+	t.Setenv("POD_NAMESPACE", apiv1.NamespaceDefault)
 	err = GetIngressPod(testclient.NewSimpleClientset())
 	if err == nil {
 		t.Errorf("expected an error but returned nil")
 	}
 
 	// POD_NAMESPACE not exist
-	os.Setenv("POD_NAME", "testpod")
-	os.Setenv("POD_NAMESPACE", "")
+	t.Setenv("POD_NAME", "testpod")
+	t.Setenv("POD_NAMESPACE", "")
 	err = GetIngressPod(testclient.NewSimpleClientset())
 	if err == nil {
 		t.Errorf("expected an error but returned nil")
 	}
 
 	// POD not exist
-	os.Setenv("POD_NAME", "testpod")
-	os.Setenv("POD_NAMESPACE", apiv1.NamespaceDefault)
+	t.Setenv("POD_NAME", "testpod")
+	t.Setenv("POD_NAMESPACE", apiv1.NamespaceDefault)
 	err = GetIngressPod(testclient.NewSimpleClientset())
 	if err == nil {
 		t.Errorf("expected an error but returned nil")

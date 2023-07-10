@@ -64,5 +64,4 @@ var _ = framework.DescribeSetting("proxy-connect-timeout", func() {
 				return !strings.Contains(server, fmt.Sprintf("proxy_connect_timeout %ss;", proxyConnectTimeout))
 			})
 	})
-
 })

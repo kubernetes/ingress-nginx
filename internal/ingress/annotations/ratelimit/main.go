@@ -288,7 +288,7 @@ func (a ratelimit) Parse(ing *networking.Ingress) (interface{}, error) {
 
 func encode(s string) string {
 	str := base64.URLEncoding.EncodeToString([]byte(s))
-	return strings.Replace(str, "=", "", -1)
+	return strings.ReplaceAll(str, "=", "")
 }
 
 func (a ratelimit) GetDocumentation() parser.AnnotationFields {

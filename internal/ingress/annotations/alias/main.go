@@ -72,7 +72,7 @@ func (a alias) Parse(ing *networking.Ingress) (interface{}, error) {
 	aliases := sets.NewString()
 	for _, alias := range strings.Split(val, ",") {
 		alias = strings.TrimSpace(alias)
-		if len(alias) == 0 {
+		if alias == "" {
 			continue
 		}
 

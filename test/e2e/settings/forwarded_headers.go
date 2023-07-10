@@ -26,6 +26,8 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
+const forwardedHeadersHost = "forwarded-headers"
+
 var _ = framework.DescribeSetting("use-forwarded-headers", func() {
 	f := framework.NewDefaultFramework("forwarded-headers")
 
@@ -37,7 +39,7 @@ var _ = framework.DescribeSetting("use-forwarded-headers", func() {
 	})
 
 	ginkgo.It("should trust X-Forwarded headers when setting is true", func() {
-		host := "forwarded-headers"
+		host := forwardedHeadersHost
 
 		f.UpdateNginxConfigMapData(setting, "true")
 
@@ -89,7 +91,7 @@ var _ = framework.DescribeSetting("use-forwarded-headers", func() {
 	})
 
 	ginkgo.It("should not trust X-Forwarded headers when setting is false", func() {
-		host := "forwarded-headers"
+		host := forwardedHeadersHost
 
 		f.UpdateNginxConfigMapData(setting, "false")
 

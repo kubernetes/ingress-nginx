@@ -103,5 +103,4 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-sync-events", func() {
 
 		assert.Empty(ginkgo.GinkgoT(), events.Items, "got events")
 	})
-
 })

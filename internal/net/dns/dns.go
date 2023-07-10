@@ -38,7 +38,7 @@ func GetSystemNameServers() ([]net.IP, error) {
 	lines := strings.Split(string(file), "\n")
 	for l := range lines {
 		trimmed := strings.TrimSpace(lines[l])
-		if len(trimmed) == 0 || trimmed[0] == '#' || trimmed[0] == ';' {
+		if trimmed == "" || trimmed[0] == '#' || trimmed[0] == ';' {
 			continue
 		}
 		fields := strings.Fields(trimmed)

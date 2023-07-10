@@ -50,7 +50,7 @@ func setupLeaderElection(config *leaderElectionConfig) {
 
 	var cancelContext context.CancelFunc
 
-	var newLeaderCtx = func(ctx context.Context) context.CancelFunc {
+	newLeaderCtx := func(ctx context.Context) context.CancelFunc {
 		// allow to cancel the context in case we stop being the leader
 		leaderCtx, cancel := context.WithCancel(ctx)
 		go elector.Run(leaderCtx)

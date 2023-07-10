@@ -37,7 +37,7 @@ var _ = framework.DescribeSetting("[Load Balancer] round-robin", func() {
 	})
 
 	ginkgo.It("should evenly distribute requests with round-robin (default algorithm)", func() {
-		host := "load-balance.com"
+		host := loadBalanceHost
 
 		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
 		f.WaitForNginxServer(host,
