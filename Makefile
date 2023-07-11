@@ -130,7 +130,9 @@ static-check: ## Run verification script for boilerplate, codegen, gofmt, golint
 
 .PHONY: golint-check
 golint-check:
-	hack/verify-golint.sh
+	@build/run-in-docker.sh \
+	    MAC_OS=$(MAC_OS) \
+		hack/verify-golint.sh
 
 ###############################
 # Tests for ingress-nginx
