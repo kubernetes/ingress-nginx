@@ -1,5 +1,15 @@
 name: golangci-lint
 
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'docs/**'
+      - 'deploy/**'
+      - '**.md'
+
 permissions:
   contents: read
 
