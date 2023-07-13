@@ -224,6 +224,8 @@ http {
         $geoip2_subregion_code source=$remote_addr subdivisions 1 iso_code;
         $geoip2_subregion_name source=$remote_addr subdivisions 1 names en;
         $geoip2_subregion_geoname_id source=$remote_addr subdivisions 1 geoname_id;
+        $geoip2_city_continent_code source=$remote_addr continent code;
+        $geoip2_city_continent_name source=$remote_addr continent names en;
     }
     {{ end }}
 
@@ -245,6 +247,8 @@ http {
         $geoip2_subregion_code source=$remote_addr subdivisions 1 iso_code;
         $geoip2_subregion_name source=$remote_addr subdivisions 1 names en;
         $geoip2_subregion_geoname_id source=$remote_addr subdivisions 1 geoname_id;
+        $geoip2_city_continent_code source=$remote_addr continent code;
+        $geoip2_city_continent_name source=$remote_addr continent names en;
     }
     {{ end }}
 
@@ -307,7 +311,6 @@ http {
     client_body_temp_path           /tmp/nginx/client-body;
     fastcgi_temp_path               /tmp/nginx/fastcgi-temp;
     proxy_temp_path                 /tmp/nginx/proxy-temp;
-    ajp_temp_path                   /tmp/nginx/ajp-temp;
 
     client_header_buffer_size       {{ $cfg.ClientHeaderBufferSize }};
     client_header_timeout           {{ $cfg.ClientHeaderTimeout }}s;

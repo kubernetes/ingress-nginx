@@ -767,7 +767,9 @@ func BenchmarkTemplateWithData(b *testing.B) {
 	}
 
 	for i := 0; i < b.N; i++ {
-		ngxTpl.Write(dat)
+		if _, err := ngxTpl.Write(dat); err != nil {
+			b.Errorf("unexpected error writing template: %v", err)
+		}
 	}
 }
 
@@ -1137,7 +1139,6 @@ func TestOpentracingPropagateContext(t *testing.T) {
 		{BackendProtocol: "AUTO_HTTP"}: "opentracing_propagate_context;",
 		{BackendProtocol: "GRPC"}:      "opentracing_grpc_propagate_context;",
 		{BackendProtocol: "GRPCS"}:     "opentracing_grpc_propagate_context;",
-		{BackendProtocol: "AJP"}:       "opentracing_propagate_context;",
 		{BackendProtocol: "FCGI"}:      "opentracing_propagate_context;",
 		nil:                            "",
 	}
@@ -1157,7 +1158,6 @@ func TestOpentelemetryPropagateContext(t *testing.T) {
 		{BackendProtocol: "AUTO_HTTP"}: "opentelemetry_propagate;",
 		{BackendProtocol: "GRPC"}:      "opentelemetry_propagate;",
 		{BackendProtocol: "GRPCS"}:     "opentelemetry_propagate;",
-		{BackendProtocol: "AJP"}:       "opentelemetry_propagate;",
 		{BackendProtocol: "FCGI"}:      "opentelemetry_propagate;",
 		nil:                            "",
 	}

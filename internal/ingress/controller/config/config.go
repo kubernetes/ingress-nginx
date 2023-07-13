@@ -91,7 +91,7 @@ const (
 
 // Configuration represents the content of nginx.conf file
 type Configuration struct {
-	defaults.Backend `json:",squash"`
+	defaults.Backend `json:",squash"` //nolint:staticcheck
 
 	// AllowSnippetAnnotations enable users to add their own snippets via ingress annotation.
 	// If disabled, only snippets added via ConfigMap are added to ingress.
@@ -710,16 +710,9 @@ type Configuration struct {
 	// Default: nginx.handle
 	DatadogOperationNameOverride string `json:"datadog-operation-name-override"`
 
-	// DatadogPrioritySampling specifies to use client-side sampling
-	// If true disables client-side sampling (thus ignoring sample_rate) and enables distributed
-	// priority sampling, where traces are sampled based on a combination of user-assigned
-	// Default: true
-	DatadogPrioritySampling bool `json:"datadog-priority-sampling"`
-
 	// DatadogSampleRate specifies sample rate for any traces created.
-	// This is effective only when datadog-priority-sampling is false
-	// Default: 1.0
-	DatadogSampleRate float32 `json:"datadog-sample-rate"`
+	// Default: use a dynamic rate instead
+	DatadogSampleRate *float32 `json:"datadog-sample-rate",omitempty`
 
 	// MainSnippet adds custom configuration to the main section of the nginx configuration
 	MainSnippet string `json:"main-snippet"`
@@ -1007,8 +1000,7 @@ func NewDefault() Configuration {
 		DatadogEnvironment:                     "prod",
 		DatadogCollectorPort:                   8126,
 		DatadogOperationNameOverride:           "nginx.handle",
-		DatadogSampleRate:                      1.0,
-		DatadogPrioritySampling:                true,
+		DatadogSampleRate:                      nil,
 		LimitReqStatusCode:                     503,
 		LimitConnStatusCode:                    503,
 		SyslogPort:                             514,

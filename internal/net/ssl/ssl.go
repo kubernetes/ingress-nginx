@@ -228,7 +228,7 @@ func ConfigureCRL(name string, crl []byte, sslCert *ingress.SSLCert) error {
 		return fmt.Errorf("CRL file %v contains invalid data, and must be created only with PEM formatted certificates", name)
 	}
 
-	_, err := x509.ParseCRL(pemCRLBlock.Bytes)
+	_, err := x509.ParseRevocationList(pemCRLBlock.Bytes)
 	if err != nil {
 		return fmt.Errorf(err.Error())
 	}
