@@ -28,7 +28,7 @@ const (
 )
 
 var http2PushPreloadAnnotations = parser.Annotation{
-	Group: "", // TODO: TBD
+	Group: "http2",
 	Annotations: parser.AnnotationFields{
 		http2PushPreloadAnnotation: {
 			Validator:     parser.ValidateBool,
