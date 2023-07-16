@@ -1,6 +1,6 @@
 {{- define "ingress-nginx.params" -}}
 - /nginx-ingress-controller
-{{- if .Values.controller.enableValidations }}
+{{- if .Values.controller.enableAnnotationValidations }}
 - --enable-annotation-validation=true
 {{- end }}
 {{- if .Values.defaultBackend.enabled }}

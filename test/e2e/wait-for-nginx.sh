@@ -69,7 +69,7 @@ else
 # TODO: remove the need to use fullnameOverride
 fullnameOverride: nginx-ingress
 controller:
-  enableValidations: ${ENABLE_VALIDATIONS}
+  enableAnnotationValidations: ${ENABLE_VALIDATIONS}
   image:
     repository: ingress-controller/controller
     chroot: ${IS_CHROOT}
