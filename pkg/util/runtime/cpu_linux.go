@@ -38,7 +38,7 @@ import (
 func NumCPU() int {
 	cpus := runtime.NumCPU()
 
-	cgroupVersion := getCgroupVersion()
+	cgroupVersion := GetCgroupVersion()
 	cpuQuota := int64(-1)
 	cpuPeriod := int64(-1)
 
@@ -64,7 +64,7 @@ func IsCgroupAvaliable() bool {
 	return true
 }
 
-func getCgroupVersion() int64 {
+func GetCgroupVersion() int64 {
 	// /sys/fs/cgroup/cgroup.controllers will not exist with cgroupsv1
 	if _, err := os.Stat("/sys/fs/cgroup/cgroup.controllers"); err == nil {
 		return 2

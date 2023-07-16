@@ -28,7 +28,10 @@ import (
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 
+	"path/filepath"
 	"k8s.io/ingress-nginx/pkg/util/runtime"
+
+	libcontainercgroups "github.com/opencontainers/runc/libcontainer/cgroups"
 )
 
 var _ = framework.IngressNginxDescribeSerial("[CGroups] cgroups", func() {
@@ -40,26 +43,75 @@ var _ = framework.IngressNginxDescribeSerial("[CGroups] cgroups", func() {
 	})
 
 	ginkgo.It("detects if cgroups is avaliable", func() {
-		assert.Equal(ginkgo.GinkgoT(), runtime.IsCgroupAvaliable(), 1)
+		assert.True(ginkgo.GinkgoT(), runtime.IsCgroupAvaliable())
 	})
 
 	ginkgo.It("detects cgroups version v1", func() {
-		assert.Equal(ginkgo.GinkgoT(), runtime.readCgroupFileToInt64(), 1)
-	})
-
-	ginkgo.It("detects number of CPUs properly in cgroups v1", func() {
-		assert.Equal(ginkgo.GinkgoT(), runtime.NumCPU(), -1)
-	})
-
-	ginkgo.It("detects cgroups version v2", func() {
-		// create cgroups2 files
-		if err := os.MkdirAll("a/b/c/d", os.ModePerm); err != nil {
+		cgroupPath, err := libcontainercgroups.FindCgroupMountpoint("", "cpu")
+		if err != nil {
 			log.Fatal(err)
 		}
 
+		quotaFile, err := os.Create(filepath.Join(cgroupPath,"cpu.cfs_quota_us"))
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		periodFile, err := os.Create(filepath.Join(cgroupPath,"cpu.cfs_period_us"))
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		quotaFile.WriteString("4");
+		quotaFile.Sync();
+
+		periodFile.WriteString("2");
+		periodFile.Sync();
+		
+		assert.Equal(ginkgo.GinkgoT(), runtime.GetCgroupVersion(), int64(1))	
+		assert.Equal(ginkgo.GinkgoT(), runtime.NumCPU(), 2)
+
+		os.Remove(filepath.Join(cgroupPath,"cpu.cfs_quota_us"))
+		os.Remove(filepath.Join(cgroupPath,"cpu.cfs_period_us"))
 	})
 
-	ginkgo.It("detects number of CPUs properly in cgroups v2", func() {
-		assert.Equal(ginkgo.GinkgoT(), runtime.NumCPU(), -1)
+	ginkgo.It("detect cgroups version v2", func() {
+		if err := os.MkdirAll("/sys/fs/cgroup/", os.ModePerm); err != nil {
+			log.Fatal(err)
+		}
+
+		os.Create("/sys/fs/cgroup/cgroup.controllers")
+		file, err := os.Create("/sys/fs/cgroup/cpu.max")
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		file.WriteString("4 2");
+		file.Sync();
+		
+		assert.Equal(ginkgo.GinkgoT(), runtime.GetCgroupVersion(), int64(2))	
+		assert.Equal(ginkgo.GinkgoT(), runtime.NumCPU(), 2)
+
+		os.Remove("/sys/fs/cgroup/cpu.max")
+		os.Remove("/sys/fs/cgroup/cgroup.controllers")
 	})
+
+	// ginkgo.It("detects number of CPUs properly in cgroups v1", func() {
+	// 	assert.Equal(ginkgo.GinkgoT(), runtime.NumCPU(), -1)
+	// })
+
+	// ginkgo.It("detects cgroups version v2", func() {
+	// 	// create cgroups2 files
+	// 	if err := os.MkdirAll("a/b/c/d", os.ModePerm); err != nil {
+	// 		log.Fatal(err)
+	// 	}
+
+	// })
+
+	// ginkgo.It("detects number of CPUs properly in cgroups v2", func() {
+	// 	assert.Equal(ginkgo.GinkgoT(), runtime.NumCPU(), -1)
+	// })
 })
