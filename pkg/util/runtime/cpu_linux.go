@@ -93,7 +93,7 @@ func readCgroup2FileToInt64Tuple(cgroupFile string) (int64, int64) {
 	}
 
 	if len(values) == 1 {
-		return cpuQuota, 1
+		return cpuQuota, 100000
 	}
 
 	cpuPeriod, err := strconv.ParseInt(values[1], 10, 64)
