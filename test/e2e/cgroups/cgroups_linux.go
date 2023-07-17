@@ -28,8 +28,8 @@ import (
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 
-	"path/filepath"
 	"k8s.io/ingress-nginx/pkg/util/runtime"
+	"path/filepath"
 
 	libcontainercgroups "github.com/opencontainers/runc/libcontainer/cgroups"
 )
@@ -48,29 +48,29 @@ var _ = framework.IngressNginxDescribeSerial("[CGroups] cgroups", func() {
 			log.Fatal(err)
 		}
 
-		quotaFile, err := os.Create(filepath.Join(cgroupPath,"cpu.cfs_quota_us"))
+		quotaFile, err := os.Create(filepath.Join(cgroupPath, "cpu.cfs_quota_us"))
 
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		periodFile, err := os.Create(filepath.Join(cgroupPath,"cpu.cfs_period_us"))
+		periodFile, err := os.Create(filepath.Join(cgroupPath, "cpu.cfs_period_us"))
 
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		quotaFile.WriteString("4");
-		quotaFile.Sync();
+		quotaFile.WriteString("4")
+		quotaFile.Sync()
 
-		periodFile.WriteString("2");
-		periodFile.Sync();
-		
-		assert.Equal(ginkgo.GinkgoT(), runtime.GetCgroupVersion(), int64(1))	
+		periodFile.WriteString("2")
+		periodFile.Sync()
+
+		assert.Equal(ginkgo.GinkgoT(), runtime.GetCgroupVersion(), int64(1))
 		assert.Equal(ginkgo.GinkgoT(), runtime.NumCPU(), 2)
 
-		os.Remove(filepath.Join(cgroupPath,"cpu.cfs_quota_us"))
-		os.Remove(filepath.Join(cgroupPath,"cpu.cfs_period_us"))
+		os.Remove(filepath.Join(cgroupPath, "cpu.cfs_quota_us"))
+		os.Remove(filepath.Join(cgroupPath, "cpu.cfs_period_us"))
 	})
 
 	ginkgo.It("detect cgroups version v2", func() {
@@ -85,10 +85,10 @@ var _ = framework.IngressNginxDescribeSerial("[CGroups] cgroups", func() {
 			log.Fatal(err)
 		}
 
-		file.WriteString("4 2");
-		file.Sync();
-		
-		assert.Equal(ginkgo.GinkgoT(), runtime.GetCgroupVersion(), int64(2))	
+		file.WriteString("4 2")
+		file.Sync()
+
+		assert.Equal(ginkgo.GinkgoT(), runtime.GetCgroupVersion(), int64(2))
 		assert.Equal(ginkgo.GinkgoT(), runtime.NumCPU(), 2)
 
 		os.Remove("/sys/fs/cgroup/cpu.max")
