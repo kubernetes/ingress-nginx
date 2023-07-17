@@ -143,7 +143,7 @@ func ValidMethod(method string) bool {
 
 // ValidHeader checks is the provided string satisfies the header's name regex
 func ValidHeader(header string) bool {
-	return headerRegexp.Match([]byte(header))
+	return headerRegexp.MatchString(header)
 }
 
 // ValidCacheDuration checks if the provided string is a valid cache duration
@@ -159,13 +159,13 @@ func ValidCacheDuration(duration string) bool {
 		if len(element) == 0 {
 			continue
 		}
-		if statusCodeRegex.Match([]byte(element)) {
+		if statusCodeRegex.MatchString(element) {
 			if seenDuration {
 				return false // code after duration
 			}
 			continue
 		}
-		if durationRegex.Match([]byte(element)) {
+		if durationRegex.MatchString(element) {
 			seenDuration = true
 		}
 	}

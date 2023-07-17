@@ -22,7 +22,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/auth-realm](#authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-secret](#authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-secret-type](#authentication)|string|
-|[nginx.ingress.kubernetes.io/auth-type](#authentication)|basic or digest|
+|[nginx.ingress.kubernetes.io/auth-type](#authentication)|"basic" or "digest"|
 |[nginx.ingress.kubernetes.io/auth-tls-secret](#client-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-tls-verify-depth](#client-certificate-authentication)|number|
 |[nginx.ingress.kubernetes.io/auth-tls-verify-client](#client-certificate-authentication)|string|
@@ -38,7 +38,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/auth-proxy-set-headers](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-snippet](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/enable-global-auth](#external-authentication)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/backend-protocol](#backend-protocol)|string|HTTP,HTTPS,GRPC,GRPCS,AJP|
+|[nginx.ingress.kubernetes.io/backend-protocol](#backend-protocol)|string|HTTP,HTTPS,GRPC,GRPCS|
 |[nginx.ingress.kubernetes.io/canary](#canary)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/canary-by-header](#canary)|string|
 |[nginx.ingress.kubernetes.io/canary-by-header-value](#canary)|string|
@@ -123,11 +123,6 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/opentracing-trust-incoming-span](#opentracing-trust-incoming-span)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/enable-opentelemetry](#enable-opentelemetry)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/opentelemetry-trust-incoming-span](#opentelemetry-trust-incoming-spans)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/enable-influxdb](#influxdb)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/influxdb-measurement](#influxdb)|string|
-|[nginx.ingress.kubernetes.io/influxdb-port](#influxdb)|string|
-|[nginx.ingress.kubernetes.io/influxdb-host](#influxdb)|string|
-|[nginx.ingress.kubernetes.io/influxdb-server-name](#influxdb)|string|
 |[nginx.ingress.kubernetes.io/use-regex](#use-regex)|bool|
 |[nginx.ingress.kubernetes.io/enable-modsecurity](#modsecurity)|bool|
 |[nginx.ingress.kubernetes.io/enable-owasp-core-rules](#modsecurity)|bool|
@@ -603,7 +598,7 @@ the User guide.
 
 ### Service Upstream
 
-By default the NGINX ingress controller uses a list of all endpoints (Pod IP/port) in the NGINX upstream configuration.
+By default the Ingress-Nginx Controller uses a list of all endpoints (Pod IP/port) in the NGINX upstream configuration.
 
 The `nginx.ingress.kubernetes.io/service-upstream` annotation disables that behavior and instead uses a single upstream in NGINX, the service's Cluster IP and port.
 
@@ -896,33 +891,10 @@ nginx.ingress.kubernetes.io/modsecurity-snippet: |
 Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
 ```
 
-### InfluxDB
-
-Using `influxdb-*` annotations we can monitor requests passing through a Location by sending them to an InfluxDB backend exposing the UDP socket
-using the [nginx-influxdb-module](https://github.com/influxdata/nginx-influxdb-module/).
-
-```yaml
-nginx.ingress.kubernetes.io/enable-influxdb: "true"
-nginx.ingress.kubernetes.io/influxdb-measurement: "nginx-reqs"
-nginx.ingress.kubernetes.io/influxdb-port: "8089"
-nginx.ingress.kubernetes.io/influxdb-host: "127.0.0.1"
-nginx.ingress.kubernetes.io/influxdb-server-name: "nginx-ingress"
-```
-
-For the `influxdb-host` parameter you have two options:
-
-- Use an InfluxDB server configured with the  [UDP protocol](https://docs.influxdata.com/influxdb/v1.5/supported_protocols/udp/) enabled.
-- Deploy Telegraf as a sidecar proxy to the Ingress controller configured to listen UDP with the [socket listener input](https://github.com/influxdata/telegraf/tree/release-1.6/plugins/inputs/socket_listener) and to write using
-anyone of the [outputs plugins](https://github.com/influxdata/telegraf/tree/release-1.7/plugins/outputs) like InfluxDB, Apache Kafka,
-Prometheus, etc.. (recommended)
-
-It's important to remember that there's no DNS resolver at this stage so you will have to configure
-an ip address to `nginx.ingress.kubernetes.io/influxdb-host`. If you deploy Influx or Telegraf as sidecar (another container in the same pod) this becomes straightforward since you can directly use `127.0.0.1`.
-
 ### Backend Protocol
 
 Using `backend-protocol` annotations is possible to indicate how NGINX should communicate with the backend service. (Replaces `secure-backends` in older versions)
-Valid Values: HTTP, HTTPS, GRPC, GRPCS, AJP and FCGI
+Valid Values: HTTP, HTTPS, GRPC, GRPCS and FCGI
 
 By default NGINX uses `HTTP`.
 

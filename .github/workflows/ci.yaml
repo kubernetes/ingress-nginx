@@ -7,6 +7,7 @@ on:
     paths-ignore:
       - 'docs/**'
       - 'deploy/**'
+      - '**.md'
 
   push:
     branches:
@@ -14,6 +15,7 @@ on:
     paths-ignore:
       - 'docs/**'
       - 'deploy/**'
+      - '**.md'
 
   workflow_dispatch:
     inputs:
@@ -21,6 +23,7 @@ on:
         description: 'Force e2e to run'
         required: false
         type: boolean
+
 
 permissions:
   contents: read
@@ -39,7 +42,7 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
 
       - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
         id: filter
@@ -65,10 +68,10 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
 
       - name: Run Gosec Security Scanner
-        uses: securego/gosec@a459eb0ba387d9bd083d5c2e2354dbeef2465038 # v2.15.0
+        uses: securego/gosec@c5ea1b7bdd9efc3792e513258853552b0ae31e06 # v2.16.0
         with:
           # G601 for zz_generated.deepcopy.go
           # G306 TODO: Expect WriteFile permissions to be 0600 or less
@@ -82,11 +85,11 @@ jobs:
       (needs.changes.outputs.go == 'true')
     steps:
       - name: Checkout
-        uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       
       - name: Set up Go
         id: go
-        uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568 # v3.5.0
+        uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
         with:
           go-version: '1.20'
           check-latest: true
@@ -101,11 +104,11 @@ jobs:
       (needs.changes.outputs.go == 'true')
     steps:
       - name: Checkout
-        uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       
       - name: Set up Go
         id: go
-        uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568 # v3.5.0
+        uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
         with:
           go-version: '1.20'
           check-latest: true
@@ -120,11 +123,11 @@ jobs:
       (needs.changes.outputs.go == 'true')
     steps:
       - name: Checkout
-        uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       
       - name: Set up Go
         id: go
-        uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568 # v3.5.0
+        uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
         with:
           go-version: '1.20'
           check-latest: true
@@ -141,21 +144,21 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
 
       - name: Set up Go
         id: go
-        uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568 # v3.5.0
+        uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
         with:
           go-version: '1.20'
           check-latest: true
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@e81a89b1732b9c48d79cd809d8d81d79c4647a18 # v2.1.0
+        uses: docker/setup-qemu-action@2b82ce82d56a2a04d2637cd93a637ae1b359c0a7 # v2.2.0
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@4b4e9c3e2d4531116a6f8ba8e71fc6e2cb6e6c8c # v2.5.0
+        uses: docker/setup-buildx-action@2a1a44ac4aa01993040736bd95bb470da1a38365 # v2.9.0
         with:
           version: latest
 
@@ -166,7 +169,7 @@ jobs:
         run: |
           sudo apt-get -qq update || true
           sudo apt-get install -y pigz
-          curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.25.5/bin/linux/amd64/kubectl
+          curl -LO https://dl.k8s.io/release/v1.25.5/bin/linux/amd64/kubectl
           chmod +x ./kubectl
           sudo mv ./kubectl /usr/local/bin/kubectl
 
@@ -192,7 +195,7 @@ jobs:
         with:
           name: docker.tar.gz
           path: docker.tar.gz
-
+          retention-days: 5
   helm:
     name: Helm chart
     runs-on: ubuntu-latest
@@ -204,14 +207,14 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.7, v1.25.3, v1.26.0]
+        k8s: [v1.24.12, v1.25.8, v1.26.3,v1.27.1]
 
     steps:
       - name: Checkout
-        uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
 
       - name: Setup Go
-        uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568 # v3.5.0
+        uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
         with:
           go-version: '1.20'
           check-latest: true
@@ -254,11 +257,6 @@ jobs:
         run: |
           kind create cluster --image=kindest/node:${{ matrix.k8s }}
 
-      - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
-        with:
-          name: docker.tar.gz
-          failOnError: false
-
       - name: Load images from cache
         run: |
           echo "loading docker images..."
@@ -284,11 +282,11 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.7, v1.25.3, v1.26.0]
+        k8s: [v1.24.12, v1.25.8, v1.26.3,v1.27.1]
 
     steps:
       - name: Checkout
-        uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
 
       - name: cache
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
@@ -299,11 +297,6 @@ jobs:
         id: kind
         run: |
           kind create cluster --image=kindest/node:${{ matrix.k8s }} --config test/e2e/kind.yaml
-
-      - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
-        with:
-          name: docker.tar.gz
-          failOnError: false
 
       - name: Load images from cache
         run: |
@@ -319,12 +312,13 @@ jobs:
           kind get kubeconfig > $HOME/.kube/kind-config-kind
           make kind-e2e-test
 
-      - name: Uplaod e2e junit-reports
+      - name: Upload e2e junit-reports
         uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         if: success() || failure()
         with:
           name: e2e-test-reports-${{ matrix.k8s }}
           path: 'test/junitreports/report*.xml'
+
 
   kubernetes-chroot:
     name: Kubernetes chroot
@@ -337,12 +331,12 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.7, v1.25.3, v1.26.0]
+        k8s: [v1.24.12, v1.25.8, v1.26.3,v1.27.1]
 
     steps:
 
       - name: Checkout
-        uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
 
       - name: cache
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
@@ -353,11 +347,6 @@ jobs:
         id: kind
         run: |
           kind create cluster --image=kindest/node:${{ matrix.k8s }} --config test/e2e/kind.yaml
-
-      - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
-        with:
-          name: docker.tar.gz
-          failOnError: false
 
       - name: Load images from cache
         run: |
@@ -374,7 +363,7 @@ jobs:
           kind get kubeconfig > $HOME/.kube/kind-config-kind
           make kind-e2e-test
 
-      - name: Uplaod e2e junit-reports
+      - name: Upload e2e junit-reports
         uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         if: success() || failure()
         with:
@@ -391,7 +380,7 @@ jobs:
       PLATFORMS: linux/amd64,linux/arm64
     steps:
       - name: Checkout
-        uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
 
       - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
         id: filter-images
@@ -408,8 +397,8 @@ jobs:
               - 'images/echo/**'
             go-grpc-greeter-server:
               - 'images/go-grpc-greeter-server/**'
-            httpbin:
-              - 'images/httpbin/**'
+            httpbun:
+              - 'images/httpbun/**'
             kube-webhook-certgen:
               - 'images/kube-webhook-certgen/**'
             ext-auth-example-authsvc:
@@ -435,10 +424,10 @@ jobs:
         if: ${{ steps.filter-images.outputs.go-grpc-greeter-server == 'true' }}
         run: |
           cd images/go-grpc-greeter-server && make build
-      - name: httpbin image build
+      - name: httpbun image build
         if: ${{ steps.filter-images.outputs.httpbin == 'true' }}
         run: |
-          cd images/httpbin && make build
+          cd images/httpbun && make build
       - name: kube-webhook-certgen image build
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
         run: |
@@ -460,11 +449,11 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.7, v1.25.3, v1.26.0]
+        k8s: [v1.24.12, v1.25.8, v1.26.3,v1.27.1]
 
     steps:
       - name: Checkout
-        uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f # v3.4.0
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
 
       - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
         id: filter-images
@@ -483,7 +472,7 @@ jobs:
       - name: Set up Go
         id: go
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
-        uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568 # v3.5.0
+        uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
         with:
           go-version: '1.20'
           check-latest: true

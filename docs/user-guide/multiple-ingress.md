@@ -111,7 +111,7 @@ spec:
 
 then setting the corresponding `kubernetes.io/ingress.class: "internal-nginx"` annotation on your Ingresses.
 
-To reiterate, setting the annotation to any value which does not match a valid ingress class will force the NGINX Ingress controller to ignore your Ingress.
-If you are only running a single NGINX ingress controller, this can be achieved by setting the annotation to any value except "nginx" or an empty string.
+To reiterate, setting the annotation to any value which does not match a valid ingress class will force the Ingress-Nginx Controller to ignore your Ingress.
+If you are only running a single Ingress-Nginx Controller, this can be achieved by setting the annotation to any value except "nginx" or an empty string.
 
 Do this if you wish to use one of the other Ingress controllers at the same time as the NGINX controller.

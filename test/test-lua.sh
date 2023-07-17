@@ -41,7 +41,7 @@ SHDICT_ARGS=(
 )
 
 if [ $# -eq 0 ]; then
-    resty "${SHDICT_ARGS[@]}" ./rootfs/etc/nginx/lua/test/ ./rootfs/etc/nginx/lua/plugins/**/test
+    resty "${SHDICT_ARGS[@]}" ./rootfs/etc/nginx/lua/test/ ./rootfs/etc/nginx/lua/plugins/**/test ${BUSTED_ARGS}
 else
-    resty "${SHDICT_ARGS[@]}" $@
+    resty "${SHDICT_ARGS[@]}" $@ ${BUSTED_ARGS}
 fi

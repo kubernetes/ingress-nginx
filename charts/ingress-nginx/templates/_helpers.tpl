@@ -201,8 +201,12 @@ Extra modules.
 
 - name: {{ .name }}
   image: {{ .image }}
+  {{- if .distroless | default false }}
+  command: ['/init_module']
+  {{- else }}
   command: ['sh', '-c', '/usr/local/bin/init_module.sh']
-  {{- if (.containerSecurityContext) }}
+  {{- end }}
+  {{- if .containerSecurityContext }}
   securityContext: {{ .containerSecurityContext | toYaml | nindent 4 }}
   {{- end }}
   volumeMounts:

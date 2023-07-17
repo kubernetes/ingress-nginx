@@ -12,21 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM alpine:3.17.2
+FROM golang:1.20.5 AS builder
 
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
+ENV HTTPBUN_COMMIT=a6b387c438b664322734250e426b6966966c2fe4
 
-RUN apk update \
-  && apk add --no-cache \
-    python3 python3-dev \
-    musl-dev gcc g++ make \
-    libffi libffi-dev libstdc++ \
-    py3-gevent py3-gunicorn py3-wheel \
-    py3-pip \
- && pip3 install httpbin \
- && apk del python3-dev musl-dev gcc g++ make libffi-dev
+RUN git clone https://github.com/sharat87/httpbun.git
+WORKDIR httpbun
+RUN git checkout $HTTPBUN_COMMIT
 
+RUN CGO_ENABLED=0 GOOS=linux go build \
+    -installsuffix cgo \
+    -trimpath \
+    -o bin/httpbun .
+
+FROM scratch
+COPY --from=builder /go/httpbun/bin/httpbun httpbun
+ENV HTTPBUN_BIND=0.0.0.0:80
 EXPOSE 80
-
-CMD ["gunicorn", "-b", "0.0.0.0:80", "httpbin:app", "-k", "gevent"]
+ENTRYPOINT ["/httpbun"]

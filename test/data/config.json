@@ -413,7 +413,7 @@
 				"secured": false
 			},
 			"externalAuth": {
-				"url": "https://httpbin.org/basic-auth/user/passwd",
+				"url": "https://httpbun.com/basic-auth/user/passwd",
 				"method": "",
 				"sendBody": false
 			},
@@ -59354,7 +59354,7 @@
 				"secured": false
 			},
 			"externalAuth": {
-				"url": "https://httpbin.org/basic-auth/user/passwd",
+				"url": "https://httpbun.com/basic-auth/user/passwd",
 				"method": "",
 				"sendBody": false
 			},

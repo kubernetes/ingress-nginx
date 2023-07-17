@@ -17,13 +17,14 @@ limitations under the License.
 package fastcgi
 
 import (
+	"fmt"
 	"testing"
 
 	api "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
@@ -51,14 +52,19 @@ type mockConfigMap struct {
 }
 
 func (m mockConfigMap) GetConfigMap(name string) (*api.ConfigMap, error) {
-	if name != "default/demo-configmap" {
-		return nil, errors.Errorf("there is no configmap with name %v", name)
+	if name != "default/demo-configmap" && name != "otherns/demo-configmap" {
+		return nil, fmt.Errorf("there is no configmap with name %v", name)
+	}
+
+	cmns, cmn, err := cache.SplitMetaNamespaceKey(name)
+	if err != nil {
+		return nil, fmt.Errorf("invalid configmap name")
 	}
 
 	return &api.ConfigMap{
 		ObjectMeta: meta_v1.ObjectMeta{
-			Namespace: api.NamespaceDefault,
-			Name:      "demo-secret",
+			Namespace: cmns,
+			Name:      cmn,
 		},
 		Data: map[string]string{"REDIRECT_STATUS": "200", "SERVER_NAME": "$server_name"},
 	}, nil
@@ -208,6 +214,20 @@ func TestParseFastCGIParamsConfigMapAnnotationWithNS(t *testing.T) {
 	if config.Params["REDIRECT_STATUS"] != "200" || config.Params["SERVER_NAME"] != "$server_name" {
 		t.Errorf("Params value is not the one expected")
 	}
+}
+
+func TestParseFastCGIParamsConfigMapAnnotationWithDifferentNS(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix("fastcgi-params-configmap")] = "otherns/demo-configmap"
+	ing.SetAnnotations(data)
+
+	_, err := NewParser(&mockConfigMap{}).Parse(ing)
+	if err == nil {
+		t.Errorf("Different namespace configmap should return an error")
+	}
+
 }
 
 func TestConfigEquality(t *testing.T) {

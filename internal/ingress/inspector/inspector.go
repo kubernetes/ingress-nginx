@@ -17,6 +17,9 @@ limitations under the License.
 package inspector
 
 import (
+	"errors"
+	"fmt"
+
 	corev1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
 	"k8s.io/klog/v2"
@@ -35,4 +38,30 @@ func DeepInspect(obj interface{}) error {
 		klog.Warningf("received invalid object to inspect: %T", obj)
 		return nil
 	}
+}
+
+var (
+	implSpecific = networking.PathTypeImplementationSpecific
+)
+
+func ValidatePathType(ing *networking.Ingress) error {
+	if ing == nil {
+		return fmt.Errorf("received null ingress")
+	}
+	var err error
+	for _, rule := range ing.Spec.Rules {
+		if rule.HTTP != nil {
+			for _, path := range rule.HTTP.Paths {
+				if path.Path == "" {
+					continue
+				}
+				if path.PathType == nil || *path.PathType != implSpecific {
+					if isValid := validPathType.MatchString(path.Path); !isValid {
+						err = errors.Join(err, fmt.Errorf("path %s cannot be used with pathType %s", path.Path, string(*path.PathType)))
+					}
+				}
+			}
+		}
+	}
+	return err
 }

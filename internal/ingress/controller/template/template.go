@@ -18,13 +18,14 @@ package template
 
 import (
 	"bytes"
+	"crypto/rand"
 	"crypto/sha1" // #nosec
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/rand" // #nosec
+	"math/big"
 	"net"
 	"net/url"
 	"os"
@@ -34,13 +35,11 @@ import (
 	"strconv"
 	"strings"
 	text_template "text/template"
-	"time"
 
 	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog/v2"
 
-	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
@@ -267,7 +266,6 @@ var (
 		"buildOpentracing":                   buildOpentracing,
 		"buildOpentelemetry":                 buildOpentelemetry,
 		"proxySetHeader":                     proxySetHeader,
-		"buildInfluxDB":                      buildInfluxDB,
 		"enforceRegexModifier":               enforceRegexModifier,
 		"buildCustomErrorDeps":               buildCustomErrorDeps,
 		"buildCustomErrorLocationsPerServer": buildCustomErrorLocationsPerServer,
@@ -281,7 +279,6 @@ var (
 		"buildModSecurityForLocation":        buildModSecurityForLocation,
 		"buildMirrorLocations":               buildMirrorLocations,
 		"shouldLoadAuthDigestModule":         shouldLoadAuthDigestModule,
-		"shouldLoadInfluxDBModule":           shouldLoadInfluxDBModule,
 		"buildServerName":                    buildServerName,
 		"buildCorsOriginRegex":               buildCorsOriginRegex,
 	}
@@ -739,9 +736,6 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 	case "GRPCS":
 		proto = "grpcs://"
 		proxyPass = "grpc_pass"
-	case "AJP":
-		proto = ""
-		proxyPass = "ajp_pass"
 	case "FCGI":
 		proto = ""
 		proxyPass = "fastcgi_pass"
@@ -1190,14 +1184,15 @@ func buildAuthSignURLLocation(location, authSignURL string) string {
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
 func randomString() string {
 	b := make([]rune, 32)
 	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))] // #nosec
+		idx, err := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
+		if err != nil {
+			klog.Errorf("unexpected error generating random index: %v", err)
+			return ""
+		}
+		b[i] = letters[idx.Int64()]
 	}
 
 	return string(b)
@@ -1267,29 +1262,6 @@ func buildOpentelemetry(c interface{}, s interface{}) string {
 		buf.WriteString(fmt.Sprintf("opentelemetry_operation_name \"%s\";\n", cfg.OpentelemetryOperationName))
 	}
 	return buf.String()
-}
-
-// buildInfluxDB produces the single line configuration
-// needed by the InfluxDB module to send request's metrics
-// for the current resource
-func buildInfluxDB(input interface{}) string {
-	cfg, ok := input.(influxdb.Config)
-	if !ok {
-		klog.Errorf("expected an 'influxdb.Config' type but %T was returned", input)
-		return ""
-	}
-
-	if !cfg.InfluxDBEnabled {
-		return ""
-	}
-
-	return fmt.Sprintf(
-		"influxdb server_name=%s host=%s port=%s measurement=%s enabled=true;",
-		cfg.InfluxDBServerName,
-		cfg.InfluxDBHost,
-		cfg.InfluxDBPort,
-		cfg.InfluxDBMeasurement,
-	)
 }
 
 func proxySetHeader(loc interface{}) string {
@@ -1753,7 +1725,7 @@ func buildMirrorLocations(locs []*ingress.Location) string {
 	mapped := sets.Set[string]{}
 
 	for _, loc := range locs {
-		if loc.Mirror.Source == "" || loc.Mirror.Target == "" {
+		if loc.Mirror.Source == "" || loc.Mirror.Target == "" || loc.Mirror.Host == "" {
 			continue
 		}
 
@@ -1764,8 +1736,8 @@ func buildMirrorLocations(locs []*ingress.Location) string {
 		mapped.Insert(loc.Mirror.Source)
 		buffer.WriteString(fmt.Sprintf(`location = %v {
 internal;
-proxy_set_header Host %v;
-proxy_pass %v;
+proxy_set_header Host "%v";
+proxy_pass "%v";
 }
 
 `, loc.Mirror.Source, loc.Mirror.Host, loc.Mirror.Target))
@@ -1789,25 +1761,6 @@ func shouldLoadAuthDigestModule(s interface{}) bool {
 			}
 
 			if location.BasicDigestAuth.Type == "digest" {
-				return true
-			}
-		}
-	}
-
-	return false
-}
-
-// shouldLoadInfluxDBModule determines whether or not the ngx_http_auth_digest_module module needs to be loaded.
-func shouldLoadInfluxDBModule(s interface{}) bool {
-	servers, ok := s.([]*ingress.Server)
-	if !ok {
-		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
-		return false
-	}
-
-	for _, server := range servers {
-		for _, location := range server.Locations {
-			if location.InfluxDB.InfluxDBEnabled {
 				return true
 			}
 		}

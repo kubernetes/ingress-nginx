@@ -93,12 +93,13 @@ func (a mirror) Parse(ing *networking.Ingress) (interface{}, error) {
 	config.Host, err = parser.GetStringAnnotation("mirror-host", ing)
 	if err != nil {
 		if config.Target != "" {
-			url, err := parser.StringToURL(config.Target)
+			target := strings.Split(config.Target, "$")
+
+			url, err := parser.StringToURL(target[0])
 			if err != nil {
 				config.Host = ""
 			} else {
-				hostname := strings.Split(url.Hostname(), "$")
-				config.Host = hostname[0]
+				config.Host = url.Hostname()
 			}
 		}
 	}
