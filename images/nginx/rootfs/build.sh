@@ -92,14 +92,8 @@ export LUA_RESTY_CACHE=0.11
 # Check for recent changes: https://github.com/openresty/lua-resty-core/compare/v0.1.23...master
 export LUA_RESTY_CORE=0.1.23
 
-# Check for recent changes: https://github.com/cloudflare/lua-resty-cookie/compare/v0.1.0...master
-export LUA_RESTY_COOKIE_VERSION=303e32e512defced053a6484bc0745cf9dc0d39e
-
 # Check for recent changes: https://github.com/openresty/lua-resty-dns/compare/v0.22...master
 export LUA_RESTY_DNS=0.22
-
-# Check for recent changes: https://github.com/ledgetech/lua-resty-http/compare/v0.16.1...master
-export LUA_RESTY_HTTP=0ce55d6d15da140ecc5966fa848204c6fd9074e8
 
 # Check for recent changes: https://github.com/openresty/lua-resty-lock/compare/v0.08...master
 export LUA_RESTY_LOCK=0.08
@@ -115,12 +109,6 @@ export LUA_RESTY_MEMCACHED_VERSION=0.16
 
 # Check for recent changes: https://github.com/openresty/lua-resty-redis/compare/v0.30...master
 export LUA_RESTY_REDIS_VERSION=0.30
-
-# Check for recent changes: https://github.com/api7/lua-resty-ipmatcher/compare/v0.6.1...master
-export LUA_RESTY_IPMATCHER_VERSION=0.6.1
-
-# Check for recent changes: https://github.com/ElvinEfendi/lua-resty-global-throttle/compare/v0.2.0...main
-export LUA_RESTY_GLOBAL_THROTTLE_VERSION=0.2.0
 
 # Check for recent changes:  https://github.com/microsoft/mimalloc/compare/v1.7.6...master
 export MIMALOC_VERSION=1.7.6
@@ -286,9 +274,6 @@ fi
 get_src 0c551d6898f89f876e48730f9b55790d0ba07d5bc0aa6c76153277f63c19489f \
         "https://github.com/openresty/lua-cjson/archive/$LUA_CJSON_VERSION.tar.gz"
 
-get_src 5ed48c36231e2622b001308622d46a0077525ac2f751e8cc0c9905914254baa4 \
-        "https://github.com/cloudflare/lua-resty-cookie/archive/$LUA_RESTY_COOKIE_VERSION.tar.gz"
-
 get_src e810ed124fe788b8e4aac2c8960dda1b9a6f8d0ca94ce162f28d3f4d877df8af \
         "https://github.com/openresty/lua-resty-lrucache/archive/v$LUA_RESTY_CACHE.tar.gz"
 
@@ -298,20 +283,11 @@ get_src 2b4683f9abe73e18ca00345c65010c9056777970907a311d6e1699f753141de2 \
 get_src 70e9a01eb32ccade0d5116a25bcffde0445b94ad35035ce06b94ccd260ad1bf0 \
         "https://github.com/openresty/lua-resty-dns/archive/v$LUA_RESTY_DNS.tar.gz"
 
-get_src 9fcb6db95bc37b6fce77d3b3dc740d593f9d90dce0369b405eb04844d56ac43f \
-        "https://github.com/ledgetech/lua-resty-http/archive/$LUA_RESTY_HTTP.tar.gz"
-
 get_src 42893da0e3de4ec180c9bf02f82608d78787290a70c5644b538f29d243147396 \
         "https://github.com/openresty/lua-resty-memcached/archive/v$LUA_RESTY_MEMCACHED_VERSION.tar.gz"
 
 get_src c15aed1a01c88a3a6387d9af67a957dff670357f5fdb4ee182beb44635eef3f1 \
         "https://github.com/openresty/lua-resty-redis/archive/v$LUA_RESTY_REDIS_VERSION.tar.gz"
-
-get_src efb767487ea3f6031577b9b224467ddbda2ad51a41c5867a47582d4ad85d609e \
-        "https://github.com/api7/lua-resty-ipmatcher/archive/v$LUA_RESTY_IPMATCHER_VERSION.tar.gz"
-
-get_src 0fb790e394510e73fdba1492e576aaec0b8ee9ef08e3e821ce253a07719cf7ea \
-        "https://github.com/ElvinEfendi/lua-resty-global-throttle/archive/v$LUA_RESTY_GLOBAL_THROTTLE_VERSION.tar.gz"
 
 get_src d74f86ada2329016068bc5a243268f1f555edd620b6a7d6ce89295e7d6cf18da \
         "https://github.com/microsoft/mimalloc/archive/refs/tags/v${MIMALOC_VERSION}.tar.gz"
@@ -674,10 +650,6 @@ cd "$BUILD_PATH/lua-cjson-$LUA_CJSON_VERSION"
 make all
 make install
 
-cd "$BUILD_PATH/lua-resty-cookie-$LUA_RESTY_COOKIE_VERSION"
-make all
-make install
-
 cd "$BUILD_PATH/lua-resty-lrucache-$LUA_RESTY_CACHE"
 make install
 
@@ -685,10 +657,6 @@ cd "$BUILD_PATH/lua-resty-dns-$LUA_RESTY_DNS"
 make install
 
 cd "$BUILD_PATH/lua-resty-lock-$LUA_RESTY_LOCK"
-make install
-
-# required for OCSP verification
-cd "$BUILD_PATH/lua-resty-http-$LUA_RESTY_HTTP"
 make install
 
 cd "$BUILD_PATH/lua-resty-upload-$LUA_RESTY_UPLOAD_VERSION"
@@ -701,12 +669,6 @@ cd "$BUILD_PATH/lua-resty-memcached-$LUA_RESTY_MEMCACHED_VERSION"
 make install
 
 cd "$BUILD_PATH/lua-resty-redis-$LUA_RESTY_REDIS_VERSION"
-make install
-
-cd "$BUILD_PATH/lua-resty-ipmatcher-$LUA_RESTY_IPMATCHER_VERSION"
-INST_LUADIR=/usr/local/lib/lua make install
-
-cd "$BUILD_PATH/lua-resty-global-throttle-$LUA_RESTY_GLOBAL_THROTTLE_VERSION"
 make install
 
 cd "$BUILD_PATH/mimalloc-$MIMALOC_VERSION"
