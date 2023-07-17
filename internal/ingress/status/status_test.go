@@ -325,7 +325,9 @@ func TestStatusActions(t *testing.T) {
 	//  wait for the election
 	time.Sleep(100 * time.Millisecond)
 	// execute sync
-	fk.sync("just-test")
+	if err := fk.sync("just-test"); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	// PublishService is empty, so the running address is: ["11.0.0.2"]
 	// after updated, the ingress's ip should only be "11.0.0.2"
 	newIPs := []networking.IngressLoadBalancerIngress{{

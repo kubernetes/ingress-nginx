@@ -48,6 +48,24 @@ func TestParse(t *testing.T) {
 			Target:      "https://test.env.com/$request_uri",
 			Host:        "test.env.com",
 		}},
+		{map[string]string{backendURL: "https://test.env.com$request_uri"}, &Config{
+			Source:      ngxURI,
+			RequestBody: "on",
+			Target:      "https://test.env.com$request_uri",
+			Host:        "test.env.com",
+		}},
+		{map[string]string{backendURL: "https://test.env.com:8080$request_uri"}, &Config{
+			Source:      ngxURI,
+			RequestBody: "on",
+			Target:      "https://test.env.com:8080$request_uri",
+			Host:        "test.env.com",
+		}},
+		{map[string]string{backendURL: "https://test.env.com:8080/$request_uri"}, &Config{
+			Source:      ngxURI,
+			RequestBody: "on",
+			Target:      "https://test.env.com:8080/$request_uri",
+			Host:        "test.env.com",
+		}},
 		{map[string]string{requestBody: "off"}, &Config{
 			Source:      "",
 			RequestBody: "off",

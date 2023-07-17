@@ -197,7 +197,7 @@ func dumpSecretAuthMap(filename string, secret *api.Secret) error {
 	for user, pass := range secret.Data {
 		builder.WriteString(user)
 		builder.WriteString(":")
-		builder.WriteString(string(pass))
+		builder.Write(pass)
 		builder.WriteString("\n")
 	}
 

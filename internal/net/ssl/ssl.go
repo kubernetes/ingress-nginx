@@ -81,7 +81,7 @@ func CreateSSLCert(cert, key []byte, uid string) (*ingress.SSLCert, error) {
 		}
 	}
 
-	pemCertBuffer.Write([]byte("\n"))
+	pemCertBuffer.WriteString("\n")
 	pemCertBuffer.Write(key)
 
 	pemBlock, _ := pem.Decode(pemCertBuffer.Bytes())
@@ -195,12 +195,12 @@ func StoreSSLCertOnDisk(name string, sslCert *ingress.SSLCert) (string, error) {
 func ConfigureCACertWithCertAndKey(name string, ca []byte, sslCert *ingress.SSLCert) error {
 	var buffer bytes.Buffer
 
-	_, err := buffer.Write([]byte(sslCert.PemCertKey))
+	_, err := buffer.WriteString(sslCert.PemCertKey)
 	if err != nil {
 		return fmt.Errorf("could not append newline to cert file %v: %v", sslCert.CAFileName, err)
 	}
 
-	_, err = buffer.Write([]byte("\n"))
+	_, err = buffer.WriteString("\n")
 	if err != nil {
 		return fmt.Errorf("could not append newline to cert file %v: %v", sslCert.CAFileName, err)
 	}
@@ -228,7 +228,7 @@ func ConfigureCRL(name string, crl []byte, sslCert *ingress.SSLCert) error {
 		return fmt.Errorf("CRL file %v contains invalid data, and must be created only with PEM formatted certificates", name)
 	}
 
-	_, err := x509.ParseCRL(pemCRLBlock.Bytes)
+	_, err := x509.ParseRevocationList(pemCRLBlock.Bytes)
 	if err != nil {
 		return fmt.Errorf(err.Error())
 	}

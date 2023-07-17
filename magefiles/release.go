@@ -136,12 +136,16 @@ func (Release) NewRelease(version string) {
 
 	//controller tag
 	updateChartValue("controller.image.tag", fmt.Sprintf("v%s", releaseNotes.Version))
+	Debug("releaseNotes.ControllerImages[0].Name %s", releaseNotes.ControllerImages[0].Name)
+	Debug("releaseNotes.ControllerImages[1].Name %s", releaseNotes.ControllerImages[1].Name)
 	//controller digest
-	if releaseNotes.ControllerImages[0].Name == "controller" {
+	if releaseNotes.ControllerImages[0].Name == "ingress-nginx/controller" {
+		Debug("Updating Chart Value %s with %s", "controller.image.digest", releaseNotes.ControllerImages[0].Digest)
 		updateChartValue("controller.image.digest", releaseNotes.ControllerImages[0].Digest)
 	}
 	//controller chroot digest
-	if releaseNotes.ControllerImages[1].Name == "controller-chroot" {
+	if releaseNotes.ControllerImages[1].Name == "ingress-nginx/controller-chroot" {
+		Debug("Updating Chart Value %s with %s", "controller.image.digestChroot", releaseNotes.ControllerImages[1].Digest)
 		updateChartValue("controller.image.digestChroot", releaseNotes.ControllerImages[1].Digest)
 	}
 
@@ -356,15 +360,17 @@ func makeReleaseNotes(newVersion string) (*ReleaseNote, error) {
 	c1 := ControllerImage{
 		Digest:   controllerDigest,
 		Registry: INGRESS_REGISTRY,
-		Name:     "controller",
-		Tag:      newReleaseNotes.NewControllerVersion,
+		Name:     "ingress-nginx/controller",
+		Tag:      fmt.Sprintf("v%s", newReleaseNotes.Version),
 	}
+
 	c2 := ControllerImage{
 		Digest:   controllerChrootDigest,
 		Registry: INGRESS_REGISTRY,
-		Name:     "controller-chroot",
-		Tag:      newReleaseNotes.NewControllerVersion,
+		Name:     "ingress-nginx/controller-chroot",
+		Tag:      fmt.Sprintf("v%s", newReleaseNotes.Version),
 	}
+
 	newReleaseNotes.ControllerImages = append(newReleaseNotes.ControllerImages, c1)
 	newReleaseNotes.ControllerImages = append(newReleaseNotes.ControllerImages, c2)
 	Debug("New Release Controller Images %s %s", newReleaseNotes.ControllerImages[0].Digest, newReleaseNotes.ControllerImages[1].Digest)
@@ -413,7 +419,7 @@ func (r ReleaseNote) helmTemplate() {
 	Debug("ChangeLog Templates %s", string(changelogTemplate))
 	t := template.Must(template.New("changelog").Parse(string(changelogTemplate)))
 	// create a new file
-	file, err := os.Create(fmt.Sprintf("charts/ingress-nginx/changelog/Changelog-%s.md", r.Version))
+	file, err := os.Create(fmt.Sprintf("charts/ingress-nginx/changelog/Changelog-%s.md", r.NewHelmChartVersion))
 	if err != nil {
 		ErrorF("Could not create changelog file %s", err)
 	}

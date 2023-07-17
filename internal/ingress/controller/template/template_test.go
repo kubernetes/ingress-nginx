@@ -35,7 +35,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/opentelemetry"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/opentracing"
@@ -768,7 +767,9 @@ func BenchmarkTemplateWithData(b *testing.B) {
 	}
 
 	for i := 0; i < b.N; i++ {
-		ngxTpl.Write(dat)
+		if _, err := ngxTpl.Write(dat); err != nil {
+			b.Errorf("unexpected error writing template: %v", err)
+		}
 	}
 }
 
@@ -1138,7 +1139,6 @@ func TestOpentracingPropagateContext(t *testing.T) {
 		{BackendProtocol: "AUTO_HTTP"}: "opentracing_propagate_context;",
 		{BackendProtocol: "GRPC"}:      "opentracing_grpc_propagate_context;",
 		{BackendProtocol: "GRPCS"}:     "opentracing_grpc_propagate_context;",
-		{BackendProtocol: "AJP"}:       "opentracing_propagate_context;",
 		{BackendProtocol: "FCGI"}:      "opentracing_propagate_context;",
 		nil:                            "",
 	}
@@ -1158,7 +1158,6 @@ func TestOpentelemetryPropagateContext(t *testing.T) {
 		{BackendProtocol: "AUTO_HTTP"}: "opentelemetry_propagate;",
 		{BackendProtocol: "GRPC"}:      "opentelemetry_propagate;",
 		{BackendProtocol: "GRPCS"}:     "opentelemetry_propagate;",
-		{BackendProtocol: "AJP"}:       "opentelemetry_propagate;",
 		{BackendProtocol: "FCGI"}:      "opentelemetry_propagate;",
 		nil:                            "",
 	}
@@ -1637,30 +1636,6 @@ func TestProxySetHeader(t *testing.T) {
 				t.Errorf("proxySetHeader() = %v, expected %v", got, tt.expected)
 			}
 		})
-	}
-}
-
-func TestBuildInfluxDB(t *testing.T) {
-	invalidType := &ingress.Ingress{}
-	expected := ""
-	actual := buildInfluxDB(invalidType)
-
-	if expected != actual {
-		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
-	}
-
-	cfg := influxdb.Config{
-		InfluxDBEnabled:     true,
-		InfluxDBServerName:  "ok.com",
-		InfluxDBHost:        "host.com",
-		InfluxDBPort:        "5252",
-		InfluxDBMeasurement: "ok",
-	}
-	expected = "influxdb server_name=ok.com host=host.com port=5252 measurement=ok enabled=true;"
-	actual = buildInfluxDB(cfg)
-
-	if expected != actual {
-		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
 	}
 }
 

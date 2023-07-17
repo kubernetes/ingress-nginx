@@ -125,7 +125,7 @@ var _ = framework.DescribeAnnotation("affinitymode", func() {
 		framework.Sleep()
 
 		// validate, there is no backend to serve the request
-		response = request.WithCookies(cookies).Expect().Status(http.StatusServiceUnavailable)
+		request.WithCookies(cookies).Expect().Status(http.StatusServiceUnavailable)
 
 		// create brand new backends
 		replicas = 2

@@ -1,0 +1,11 @@
+# netlify configuration
+[build]
+publish = "site"
+command = "make build-docs"
+ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF ./docs"
+# available here https://github.com/netlify/build-image/blob/focal/included_software.md#languages
+environment = { PYTHON_VERSION = "3.8" }
+
+[context.deploy-preview]
+  publish = "site/"
+  command = "make build-docs"

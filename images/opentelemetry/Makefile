@@ -21,7 +21,9 @@ DIR:=$(strip $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))
 INIT_BUILDX=$(DIR)/../../hack/init-buildx.sh
 
 # 0.0.0 shouldn't clobber any released builds
-TAG ?=v$(shell date +%m%d%Y)-$(shell git rev-parse --short HEAD)
+SHORT_SHA ?=$(shell git rev-parse --short HEAD)
+TAG ?=v$(shell date +%Y%m%d)-$(SHORT_SHA)
+
 REGISTRY ?= gcr.io/k8s-staging-ingress-nginx
 
 IMAGE = $(REGISTRY)/opentelemetry

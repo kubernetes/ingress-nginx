@@ -53,8 +53,8 @@ export JAEGER_VERSION=0.7.0
 # Check for recent changes: https://github.com/msgpack/msgpack-c/compare/cpp-3.3.0...master
 export MSGPACK_VERSION=3.3.0
 
-# Check for recent changes: https://github.com/DataDog/dd-opentracing-cpp/compare/v1.3.2...master
-export DATADOG_CPP_VERSION=1.3.2
+# Check for recent changes: https://github.com/DataDog/dd-opentracing-cpp/compare/v1.3.7...master
+export DATADOG_CPP_VERSION=1.3.7
 
 # Check for recent changes: https://github.com/SpiderLabs/ModSecurity-nginx/compare/v1.0.3...master
 export MODSECURITY_VERSION=1.0.3
@@ -77,15 +77,8 @@ export LUA_UPSTREAM_VERSION=8aa93ead98ba2060d4efd594ae33a35d153589bf
 # Check for recent changes: https://github.com/openresty/lua-cjson/compare/2.1.0.10...openresty:master
 export LUA_CJSON_VERSION=2.1.0.10
 
-export NGINX_INFLUXDB_VERSION=5b09391cb7b9a889687c0aa67964c06a2d933e8b
-
 # Check for recent changes: https://github.com/leev/ngx_http_geoip2_module/compare/3.3...master
 export GEOIP2_VERSION=a26c6beed77e81553686852dceb6c7fdacc5970d
-
-# Check for recent changes: https://github.com/msva/nginx_ajp_module/compare/fcbb2ccca4901d317ecd7a9dabb3fec9378ff40f...master
-# This is a fork from https://github.com/yaoweibin/nginx_ajp_module
-# Since it has not been updated and is not compatible with NGINX 1.21
-export NGINX_AJP_VERSION=fcbb2ccca4901d317ecd7a9dabb3fec9378ff40f
 
 # Check for recent changes: https://github.com/openresty/luajit2/compare/v2.1-20220411...v2.1-agentzh
 export LUAJIT_VERSION=2.1-20220411
@@ -267,17 +260,11 @@ get_src d3f2c870f8f88477b01726b32accab30f6e5d57ae59c5ec87374ff73d0794316 \
         "https://github.com/openresty/luajit2/archive/v$LUAJIT_VERSION.tar.gz"
 fi
 
-get_src 586f92166018cc27080d34e17c59d68219b85af745edf3cc9fe41403fc9b4ac6 \
+get_src 8d39c6b23f941a2d11571daaccc04e69539a3fcbcc50a631837560d5861a7b96 \
         "https://github.com/DataDog/dd-opentracing-cpp/archive/v$DATADOG_CPP_VERSION.tar.gz"
-
-get_src 1af5a5632dc8b00ae103d51b7bf225de3a7f0df82f5c6a401996c080106e600e \
-        "https://github.com/influxdata/nginx-influxdb-module/archive/$NGINX_INFLUXDB_VERSION.tar.gz"
 
 get_src 4c1933434572226942c65b2f2b26c8a536ab76aa771a3c7f6c2629faa764976b \
         "https://github.com/leev/ngx_http_geoip2_module/archive/$GEOIP2_VERSION.tar.gz"
-
-get_src 778fcca851bd69dabfb382dc827d2ee07662f7eca36b5e66e67d5512bad75ef8 \
-        "https://github.com/msva/nginx_ajp_module/archive/$NGINX_AJP_VERSION.tar.gz"
 
 get_src 5d16e623d17d4f42cc64ea9cfb69ca960d313e12f5d828f785dd227cc483fcbd \
         "https://github.com/openresty/lua-resty-upload/archive/v$LUA_RESTY_UPLOAD_VERSION.tar.gz"
@@ -638,9 +625,7 @@ WITH_MODULES=" \
   --add-module=$BUILD_PATH/lua-nginx-module-$LUA_NGX_VERSION \
   --add-module=$BUILD_PATH/stream-lua-nginx-module-$LUA_STREAM_NGX_VERSION \
   --add-module=$BUILD_PATH/lua-upstream-nginx-module-$LUA_UPSTREAM_VERSION \
-  --add-module=$BUILD_PATH/nginx_ajp_module-${NGINX_AJP_VERSION} \
   --add-dynamic-module=$BUILD_PATH/nginx-http-auth-digest-$NGINX_DIGEST_AUTH \
-  --add-dynamic-module=$BUILD_PATH/nginx-influxdb-module-$NGINX_INFLUXDB_VERSION \
   --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/opentracing \
   --add-dynamic-module=$BUILD_PATH/ModSecurity-nginx-$MODSECURITY_VERSION \
   --add-dynamic-module=$BUILD_PATH/ngx_http_geoip2_module-${GEOIP2_VERSION} \

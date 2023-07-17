@@ -171,10 +171,11 @@ Requires the update-status parameter.`)
 		reportStatusClasses = flags.Bool("report-status-classes", false,
 			`Use status classes (2xx, 3xx, 4xx and 5xx) instead of status codes in metrics.`)
 
-		timeBuckets         = flags.Float64Slice("time-buckets", prometheus.DefBuckets, "Set of buckets which will be used for prometheus histogram metrics such as RequestTime, ResponseTime.")
-		lengthBuckets       = flags.Float64Slice("length-buckets", prometheus.LinearBuckets(10, 10, 10), "Set of buckets which will be used for prometheus histogram metrics such as RequestLength, ResponseLength.")
-		sizeBuckets         = flags.Float64Slice("size-buckets", prometheus.ExponentialBuckets(10, 10, 7), "Set of buckets which will be used for prometheus histogram metrics such as BytesSent.")
-		monitorMaxBatchSize = flags.Int("monitor-max-batch-size", 10000, "Max batch size of NGINX metrics.")
+		timeBuckets          = flags.Float64Slice("time-buckets", prometheus.DefBuckets, "Set of buckets which will be used for prometheus histogram metrics such as RequestTime, ResponseTime.")
+		lengthBuckets        = flags.Float64Slice("length-buckets", prometheus.LinearBuckets(10, 10, 10), "Set of buckets which will be used for prometheus histogram metrics such as RequestLength, ResponseLength.")
+		sizeBuckets          = flags.Float64Slice("size-buckets", prometheus.ExponentialBuckets(10, 10, 7), "Set of buckets which will be used for prometheus histogram metrics such as BytesSent.")
+		excludeSocketMetrics = flags.StringSlice("exclude-socket-metrics", []string{}, "et of socket request metrics to exclude which won't be exported nor being calculated. E.g. 'nginx_ingress_controller_success,nginx_ingress_controller_header_duration_seconds'.")
+		monitorMaxBatchSize  = flags.Int("monitor-max-batch-size", 10000, "Max batch size of NGINX metrics.")
 
 		httpPort  = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
 		httpsPort = flags.Int("https-port", 443, `Port to use for servicing HTTPS traffic.`)
@@ -227,14 +228,10 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 	flags.IntVar(&nginx.MaxmindRetriesCount, "maxmind-retries-count", 1, "Number of attempts to download the GeoIP DB.")
 	flags.DurationVar(&nginx.MaxmindRetriesTimeout, "maxmind-retries-timeout", time.Second*0, "Maxmind downloading delay between 1st and 2nd attempt, 0s - do not retry to download if something went wrong.")
 
-	flag.Set("logtostderr", "true")
-
 	flags.AddGoFlagSet(flag.CommandLine)
-	flags.Parse(os.Args)
-
-	// Workaround for this issue:
-	// https://github.com/kubernetes/kubernetes/issues/17162
-	flag.CommandLine.Parse([]string{})
+	if err := flags.Parse(os.Args); err != nil {
+		return false, nil, err
+	}
 
 	pflag.VisitAll(func(flag *pflag.Flag) {
 		klog.V(2).InfoS("FLAG", flag.Name, flag.Value)
@@ -328,6 +325,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		MetricsPerHost:              *metricsPerHost,
 		MetricsBuckets:              histogramBuckets,
 		ReportStatusClasses:         *reportStatusClasses,
+		ExcludeSocketMetrics:        *excludeSocketMetrics,
 		MonitorMaxBatchSize:         *monitorMaxBatchSize,
 		DisableServiceExternalName:  *disableServiceExternalName,
 		EnableSSLPassthrough:        *enableSSLPassthrough,

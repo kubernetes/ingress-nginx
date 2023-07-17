@@ -91,7 +91,7 @@ const (
 
 // Configuration represents the content of nginx.conf file
 type Configuration struct {
-	defaults.Backend `json:",squash"`
+	defaults.Backend `json:",squash"` //nolint:staticcheck
 
 	// AllowSnippetAnnotations enable users to add their own snippets via ingress annotation.
 	// If disabled, only snippets added via ConfigMap are added to ingress.
@@ -215,16 +215,19 @@ type Configuration struct {
 
 	// https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_field_size
 	// HTTP2MaxFieldSize Limits the maximum size of an HPACK-compressed request header field
+	// NOTE: Deprecated
 	HTTP2MaxFieldSize string `json:"http2-max-field-size,omitempty"`
 
 	// https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_header_size
 	// HTTP2MaxHeaderSize Limits the maximum size of the entire request header list after HPACK decompression
+	// NOTE: Deprecated
 	HTTP2MaxHeaderSize string `json:"http2-max-header-size,omitempty"`
 
 	// http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_requests
 	// HTTP2MaxRequests Sets the maximum number of requests (including push requests) that can be served
 	// through one HTTP/2 connection, after which the next client request will lead to connection closing
 	// and the need of establishing a new connection.
+	// NOTE: Deprecated
 	HTTP2MaxRequests int `json:"http2-max-requests,omitempty"`
 
 	// http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_concurrent_streams
@@ -596,7 +599,7 @@ type Configuration struct {
 	OtelServiceName string `json:"otel-service-name"`
 
 	// OtelSampler specifies the sampler to use for any traces created
-	// Default: AlwaysOff
+	// Default: AlwaysOn
 	OtelSampler string `json:"otel-sampler"`
 
 	// OtelSamplerRatio specifies the sampler ratio to use for any traces created
@@ -604,16 +607,19 @@ type Configuration struct {
 	OtelSamplerRatio float32 `json:"otel-sampler-ratio"`
 
 	//OtelSamplerParentBased specifies the parent based sampler to be use for any traces created
-	// Default: false
+	// Default: true
 	OtelSamplerParentBased bool `json:"otel-sampler-parent-based"`
 
 	// MaxQueueSize specifies the max queue size for uploading traces
+	// Default: 2048
 	OtelMaxQueueSize int32 `json:"otel-max-queuesize"`
 
 	// ScheduleDelayMillis specifies the max delay between uploading traces
+	// Default: 5000
 	OtelScheduleDelayMillis int32 `json:"otel-schedule-delay-millis"`
 
 	// MaxExportBatchSize specifies the max export batch size to used when uploading traces
+	// Default: 512
 	OtelMaxExportBatchSize int32 `json:"otel-max-export-batch-size"`
 
 	// ZipkinCollectorHost specifies the host to use when uploading traces
@@ -700,16 +706,9 @@ type Configuration struct {
 	// Default: nginx.handle
 	DatadogOperationNameOverride string `json:"datadog-operation-name-override"`
 
-	// DatadogPrioritySampling specifies to use client-side sampling
-	// If true disables client-side sampling (thus ignoring sample_rate) and enables distributed
-	// priority sampling, where traces are sampled based on a combination of user-assigned
-	// Default: true
-	DatadogPrioritySampling bool `json:"datadog-priority-sampling"`
-
 	// DatadogSampleRate specifies sample rate for any traces created.
-	// This is effective only when datadog-priority-sampling is false
-	// Default: 1.0
-	DatadogSampleRate float32 `json:"datadog-sample-rate"`
+	// Default: use a dynamic rate instead
+	DatadogSampleRate *float32 `json:"datadog-sample-rate",omitempty`
 
 	// MainSnippet adds custom configuration to the main section of the nginx configuration
 	MainSnippet string `json:"main-snippet"`
@@ -830,6 +829,12 @@ type Configuration struct {
 	// http://nginx.org/en/docs/ngx_core_module.html#debug_connection
 	// Default: ""
 	DebugConnections []string `json:"debug-connections"`
+
+	// StrictValidatePathType enable the strict validation of Ingress Paths
+	// It enforces that pathType of type Exact or Prefix should start with / and contain only
+	// alphanumeric chars, "-", "_", "/".In case of additional characters,
+	// like used on Rewrite configurations the user should use pathType as ImplementationSpecific
+	StrictValidatePathType bool `json:"strict-validate-path-type"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -873,9 +878,9 @@ func NewDefault() Configuration {
 		ComputeFullForwardedFor:          false,
 		ProxyAddOriginalURIHeader:        false,
 		GenerateRequestID:                true,
-		HTTP2MaxFieldSize:                "4k",
-		HTTP2MaxHeaderSize:               "16k",
-		HTTP2MaxRequests:                 1000,
+		HTTP2MaxFieldSize:                "",
+		HTTP2MaxHeaderSize:               "",
+		HTTP2MaxRequests:                 0,
 		HTTP2MaxConcurrentStreams:        128,
 		HTTPRedirectCode:                 308,
 		HSTS:                             true,
@@ -969,9 +974,12 @@ func NewDefault() Configuration {
 		OpentelemetryConfig:                    "/etc/nginx/opentelemetry.toml",
 		OtlpCollectorPort:                      "4317",
 		OtelServiceName:                        "nginx",
-		OtelSampler:                            "AlwaysOff",
+		OtelSampler:                            "AlwaysOn",
 		OtelSamplerRatio:                       0.01,
-		OtelSamplerParentBased:                 false,
+		OtelSamplerParentBased:                 true,
+		OtelScheduleDelayMillis:                5000,
+		OtelMaxExportBatchSize:                 512,
+		OtelMaxQueueSize:                       2048,
 		ZipkinCollectorPort:                    9411,
 		ZipkinServiceName:                      "nginx",
 		ZipkinSampleRate:                       1.0,
@@ -986,8 +994,7 @@ func NewDefault() Configuration {
 		DatadogEnvironment:                     "prod",
 		DatadogCollectorPort:                   8126,
 		DatadogOperationNameOverride:           "nginx.handle",
-		DatadogSampleRate:                      1.0,
-		DatadogPrioritySampling:                true,
+		DatadogSampleRate:                      nil,
 		LimitReqStatusCode:                     503,
 		LimitConnStatusCode:                    503,
 		SyslogPort:                             514,
@@ -1002,6 +1009,7 @@ func NewDefault() Configuration {
 		GlobalRateLimitMemcachedPoolSize:       50,
 		GlobalRateLimitStatucCode:              429,
 		DebugConnections:                       []string{},
+		StrictValidatePathType:                 false, // TODO: This will be true in future releases
 	}
 
 	if klog.V(5).Enabled() {
