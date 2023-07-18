@@ -413,8 +413,10 @@ controller:
     # It allows choosing the protocol for each backend specified in the Kubernetes service.
     # See the following GitHub issue for more details about the purpose: https://github.com/kubernetes/kubernetes/issues/40244
     # Will be ignored for Kubernetes versions older than 1.20
+    # For GatewayAPI in GKE uppercase values are expected, otherwise LB healthchecks will be allways http.
     ##
     appProtocol: true
+    appProtocolInUpperCase: false
     annotations: {}
     labels: {}
     # clusterIP: ""
