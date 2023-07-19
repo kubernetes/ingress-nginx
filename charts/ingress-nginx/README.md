@@ -2,7 +2,7 @@
 
 [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 
-![Version: 4.7.1](https://img.shields.io/badge/Version-4.7.1-informational?style=flat-square) ![AppVersion: 1.8.1](https://img.shields.io/badge/AppVersion-1.8.1-informational?style=flat-square)
+![Version: 4.7.2](https://img.shields.io/badge/Version-4.7.2-informational?style=flat-square) ![AppVersion: 1.8.1](https://img.shields.io/badge/AppVersion-1.8.1-informational?style=flat-square)
 
 To use, add `ingressClassName: nginx` spec field or the `kubernetes.io/ingress.class: nginx` annotation to your Ingress resources.
 
@@ -401,7 +401,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.scope.namespaceSelector | string | `""` | When scope.enabled == false, instead of watching all namespaces, we watching namespaces whose labels only match with namespaceSelector. Format like foo=bar. Defaults to empty, means watching all namespaces. |
 | controller.service.annotations | object | `{}` |  |
 | controller.service.appProtocol | bool | `true` | If enabled is adding an appProtocol option for Kubernetes service. An appProtocol field replacing annotations that were using for setting a backend protocol. Here is an example for AWS: service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http It allows choosing the protocol for each backend specified in the Kubernetes service. See the following GitHub issue for more details about the purpose: https://github.com/kubernetes/kubernetes/issues/40244 Will be ignored for Kubernetes versions older than 1.20 # |
-| controller.service.appProtocolInUpperCase | bool | `false` | If enabled,  appProtocol values will be in uppercase. (This is needed for example with [GKE GatewayAPI](https://cloud.google.com/kubernetes-engine/docs/how-to/secure-gateway#restrictions_and_limitations)) |
+| controller.service.appProtocolInUpperCase | bool | `false` | If enabled,  appProtocol values will be in uppercase. (This is needed for example with GKE GatewayAPI - https://cloud.google.com/kubernetes-engine/docs/how-to/secure-gateway#restrictions_and_limitations) |
 | controller.service.enableHttp | bool | `true` |  |
 | controller.service.enableHttps | bool | `true` |  |
 | controller.service.enabled | bool | `true` |  |
