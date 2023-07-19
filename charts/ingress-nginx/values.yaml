@@ -415,7 +415,7 @@ controller:
     # Will be ignored for Kubernetes versions older than 1.20
     ##
     appProtocol: true
-    # -- For GatewayAPI in GKE uppercase values are expected, otherwise LB healthchecks will be allways http.
+    # -- If enabled,  appProtocol values will be in uppercase. (This is needed for example with GKE GatewayAPI - https://cloud.google.com/kubernetes-engine/docs/how-to/secure-gateway#restrictions_and_limitations)
     appProtocolInUpperCase: false
     annotations: {}
     labels: {}
