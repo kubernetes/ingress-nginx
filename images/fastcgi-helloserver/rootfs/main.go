@@ -26,5 +26,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fcgi.Serve(l, nil)
+	if err := fcgi.Serve(l, nil); err != nil {
+		panic(err)
+	}
 }

@@ -18,13 +18,10 @@ package main
 
 import (
 	"fmt"
-	"math/rand" // #nosec
-	"net/http"
-	"os"
-	"time"
-
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
+	"net/http"
+	"os"
 
 	"k8s.io/klog/v2"
 
@@ -40,8 +37,6 @@ import (
 
 func main() {
 	klog.InitFlags(nil)
-
-	rand.Seed(time.Now().UnixNano())
 
 	fmt.Println(version.String())
 	var err error

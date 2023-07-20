@@ -397,7 +397,9 @@ func newFakeCertificate(t *testing.T) ([]byte, string, string) {
 		t.Errorf("failed to write test key: %v", err)
 	}
 
-	certFile.Write(cert)
+	if _, err := certFile.Write(cert); err != nil {
+		t.Errorf("failed to write cert: %v", err)
+	}
 	defer certFile.Close()
 
 	keyFile, err := os.CreateTemp("", "key-")
@@ -405,7 +407,9 @@ func newFakeCertificate(t *testing.T) ([]byte, string, string) {
 		t.Errorf("failed to write test key: %v", err)
 	}
 
-	keyFile.Write(key)
+	if _, err := keyFile.Write(key); err != nil {
+		t.Errorf("failed to write key: %v", err)
+	}
 	defer keyFile.Close()
 
 	return cert, certFile.Name(), keyFile.Name()
