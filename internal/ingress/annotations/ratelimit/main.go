@@ -296,6 +296,6 @@ func (a ratelimit) GetDocumentation() parser.AnnotationFields {
 }
 
 func (a ratelimit) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, rateLimitAnnotations.Annotations)
 }

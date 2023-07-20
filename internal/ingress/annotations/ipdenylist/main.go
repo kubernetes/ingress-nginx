@@ -125,6 +125,6 @@ func (a ipdenylist) GetDocumentation() parser.AnnotationFields {
 }
 
 func (a ipdenylist) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, denylistAnnotations.Annotations)
 }

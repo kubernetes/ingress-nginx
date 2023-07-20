@@ -31,7 +31,7 @@ The following table shows a configuration option's name, type, and the default v
 |[allow-backend-server-header](#allow-backend-server-header)|bool|"false"||
 |[allow-cross-namespace-resources](#allow-cross-namespace-resources)|bool|"true"||
 |[allow-snippet-annotations](#allow-snippet-annotations)|bool|true||
-|[annotation-risk](#annotation-risk)|string|Critical||
+|[annotations-risk-level](#annotations-risk-level)|string|Critical||
 |[annotation-value-word-blocklist](#annotation-value-word-blocklist)|string array|""||
 |[hide-headers](#hide-headers)|string array|empty||
 |[access-log-params](#access-log-params)|string|""||
@@ -264,7 +264,7 @@ may allow a user to add restricted configurations to the final nginx.conf file
 
 **This option will be defaulted to false in the next major release**
 
-## annotation-risk
+## annotations-risk-level
 
 Represents the risk accepted on an annotation. If the risk is, for instance `Medium`, annotations with risk High and Critical will not be accepted.
 

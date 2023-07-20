@@ -1145,7 +1145,7 @@ func (s *k8sStore) GetSecurityConfiguration() defaults.SecurityConfiguration {
 
 	secConfig := defaults.SecurityConfiguration{
 		AllowCrossNamespaceResources: s.backendConfig.AllowCrossNamespaceResources,
-		AnnotationsRisk:              s.backendConfig.AnnotationsRisk,
+		AnnotationsRiskLevel:         s.backendConfig.AnnotationsRiskLevel,
 	}
 	return secConfig
 }

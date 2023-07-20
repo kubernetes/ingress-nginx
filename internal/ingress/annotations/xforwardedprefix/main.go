@@ -63,6 +63,6 @@ func (cbbs xforwardedprefix) GetDocumentation() parser.AnnotationFields {
 }
 
 func (a xforwardedprefix) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, xForwardedForAnnotations.Annotations)
 }

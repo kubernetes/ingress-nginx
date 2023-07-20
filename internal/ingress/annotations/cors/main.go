@@ -261,6 +261,6 @@ func (c cors) GetDocumentation() parser.AnnotationFields {
 }
 
 func (a cors) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, corsAnnotation.Annotations)
 }

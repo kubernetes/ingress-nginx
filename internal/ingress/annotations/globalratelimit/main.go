@@ -175,6 +175,6 @@ func (a globalratelimit) GetDocumentation() parser.AnnotationFields {
 }
 
 func (a globalratelimit) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, globalRateLimitAnnotationConfig.Annotations)
 }

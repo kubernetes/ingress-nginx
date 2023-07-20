@@ -102,6 +102,6 @@ func (a connection) GetDocumentation() parser.AnnotationFields {
 }
 
 func (a connection) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, connectionHeadersAnnotations.Annotations)
 }

@@ -162,6 +162,6 @@ func (a fastcgi) GetDocumentation() parser.AnnotationFields {
 }
 
 func (a fastcgi) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, fastCGIAnnotations.Annotations)
 }

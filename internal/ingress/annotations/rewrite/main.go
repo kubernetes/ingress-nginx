@@ -210,6 +210,6 @@ func (a rewrite) GetDocumentation() parser.AnnotationFields {
 }
 
 func (a rewrite) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, rewriteAnnotations.Annotations)
 }

@@ -190,6 +190,6 @@ func (c canary) GetDocumentation() parser.AnnotationFields {
 }
 
 func (a canary) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, CanaryAnnotations.Annotations)
 }

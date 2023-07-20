@@ -75,7 +75,7 @@ func (fis fakeIngressStore) GetBackendConfiguration() ngx_config.Configuration {
 
 func (fis fakeIngressStore) GetSecurityConfiguration() defaults.SecurityConfiguration {
 	return defaults.SecurityConfiguration{
-		AnnotationsRisk:              fis.configuration.AnnotationsRisk,
+		AnnotationsRiskLevel:         fis.configuration.AnnotationsRiskLevel,
 		AllowCrossNamespaceResources: fis.configuration.AllowCrossNamespaceResources,
 	}
 }

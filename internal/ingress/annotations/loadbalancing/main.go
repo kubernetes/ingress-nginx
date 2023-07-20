@@ -69,6 +69,6 @@ func (a loadbalancing) GetDocumentation() parser.AnnotationFields {
 }
 
 func (a loadbalancing) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, loadBalanceAnnotations.Annotations)
 }
