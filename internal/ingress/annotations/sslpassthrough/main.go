@@ -67,6 +67,6 @@ func (a sslpt) GetDocumentation() parser.AnnotationFields {
 }
 
 func (a sslpt) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, sslPassthroughAnnotations.Annotations)
 }

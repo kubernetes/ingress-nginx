@@ -70,6 +70,6 @@ func (s satisfy) GetDocumentation() parser.AnnotationFields {
 }
 
 func (a satisfy) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, satisfyAnnotations.Annotations)
 }

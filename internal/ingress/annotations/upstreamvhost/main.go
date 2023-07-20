@@ -65,6 +65,6 @@ func (a upstreamVhost) GetDocumentation() parser.AnnotationFields {
 }
 
 func (a upstreamVhost) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, upstreamVhostAnnotations.Annotations)
 }

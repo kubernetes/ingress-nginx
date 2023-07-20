@@ -128,6 +128,6 @@ func (a ipallowlist) GetDocumentation() parser.AnnotationFields {
 }
 
 func (a ipallowlist) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, allowlistAnnotations.Annotations)
 }

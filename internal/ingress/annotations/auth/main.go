@@ -277,6 +277,6 @@ func (a auth) GetDocumentation() parser.AnnotationFields {
 }
 
 func (a auth) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, authSecretAnnotations.Annotations)
 }

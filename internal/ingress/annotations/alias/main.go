@@ -88,6 +88,6 @@ func (a alias) Parse(ing *networking.Ingress) (interface{}, error) {
 }
 
 func (a alias) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, aliasAnnotation.Annotations)
 }

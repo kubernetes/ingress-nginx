@@ -109,6 +109,6 @@ func (a upstreamhashby) GetDocumentation() parser.AnnotationFields {
 }
 
 func (a upstreamhashby) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, upstreamHashByAnnotations.Annotations)
 }

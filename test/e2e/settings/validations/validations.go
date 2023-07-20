@@ -34,7 +34,7 @@ var _ = framework.IngressNginxDescribeSerial("annotation validations", func() {
 		host := "annotation-validations"
 
 		// Low and Medium Risk annotations should be allowed, the rest should be denied
-		f.UpdateNginxConfigMapData("annotations-risk", "Medium")
+		f.UpdateNginxConfigMapData("annotations-risk-level", "Medium")
 		// Sleep a while just to guarantee that the configmap is applied
 		framework.Sleep()
 
@@ -61,7 +61,7 @@ var _ = framework.IngressNginxDescribeSerial("annotation validations", func() {
 		host := "annotation-validations"
 
 		// Low and Medium Risk annotations should be allowed, the rest should be denied
-		f.UpdateNginxConfigMapData("annotations-risk", "Medium")
+		f.UpdateNginxConfigMapData("annotations-risk-level", "Medium")
 		// Sleep a while just to guarantee that the configmap is applied
 		framework.Sleep()
 

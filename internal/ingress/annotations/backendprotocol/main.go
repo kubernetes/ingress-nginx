@@ -83,6 +83,6 @@ func (a backendProtocol) Parse(ing *networking.Ingress) (interface{}, error) {
 }
 
 func (a backendProtocol) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, backendProtocolConfig.Annotations)
 }

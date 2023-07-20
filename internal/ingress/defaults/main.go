@@ -178,7 +178,7 @@ type SecurityConfiguration struct {
 	// This valid will default to `false` on future releases
 	AllowCrossNamespaceResources bool `json:"allow-cross-namespace-resources"`
 
-	// AnnotationsRisk represents the risk accepted on an annotation. If the risk is, for instance `Medium`, annotations
+	// AnnotationsRiskLevel represents the risk accepted on an annotation. If the risk is, for instance `Medium`, annotations
 	// with risk High and Critical will not be accepted
-	AnnotationsRisk string `json:"annotations-risk"`
+	AnnotationsRiskLevel string `json:"annotations-risk-level"`
 }

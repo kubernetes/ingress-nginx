@@ -103,10 +103,10 @@ type Configuration struct {
 	// This value will default to `false` on future releases
 	AllowCrossNamespaceResources bool `json:"allow-cross-namespace-resources"`
 
-	// AnnotationsRisk represents the risk accepted on an annotation. If the risk is, for instance `Medium`, annotations
+	// AnnotationsRiskLevel represents the risk accepted on an annotation. If the risk is, for instance `Medium`, annotations
 	// with risk High and Critical will not be accepted.
 	// Default Risk is Critical by default, but this may be changed in future releases
-	AnnotationsRisk string `json:"annotations-risk"`
+	AnnotationsRiskLevel string `json:"annotations-risk-level"`
 
 	// AnnotationValueWordBlocklist defines words that should not be part of an user annotation value
 	// (can be used to run arbitrary code or configs, for example) and that should be dropped.
@@ -719,7 +719,7 @@ type Configuration struct {
 
 	// DatadogSampleRate specifies sample rate for any traces created.
 	// Default: use a dynamic rate instead
-	DatadogSampleRate *float32 `json:"datadog-sample-rate",omitempty`
+	DatadogSampleRate *float32 `json:"datadog-sample-rate,omitempty"`
 
 	// MainSnippet adds custom configuration to the main section of the nginx configuration
 	MainSnippet string `json:"main-snippet"`
@@ -867,7 +867,7 @@ func NewDefault() Configuration {
 		AllowCrossNamespaceResources:     true,
 		AllowBackendServerHeader:         false,
 		AnnotationValueWordBlocklist:     "",
-		AnnotationsRisk:                  "Critical",
+		AnnotationsRiskLevel:             "Critical",
 		AccessLogPath:                    "/var/log/nginx/access.log",
 		AccessLogParams:                  "",
 		EnableAccessLogForDefaultBackend: false,

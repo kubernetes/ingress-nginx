@@ -66,6 +66,6 @@ func (cbbs clientBodyBufferSize) Parse(ing *networking.Ingress) (interface{}, er
 }
 
 func (a clientBodyBufferSize) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRisk)
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, clientBodyBufferSizeConfig.Annotations)
 }

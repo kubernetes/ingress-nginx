@@ -26,9 +26,9 @@ import (
 
 // Mock implements the Resolver interface
 type Mock struct {
-	ConfigMaps          map[string]*apiv1.ConfigMap
-	AnnotationRisk      string
-	AllowCrossNamespace bool
+	ConfigMaps           map[string]*apiv1.ConfigMap
+	AnnotationsRiskLevel string
+	AllowCrossNamespace  bool
 }
 
 // GetDefaultBackend returns the backend that must be used as default
@@ -37,12 +37,12 @@ func (m Mock) GetDefaultBackend() defaults.Backend {
 }
 
 func (m Mock) GetSecurityConfiguration() defaults.SecurityConfiguration {
-	defRisk := m.AnnotationRisk
+	defRisk := m.AnnotationsRiskLevel
 	if defRisk == "" {
 		defRisk = "Critical"
 	}
 	return defaults.SecurityConfiguration{
-		AnnotationsRisk:              defRisk,
+		AnnotationsRiskLevel:         defRisk,
 		AllowCrossNamespaceResources: m.AllowCrossNamespace,
 	}
 }
