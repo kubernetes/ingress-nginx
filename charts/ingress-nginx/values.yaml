@@ -417,6 +417,7 @@ controller:
     appProtocol: true
     # -- If enabled,  appProtocol values will be in uppercase. (This is needed for example with GKE GatewayAPI - https://cloud.google.com/kubernetes-engine/docs/how-to/secure-gateway#restrictions_and_limitations)
     appProtocolInUpperCase: false
+    # -- Annotations are mandatory for the load balancer to come up. Varies with the cloud service. Values passed through helm tpl engine.
     annotations: {}
     labels: {}
     # clusterIP: ""
@@ -478,7 +479,7 @@ controller:
     internal:
       # -- Enables an additional internal load balancer (besides the external one).
       enabled: false
-      # -- Annotations are mandatory for the load balancer to come up. Varies with the cloud service.
+      # -- Annotations are mandatory for the load balancer to come up. Varies with the cloud service. Values passed through helm tpl engine.
       annotations: {}
       # -- Used by cloud providers to connect the resulting internal LoadBalancer to a pre-existing static IP. Make sure to add to the service the needed annotation to specify the subnet which the static IP belongs to. For instance, `networking.gke.io/internal-load-balancer-subnet` for GCP and `service.beta.kubernetes.io/aws-load-balancer-subnets` for AWS.
       loadBalancerIP: ""
