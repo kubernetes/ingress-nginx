@@ -23,8 +23,6 @@ TAG ?=v$(shell date +%Y%m%d)-$(SHORT_SHA)
 
 REGISTRY ?= local
 
-
-
 IMAGE = $(REGISTRY)/e2e-test-cfssl
 
 # required to enable buildx
