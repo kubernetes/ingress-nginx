@@ -21,7 +21,7 @@ INIT_BUILDX=$(DIR)/../../hack/init-buildx.sh
 SHORT_SHA ?=$(shell git rev-parse --short HEAD)
 TAG ?=v$(shell date +%Y%m%d)-$(SHORT_SHA)
 
-REGISTRY ?= gcr.io/k8s-staging-ingress-nginx
+REGISTRY ?= local
 
 IMAGE = $(REGISTRY)/e2e-test-runner
 
