@@ -6,6 +6,7 @@ local configuration = require("configuration")
 local round_robin = require("balancer.round_robin")
 local chash = require("balancer.chash")
 local chashsubset = require("balancer.chashsubset")
+local chashboundedloads = require("balancer.chashboundedloads")
 local sticky_balanced = require("balancer.sticky_balanced")
 local sticky_persistent = require("balancer.sticky_persistent")
 local ewma = require("balancer.ewma")
@@ -29,6 +30,7 @@ local IMPLEMENTATIONS = {
   round_robin = round_robin,
   chash = chash,
   chashsubset = chashsubset,
+  chashboundedloads = chashboundedloads,
   sticky_balanced = sticky_balanced,
   sticky_persistent = sticky_persistent,
   ewma = ewma,
@@ -55,7 +57,9 @@ local function get_implementation(backend)
 
   elseif backend["upstreamHashByConfig"] and
          backend["upstreamHashByConfig"]["upstream-hash-by"] then
-    if backend["upstreamHashByConfig"]["upstream-hash-by-subset"] then
+    if backend["upstreamHashByConfig"]["upstream-hash-by-balance-factor"] then
+      name = "chashboundedloads"
+    elseif backend["upstreamHashByConfig"]["upstream-hash-by-subset"] then
       name = "chashsubset"
     else
       name = "chash"

@@ -102,4 +102,34 @@ describe("utility", function()
       assert.are.same({ "10.10.10.2:8080" }, removed)
     end)
   end)
+
+  describe("hash_string", function()
+    it("returns same seed for same string", function()
+      local seed1 = util.hash_string("test")
+      local seed2 = util.hash_string("test")
+
+      assert.are.same(seed1, seed2)
+    end)
+
+    it("does not overflow on a typical hostname", function()
+      local seed = util.hash_string("nginx-ingress-controller-6f7f95d6c-kvlvj")
+      assert.is_true(seed < 2^31)
+    end)
+
+    it("returns different seed for different string", function()
+      local seed1 = util.hash_string("test")
+      local seed2 = util.hash_string("test2")
+
+      assert.are_not.same(seed1, seed2)
+    end)
+  end)
+
+  describe("get_host_seed", function()
+    it("returns same seed for subsequent calls", function()
+      local seed1 = util.get_host_seed()
+      local seed2 = util.get_host_seed()
+
+      assert.are.same(seed1, seed2)
+    end)
+  end)
 end)

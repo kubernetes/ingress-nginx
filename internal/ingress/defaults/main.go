@@ -132,6 +132,18 @@ type Backend struct {
 	// Default 3
 	UpstreamHashBySubsetSize int `json:"upstream-hash-by-subset-size"`
 
+	// Configures percentage of average cluster load to bound per upstream host.
+	// For example, with a value of 1.5 no upstream host will get a load more than 1.5x times
+	// the average load of all the hosts in the cluster.
+	//
+	// This is implemented based on the method described in the paper https://arxiv.org/abs/1608.01350
+	// This is an O(N) algorithm, unlike other load balancers.
+	// Using a lower hash_balance_factor results in more hosts being probed,
+	// so use a higher value if you require better performance.
+	//
+	// Defaults to 2 (meaning a host might be overloaded 2x compared to average)
+	UpstreamHashByBalanceFactor float32 `json:"upstream-hash-by-balance-factor"`
+
 	// Let's us choose a load balancing algorithm per ingress
 	LoadBalancing string `json:"load-balance"`
 
