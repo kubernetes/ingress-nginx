@@ -134,8 +134,11 @@ func TestSSLPassthrough(t *testing.T) {
 
 	for _, foo := range fooAnns {
 		ing.SetAnnotations(foo.annotations)
-		r := ec.Extract(ing).SSLPassthrough
-		if r != foo.er {
+		r, err := ec.Extract(ing)
+		if err != nil {
+			t.Errorf("Errors should be null: %v", err)
+		}
+		if r.SSLPassthrough != foo.er {
 			t.Errorf("Returned %v but expected %v", r, foo.er)
 		}
 	}
@@ -158,8 +161,11 @@ func TestUpstreamHashBy(t *testing.T) {
 
 	for _, foo := range fooAnns {
 		ing.SetAnnotations(foo.annotations)
-		r := ec.Extract(ing).UpstreamHashBy.UpstreamHashBy
-		if r != foo.er {
+		r, err := ec.Extract(ing)
+		if err != nil {
+			t.Errorf("error should be null: %v", err)
+		}
+		if r.UpstreamHashBy.UpstreamHashBy != foo.er {
 			t.Errorf("Returned %v but expected %v", r, foo.er)
 		}
 	}
@@ -185,7 +191,11 @@ func TestAffinitySession(t *testing.T) {
 
 	for _, foo := range fooAnns {
 		ing.SetAnnotations(foo.annotations)
-		r := ec.Extract(ing).SessionAffinity
+		rann, err := ec.Extract(ing)
+		if err != nil {
+			t.Errorf("error should be null: %v", err)
+		}
+		r := rann.SessionAffinity
 		t.Logf("Testing pass %v %v", foo.affinitytype, foo.cookiename)
 
 		if r.Type != foo.affinitytype {
@@ -228,7 +238,11 @@ func TestCors(t *testing.T) {
 
 	for _, foo := range fooAnns {
 		ing.SetAnnotations(foo.annotations)
-		r := ec.Extract(ing).CorsConfig
+		rann, err := ec.Extract(ing)
+		if err != nil {
+			t.Errorf("error should be null: %v", err)
+		}
+		r := rann.CorsConfig
 		t.Logf("Testing pass %v %v %v %v %v", foo.corsenabled, foo.methods, foo.headers, foo.origin, foo.credentials)
 
 		if r.CorsEnabled != foo.corsenabled {
@@ -277,7 +291,11 @@ func TestCustomHTTPErrors(t *testing.T) {
 
 	for _, foo := range fooAnns {
 		ing.SetAnnotations(foo.annotations)
-		r := ec.Extract(ing).CustomHTTPErrors
+		rann, err := ec.Extract(ing)
+		if err != nil {
+			t.Errorf("error should be null: %v", err)
+		}
+		r := rann.CustomHTTPErrors
 
 		// Check that expected codes were created
 		for i := range foo.er {

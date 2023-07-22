@@ -97,6 +97,17 @@ type Configuration struct {
 	// If disabled, only snippets added via ConfigMap are added to ingress.
 	AllowSnippetAnnotations bool `json:"allow-snippet-annotations"`
 
+	// AllowCrossNamespaceResources enables users to consume cross namespace resource on annotations
+	// Case disabled, attempts to use secrets or configmaps from a namespace different from Ingress will
+	// be denied
+	// This value will default to `false` on future releases
+	AllowCrossNamespaceResources bool `json:"allow-cross-namespace-resources"`
+
+	// AnnotationsRiskLevel represents the risk accepted on an annotation. If the risk is, for instance `Medium`, annotations
+	// with risk High and Critical will not be accepted.
+	// Default Risk is Critical by default, but this may be changed in future releases
+	AnnotationsRiskLevel string `json:"annotations-risk-level"`
+
 	// AnnotationValueWordBlocklist defines words that should not be part of an user annotation value
 	// (can be used to run arbitrary code or configs, for example) and that should be dropped.
 	// This list should be separated by "," character
@@ -708,7 +719,7 @@ type Configuration struct {
 
 	// DatadogSampleRate specifies sample rate for any traces created.
 	// Default: use a dynamic rate instead
-	DatadogSampleRate *float32 `json:"datadog-sample-rate",omitempty`
+	DatadogSampleRate *float32 `json:"datadog-sample-rate,omitempty"`
 
 	// MainSnippet adds custom configuration to the main section of the nginx configuration
 	MainSnippet string `json:"main-snippet"`
@@ -853,8 +864,10 @@ func NewDefault() Configuration {
 
 	cfg := Configuration{
 		AllowSnippetAnnotations:          true,
+		AllowCrossNamespaceResources:     true,
 		AllowBackendServerHeader:         false,
 		AnnotationValueWordBlocklist:     "",
+		AnnotationsRiskLevel:             "Critical",
 		AccessLogPath:                    "/var/log/nginx/access.log",
 		AccessLogParams:                  "",
 		EnableAccessLogForDefaultBackend: false,

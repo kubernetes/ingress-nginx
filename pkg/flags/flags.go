@@ -152,6 +152,9 @@ Requires the update-status parameter.`)
 		annotationsPrefix = flags.String("annotations-prefix", parser.DefaultAnnotationsPrefix,
 			`Prefix of the Ingress annotations specific to the NGINX controller.`)
 
+		enableAnnotationValidation = flags.Bool("enable-annotation-validation", false,
+			`If true, will enable the annotation validation feature. This value will be defaulted to true on a future release`)
+
 		enableSSLChainCompletion = flags.Bool("enable-ssl-chain-completion", false,
 			`Autocomplete SSL certificate chains with missing intermediate CA certificates.
 Certificates uploaded to Kubernetes must have the "Authority Information Access" X.509 v3
@@ -249,6 +252,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 	}
 
 	parser.AnnotationsPrefix = *annotationsPrefix
+	parser.EnableAnnotationValidation = *enableAnnotationValidation
 
 	// check port collisions
 	if !ing_net.IsPortAvailable(*httpPort) {

@@ -39,6 +39,9 @@ func TestParse(t *testing.T) {
 	}{
 		{map[string]string{annotation: "8k"}, "8k"},
 		{map[string]string{annotation: "16k"}, "16k"},
+		{map[string]string{annotation: "10000"}, "10000"},
+		{map[string]string{annotation: "16R"}, ""},
+		{map[string]string{annotation: "16kkk"}, ""},
 		{map[string]string{annotation: ""}, ""},
 		{map[string]string{}, ""},
 		{nil, ""},
