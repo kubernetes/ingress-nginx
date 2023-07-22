@@ -44,8 +44,8 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/fastcgi"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/globalratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/http2pushpreload"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/ipallowlist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipdenylist"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/loadbalancing"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/mirror"
@@ -109,7 +109,6 @@ type Ingress struct {
 	UpstreamHashBy     upstreamhashby.Config
 	LoadBalancing      string
 	UpstreamVhost      string
-	Whitelist          ipwhitelist.SourceRange
 	Denylist           ipdenylist.SourceRange
 	XForwardedPrefix   string
 	SSLCipher          sslcipher.Config
@@ -117,6 +116,7 @@ type Ingress struct {
 	ModSecurity        modsecurity.Config
 	Mirror             mirror.Config
 	StreamSnippet      string
+	Allowlist          ipallowlist.SourceRange
 }
 
 // Extractor defines the annotation parsers to be used in the extraction of annotations
@@ -159,7 +159,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"UpstreamHashBy":       upstreamhashby.NewParser(cfg),
 			"LoadBalancing":        loadbalancing.NewParser(cfg),
 			"UpstreamVhost":        upstreamvhost.NewParser(cfg),
-			"Whitelist":            ipwhitelist.NewParser(cfg),
+			"Allowlist":            ipallowlist.NewParser(cfg),
 			"Denylist":             ipdenylist.NewParser(cfg),
 			"XForwardedPrefix":     xforwardedprefix.NewParser(cfg),
 			"SSLCipher":            sslcipher.NewParser(cfg),
@@ -173,16 +173,23 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 }
 
 // Extract extracts the annotations from an Ingress
-func (e Extractor) Extract(ing *networking.Ingress) *Ingress {
+func (e Extractor) Extract(ing *networking.Ingress) (*Ingress, error) {
 	pia := &Ingress{
 		ObjectMeta: ing.ObjectMeta,
 	}
 
 	data := make(map[string]interface{})
 	for name, annotationParser := range e.annotations {
+		if err := annotationParser.Validate(ing.GetAnnotations()); err != nil {
+			return nil, errors.NewRiskyAnnotations(name)
+		}
 		val, err := annotationParser.Parse(ing)
 		klog.V(5).InfoS("Parsing Ingress annotation", "name", name, "ingress", klog.KObj(ing), "value", val)
 		if err != nil {
+			if errors.IsValidationError(err) {
+				klog.ErrorS(err, "ingress contains invalid annotation value")
+				return nil, err
+			}
 			if errors.IsMissingAnnotations(err) {
 				continue
 			}
@@ -220,5 +227,5 @@ func (e Extractor) Extract(ing *networking.Ingress) *Ingress {
 		klog.ErrorS(err, "unexpected error merging extracted annotations")
 	}
 
-	return pia
+	return pia, nil
 }

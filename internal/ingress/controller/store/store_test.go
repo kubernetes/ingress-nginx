@@ -1414,15 +1414,28 @@ func TestUpdateSecretIngressMap(t *testing.T) {
 	t.Run("with annotation in namespace/name format", func(t *testing.T) {
 		ing := ingTpl.DeepCopy()
 		ing.ObjectMeta.SetAnnotations(map[string]string{
-			parser.GetAnnotationWithPrefix("auth-secret"): "otherns/auth",
+			parser.GetAnnotationWithPrefix("auth-secret"): "testns/auth",
 		})
 		if err := s.listers.Ingress.Update(ing); err != nil {
 			t.Errorf("error updating the Ingress: %v", err)
 		}
 		s.updateSecretIngressMap(ing)
 
-		if l := s.secretIngressMap.Len(); !(l == 1 && s.secretIngressMap.Has("otherns/auth")) {
+		if l := s.secretIngressMap.Len(); !(l == 1 && s.secretIngressMap.Has("testns/auth")) {
 			t.Errorf("Expected \"otherns/auth\" to be the only referenced Secret (got %d)", l)
+		}
+	})
+
+	t.Run("with annotation in namespace/name format should not be supported", func(t *testing.T) {
+		ing := ingTpl.DeepCopy()
+		ing.ObjectMeta.SetAnnotations(map[string]string{
+			parser.GetAnnotationWithPrefix("auth-secret"): "anotherns/auth",
+		})
+		s.listers.Ingress.Update(ing)
+		s.updateSecretIngressMap(ing)
+
+		if l := s.secretIngressMap.Len(); l != 0 {
+			t.Errorf("Expected \"otherns/auth\" to be denied as it contains a different namespace (got %d)", l)
 		}
 	})
 

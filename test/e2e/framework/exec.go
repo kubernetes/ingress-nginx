@@ -116,7 +116,12 @@ func (f *Framework) newIngressController(namespace string, namespaceOverlay stri
 	if !ok {
 		isChroot = "false"
 	}
-	cmd := exec.Command("./wait-for-nginx.sh", namespace, namespaceOverlay, isChroot)
+
+	enableAnnotationValidations, ok := os.LookupEnv("ENABLE_VALIDATIONS")
+	if !ok {
+		enableAnnotationValidations = "false"
+	}
+	cmd := exec.Command("./wait-for-nginx.sh", namespace, namespaceOverlay, isChroot, enableAnnotationValidations)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("unexpected error waiting for ingress controller deployment: %v.\nLogs:\n%v", err, string(out))

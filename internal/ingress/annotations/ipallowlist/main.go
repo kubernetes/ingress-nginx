@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package ipwhitelist
+package ipallowlist
 
 import (
 	"fmt"
@@ -29,6 +29,24 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/pkg/util/sets"
 )
+
+const (
+	ipWhitelistAnnotation = "whitelist-source-range"
+	ipAllowlistAnnotation = "allowlist-source-range"
+)
+
+var allowlistAnnotations = parser.Annotation{
+	Group: "acl",
+	Annotations: parser.AnnotationFields{
+		ipAllowlistAnnotation: {
+			Validator:         parser.ValidateCIDRs,
+			Scope:             parser.AnnotationScopeLocation,
+			Risk:              parser.AnnotationRiskMedium, // Failure on parsing this may cause undesired access
+			Documentation:     `This annotation allows setting a list of IPs and networks allowed to access this Location`,
+			AnnotationAliases: []string{ipWhitelistAnnotation},
+		},
+	},
+}
 
 // SourceRange returns the CIDR
 type SourceRange struct {
@@ -47,36 +65,47 @@ func (sr1 *SourceRange) Equal(sr2 *SourceRange) bool {
 	return sets.StringElementsMatch(sr1.CIDR, sr2.CIDR)
 }
 
-type ipwhitelist struct {
-	r resolver.Resolver
+type ipallowlist struct {
+	r                resolver.Resolver
+	annotationConfig parser.Annotation
 }
 
-// NewParser creates a new whitelist annotation parser
+// NewParser creates a new ipallowlist annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return ipwhitelist{r}
+	return ipallowlist{
+		r:                r,
+		annotationConfig: allowlistAnnotations,
+	}
 }
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to limit access to certain client addresses or networks.
 // Multiple ranges can specified using commas as separator
 // e.g. `18.0.0.0/8,56.0.0.0/8`
-func (a ipwhitelist) Parse(ing *networking.Ingress) (interface{}, error) {
+func (a ipallowlist) Parse(ing *networking.Ingress) (interface{}, error) {
 	defBackend := a.r.GetDefaultBackend()
 
-	defaultWhitelistSourceRange := make([]string, len(defBackend.WhitelistSourceRange))
-	copy(defaultWhitelistSourceRange, defBackend.WhitelistSourceRange)
-	sort.Strings(defaultWhitelistSourceRange)
+	defaultAllowlistSourceRange := make([]string, len(defBackend.WhitelistSourceRange))
+	copy(defaultAllowlistSourceRange, defBackend.WhitelistSourceRange)
+	sort.Strings(defaultAllowlistSourceRange)
 
-	val, err := parser.GetStringAnnotation("whitelist-source-range", ing)
+	val, err := parser.GetStringAnnotation(ipAllowlistAnnotation, ing, a.annotationConfig.Annotations)
 	// A missing annotation is not a problem, just use the default
-	if err == ing_errors.ErrMissingAnnotations {
-		return &SourceRange{CIDR: defaultWhitelistSourceRange}, nil
+	if err != nil {
+		if err == ing_errors.ErrMissingAnnotations {
+			return &SourceRange{CIDR: defaultAllowlistSourceRange}, nil
+		}
+
+		return &SourceRange{CIDR: defaultAllowlistSourceRange}, ing_errors.LocationDenied{
+			Reason: err,
+		}
+
 	}
 
 	values := strings.Split(val, ",")
 	ipnets, ips, err := net.ParseIPNets(values...)
 	if err != nil && len(ips) == 0 {
-		return &SourceRange{CIDR: defaultWhitelistSourceRange}, ing_errors.LocationDenied{
+		return &SourceRange{CIDR: defaultAllowlistSourceRange}, ing_errors.LocationDenied{
 			Reason: fmt.Errorf("the annotation does not contain a valid IP address or network: %w", err),
 		}
 	}
@@ -92,4 +121,13 @@ func (a ipwhitelist) Parse(ing *networking.Ingress) (interface{}, error) {
 	sort.Strings(cidrs)
 
 	return &SourceRange{cidrs}, nil
+}
+
+func (a ipallowlist) GetDocumentation() parser.AnnotationFields {
+	return a.annotationConfig.Annotations
+}
+
+func (a ipallowlist) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+	return parser.CheckAnnotationRisk(anns, maxrisk, allowlistAnnotations.Annotations)
 }

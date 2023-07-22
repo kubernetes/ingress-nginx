@@ -73,7 +73,7 @@ func TestIngressAnnotationOpentelemetrySetTrue(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("enable-opentelemetry")] = "true"
+	data[parser.GetAnnotationWithPrefix(enableOpenTelemetryAnnotation)] = "true"
 	ing.SetAnnotations(data)
 
 	val, _ := NewParser(&resolver.Mock{}).Parse(ing)
@@ -100,7 +100,7 @@ func TestIngressAnnotationOpentelemetrySetFalse(t *testing.T) {
 
 	// Test with explicitly set to false
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("enable-opentelemetry")] = "false"
+	data[parser.GetAnnotationWithPrefix(enableOpenTelemetryAnnotation)] = "false"
 	ing.SetAnnotations(data)
 
 	val, _ := NewParser(&resolver.Mock{}).Parse(ing)
@@ -123,12 +123,15 @@ func TestIngressAnnotationOpentelemetryTrustSetTrue(t *testing.T) {
 
 	data := map[string]string{}
 	opName := "foo-op"
-	data[parser.GetAnnotationWithPrefix("enable-opentelemetry")] = "true"
-	data[parser.GetAnnotationWithPrefix("opentelemetry-trust-incoming-span")] = "true"
-	data[parser.GetAnnotationWithPrefix("opentelemetry-operation-name")] = opName
+	data[parser.GetAnnotationWithPrefix(enableOpenTelemetryAnnotation)] = "true"
+	data[parser.GetAnnotationWithPrefix(otelTrustSpanAnnotation)] = "true"
+	data[parser.GetAnnotationWithPrefix(otelOperationNameAnnotation)] = opName
 	ing.SetAnnotations(data)
 
-	val, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	val, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Fatal(err)
+	}
 	openTelemetry, ok := val.(*Config)
 	if !ok {
 		t.Errorf("expected a Config type")
@@ -152,6 +155,21 @@ func TestIngressAnnotationOpentelemetryTrustSetTrue(t *testing.T) {
 
 	if openTelemetry.OperationName != opName {
 		t.Errorf("expected annotation value to be %v, got %v", opName, openTelemetry.OperationName)
+	}
+}
+
+func TestIngressAnnotationOpentelemetryWithBadOpName(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	opName := "fooxpto_123$la;"
+	data[parser.GetAnnotationWithPrefix(enableOpenTelemetryAnnotation)] = "true"
+	data[parser.GetAnnotationWithPrefix(otelOperationNameAnnotation)] = opName
+	ing.SetAnnotations(data)
+
+	_, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err == nil {
+		t.Fatalf("This operation should return an error but no error was returned")
 	}
 }
 

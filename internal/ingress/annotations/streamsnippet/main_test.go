@@ -27,7 +27,7 @@ import (
 )
 
 func TestParse(t *testing.T) {
-	annotation := parser.GetAnnotationWithPrefix("stream-snippet")
+	annotation := parser.GetAnnotationWithPrefix(streamSnippetAnnotation)
 
 	ap := NewParser(&resolver.Mock{})
 	if ap == nil {

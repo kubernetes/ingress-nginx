@@ -69,6 +69,9 @@ type Storer interface {
 	// GetBackendConfiguration returns the nginx configuration stored in a configmap
 	GetBackendConfiguration() ngx_config.Configuration
 
+	// GetSecurityConfiguration returns the configuration options from Ingress
+	GetSecurityConfiguration() defaults.SecurityConfiguration
+
 	// GetConfigMap returns the ConfigMap matching key.
 	GetConfigMap(key string) (*corev1.ConfigMap, error)
 
@@ -882,9 +885,14 @@ func (s *k8sStore) syncIngress(ing *networkingv1.Ingress) {
 
 	k8s.SetDefaultNGINXPathType(copyIng)
 
-	err := s.listers.IngressWithAnnotation.Update(&ingress.Ingress{
+	parsed, err := s.annotations.Extract(ing)
+	if err != nil {
+		klog.Error(err)
+		return
+	}
+	err = s.listers.IngressWithAnnotation.Update(&ingress.Ingress{
 		Ingress:           *copyIng,
-		ParsedAnnotations: s.annotations.Extract(ing),
+		ParsedAnnotations: parsed,
 	})
 	if err != nil {
 		klog.Error(err)
@@ -920,8 +928,10 @@ func (s *k8sStore) updateSecretIngressMap(ing *networkingv1.Ingress) {
 		"proxy-ssl-secret",
 		"secure-verify-ca-secret",
 	}
+
+	secConfig := s.GetSecurityConfiguration().AllowCrossNamespaceResources
 	for _, ann := range secretAnnotations {
-		secrKey, err := objectRefAnnotationNsKey(ann, ing)
+		secrKey, err := objectRefAnnotationNsKey(ann, ing, secConfig)
 		if err != nil && !errors.IsMissingAnnotations(err) {
 			klog.Errorf("error reading secret reference in annotation %q: %s", ann, err)
 			continue
@@ -937,8 +947,9 @@ func (s *k8sStore) updateSecretIngressMap(ing *networkingv1.Ingress) {
 
 // objectRefAnnotationNsKey returns an object reference formatted as a
 // 'namespace/name' key from the given annotation name.
-func objectRefAnnotationNsKey(ann string, ing *networkingv1.Ingress) (string, error) {
-	annValue, err := parser.GetStringAnnotation(ann, ing)
+func objectRefAnnotationNsKey(ann string, ing *networkingv1.Ingress, allowCrossNamespace bool) (string, error) {
+	// We pass nil fields, as this is an internal process and we don't need to validate it.
+	annValue, err := parser.GetStringAnnotation(ann, ing, nil)
 	if err != nil {
 		return "", err
 	}
@@ -950,6 +961,9 @@ func objectRefAnnotationNsKey(ann string, ing *networkingv1.Ingress) (string, er
 
 	if secrNs == "" {
 		return fmt.Sprintf("%v/%v", ing.Namespace, secrName), nil
+	}
+	if !allowCrossNamespace && secrNs != ing.Namespace {
+		return "", fmt.Errorf("cross namespace secret is not supported")
 	}
 	return annValue, nil
 }
@@ -1123,6 +1137,17 @@ func (s *k8sStore) GetBackendConfiguration() ngx_config.Configuration {
 	defer s.backendConfigMu.RUnlock()
 
 	return s.backendConfig
+}
+
+func (s *k8sStore) GetSecurityConfiguration() defaults.SecurityConfiguration {
+	s.backendConfigMu.RLock()
+	defer s.backendConfigMu.RUnlock()
+
+	secConfig := defaults.SecurityConfiguration{
+		AllowCrossNamespaceResources: s.backendConfig.AllowCrossNamespaceResources,
+		AnnotationsRiskLevel:         s.backendConfig.AnnotationsRiskLevel,
+	}
+	return secConfig
 }
 
 func (s *k8sStore) setConfig(cmap *corev1.ConfigMap) {

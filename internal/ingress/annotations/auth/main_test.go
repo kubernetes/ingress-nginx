@@ -26,6 +26,7 @@ import (
 	api "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
@@ -79,13 +80,18 @@ type mockSecret struct {
 }
 
 func (m mockSecret) GetSecret(name string) (*api.Secret, error) {
-	if name != "default/demo-secret" {
+	if name != "default/demo-secret" && name != "otherns/demo-secret" {
 		return nil, fmt.Errorf("there is no secret with name %v", name)
+	}
+
+	ns, _, err := cache.SplitMetaNamespaceKey(name)
+	if err != nil {
+		return nil, err
 	}
 
 	return &api.Secret{
 		ObjectMeta: meta_v1.ObjectMeta{
-			Namespace: api.NamespaceDefault,
+			Namespace: ns,
 			Name:      "demo-secret",
 		},
 		Data: map[string][]byte{"auth": []byte("foo:$apr1$OFG3Xybp$ckL0FHDAkoXYIlH9.cysT0")},
@@ -106,13 +112,91 @@ func TestIngressAuthBadAuthType(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("auth-type")] = "invalid"
+	data[parser.GetAnnotationWithPrefix(authTypeAnnotation)] = "invalid"
 	ing.SetAnnotations(data)
 
 	_, dir, _ := dummySecretContent(t)
 	defer os.RemoveAll(dir)
 
-	expected := ing_errors.NewLocationDenied("invalid authentication type")
+	expected := ing_errors.NewValidationError("nginx.ingress.kubernetes.io/auth-type")
+	_, err := NewParser(dir, &mockSecret{}).Parse(ing)
+	if err.Error() != expected.Error() {
+		t.Errorf("expected '%v' but got '%v'", expected, err)
+	}
+}
+
+func TestIngressInvalidRealm(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix(authTypeAnnotation)] = "basic"
+	data[parser.GetAnnotationWithPrefix(authRealmAnnotation)] = "something weird ; location trying to { break }"
+	data[parser.GetAnnotationWithPrefix(AuthSecretAnnotation)] = "demo-secret"
+	ing.SetAnnotations(data)
+
+	_, dir, _ := dummySecretContent(t)
+	defer os.RemoveAll(dir)
+
+	expected := ing_errors.NewValidationError("nginx.ingress.kubernetes.io/auth-realm")
+	_, err := NewParser(dir, &mockSecret{}).Parse(ing)
+	if err.Error() != expected.Error() {
+		t.Errorf("expected '%v' but got '%v'", expected, err)
+	}
+}
+
+func TestIngressInvalidDifferentNamespace(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix(authTypeAnnotation)] = "basic"
+	data[parser.GetAnnotationWithPrefix(AuthSecretAnnotation)] = "otherns/demo-secret"
+	ing.SetAnnotations(data)
+
+	_, dir, _ := dummySecretContent(t)
+	defer os.RemoveAll(dir)
+
+	expected := ing_errors.LocationDenied{
+		Reason: errors.New("cross namespace usage of secrets is not allowed"),
+	}
+	_, err := NewParser(dir, &mockSecret{}).Parse(ing)
+	if err.Error() != expected.Error() {
+		t.Errorf("expected '%v' but got '%v'", expected, err)
+	}
+}
+
+func TestIngressInvalidDifferentNamespaceAllowed(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix(authTypeAnnotation)] = "basic"
+	data[parser.GetAnnotationWithPrefix(AuthSecretAnnotation)] = "otherns/demo-secret"
+	ing.SetAnnotations(data)
+
+	_, dir, _ := dummySecretContent(t)
+	defer os.RemoveAll(dir)
+
+	r := mockSecret{}
+	r.AllowCrossNamespace = true
+	_, err := NewParser(dir, r).Parse(ing)
+	if err != nil {
+		t.Errorf("not expecting an error")
+	}
+}
+
+func TestIngressInvalidSecretName(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix(authTypeAnnotation)] = "basic"
+	data[parser.GetAnnotationWithPrefix(AuthSecretAnnotation)] = "demo-secret;xpto"
+	ing.SetAnnotations(data)
+
+	_, dir, _ := dummySecretContent(t)
+	defer os.RemoveAll(dir)
+
+	expected := ing_errors.LocationDenied{
+		Reason: errors.New("error reading secret name from annotation: annotation nginx.ingress.kubernetes.io/auth-secret contains invalid value"),
+	}
 	_, err := NewParser(dir, &mockSecret{}).Parse(ing)
 	if err.Error() != expected.Error() {
 		t.Errorf("expected '%v' but got '%v'", expected, err)
@@ -123,7 +207,7 @@ func TestInvalidIngressAuthNoSecret(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("auth-type")] = "basic"
+	data[parser.GetAnnotationWithPrefix(authTypeAnnotation)] = "basic"
 	ing.SetAnnotations(data)
 
 	_, dir, _ := dummySecretContent(t)
@@ -142,9 +226,9 @@ func TestIngressAuth(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("auth-type")] = "basic"
-	data[parser.GetAnnotationWithPrefix("auth-secret")] = "demo-secret"
-	data[parser.GetAnnotationWithPrefix("auth-realm")] = "-realm-"
+	data[parser.GetAnnotationWithPrefix(authTypeAnnotation)] = "basic"
+	data[parser.GetAnnotationWithPrefix(AuthSecretAnnotation)] = "demo-secret"
+	data[parser.GetAnnotationWithPrefix(authRealmAnnotation)] = "-realm-"
 	ing.SetAnnotations(data)
 
 	_, dir, _ := dummySecretContent(t)
@@ -173,9 +257,9 @@ func TestIngressAuthWithoutSecret(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("auth-type")] = "basic"
-	data[parser.GetAnnotationWithPrefix("auth-secret")] = "invalid-secret"
-	data[parser.GetAnnotationWithPrefix("auth-realm")] = "-realm-"
+	data[parser.GetAnnotationWithPrefix(authTypeAnnotation)] = "basic"
+	data[parser.GetAnnotationWithPrefix(AuthSecretAnnotation)] = "invalid-secret"
+	data[parser.GetAnnotationWithPrefix(authRealmAnnotation)] = "-realm-"
 	ing.SetAnnotations(data)
 
 	_, dir, _ := dummySecretContent(t)
@@ -191,10 +275,10 @@ func TestIngressAuthInvalidSecretKey(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("auth-type")] = "basic"
-	data[parser.GetAnnotationWithPrefix("auth-secret")] = "demo-secret"
-	data[parser.GetAnnotationWithPrefix("auth-secret-type")] = "invalid-type"
-	data[parser.GetAnnotationWithPrefix("auth-realm")] = "-realm-"
+	data[parser.GetAnnotationWithPrefix(authTypeAnnotation)] = "basic"
+	data[parser.GetAnnotationWithPrefix(AuthSecretAnnotation)] = "demo-secret"
+	data[parser.GetAnnotationWithPrefix(authSecretTypeAnnotation)] = "invalid-type"
+	data[parser.GetAnnotationWithPrefix(authRealmAnnotation)] = "-realm-"
 	ing.SetAnnotations(data)
 
 	_, dir, _ := dummySecretContent(t)
