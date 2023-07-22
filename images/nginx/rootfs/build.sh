@@ -199,13 +199,13 @@ cd "$BUILD_PATH"
 get_src 66dc7081488811e9f925719e34d1b4504c2801c81dee2920e5452a86b11405ae \
         "https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
-get_src 09fec34ff3ef1baf23dd0eaf04307fd73db865cdf99294687de45bf80c58f146 \
-        "https://github.com/simpl/ngx_devel_kit/archive/v$NDK_VERSION.tar.gz"
+get_src aa961eafb8317e0eb8da37eb6e2c9ff42267edd18b56947384e719b85188f58b \
+        "https://github.com/vision5/ngx_devel_kit/archive/v$NDK_VERSION.tar.gz"
 
 get_src cd5e2cc834bcfa30149e7511f2b5a2183baf0b70dc091af717a89a64e44a2985 \
         "https://github.com/openresty/set-misc-nginx-module/archive/v$SETMISC_VERSION.tar.gz"
 
-get_src 2a86088a37932a4a9812d2e552cc3847e11470a753ed78a18510b196344c2734 \
+get_src 0c0d2ced2ce895b3f45eb2b230cd90508ab2a773299f153de14a43e44c1209b3 \
         "https://github.com/openresty/headers-more-nginx-module/archive/v$MORE_HEADERS_VERSION.tar.gz"
 
 get_src f09851e6309560a8ff3e901548405066c83f1f6ff88aa7171e0763bd9514762b \
@@ -244,7 +244,7 @@ else
 get_src bc764db42830aeaf74755754b900253c233ad57498debe7a441cee2c6f4b07c2 \
         "https://github.com/openresty/lua-nginx-module/archive/v$LUA_NGX_VERSION.tar.gz"
 
-get_src c4df29aeee1ec648a2d2d527c2b27312617a1f1a4033e492e8cf8e6ecbbc269d \
+get_src 01b715754a8248cc7228e0c8f97f7488ae429d90208de0481394e35d24cef32f \
         "https://github.com/openresty/stream-lua-nginx-module/archive/v$LUA_STREAM_NGX_VERSION.tar.gz"
 
 fi
@@ -266,7 +266,7 @@ get_src 8d39c6b23f941a2d11571daaccc04e69539a3fcbcc50a631837560d5861a7b96 \
 get_src 4c1933434572226942c65b2f2b26c8a536ab76aa771a3c7f6c2629faa764976b \
         "https://github.com/leev/ngx_http_geoip2_module/archive/$GEOIP2_VERSION.tar.gz"
 
-get_src c7e94aefd32ed04068642fd5da2dcc41aa41a63a8dfac6d73b203bc73f1a3232 \
+get_src deb4ab1ffb9f3d962c4b4a2c4bdff692b86a209e3835ae71ebdf3b97189e40a9 \
         "https://github.com/openresty/lua-resty-upload/archive/v$LUA_RESTY_UPLOAD_VERSION.tar.gz"
 
 get_src bdbf271003d95aa91cab0a92f24dca129e99b33f79c13ebfcdbbcbb558129491 \
@@ -279,7 +279,7 @@ if [[ ${ARCH} == "s390x" ]]; then
 get_src 8f5f76d2689a3f6b0782f0a009c56a65e4c7a4382be86422c9b3549fe95b0dc4 \
         "https://github.com/openresty/lua-resty-core/archive/v$LUA_RESTY_CORE.tar.gz"
 else
-get_src 5249631c2f493fc41a9e85b1e7214675d2e31d5bb52cac7a1e99d9a5eb873ba9 \
+get_src 39baab9e2b31cc48cecf896cea40ef6e80559054fd8a6e440cc804a858ea84d4 \
         "https://github.com/openresty/lua-resty-core/archive/v$LUA_RESTY_CORE.tar.gz"
 fi
 
@@ -289,10 +289,10 @@ get_src a77b9de160d81712f2f442e1de8b78a5a7ef0d08f13430ff619f79235db974d4 \
 get_src 5ed48c36231e2622b001308622d46a0077525ac2f751e8cc0c9905914254baa4 \
         "https://github.com/cloudflare/lua-resty-cookie/archive/$LUA_RESTY_COOKIE_VERSION.tar.gz"
 
-get_src b38ba9620a08cf3e0b3cc17f85bde285dca6441fe5a6bd982ef732f4b6036e66 \
+get_src 573184006b98ccee2594b0d134fa4d05e5d2afd5141cbad315051ccf7e9b6403 \
         "https://github.com/openresty/lua-resty-lrucache/archive/v$LUA_RESTY_CACHE.tar.gz"
 
-get_src 6aebf4412639a84eedc8b140aa48e065d625453859699a6712a62fa8085f2704 \
+get_src b4ddcd47db347e9adf5c1e1491a6279a6ae2a3aff3155ef77ea0a65c998a69c1 \
         "https://github.com/openresty/lua-resty-lock/archive/v$LUA_RESTY_LOCK.tar.gz"
 
 get_src 70e9a01eb32ccade0d5116a25bcffde0445b94ad35035ce06b94ccd260ad1bf0 \
@@ -301,7 +301,7 @@ get_src 70e9a01eb32ccade0d5116a25bcffde0445b94ad35035ce06b94ccd260ad1bf0 \
 get_src 9fcb6db95bc37b6fce77d3b3dc740d593f9d90dce0369b405eb04844d56ac43f \
         "https://github.com/ledgetech/lua-resty-http/archive/$LUA_RESTY_HTTP.tar.gz"
 
-get_src 0513e2be4e9d6dd59c5575432c8a28e5f7a105b373009fa5058f685f0759f28f \
+get_src 02733575c4aed15f6cab662378e4b071c0a4a4d07940c4ef19a7319e9be943d4 \
         "https://github.com/openresty/lua-resty-memcached/archive/v$LUA_RESTY_MEMCACHED_VERSION.tar.gz"
 
 get_src c15aed1a01c88a3a6387d9af67a957dff670357f5fdb4ee182beb44635eef3f1 \
