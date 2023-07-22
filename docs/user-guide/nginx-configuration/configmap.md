@@ -29,7 +29,9 @@ The following table shows a configuration option's name, type, and the default v
 |:---|:---|:------|:----|
 |[add-headers](#add-headers)|string|""||
 |[allow-backend-server-header](#allow-backend-server-header)|bool|"false"||
+|[allow-cross-namespace-resources](#allow-cross-namespace-resources)|bool|"true"||
 |[allow-snippet-annotations](#allow-snippet-annotations)|bool|true||
+|[annotations-risk-level](#annotations-risk-level)|string|Critical||
 |[annotation-value-word-blocklist](#annotation-value-word-blocklist)|string array|""||
 |[hide-headers](#hide-headers)|string array|empty||
 |[access-log-params](#access-log-params)|string|""||
@@ -240,12 +242,36 @@ Sets custom headers from named configmap before sending traffic to the client. S
 
 Enables the return of the header Server from the backend instead of the generic nginx string. _**default:**_ is disabled
 
+## allow-cross-namespace-resources
+
+Enables users to consume cross namespace resource on annotations, when was previously enabled . _**default:**_ true
+
+**Annotations that may be impacted with this change**:
+* `auth-secret`
+* `auth-proxy-set-header`
+* `auth-tls-secret`
+* `fastcgi-params-configmap`
+* `proxy-ssl-secret`
+
+
+**This option will be defaulted to false in the next major release**
+
 ## allow-snippet-annotations
 
 Enables Ingress to parse and add *-snippet annotations/directives created by the user. _**default:**_ `true`
 
 Warning: We recommend enabling this option only if you TRUST users with permission to create Ingress objects, as this
 may allow a user to add restricted configurations to the final nginx.conf file
+
+**This option will be defaulted to false in the next major release**
+
+## annotations-risk-level
+
+Represents the risk accepted on an annotation. If the risk is, for instance `Medium`, annotations with risk High and Critical will not be accepted.
+
+Accepted values are `Critical`, `High`, `Medium` and `Low`.
+
+Defaults to `Critical` but will be changed to `High` on the next minor release
 
 ## annotation-value-word-blocklist
 

@@ -26,12 +26,25 @@ import (
 
 // Mock implements the Resolver interface
 type Mock struct {
-	ConfigMaps map[string]*apiv1.ConfigMap
+	ConfigMaps           map[string]*apiv1.ConfigMap
+	AnnotationsRiskLevel string
+	AllowCrossNamespace  bool
 }
 
 // GetDefaultBackend returns the backend that must be used as default
 func (m Mock) GetDefaultBackend() defaults.Backend {
 	return defaults.Backend{}
+}
+
+func (m Mock) GetSecurityConfiguration() defaults.SecurityConfiguration {
+	defRisk := m.AnnotationsRiskLevel
+	if defRisk == "" {
+		defRisk = "Critical"
+	}
+	return defaults.SecurityConfiguration{
+		AnnotationsRiskLevel:         defRisk,
+		AllowCrossNamespaceResources: m.AllowCrossNamespace,
+	}
 }
 
 // GetSecret searches for secrets contenating the namespace and name using a the character /

@@ -73,7 +73,7 @@ func TestIngressAnnotationOpentracingSetTrue(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("enable-opentracing")] = "true"
+	data[parser.GetAnnotationWithPrefix(enableOpentracingAnnotation)] = "true"
 	ing.SetAnnotations(data)
 
 	val, _ := NewParser(&resolver.Mock{}).Parse(ing)
@@ -92,7 +92,7 @@ func TestIngressAnnotationOpentracingSetFalse(t *testing.T) {
 
 	// Test with explicitly set to false
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("enable-opentracing")] = "false"
+	data[parser.GetAnnotationWithPrefix(enableOpentracingAnnotation)] = "false"
 	ing.SetAnnotations(data)
 
 	val, _ := NewParser(&resolver.Mock{}).Parse(ing)
@@ -110,8 +110,8 @@ func TestIngressAnnotationOpentracingTrustSetTrue(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("enable-opentracing")] = "true"
-	data[parser.GetAnnotationWithPrefix("opentracing-trust-incoming-span")] = "true"
+	data[parser.GetAnnotationWithPrefix(enableOpentracingAnnotation)] = "true"
+	data[parser.GetAnnotationWithPrefix(opentracingTrustSpanAnnotation)] = "true"
 	ing.SetAnnotations(data)
 
 	val, _ := NewParser(&resolver.Mock{}).Parse(ing)

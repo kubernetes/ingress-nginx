@@ -389,14 +389,19 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 			toCheck.ObjectMeta.Name == ing.ObjectMeta.Name
 	}
 	ings := store.FilterIngresses(allIngresses, filter)
+	parsed, err := annotations.NewAnnotationExtractor(n.store).Extract(ing)
+	if err != nil {
+		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
+		return err
+	}
 	ings = append(ings, &ingress.Ingress{
 		Ingress:           *ing,
-		ParsedAnnotations: annotations.NewAnnotationExtractor(n.store).Extract(ing),
+		ParsedAnnotations: parsed,
 	})
 	startTest := time.Now().UnixNano() / 1000000
 	_, servers, pcfg := n.getConfiguration(ings)
 
-	err := checkOverlap(ing, allIngresses, servers)
+	err = checkOverlap(ing, allIngresses, servers)
 	if err != nil {
 		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
 		return err
@@ -1509,7 +1514,7 @@ func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) 
 	loc.Rewrite = anns.Rewrite
 	loc.UpstreamVhost = anns.UpstreamVhost
 	loc.Denylist = anns.Denylist
-	loc.Whitelist = anns.Whitelist
+	loc.Allowlist = anns.Allowlist
 	loc.Denied = anns.Denied
 	loc.XForwardedPrefix = anns.XForwardedPrefix
 	loc.UsePortInRedirects = anns.UsePortInRedirects
@@ -1809,9 +1814,9 @@ func checkOverlap(ing *networking.Ingress, ingresses []*ingress.Ingress, servers
 			}
 
 			// path overlap. Check if one of the ingresses has a canary annotation
-			isCanaryEnabled, annotationErr := parser.GetBoolAnnotation("canary", ing)
+			isCanaryEnabled, annotationErr := parser.GetBoolAnnotation("canary", ing, canary.CanaryAnnotations.Annotations)
 			for _, existing := range existingIngresses {
-				isExistingCanaryEnabled, existingAnnotationErr := parser.GetBoolAnnotation("canary", existing)
+				isExistingCanaryEnabled, existingAnnotationErr := parser.GetBoolAnnotation("canary", existing, canary.CanaryAnnotations.Annotations)
 
 				if isCanaryEnabled && isExistingCanaryEnabled {
 					return fmt.Errorf(`host "%s" and path "%s" is already defined in ingress %s/%s`, rule.Host, path.Path, existing.Namespace, existing.Name)

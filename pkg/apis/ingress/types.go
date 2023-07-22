@@ -29,8 +29,8 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/fastcgi"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/globalratelimit"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/ipallowlist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipdenylist"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/mirror"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
@@ -224,7 +224,7 @@ type Server struct {
 // is required.
 // The chain in the execution order of annotations should be:
 // - Denylist
-// - Whitelist
+// - Allowlist
 // - RateLimit
 // - BasicDigestAuth
 // - ExternalAuth
@@ -298,10 +298,10 @@ type Location struct {
 	// addresses or networks are allowed.
 	// +optional
 	Denylist ipdenylist.SourceRange `json:"denylist,omitempty"`
-	// Whitelist indicates only connections from certain client
+	// Allowlist indicates only connections from certain client
 	// addresses or networks are allowed.
 	// +optional
-	Whitelist ipwhitelist.SourceRange `json:"whitelist,omitempty"`
+	Allowlist ipallowlist.SourceRange `json:"allowlist,omitempty"`
 	// Proxy contains information about timeouts and buffer sizes
 	// to be used in connections against endpoints
 	// +optional
