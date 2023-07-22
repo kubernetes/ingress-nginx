@@ -96,6 +96,10 @@ controller:
       http: 80
       # -- 'hostPort' https port
       https: 443
+  # NetworkPolicy for controller component.
+  networkPolicy:
+    # -- Enable 'networkPolicy' or not
+    enabled: false
   # -- Election ID to use for status update, by default it uses the controller name combined with a suffix of 'leader'
   electionID: ""
   ## This section refers to the creation of the IngressClass resource
@@ -606,7 +610,6 @@ controller:
     labels: {}
     # -- Use an existing PSP instead of creating one
     existingPsp: ""
-    networkPolicyEnabled: false
     service:
       annotations: {}
       # clusterIP: ""
@@ -872,6 +875,12 @@ defaultBackend:
     maxReplicas: 2
     targetCPUUtilizationPercentage: 50
     targetMemoryUtilizationPercentage: 50
+
+  # NetworkPolicy for default backend component.
+  networkPolicy:
+    # -- Enable 'networkPolicy' or not
+    enabled: false
+
   service:
     annotations: {}
     # clusterIP: ""
