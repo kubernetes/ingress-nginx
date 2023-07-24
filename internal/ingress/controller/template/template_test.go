@@ -1771,6 +1771,7 @@ func TestEnforceRegexModifier(t *testing.T) {
 	}
 }
 
+//nolint:dupl // Ignore dupl errors for similar test case
 func TestShouldLoadModSecurityModule(t *testing.T) {
 	// ### Invalid argument type tests ###
 	// The first tests should return false.
@@ -1871,6 +1872,7 @@ opentracing_trust_incoming_span off;`
 	}
 }
 
+//nolint:dupl // Ignore dupl errors for similar test case
 func TestShouldLoadOpentracingModule(t *testing.T) {
 	// ### Invalid argument type tests ###
 	// The first tests should return false.
@@ -1972,6 +1974,7 @@ opentelemetry_trust_incoming_spans off;`
 	}
 }
 
+//nolint:dupl // Ignore dupl errors for similar test case
 func TestShouldLoadOpentelemetryModule(t *testing.T) {
 	// ### Invalid argument type tests ###
 	// The first tests should return false.

@@ -92,7 +92,7 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 			Expect().
 			Status(http.StatusOK)
 	})
-
+	//nolint:dupl // Ignore dupl errors for similar test case
 	ginkgo.It("should set valid proxy-ssl-secret, proxy-ssl-ciphers to HIGH:!AES", func() {
 		host := proxySSLHost
 		annotations := make(map[string]string)
@@ -120,7 +120,7 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 			Expect().
 			Status(http.StatusOK)
 	})
-
+	//nolint:dupl // Ignore dupl errors for similar test case
 	ginkgo.It("should set valid proxy-ssl-secret, proxy-ssl-protocols", func() {
 		host := proxySSLHost
 		annotations := make(map[string]string)

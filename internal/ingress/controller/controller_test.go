@@ -475,6 +475,7 @@ func TestCheckWarning(t *testing.T) {
 	})
 }
 
+//nolint:dupl // Ignore dupl errors for similar test case
 func TestMergeAlternativeBackends(t *testing.T) {
 	testCases := map[string]struct {
 		ingress      *ingress.Ingress
@@ -2104,6 +2105,7 @@ func TestGetBackendServers(t *testing.T) {
 			SetConfigMap: testConfigMap,
 		},
 		{
+			//nolint:dupl // Ignore dupl errors for similar test case
 			Ingresses: []*ingress.Ingress{
 				{
 					Ingress: networking.Ingress{
@@ -2211,6 +2213,7 @@ func TestGetBackendServers(t *testing.T) {
 			SetConfigMap: testConfigMap,
 		},
 		{
+			//nolint:dupl // Ignore dupl errors for similar test case
 			Ingresses: []*ingress.Ingress{
 				{
 					Ingress: networking.Ingress{

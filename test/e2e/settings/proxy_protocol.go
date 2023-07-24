@@ -44,7 +44,7 @@ var _ = framework.DescribeSetting("use-proxy-protocol", func() {
 		f.NewEchoDeployment()
 		f.UpdateNginxConfigMapData(setting, "false")
 	})
-
+	//nolint:dupl // Ignore dupl errors for similar test case
 	ginkgo.It("should respect port passed by the PROXY Protocol", func() {
 		host := proxyProtocol
 
@@ -81,6 +81,7 @@ var _ = framework.DescribeSetting("use-proxy-protocol", func() {
 		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-for=192.168.0.1")
 	})
 
+	//nolint:dupl // Ignore dupl errors for similar test case
 	ginkgo.It("should respect proto passed by the PROXY Protocol server port", func() {
 		host := proxyProtocol
 
