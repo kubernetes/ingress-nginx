@@ -172,6 +172,9 @@ Example for Azure:
 ```yaml
 controller:
   service:
+    internal:
+      enabled: true
+      externalTrafficPolicy: Local
       annotations:
         # Create internal LB
         service.beta.kubernetes.io/azure-load-balancer-internal: "true"
