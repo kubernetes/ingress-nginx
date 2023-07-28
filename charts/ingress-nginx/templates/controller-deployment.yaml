@@ -1,4 +1,4 @@
-{{- if or (eq .Values.controller.kind "Deployment") (eq .Values.controller.kind "Both") -}}
+{{- if eq .Values.controller.kind "Deployment" -}}
 {{- include  "isControllerTagValid" . -}}
 apiVersion: apps/v1
 kind: Deployment
