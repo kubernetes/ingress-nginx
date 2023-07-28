@@ -1,4 +1,4 @@
-{{- if and .Values.controller.keda.enabled (or (eq .Values.controller.kind "Deployment") (eq .Values.controller.kind "Both")) -}}
+{{- if and .Values.controller.keda.enabled (eq .Values.controller.kind "Deployment") -}}
 # https://keda.sh/docs/
 
 apiVersion: {{ .Values.controller.keda.apiVersion }}
