@@ -49,6 +49,8 @@ controller:
   addHeaders: {}
   # -- Optionally customize the pod dnsConfig.
   dnsConfig: {}
+  # -- Optionally customize the pod hostAliases.
+  hostAliases: {}
   # -- Optionally customize the pod hostname.
   hostname: {}
   # -- Optionally change this to ClusterFirstWithHostNet in case you have 'hostNetwork: true'.
