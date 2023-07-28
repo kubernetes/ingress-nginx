@@ -49,6 +49,9 @@ spec:
     {{- if .Values.controller.dnsConfig }}
       dnsConfig: {{ toYaml .Values.controller.dnsConfig | nindent 8 }}
     {{- end }}
+    {{- if .Values.controller.hostAliases }}
+      hostAliases: {{ tpl (toYaml .Values.controller.hostAliases) $ | nindent 8 }}
+    {{- end }}
     {{- if .Values.controller.hostname }}
       hostname: {{ toYaml .Values.controller.hostname | nindent 8 }}
     {{- end }}
