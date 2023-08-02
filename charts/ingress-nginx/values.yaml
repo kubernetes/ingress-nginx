@@ -50,7 +50,15 @@ controller:
   # -- Optionally customize the pod dnsConfig.
   dnsConfig: {}
   # -- Optionally customize the pod hostAliases.
-  hostAliases: {}
+  hostAliases: []
+  # - ip: 127.0.0.1
+  #   hostnames:
+  #   - foo.local
+  #   - bar.local
+  # - ip: 10.1.2.3
+  #   hostnames:
+  #   - foo.remote
+  #   - bar.remote
   # -- Optionally customize the pod hostname.
   hostname: {}
   # -- Optionally change this to ClusterFirstWithHostNet in case you have 'hostNetwork: true'.

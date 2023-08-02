@@ -24,8 +24,7 @@ spec:
   {{- end }}
   revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
   {{- if .Values.controller.updateStrategy }}
-  strategy:
-    {{ toYaml .Values.controller.updateStrategy | nindent 4 }}
+  strategy: {{ toYaml .Values.controller.updateStrategy | nindent 4 }}
   {{- end }}
   minReadySeconds: {{ .Values.controller.minReadySeconds }}
   template:
@@ -187,12 +186,12 @@ spec:
       {{- end }}
       {{- if .Values.controller.extraModules }}
         {{- range .Values.controller.extraModules }}
-          {{ $containerSecurityContext := .containerSecurityContext | default $.Values.controller.containerSecurityContext }}
-{{ include "extraModules" (dict "name" .name "image" .image "containerSecurityContext" $containerSecurityContext) | indent 8 }}
+          {{- $containerSecurityContext := .containerSecurityContext | default $.Values.controller.containerSecurityContext }}
+          {{- include "extraModules" (dict "name" .name "image" .image "containerSecurityContext" $containerSecurityContext) | nindent 8 }}
         {{- end }}
       {{- end }}
       {{- if .Values.controller.opentelemetry.enabled}}
-          {{ $otelContainerSecurityContext := $.Values.controller.opentelemetry.containerSecurityContext | default $.Values.controller.containerSecurityContext }}
+          {{- $otelContainerSecurityContext := $.Values.controller.opentelemetry.containerSecurityContext | default $.Values.controller.containerSecurityContext }}
           {{- include "extraModules" (dict "name" "opentelemetry" "image" .Values.controller.opentelemetry.image "containerSecurityContext" $otelContainerSecurityContext "distroless" true) | nindent 8}}
       {{- end}}
     {{- end }}

@@ -198,7 +198,6 @@ IngressClass parameters.
 Extra modules.
 */}}
 {{- define "extraModules" -}}
-
 - name: {{ .name }}
   image: {{ .image }}
   {{- if .distroless | default false }}
@@ -212,5 +211,4 @@ Extra modules.
   volumeMounts:
     - name: {{ toYaml "modules"}}
       mountPath: {{ toYaml "/modules_mount"}}
-
 {{- end -}}
