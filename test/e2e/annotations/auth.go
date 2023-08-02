@@ -648,7 +648,7 @@ http {
 				})
 		})
 
-		ginkgo.It(`should disable set_all_vars when auth-keepalive-share-vars is true`, func() {
+		ginkgo.It(`should enable set_all_vars when auth-keepalive-share-vars is true`, func() {
 			f.UpdateNginxConfigMapData("use-http2", "false")
 			defer func() {
 				f.UpdateNginxConfigMapData("use-http2", "true")
