@@ -628,6 +628,45 @@ http {
 						strings.Contains(server, `keepalive_timeout 789s;`)
 				})
 		})
+
+		ginkgo.It(`should disable set_all_vars when auth-keepalive-share-vars is not set`, func() {
+			f.UpdateNginxConfigMapData("use-http2", "false")
+			defer func() {
+				f.UpdateNginxConfigMapData("use-http2", "true")
+			}()
+			// Sleep a while just to guarantee that the configmap is applied
+			framework.Sleep()
+
+			annotations["nginx.ingress.kubernetes.io/auth-keepalive"] = "10"
+			f.UpdateIngress(ing)
+
+			f.WaitForNginxServer("",
+				func(server string) bool {
+					return strings.Contains(server, `upstream auth-external-auth`) &&
+						strings.Contains(server, `keepalive 10;`) &&
+						strings.Contains(server, `share_all_vars = false`)
+				})
+		})
+
+		ginkgo.It(`should disable set_all_vars when auth-keepalive-share-vars is true`, func() {
+			f.UpdateNginxConfigMapData("use-http2", "false")
+			defer func() {
+				f.UpdateNginxConfigMapData("use-http2", "true")
+			}()
+			// Sleep a while just to guarantee that the configmap is applied
+			framework.Sleep()
+
+			annotations["nginx.ingress.kubernetes.io/auth-keepalive"] = "10"
+			annotations["nginx.ingress.kubernetes.io/auth-keepalive-share-vars"] = "true"
+			f.UpdateIngress(ing)
+
+			f.WaitForNginxServer("",
+				func(server string) bool {
+					return strings.Contains(server, `upstream auth-external-auth`) &&
+						strings.Contains(server, `keepalive 10;`) &&
+						strings.Contains(server, `share_all_vars = true`)
+				})
+		})
 	})
 
 	ginkgo.Context("when external authentication is configured with a custom redirect param", func() {
