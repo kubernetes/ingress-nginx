@@ -94,7 +94,7 @@ This guide refers to chapters in the CIS Benchmark. For full explanation you sho
 | __5 Request Filtering and Restrictions__||| |
 | ||| |
 | __5.1 Access Control__||| |
-| 5.1.1 Ensure allow and deny filters limit access to specific IP addresses (Not Scored)| OK/ACTION NEEDED | Depends on use case, geo ip module is compiled into nginx ingress controller, there are several ways to use it | If needed set IP restrictions via annotations or work with config snippets (be careful with lets-encrypt-http-challenge!) |
+| 5.1.1 Ensure allow and deny filters limit access to specific IP addresses (Not Scored)| OK/ACTION NEEDED | Depends on use case, geo ip module is compiled into Ingress-Nginx Controller, there are several ways to use it | If needed set IP restrictions via annotations or work with config snippets (be careful with lets-encrypt-http-challenge!) |
 | 5.1.2 Ensure only whitelisted HTTP methods are allowed (Not Scored) | OK/ACTION NEEDED | Depends on use case| If required it can be set via config snippet|
 | ||| |
 | __5.2 Request Limits__||| |

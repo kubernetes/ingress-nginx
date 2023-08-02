@@ -72,8 +72,8 @@ func (f *OSFileWatcher) watch() error {
 		for {
 			select {
 			case event := <-watcher.Events:
-				if event.Op&fsnotify.Create == fsnotify.Create ||
-					event.Op&fsnotify.Write == fsnotify.Write {
+				if event.Has(fsnotify.Create) ||
+					event.Has(fsnotify.Write) {
 					if finfo, err := os.Lstat(event.Name); err != nil {
 						log.Printf("can not lstat file: %v\n", err)
 					} else if finfo.Mode()&os.ModeSymlink != 0 {

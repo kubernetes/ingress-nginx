@@ -27,7 +27,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("[Flag] watch namespace selector", func() {
+var _ = framework.IngressNginxDescribeSerial("[Flag] watch namespace selector", func() {
 	f := framework.NewDefaultFramework("namespace-selector")
 	notMatchedHost, matchedHost := "bar", "foo"
 	var notMatchedNs string
@@ -45,7 +45,7 @@ var _ = framework.IngressNginxDescribe("[Flag] watch namespace selector", func()
 
 	cleanupNamespace := func(ns string) {
 		err := framework.DeleteKubeNamespace(f.KubeClientSet, ns)
-		assert.Nil(ginkgo.GinkgoT(), err, "deleting temporarily crated namespace")
+		assert.Nil(ginkgo.GinkgoT(), err, "deleting temporarily created namespace")
 	}
 
 	ginkgo.BeforeEach(func() {
@@ -56,13 +56,6 @@ var _ = framework.IngressNginxDescribe("[Flag] watch namespace selector", func()
 	ginkgo.AfterEach(func() {
 		cleanupNamespace(notMatchedNs)
 		cleanupNamespace(matchedNs)
-
-		// cleanup clusterrole/clusterrolebinding created by installing chart with controller.scope.enabled=false
-		err := f.KubeClientSet.RbacV1().ClusterRoles().Delete(context.TODO(), "nginx-ingress", metav1.DeleteOptions{})
-		assert.Nil(ginkgo.GinkgoT(), err, "deleting clusterrole nginx-ingress")
-
-		err = f.KubeClientSet.RbacV1().ClusterRoleBindings().Delete(context.TODO(), "nginx-ingress", metav1.DeleteOptions{})
-		assert.Nil(ginkgo.GinkgoT(), err, "deleting clusterrolebinging nginx-ingress")
 	})
 
 	ginkgo.Context("With specific watch-namespace-selector flags", func() {

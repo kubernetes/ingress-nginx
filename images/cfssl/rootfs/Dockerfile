@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM alpine:3.16.2
+FROM alpine:3.18.2
+
 
 RUN echo "@testing http://nl.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
-RUN apk add --no-cache \
+RUN apk update \
+    && apk upgrade &&  \
+    apk add --no-cache \
     bash \
     cfssl@testing
 

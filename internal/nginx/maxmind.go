@@ -165,7 +165,7 @@ func downloadDatabase(dbName string) error {
 	mmdbFile := dbName + dbExtension
 
 	tarReader := tar.NewReader(archive)
-	for true {
+	for {
 		header, err := tarReader.Next()
 		if err == io.EOF {
 			break

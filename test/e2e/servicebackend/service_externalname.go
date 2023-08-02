@@ -29,44 +29,21 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-func buildHTTPBinExternalNameService(f *framework.Framework, portName string) *corev1.Service {
-	return &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      framework.HTTPBinService,
-			Namespace: f.Namespace,
-		},
-		Spec: corev1.ServiceSpec{
-			ExternalName: "httpbin.org",
-			Type:         corev1.ServiceTypeExternalName,
-			Ports: []corev1.ServicePort{
-				{
-					Name:       portName,
-					Port:       80,
-					TargetPort: intstr.FromInt(80),
-					Protocol:   "TCP",
-				},
-			},
-		},
-	}
-}
-
 var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
-	f := framework.NewDefaultFramework("type-externalname")
+	f := framework.NewDefaultFramework("type-externalname", framework.WithHTTPBunEnabled())
 
 	ginkgo.It("works with external name set to incomplete fqdn", func() {
 		f.NewEchoDeployment()
-
 		host := "echo"
 
 		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      framework.HTTPBinService,
+				Name:      framework.NIPService,
 				Namespace: f.Namespace,
 			},
 			Spec: corev1.ServiceSpec{
@@ -74,10 +51,15 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 				Type:         corev1.ServiceTypeExternalName,
 			},
 		}
-
 		f.EnsureService(svc)
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, nil)
+		ing := framework.NewSingleIngress(host,
+			"/",
+			host,
+			f.Namespace,
+			framework.NIPService,
+			80,
+			nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -97,21 +79,27 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 
 		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      framework.HTTPBinService,
+				Name:      framework.NIPService,
 				Namespace: f.Namespace,
 			},
 			Spec: corev1.ServiceSpec{
-				ExternalName: "httpbin.org",
+				ExternalName: f.GetNIPHost(),
 				Type:         corev1.ServiceTypeExternalName,
 			},
 		}
-
 		f.EnsureService(svc)
 
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/upstream-vhost": "httpbin.org",
+			"nginx.ingress.kubernetes.io/upstream-vhost": f.GetNIPHost(),
 		}
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, annotations)
+
+		ing := framework.NewSingleIngress(host,
+			"/",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -129,13 +117,19 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 	ginkgo.It("should return 200 for service type=ExternalName with a port defined", func() {
 		host := "echo"
 
-		svc := buildHTTPBinExternalNameService(f, host)
+		svc := framework.BuildNIPExternalNameService(f, f.HTTPBunIP, host)
 		f.EnsureService(svc)
 
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/upstream-vhost": "httpbin.org",
+			"nginx.ingress.kubernetes.io/upstream-vhost": f.GetNIPHost(),
 		}
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, annotations)
+		ing := framework.NewSingleIngress(host,
+			"/",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -155,7 +149,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 
 		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      framework.HTTPBinService,
+				Name:      framework.NIPService,
 				Namespace: f.Namespace,
 			},
 			Spec: corev1.ServiceSpec{
@@ -163,10 +157,15 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 				Type:         corev1.ServiceTypeExternalName,
 			},
 		}
-
 		f.EnsureService(svc)
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, nil)
+		ing := framework.NewSingleIngress(host,
+			"/",
+			host,
+			f.Namespace,
+			framework.NIPService,
+			80,
+			nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -184,21 +183,29 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 	ginkgo.It("should return 200 for service type=ExternalName using a port name", func() {
 		host := "echo"
 
-		svc := buildHTTPBinExternalNameService(f, host)
+		svc := framework.BuildNIPExternalNameService(f, f.HTTPBunIP, host)
 		f.EnsureService(svc)
 
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/upstream-vhost": "httpbin.org",
+			"nginx.ingress.kubernetes.io/upstream-vhost": f.GetNIPHost(),
 		}
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, annotations)
+		ing := framework.NewSingleIngress(host,
+			"/",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations)
+
 		namedBackend := networking.IngressBackend{
 			Service: &networking.IngressServiceBackend{
-				Name: framework.HTTPBinService,
+				Name: framework.NIPService,
 				Port: networking.ServiceBackendPort{
 					Name: host,
 				},
 			},
 		}
+
 		ing.Spec.Rules[0].HTTP.Paths[0].Backend = namedBackend
 		f.EnsureIngress(ing)
 
@@ -219,18 +226,23 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 
 		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      framework.HTTPBinService,
+				Name:      framework.NIPService,
 				Namespace: f.Namespace,
 			},
 			Spec: corev1.ServiceSpec{
-				ExternalName: "httpbin.org.",
+				ExternalName: f.GetNIPHost(),
 				Type:         corev1.ServiceTypeExternalName,
 			},
 		}
-
 		f.EnsureService(svc)
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, nil)
+		ing := framework.NewSingleIngress(host,
+			"/",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -248,16 +260,24 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 	ginkgo.It("should update the external name after a service update", func() {
 		host := "echo"
 
-		svc := buildHTTPBinExternalNameService(f, host)
+		svc := framework.BuildNIPExternalNameService(f, f.HTTPBunIP, host)
 		f.EnsureService(svc)
 
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/upstream-vhost": "httpbin.org",
+			"nginx.ingress.kubernetes.io/upstream-vhost": f.GetNIPHost(),
 		}
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, annotations)
+
+		ing := framework.NewSingleIngress(host,
+			"/",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations)
+
 		namedBackend := networking.IngressBackend{
 			Service: &networking.IngressServiceBackend{
-				Name: framework.HTTPBinService,
+				Name: framework.NIPService,
 				Port: networking.ServiceBackendPort{
 					Name: host,
 				},
@@ -281,13 +301,21 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 
 		assert.Contains(ginkgo.GinkgoT(), body, `"X-Forwarded-Host": "echo"`)
 
-		svc, err := f.KubeClientSet.CoreV1().Services(f.Namespace).Get(context.TODO(), framework.HTTPBinService, metav1.GetOptions{})
-		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error obtaining httpbin service")
+		svc, err := f.KubeClientSet.
+			CoreV1().
+			Services(f.Namespace).
+			Get(context.TODO(), framework.NIPService, metav1.GetOptions{})
+		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error obtaining external service")
 
-		svc.Spec.ExternalName = "eu.httpbin.org"
+		//Deploy a new instance to switch routing to
+		ip := f.NewHttpbunDeployment(framework.WithDeploymentName("eu-server"))
+		svc.Spec.ExternalName = framework.BuildNIPHost(ip)
 
-		_, err = f.KubeClientSet.CoreV1().Services(f.Namespace).Update(context.Background(), svc, metav1.UpdateOptions{})
-		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error updating httpbin service")
+		_, err = f.KubeClientSet.
+			CoreV1().
+			Services(f.Namespace).
+			Update(context.Background(), svc, metav1.UpdateOptions{})
+		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error updating external service")
 
 		framework.Sleep()
 
@@ -301,18 +329,32 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 
 		assert.Contains(ginkgo.GinkgoT(), body, `"X-Forwarded-Host": "echo"`)
 
-		ginkgo.By("checking the service is updated to use eu.httpbin.org")
-		curlCmd := fmt.Sprintf("curl --fail --silent http://localhost:%v/configuration/backends", nginx.StatusPort)
+		ginkgo.By("checking the service is updated to use new host")
+		curlCmd := fmt.Sprintf(
+			"curl --fail --silent http://localhost:%v/configuration/backends",
+			nginx.StatusPort,
+		)
+
 		output, err := f.ExecIngressPod(curlCmd)
 		assert.Nil(ginkgo.GinkgoT(), err)
-		assert.Contains(ginkgo.GinkgoT(), output, `{"address":"eu.httpbin.org"`)
+		assert.Contains(
+			ginkgo.GinkgoT(),
+			output,
+			fmt.Sprintf("{\"address\":\"%s\"", framework.BuildNIPHost(ip)),
+		)
 	})
 
 	ginkgo.It("should sync ingress on external name service addition/deletion", func() {
 		host := "echo"
 
 		// Create the Ingress first
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, nil)
+		ing := framework.NewSingleIngress(host,
+			"/",
+			host,
+			f.Namespace,
+			framework.NIPService,
+			80,
+			nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -328,7 +370,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 			Status(http.StatusServiceUnavailable)
 
 		// Now create the service
-		svc := buildHTTPBinExternalNameService(f, host)
+		svc := framework.BuildNIPExternalNameService(f, f.HTTPBunIP, host)
 		f.EnsureService(svc)
 
 		framework.Sleep()
@@ -341,9 +383,11 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 			Status(http.StatusOK)
 
 		// And back to 503 after deleting the service
-
-		err := f.KubeClientSet.CoreV1().Services(f.Namespace).Delete(context.TODO(), framework.HTTPBinService, metav1.DeleteOptions{})
-		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error deleting httpbin service")
+		err := f.KubeClientSet.
+			CoreV1().
+			Services(f.Namespace).
+			Delete(context.TODO(), framework.NIPService, metav1.DeleteOptions{})
+		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error deleting external service")
 
 		framework.Sleep()
 

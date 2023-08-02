@@ -27,7 +27,7 @@ import (
 )
 
 func TestParse(t *testing.T) {
-	annotation := parser.GetAnnotationWithPrefix("x-forwarded-prefix")
+	annotation := parser.GetAnnotationWithPrefix(xForwardedForPrefixAnnotation)
 	ap := NewParser(&resolver.Mock{})
 	if ap == nil {
 		t.Fatalf("expected a parser.IngressAnnotation but returned nil")

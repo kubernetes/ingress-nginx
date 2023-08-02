@@ -136,7 +136,8 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 		n.updateCh,
 		config.DisableCatchAll,
 		config.DeepInspector,
-		config.IngressClassConfiguration)
+		config.IngressClassConfiguration,
+		config.DisableSyncEvents)
 
 	n.syncQueue = task.NewTaskQueue(n.syncIngress)
 
@@ -247,8 +248,7 @@ type NGINXController struct {
 
 	store store.Storer
 
-	metricCollector    metric.Collector
-	admissionCollector metric.Collector
+	metricCollector metric.Collector
 
 	validationWebhookServer *http.Server
 
@@ -672,6 +672,11 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		return err
 	}
 
+	err = createOpentelemetryCfg(cfg)
+	if err != nil {
+		return err
+	}
+
 	err = n.testTemplate(content)
 	if err != nil {
 		return err
@@ -791,45 +796,6 @@ func (n *NGINXController) setupSSLProxy() {
 			go n.Proxy.Handle(conn)
 		}
 	}()
-}
-
-// Helper function to clear Certificates from the ingress configuration since they should be ignored when
-// checking if the new configuration changes can be applied dynamically if dynamic certificates is on
-func clearCertificates(config *ingress.Configuration) {
-	var clearedServers []*ingress.Server
-	for _, server := range config.Servers {
-		copyOfServer := *server
-		copyOfServer.SSLCert = nil
-		clearedServers = append(clearedServers, &copyOfServer)
-	}
-	config.Servers = clearedServers
-}
-
-// Helper function to clear endpoints from the ingress configuration since they should be ignored when
-// checking if the new configuration changes can be applied dynamically.
-func clearL4serviceEndpoints(config *ingress.Configuration) {
-	var clearedTCPL4Services []ingress.L4Service
-	var clearedUDPL4Services []ingress.L4Service
-	for _, service := range config.TCPEndpoints {
-		copyofService := ingress.L4Service{
-			Port:      service.Port,
-			Backend:   service.Backend,
-			Endpoints: []ingress.Endpoint{},
-			Service:   nil,
-		}
-		clearedTCPL4Services = append(clearedTCPL4Services, copyofService)
-	}
-	for _, service := range config.UDPEndpoints {
-		copyofService := ingress.L4Service{
-			Port:      service.Port,
-			Backend:   service.Backend,
-			Endpoints: []ingress.Endpoint{},
-			Service:   nil,
-		}
-		clearedUDPL4Services = append(clearedUDPL4Services, copyofService)
-	}
-	config.TCPEndpoints = clearedTCPL4Services
-	config.UDPEndpoints = clearedUDPL4Services
 }
 
 // configureDynamically encodes new Backends in JSON format and POSTs the
@@ -1045,49 +1011,105 @@ const jaegerTmpl = `{
   }
 }`
 
-const datadogTmpl = `{
-  "service": "{{ .DatadogServiceName }}",
-  "agent_host": "{{ .DatadogCollectorHost }}",
-  "agent_port": {{ .DatadogCollectorPort }},
-  "environment": "{{ .DatadogEnvironment }}",
-  "operation_name_override": "{{ .DatadogOperationNameOverride }}",
-  "sample_rate": {{ .DatadogSampleRate }},
-  "dd.priority.sampling": {{ .DatadogPrioritySampling }}
-}`
+const otelTmpl = `
+exporter = "otlp"
+processor = "batch"
+
+[exporters.otlp]
+# Alternatively the OTEL_EXPORTER_OTLP_ENDPOINT environment variable can also be used.
+host = "{{ .OtlpCollectorHost }}"
+port = {{ .OtlpCollectorPort }}
+
+[processors.batch]
+max_queue_size = {{ .OtelMaxQueueSize }}
+schedule_delay_millis = {{ .OtelScheduleDelayMillis }}
+max_export_batch_size = {{ .OtelMaxExportBatchSize }}
+
+[service]
+name = "{{ .OtelServiceName }}" # Opentelemetry resource name
+
+[sampler]
+name = "{{ .OtelSampler }}" # Also: AlwaysOff, TraceIdRatioBased
+ratio = {{ .OtelSamplerRatio }}
+parent_based = {{ .OtelSamplerParentBased }}
+`
+
+func datadogOpentracingCfg(cfg ngx_config.Configuration) (string, error) {
+	m := map[string]interface{}{
+		"service":                 cfg.DatadogServiceName,
+		"agent_host":              cfg.DatadogCollectorHost,
+		"agent_port":              cfg.DatadogCollectorPort,
+		"environment":             cfg.DatadogEnvironment,
+		"operation_name_override": cfg.DatadogOperationNameOverride,
+	}
+
+	// Omit "sample_rate" if the configuration's sample rate is unset (nil).
+	// Omitting "sample_rate" from the plugin JSON indicates to the tracer that
+	// it should use dynamic rates instead of a configured rate.
+	if cfg.DatadogSampleRate != nil {
+		m["sample_rate"] = *cfg.DatadogSampleRate
+	}
+
+	buf, err := json.Marshal(m)
+	if err != nil {
+		return "", err
+	}
+
+	return string(buf), nil
+}
+
+func opentracingCfgFromTemplate(cfg ngx_config.Configuration, tmplName string, tmplText string) (string, error) {
+	tmpl, err := template.New(tmplName).Parse(tmplText)
+	if err != nil {
+		return "", err
+	}
+
+	tmplBuf := bytes.NewBuffer(make([]byte, 0))
+	err = tmpl.Execute(tmplBuf, cfg)
+	if err != nil {
+		return "", err
+	}
+
+	return tmplBuf.String(), nil
+}
 
 func createOpentracingCfg(cfg ngx_config.Configuration) error {
-	var tmpl *template.Template
+	var configData string
 	var err error
 
 	if cfg.ZipkinCollectorHost != "" {
-		tmpl, err = template.New("zipkin").Parse(zipkinTmpl)
-		if err != nil {
-			return err
-		}
+		configData, err = opentracingCfgFromTemplate(cfg, "zipkin", zipkinTmpl)
 	} else if cfg.JaegerCollectorHost != "" || cfg.JaegerEndpoint != "" {
-		tmpl, err = template.New("jaeger").Parse(jaegerTmpl)
-		if err != nil {
-			return err
-		}
+		configData, err = opentracingCfgFromTemplate(cfg, "jaeger", jaegerTmpl)
 	} else if cfg.DatadogCollectorHost != "" {
-		tmpl, err = template.New("datadog").Parse(datadogTmpl)
-		if err != nil {
-			return err
-		}
+		configData, err = datadogOpentracingCfg(cfg)
 	} else {
-		tmpl, _ = template.New("empty").Parse("{}")
+		configData = "{}"
 	}
 
+	if err != nil {
+		return err
+	}
+
+	// Expand possible environment variables before writing the configuration to file.
+	expanded := os.ExpandEnv(configData)
+
+	return os.WriteFile("/etc/nginx/opentracing.json", []byte(expanded), file.ReadWriteByUser)
+}
+
+func createOpentelemetryCfg(cfg ngx_config.Configuration) error {
+
+	tmpl, err := template.New("otel").Parse(otelTmpl)
+	if err != nil {
+		return err
+	}
 	tmplBuf := bytes.NewBuffer(make([]byte, 0))
 	err = tmpl.Execute(tmplBuf, cfg)
 	if err != nil {
 		return err
 	}
 
-	// Expand possible environment variables before writing the configuration to file.
-	expanded := os.ExpandEnv(tmplBuf.String())
-
-	return os.WriteFile("/etc/nginx/opentracing.json", []byte(expanded), file.ReadWriteByUser)
+	return os.WriteFile(cfg.OpentelemetryConfig, tmplBuf.Bytes(), file.ReadWriteByUser)
 }
 
 func cleanTempNginxCfg() error {

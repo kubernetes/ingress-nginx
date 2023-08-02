@@ -16,10 +16,10 @@
 
 GO_BUILD_CMD="go build"
 
-if [ -n "$DEBUG" ]; then
-	set -x
-	GO_BUILD_CMD="go build -v"
-fi
+#if [ -n "$DEBUG" ]; then
+#	set -x
+#	GO_BUILD_CMD="go build -v"
+#fi
 
 set -o errexit
 set -o nounset

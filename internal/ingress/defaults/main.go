@@ -139,6 +139,10 @@ type Backend struct {
 	// http://nginx.org/en/docs/http/ngx_http_access_module.html
 	WhitelistSourceRange []string `json:"whitelist-source-range"`
 
+	// DenylistSourceRange allows limiting access to certain client addresses
+	// http://nginx.org/en/docs/http/ngx_http_access_module.html
+	DenylistSourceRange []string `json:"denylist-source-range"`
+
 	// Limits the rate of response transmission to a client.
 	// The rate is specified in bytes per second. The zero value disables rate limiting.
 	// The limit is set per a request, and so if a client simultaneously opens two connections,
@@ -165,4 +169,16 @@ type Backend struct {
 	// By default, the NGINX ingress controller uses a list of all endpoints (Pod IP/port) in the NGINX upstream configuration.
 	// It disables that behavior and instead uses a single upstream in NGINX, the service's Cluster IP and port.
 	ServiceUpstream bool `json:"service-upstream"`
+}
+
+type SecurityConfiguration struct {
+	// AllowCrossNamespaceResources enables users to consume cross namespace resource on annotations
+	// Case disabled, attempts to use secrets or configmaps from a namespace different from Ingress will
+	// be denied
+	// This valid will default to `false` on future releases
+	AllowCrossNamespaceResources bool `json:"allow-cross-namespace-resources"`
+
+	// AnnotationsRiskLevel represents the risk accepted on an annotation. If the risk is, for instance `Medium`, annotations
+	// with risk High and Critical will not be accepted
+	AnnotationsRiskLevel string `json:"annotations-risk-level"`
 }

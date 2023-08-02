@@ -46,7 +46,7 @@ func GetRemovedHosts(rucfg, newcfg *ingress.Configuration) []string {
 	return oldSet.Difference(newSet).List()
 }
 
-// GetRemovedCertificateSerialNumber extracts the difference of certificates between two configurations
+// GetRemovedCertificateSerialNumbers extracts the difference of certificates between two configurations
 func GetRemovedCertificateSerialNumbers(rucfg, newcfg *ingress.Configuration) []string {
 	oldCertificates := sets.NewString()
 	newCertificates := sets.NewString()
@@ -177,7 +177,7 @@ type redirect struct {
 
 // BuildRedirects build the redirects of servers based on configurations and certificates
 func BuildRedirects(servers []*ingress.Server) []*redirect {
-	names := sets.String{}
+	names := sets.Set[string]{}
 	redirectServers := make([]*redirect, 0)
 
 	for _, srv := range servers {

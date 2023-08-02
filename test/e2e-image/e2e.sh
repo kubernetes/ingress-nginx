@@ -14,43 +14,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e
+set -eu
 
 NC='\e[0m'
 BGREEN='\e[32m'
 
-SLOW_E2E_THRESHOLD=${SLOW_E2E_THRESHOLD:-"5s"}
-FOCUS=${FOCUS:-.*}
 E2E_NODES=${E2E_NODES:-5}
 E2E_CHECK_LEAKS=${E2E_CHECK_LEAKS:-""}
 
+reportFile="report-e2e-test-suite.xml"
 ginkgo_args=(
-  "-randomize-all"
-  "-flake-attempts=2"
-  "-fail-fast"
-  "-progress"
-  "-slow-spec-threshold=${SLOW_E2E_THRESHOLD}"
-  "-succinct"
-  "-timeout=75m"
+  "--fail-fast"
+  "--flake-attempts=2"
+  "--junit-report=${reportFile}"
+  "--nodes=${E2E_NODES}"
+  "--poll-progress-after=180s"
+  "--randomize-all"
+  "--show-node-events"
+  "--succinct"
+  "--timeout=75m"
 )
 
-echo -e "${BGREEN}Running e2e test suite (FOCUS=${FOCUS})...${NC}"
-ginkgo "${ginkgo_args[@]}"               \
-  -focus="${FOCUS}"                  \
-  -skip="\[Serial\]|\[MemoryLeak\]"  \
-  -nodes="${E2E_NODES}" \
-  /e2e.test
-
-echo -e "${BGREEN}Running e2e test suite with tests that require serial execution...${NC}"
-ginkgo "${ginkgo_args[@]}"   \
-  -focus="\[Serial\]"    \
-  -skip="\[MemoryLeak\]" \
-  /e2e.test
-
-if [[ ${E2E_CHECK_LEAKS} != "" ]]; then
-  echo -e "${BGREEN}Running e2e test suite with tests that check for memory leaks...${NC}"
-  ginkgo "${ginkgo_args[@]}"    \
-    -focus="\[MemoryLeak\]" \
-    -skip="\[Serial\]" \
-    /e2e.test
+if [ -n "${FOCUS}" ]; then
+  ginkgo_args+=("--focus=${FOCUS}")
 fi
+
+if [ -z "${E2E_CHECK_LEAKS}" ]; then
+  ginkgo_args+=("--skip=\[Memory Leak\]")
+fi
+
+echo -e "${BGREEN}Running e2e test suite...${NC}"
+(set -x; ginkgo "${ginkgo_args[@]}" /e2e.test)
+
+# Create configMap out of a compressed report file for extraction later
+gzip -k ${reportFile}
+kubectl create cm ${reportFile}.gz --from-file ${reportFile}.gz
+kubectl label cm ${reportFile}.gz junitreport=true

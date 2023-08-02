@@ -27,7 +27,7 @@ import (
 )
 
 func TestParse(t *testing.T) {
-	annotation := parser.GetAnnotationWithPrefix("configuration-snippet")
+	annotation := parser.GetAnnotationWithPrefix(configurationSnippetAnnotation)
 
 	ap := NewParser(&resolver.Mock{})
 	if ap == nil {

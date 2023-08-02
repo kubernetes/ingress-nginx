@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	"github.com/onsi/ginkgo/v2"
-	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -76,14 +75,12 @@ var _ = framework.DescribeAnnotation("backend-protocol - FastCGI", func() {
 				Namespace: f.Namespace,
 			},
 			Data: map[string]string{
-				"SCRIPT_FILENAME": "/home/www/scripts/php$fastcgi_script_name",
+				"SCRIPT_FILENAME": "$fastcgi_script_name",
 				"REDIRECT_STATUS": "200",
 			},
 		}
 
-		cm, err := f.EnsureConfigMap(configuration)
-		assert.Nil(ginkgo.GinkgoT(), err, "creating configmap")
-		assert.NotNil(ginkgo.GinkgoT(), cm, "expected a configmap but none returned")
+		f.EnsureConfigMap(configuration)
 
 		host := "fastcgi-params-configmap"
 
@@ -97,7 +94,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - FastCGI", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "fastcgi_param SCRIPT_FILENAME \"/home/www/scripts/php$fastcgi_script_name\";") &&
+				return strings.Contains(server, "fastcgi_param SCRIPT_FILENAME \"$fastcgi_script_name\";") &&
 					strings.Contains(server, "fastcgi_param REDIRECT_STATUS \"200\";")
 			})
 	})

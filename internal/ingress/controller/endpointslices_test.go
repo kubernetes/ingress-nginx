@@ -33,6 +33,7 @@ func TestGetEndpointsFromSlices(t *testing.T) {
 		svc    *corev1.Service
 		port   *corev1.ServicePort
 		proto  corev1.Protocol
+		zone   string
 		fn     func(string) ([]*discoveryv1.EndpointSlice, error)
 		result []ingress.Endpoint
 	}{
@@ -41,6 +42,7 @@ func TestGetEndpointsFromSlices(t *testing.T) {
 			nil,
 			nil,
 			corev1.ProtocolTCP,
+			"",
 			func(string) ([]*discoveryv1.EndpointSlice, error) {
 				return nil, nil
 			},
@@ -51,6 +53,7 @@ func TestGetEndpointsFromSlices(t *testing.T) {
 			&corev1.Service{},
 			nil,
 			corev1.ProtocolTCP,
+			"",
 			func(string) ([]*discoveryv1.EndpointSlice, error) {
 				return nil, nil
 			},
@@ -61,6 +64,7 @@ func TestGetEndpointsFromSlices(t *testing.T) {
 			&corev1.Service{},
 			&corev1.ServicePort{Name: "default"},
 			corev1.ProtocolTCP,
+			"",
 			func(string) ([]*discoveryv1.EndpointSlice, error) {
 				return []*discoveryv1.EndpointSlice{}, nil
 			},
@@ -75,6 +79,7 @@ func TestGetEndpointsFromSlices(t *testing.T) {
 			},
 			&corev1.ServicePort{Name: "default"},
 			corev1.ProtocolTCP,
+			"",
 			func(string) ([]*discoveryv1.EndpointSlice, error) {
 				return []*discoveryv1.EndpointSlice{}, nil
 			},
@@ -99,6 +104,7 @@ func TestGetEndpointsFromSlices(t *testing.T) {
 				TargetPort: intstr.FromInt(80),
 			},
 			corev1.ProtocolTCP,
+			"",
 			func(string) ([]*discoveryv1.EndpointSlice, error) {
 				return []*discoveryv1.EndpointSlice{}, nil
 			},
@@ -123,6 +129,7 @@ func TestGetEndpointsFromSlices(t *testing.T) {
 				TargetPort: intstr.FromInt(80),
 			},
 			corev1.ProtocolTCP,
+			"",
 			func(string) ([]*discoveryv1.EndpointSlice, error) {
 				return []*discoveryv1.EndpointSlice{}, nil
 			},
@@ -147,6 +154,7 @@ func TestGetEndpointsFromSlices(t *testing.T) {
 				TargetPort: intstr.FromInt(80),
 			},
 			corev1.ProtocolTCP,
+			"",
 			func(string) ([]*discoveryv1.EndpointSlice, error) {
 				return []*discoveryv1.EndpointSlice{}, nil
 			},
@@ -176,6 +184,7 @@ func TestGetEndpointsFromSlices(t *testing.T) {
 				TargetPort: intstr.FromInt(80),
 			},
 			corev1.ProtocolTCP,
+			"",
 			func(string) ([]*discoveryv1.EndpointSlice, error) {
 				return []*discoveryv1.EndpointSlice{}, nil
 			},
@@ -205,6 +214,7 @@ func TestGetEndpointsFromSlices(t *testing.T) {
 				TargetPort: intstr.FromInt(80),
 			},
 			corev1.ProtocolTCP,
+			"",
 			func(string) ([]*discoveryv1.EndpointSlice, error) {
 				return []*discoveryv1.EndpointSlice{}, nil
 			},
@@ -229,6 +239,7 @@ func TestGetEndpointsFromSlices(t *testing.T) {
 				TargetPort: intstr.FromInt(80),
 			},
 			corev1.ProtocolTCP,
+			"",
 			func(string) ([]*discoveryv1.EndpointSlice, error) {
 				return nil, fmt.Errorf("unexpected error")
 			},
@@ -253,6 +264,7 @@ func TestGetEndpointsFromSlices(t *testing.T) {
 				TargetPort: intstr.FromInt(80),
 			},
 			corev1.ProtocolTCP,
+			"",
 			func(string) ([]*discoveryv1.EndpointSlice, error) {
 				return []*discoveryv1.EndpointSlice{{
 					ObjectMeta: metav1.ObjectMeta{
@@ -296,6 +308,7 @@ func TestGetEndpointsFromSlices(t *testing.T) {
 				TargetPort: intstr.FromInt(80),
 			},
 			corev1.ProtocolTCP,
+			"",
 			func(string) ([]*discoveryv1.EndpointSlice, error) {
 				return []*discoveryv1.EndpointSlice{{
 					ObjectMeta: metav1.ObjectMeta{
@@ -339,6 +352,7 @@ func TestGetEndpointsFromSlices(t *testing.T) {
 				TargetPort: intstr.FromString("port-1"),
 			},
 			corev1.ProtocolTCP,
+			"",
 			func(string) ([]*discoveryv1.EndpointSlice, error) {
 				return []*discoveryv1.EndpointSlice{{
 					ObjectMeta: metav1.ObjectMeta{
@@ -382,6 +396,7 @@ func TestGetEndpointsFromSlices(t *testing.T) {
 				TargetPort: intstr.FromInt(80),
 			},
 			corev1.ProtocolTCP,
+			"",
 			func(string) ([]*discoveryv1.EndpointSlice, error) {
 				return []*discoveryv1.EndpointSlice{{
 					ObjectMeta: metav1.ObjectMeta{
@@ -430,6 +445,7 @@ func TestGetEndpointsFromSlices(t *testing.T) {
 				TargetPort: intstr.FromInt(80),
 			},
 			corev1.ProtocolTCP,
+			"",
 			func(string) ([]*discoveryv1.EndpointSlice, error) {
 				return []*discoveryv1.EndpointSlice{{
 					ObjectMeta: metav1.ObjectMeta{
@@ -478,6 +494,7 @@ func TestGetEndpointsFromSlices(t *testing.T) {
 				TargetPort: intstr.FromString("port-1"),
 			},
 			corev1.ProtocolTCP,
+			"",
 			func(string) ([]*discoveryv1.EndpointSlice, error) {
 				return []*discoveryv1.EndpointSlice{
 					{
@@ -552,6 +569,7 @@ func TestGetEndpointsFromSlices(t *testing.T) {
 				TargetPort: intstr.FromString("port-1"),
 			},
 			corev1.ProtocolTCP,
+			"",
 			func(string) ([]*discoveryv1.EndpointSlice, error) {
 				return []*discoveryv1.EndpointSlice{
 					{
@@ -622,6 +640,7 @@ func TestGetEndpointsFromSlices(t *testing.T) {
 				TargetPort: intstr.FromString("port-1"),
 			},
 			corev1.ProtocolTCP,
+			"",
 			func(string) ([]*discoveryv1.EndpointSlice, error) {
 				return []*discoveryv1.EndpointSlice{{
 					ObjectMeta: metav1.ObjectMeta{
@@ -656,11 +675,251 @@ func TestGetEndpointsFromSlices(t *testing.T) {
 				},
 			},
 		},
+		{
+			"should return one endpoint which belongs to zone",
+			&corev1.Service{
+				Spec: corev1.ServiceSpec{
+					Type:      corev1.ServiceTypeClusterIP,
+					ClusterIP: "1.1.1.1",
+					Ports: []corev1.ServicePort{
+						{
+							Name:       "default",
+							TargetPort: intstr.FromString("port-1"),
+						},
+					},
+				},
+			},
+			&corev1.ServicePort{
+				Name:       "port-1",
+				TargetPort: intstr.FromString("port-1"),
+			},
+			corev1.ProtocolTCP,
+			"eu-west-1b",
+			func(string) ([]*discoveryv1.EndpointSlice, error) {
+				return []*discoveryv1.EndpointSlice{{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: map[string]string{discoveryv1.LabelServiceName: "default"},
+					},
+					Endpoints: []discoveryv1.Endpoint{
+						{
+							Addresses: []string{"1.1.1.1"},
+							Conditions: discoveryv1.EndpointConditions{
+								Ready: &[]bool{true}[0],
+							},
+							Hints: &[]discoveryv1.EndpointHints{{
+								ForZones: []discoveryv1.ForZone{{
+									Name: "eu-west-1b",
+								}},
+							}}[0],
+						},
+						{
+							Addresses: []string{"1.1.1.2"},
+							Conditions: discoveryv1.EndpointConditions{
+								Ready: &[]bool{true}[0],
+							},
+							Hints: &[]discoveryv1.EndpointHints{{
+								ForZones: []discoveryv1.ForZone{{
+									Name: "eu-west-1a",
+								}},
+							}}[0],
+						},
+						{
+							Addresses: []string{"1.1.1.3"},
+							Conditions: discoveryv1.EndpointConditions{
+								Ready: &[]bool{true}[0],
+							},
+							Hints: &[]discoveryv1.EndpointHints{{
+								ForZones: []discoveryv1.ForZone{{
+									Name: "eu-west-1c",
+								}},
+							}}[0],
+						},
+					},
+					Ports: []discoveryv1.EndpointPort{
+						{
+							Protocol: &[]corev1.Protocol{corev1.ProtocolTCP}[0],
+							Port:     &[]int32{80}[0],
+							Name:     &[]string{"port-1"}[0],
+						},
+					},
+				}}, nil
+			},
+			[]ingress.Endpoint{
+				{
+					Address: "1.1.1.1",
+					Port:    "80",
+				},
+			},
+		},
+		{
+			"should return all endpoints because one is missing zone hint",
+			&corev1.Service{
+				Spec: corev1.ServiceSpec{
+					Type:      corev1.ServiceTypeClusterIP,
+					ClusterIP: "1.1.1.1",
+					Ports: []corev1.ServicePort{
+						{
+							Name:       "default",
+							TargetPort: intstr.FromString("port-1"),
+						},
+					},
+				},
+			},
+			&corev1.ServicePort{
+				Name:       "port-1",
+				TargetPort: intstr.FromString("port-1"),
+			},
+			corev1.ProtocolTCP,
+			"eu-west-1b",
+			func(string) ([]*discoveryv1.EndpointSlice, error) {
+				return []*discoveryv1.EndpointSlice{{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: map[string]string{discoveryv1.LabelServiceName: "default"},
+					},
+					Endpoints: []discoveryv1.Endpoint{
+						{
+							Addresses: []string{"1.1.1.1"},
+							Conditions: discoveryv1.EndpointConditions{
+								Ready: &[]bool{true}[0],
+							},
+							Hints: &[]discoveryv1.EndpointHints{{
+								ForZones: []discoveryv1.ForZone{{
+									Name: "eu-west-1b",
+								}},
+							}}[0],
+						},
+						{
+							Addresses: []string{"1.1.1.2"},
+							Conditions: discoveryv1.EndpointConditions{
+								Ready: &[]bool{true}[0],
+							},
+							Hints: &[]discoveryv1.EndpointHints{{
+								ForZones: []discoveryv1.ForZone{{
+									Name: "eu-west-1b",
+								}},
+							}}[0],
+						},
+						{
+							Addresses: []string{"1.1.1.3"},
+							Conditions: discoveryv1.EndpointConditions{
+								Ready: &[]bool{true}[0],
+							},
+							Hints: &[]discoveryv1.EndpointHints{{}}[0],
+						},
+					},
+					Ports: []discoveryv1.EndpointPort{
+						{
+							Protocol: &[]corev1.Protocol{corev1.ProtocolTCP}[0],
+							Port:     &[]int32{80}[0],
+							Name:     &[]string{"port-1"}[0],
+						},
+					},
+				}}, nil
+			},
+			[]ingress.Endpoint{
+				{
+					Address: "1.1.1.1",
+					Port:    "80",
+				},
+				{
+					Address: "1.1.1.2",
+					Port:    "80",
+				},
+				{
+					Address: "1.1.1.3",
+					Port:    "80",
+				},
+			},
+		},
+		{
+			"should return all endpoints because no zone from controller node",
+			&corev1.Service{
+				Spec: corev1.ServiceSpec{
+					Type:      corev1.ServiceTypeClusterIP,
+					ClusterIP: "1.1.1.1",
+					Ports: []corev1.ServicePort{
+						{
+							Name:       "default",
+							TargetPort: intstr.FromString("port-1"),
+						},
+					},
+				},
+			},
+			&corev1.ServicePort{
+				Name:       "port-1",
+				TargetPort: intstr.FromString("port-1"),
+			},
+			corev1.ProtocolTCP,
+			"",
+			func(string) ([]*discoveryv1.EndpointSlice, error) {
+				return []*discoveryv1.EndpointSlice{{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: map[string]string{discoveryv1.LabelServiceName: "default"},
+					},
+					Endpoints: []discoveryv1.Endpoint{
+						{
+							Addresses: []string{"1.1.1.1"},
+							Conditions: discoveryv1.EndpointConditions{
+								Ready: &[]bool{true}[0],
+							},
+							Hints: &[]discoveryv1.EndpointHints{{
+								ForZones: []discoveryv1.ForZone{{
+									Name: "eu-west-1a",
+								}},
+							}}[0],
+						},
+						{
+							Addresses: []string{"1.1.1.2"},
+							Conditions: discoveryv1.EndpointConditions{
+								Ready: &[]bool{true}[0],
+							},
+							Hints: &[]discoveryv1.EndpointHints{{
+								ForZones: []discoveryv1.ForZone{{
+									Name: "eu-west-1b",
+								}},
+							}}[0],
+						},
+						{
+							Addresses: []string{"1.1.1.3"},
+							Conditions: discoveryv1.EndpointConditions{
+								Ready: &[]bool{true}[0],
+							},
+							Hints: &[]discoveryv1.EndpointHints{{
+								ForZones: []discoveryv1.ForZone{{
+									Name: "eu-west-1c",
+								}},
+							}}[0],
+						},
+					},
+					Ports: []discoveryv1.EndpointPort{
+						{
+							Protocol: &[]corev1.Protocol{corev1.ProtocolTCP}[0],
+							Port:     &[]int32{80}[0],
+							Name:     &[]string{"port-1"}[0],
+						},
+					},
+				}}, nil
+			},
+			[]ingress.Endpoint{
+				{
+					Address: "1.1.1.1",
+					Port:    "80",
+				},
+				{
+					Address: "1.1.1.2",
+					Port:    "80",
+				},
+				{
+					Address: "1.1.1.3",
+					Port:    "80",
+				},
+			},
+		},
 	}
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			result := getEndpointsFromSlices(testCase.svc, testCase.port, testCase.proto, testCase.fn)
+			result := getEndpointsFromSlices(testCase.svc, testCase.port, testCase.proto, testCase.zone, testCase.fn)
 			if len(testCase.result) != len(result) {
 				t.Errorf("Expected %d Endpoints but got %d", len(testCase.result), len(result))
 			}

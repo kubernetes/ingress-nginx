@@ -4,7 +4,7 @@ kind: Service
 metadata:
   annotations:
   {{- range $key, $value := .Values.controller.service.annotations }}
-    {{ $key }}: {{ $value | quote }}
+    {{ $key }}: {{ tpl ($value | toString) $ | quote }}
   {{- end }}
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
@@ -27,6 +27,9 @@ spec:
 {{- end }}
 {{- if .Values.controller.service.loadBalancerSourceRanges }}
   loadBalancerSourceRanges: {{ toYaml .Values.controller.service.loadBalancerSourceRanges | nindent 4 }}
+{{- end }}
+{{- if .Values.controller.service.loadBalancerClass }}
+  loadBalancerClass: {{ .Values.controller.service.loadBalancerClass }}
 {{- end }}
 {{- if .Values.controller.service.externalTrafficPolicy }}
   externalTrafficPolicy: {{ .Values.controller.service.externalTrafficPolicy }}

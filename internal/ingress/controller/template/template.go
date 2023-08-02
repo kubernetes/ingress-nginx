@@ -18,13 +18,14 @@ package template
 
 import (
 	"bytes"
+	"crypto/rand"
 	"crypto/sha1" // #nosec
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/rand" // #nosec
+	"math/big"
 	"net"
 	"net/url"
 	"os"
@@ -34,13 +35,11 @@ import (
 	"strconv"
 	"strings"
 	text_template "text/template"
-	"time"
 
 	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog/v2"
 
-	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
@@ -75,8 +74,8 @@ type Template struct {
 	bp *BufferPool
 }
 
-//NewTemplate returns a new Template instance or an
-//error if the specified template file contains errors
+// NewTemplate returns a new Template instance or an
+// error if the specified template file contains errors
 func NewTemplate(file string) (*Template, error) {
 	data, err := os.ReadFile(file)
 	if err != nil {
@@ -265,8 +264,8 @@ var (
 		"buildAuthSignURL":                   buildAuthSignURL,
 		"buildAuthSignURLLocation":           buildAuthSignURLLocation,
 		"buildOpentracing":                   buildOpentracing,
+		"buildOpentelemetry":                 buildOpentelemetry,
 		"proxySetHeader":                     proxySetHeader,
-		"buildInfluxDB":                      buildInfluxDB,
 		"enforceRegexModifier":               enforceRegexModifier,
 		"buildCustomErrorDeps":               buildCustomErrorDeps,
 		"buildCustomErrorLocationsPerServer": buildCustomErrorLocationsPerServer,
@@ -274,11 +273,12 @@ var (
 		"buildHTTPListener":                  buildHTTPListener,
 		"buildHTTPSListener":                 buildHTTPSListener,
 		"buildOpentracingForLocation":        buildOpentracingForLocation,
+		"buildOpentelemetryForLocation":      buildOpentelemetryForLocation,
 		"shouldLoadOpentracingModule":        shouldLoadOpentracingModule,
+		"shouldLoadOpentelemetryModule":      shouldLoadOpentelemetryModule,
 		"buildModSecurityForLocation":        buildModSecurityForLocation,
 		"buildMirrorLocations":               buildMirrorLocations,
 		"shouldLoadAuthDigestModule":         shouldLoadAuthDigestModule,
-		"shouldLoadInfluxDBModule":           shouldLoadInfluxDBModule,
 		"buildServerName":                    buildServerName,
 		"buildCorsOriginRegex":               buildCorsOriginRegex,
 	}
@@ -287,9 +287,10 @@ var (
 // escapeLiteralDollar will replace the $ character with ${literal_dollar}
 // which is made to work via the following configuration in the http section of
 // the template:
-// geo $literal_dollar {
-//     default "$";
-// }
+//
+//	geo $literal_dollar {
+//	    default "$";
+//	}
 func escapeLiteralDollar(input interface{}) string {
 	inputStr, ok := input.(string)
 	if !ok {
@@ -735,9 +736,6 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 	case "GRPCS":
 		proto = "grpcs://"
 		proxyPass = "grpc_pass"
-	case "AJP":
-		proto = ""
-		proxyPass = "ajp_pass"
 	case "FCGI":
 		proto = ""
 		proxyPass = "fastcgi_pass"
@@ -791,7 +789,7 @@ rewrite "(?i)%s" %s break;
 
 func filterRateLimits(input interface{}) []ratelimit.Config {
 	ratelimits := []ratelimit.Config{}
-	found := sets.String{}
+	found := sets.Set[string]{}
 
 	servers, ok := input.([]*ingress.Server)
 	if !ok {
@@ -814,12 +812,12 @@ func filterRateLimits(input interface{}) []ratelimit.Config {
 // for connection limit by IP address, one for limiting requests per minute, and
 // one for limiting requests per second.
 func buildRateLimitZones(input interface{}) []string {
-	zones := sets.String{}
+	zones := sets.Set[string]{}
 
 	servers, ok := input.([]*ingress.Server)
 	if !ok {
 		klog.Errorf("expected a '[]*ingress.Server' type but %T was returned", input)
-		return zones.List()
+		return zones.UnsortedList()
 	}
 
 	for _, server := range servers {
@@ -858,7 +856,7 @@ func buildRateLimitZones(input interface{}) []string {
 		}
 	}
 
-	return zones.List()
+	return zones.UnsortedList()
 }
 
 // buildRateLimit produces an array of limit_req to be used inside the Path of
@@ -1186,14 +1184,15 @@ func buildAuthSignURLLocation(location, authSignURL string) string {
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
 func randomString() string {
 	b := make([]rune, 32)
 	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))] // #nosec
+		idx, err := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
+		if err != nil {
+			klog.Errorf("unexpected error generating random index: %v", err)
+			return ""
+		}
+		b[i] = letters[idx.Int64()]
 	}
 
 	return string(b)
@@ -1238,27 +1237,31 @@ func buildOpentracing(c interface{}, s interface{}) string {
 	return buf.String()
 }
 
-// buildInfluxDB produces the single line configuration
-// needed by the InfluxDB module to send request's metrics
-// for the current resource
-func buildInfluxDB(input interface{}) string {
-	cfg, ok := input.(influxdb.Config)
+func buildOpentelemetry(c interface{}, s interface{}) string {
+	cfg, ok := c.(config.Configuration)
 	if !ok {
-		klog.Errorf("expected an 'influxdb.Config' type but %T was returned", input)
+		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
 		return ""
 	}
 
-	if !cfg.InfluxDBEnabled {
+	servers, ok := s.([]*ingress.Server)
+	if !ok {
+		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
 		return ""
 	}
 
-	return fmt.Sprintf(
-		"influxdb server_name=%s host=%s port=%s measurement=%s enabled=true;",
-		cfg.InfluxDBServerName,
-		cfg.InfluxDBHost,
-		cfg.InfluxDBPort,
-		cfg.InfluxDBMeasurement,
-	)
+	if !shouldLoadOpentelemetryModule(cfg, servers) {
+		return ""
+	}
+
+	buf := bytes.NewBufferString("")
+
+	buf.WriteString("\r\n")
+
+	if cfg.OpentelemetryOperationName != "" {
+		buf.WriteString(fmt.Sprintf("opentelemetry_operation_name \"%s\";\n", cfg.OpentelemetryOperationName))
+	}
+	return buf.String()
 }
 
 func proxySetHeader(loc interface{}) string {
@@ -1357,6 +1360,13 @@ func opentracingPropagateContext(location *ingress.Location) string {
 	}
 
 	return "opentracing_propagate_context;"
+}
+
+func opentelemetryPropagateContext(location *ingress.Location) string {
+	if location == nil {
+		return ""
+	}
+	return "opentelemetry_propagate;"
 }
 
 // shouldLoadModSecurityModule determines whether or not the ModSecurity module needs to be loaded.
@@ -1574,6 +1584,36 @@ func buildOpentracingForLocation(isOTEnabled bool, isOTTrustSet bool, location *
 	return opc
 }
 
+func buildOpentelemetryForLocation(isOTEnabled bool, isOTTrustSet bool, location *ingress.Location) string {
+	isOTEnabledInLoc := location.Opentelemetry.Enabled
+	isOTSetInLoc := location.Opentelemetry.Set
+
+	if isOTEnabled {
+		if isOTSetInLoc && !isOTEnabledInLoc {
+			return "opentelemetry off;"
+		}
+	} else if !isOTSetInLoc || !isOTEnabledInLoc {
+		return ""
+	}
+
+	opc := opentelemetryPropagateContext(location)
+	if opc != "" {
+		opc = fmt.Sprintf("opentelemetry on;\n%v", opc)
+	}
+
+	if location.Opentelemetry.OperationName != "" {
+		opc = opc + "\nopentelemetry_operation_name " + location.Opentelemetry.OperationName + ";"
+	}
+
+	if (!isOTTrustSet && !location.Opentelemetry.TrustSet) ||
+		(location.Opentelemetry.TrustSet && !location.Opentelemetry.TrustEnabled) {
+		opc = opc + "\nopentelemetry_trust_incoming_spans off;"
+	} else {
+		opc = opc + "\nopentelemetry_trust_incoming_spans on;"
+	}
+	return opc
+}
+
 // shouldLoadOpentracingModule determines whether or not the Opentracing module needs to be loaded.
 // First, it checks if `enable-opentracing` is set in the ConfigMap. If it is not, it iterates over all locations to
 // check if Opentracing is enabled by the annotation `nginx.ingress.kubernetes.io/enable-opentracing`.
@@ -1602,6 +1642,35 @@ func shouldLoadOpentracingModule(c interface{}, s interface{}) bool {
 		}
 	}
 
+	return false
+}
+
+// shouldLoadOpentelemetryModule determines whether or not the Opentelemetry module needs to be loaded.
+// It checks if `enable-opentelemetry` is set in the ConfigMap.
+func shouldLoadOpentelemetryModule(c interface{}, s interface{}) bool {
+	cfg, ok := c.(config.Configuration)
+	if !ok {
+		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
+		return false
+	}
+
+	servers, ok := s.([]*ingress.Server)
+	if !ok {
+		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
+		return false
+	}
+
+	if cfg.EnableOpentelemetry {
+		return true
+	}
+
+	for _, server := range servers {
+		for _, location := range server.Locations {
+			if location.Opentelemetry.Enabled {
+				return true
+			}
+		}
+	}
 	return false
 }
 
@@ -1653,10 +1722,10 @@ func buildModSecurityForLocation(cfg config.Configuration, location *ingress.Loc
 func buildMirrorLocations(locs []*ingress.Location) string {
 	var buffer bytes.Buffer
 
-	mapped := sets.String{}
+	mapped := sets.Set[string]{}
 
 	for _, loc := range locs {
-		if loc.Mirror.Source == "" || loc.Mirror.Target == "" {
+		if loc.Mirror.Source == "" || loc.Mirror.Target == "" || loc.Mirror.Host == "" {
 			continue
 		}
 
@@ -1667,8 +1736,8 @@ func buildMirrorLocations(locs []*ingress.Location) string {
 		mapped.Insert(loc.Mirror.Source)
 		buffer.WriteString(fmt.Sprintf(`location = %v {
 internal;
-proxy_set_header Host %v;
-proxy_pass %v;
+proxy_set_header Host "%v";
+proxy_pass "%v";
 }
 
 `, loc.Mirror.Source, loc.Mirror.Host, loc.Mirror.Target))
@@ -1700,25 +1769,6 @@ func shouldLoadAuthDigestModule(s interface{}) bool {
 	return false
 }
 
-// shouldLoadInfluxDBModule determines whether or not the ngx_http_auth_digest_module module needs to be loaded.
-func shouldLoadInfluxDBModule(s interface{}) bool {
-	servers, ok := s.([]*ingress.Server)
-	if !ok {
-		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
-		return false
-	}
-
-	for _, server := range servers {
-		for _, location := range server.Locations {
-			if location.InfluxDB.InfluxDBEnabled {
-				return true
-			}
-		}
-	}
-
-	return false
-}
-
 // buildServerName ensures wildcard hostnames are valid
 func buildServerName(hostname string) string {
 	if !strings.HasPrefix(hostname, "*") {
@@ -1731,7 +1781,7 @@ func buildServerName(hostname string) string {
 	return `~^(?<subdomain>[\w-]+)\.` + strings.Join(parts, "\\.") + `$`
 }
 
-// parseComplexNGINXVar parses things like "$my${complex}ngx\$var" into
+// parseComplexNginxVarIntoLuaTable parses things like "$my${complex}ngx\$var" into
 // [["$var", "complex", "my", "ngx"]]. In other words, 2nd and 3rd elements
 // in the result are actual NGINX variable names, whereas first and 4th elements
 // are string literals.

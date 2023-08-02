@@ -1,0 +1,19 @@
+name: Adds all issues
+
+on:
+  issues:
+    types:
+      - opened
+
+jobs:
+  add-to-project:
+    name: Add issue to project
+    runs-on: ubuntu-latest
+    permissions:
+      repository-projects: write
+      issues: write
+    steps:
+      - uses: actions/add-to-project@31b3f3ccdc584546fc445612dec3f38ff5edb41c # v0.5.0
+        with:
+          project-url: https://github.com/orgs/kubernetes/projects/104
+          github-token: ${{ secrets.PROJECT_WRITER }}

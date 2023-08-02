@@ -59,11 +59,12 @@ func (p *TCPProxy) Get(host string) *TCPServer {
 // and open a connection to the passthrough server.
 func (p *TCPProxy) Handle(conn net.Conn) {
 	defer conn.Close()
-	data := make([]byte, 4096)
+	// See: https://www.ibm.com/docs/en/ztpf/1.1.0.15?topic=sessions-ssl-record-format
+	data := make([]byte, 16384)
 
 	length, err := conn.Read(data)
 	if err != nil {
-		klog.V(4).ErrorS(err, "Error reading the first 4k of the connection")
+		klog.V(4).ErrorS(err, "Error reading data from the connection")
 		return
 	}
 
@@ -80,6 +81,7 @@ func (p *TCPProxy) Handle(conn net.Conn) {
 	}
 
 	hostPort := net.JoinHostPort(proxy.IP, fmt.Sprintf("%v", proxy.Port))
+	klog.V(4).InfoS("passing to", "hostport", hostPort)
 	clientConn, err := net.Dial("tcp", hostPort)
 	if err != nil {
 		klog.V(4).ErrorS(err, "error dialing proxy", "ip", proxy.IP, "port", proxy.Port, "hostname", proxy.Hostname)
@@ -99,7 +101,7 @@ func (p *TCPProxy) Handle(conn net.Conn) {
 		}
 		proxyProtocolHeader := fmt.Sprintf("PROXY %s %s %s %d %d\r\n", protocol, remoteAddr.IP.String(), localAddr.IP.String(), remoteAddr.Port, localAddr.Port)
 		klog.V(4).InfoS("Writing Proxy Protocol", "header", proxyProtocolHeader)
-		_, err = fmt.Fprintf(clientConn, proxyProtocolHeader)
+		_, err = fmt.Fprint(clientConn, proxyProtocolHeader)
 	}
 	if err != nil {
 		klog.ErrorS(err, "Error writing Proxy Protocol header")
@@ -117,7 +119,9 @@ func (p *TCPProxy) Handle(conn net.Conn) {
 
 func pipe(client, server net.Conn) {
 	doCopy := func(s, c net.Conn, cancel chan<- bool) {
-		io.Copy(s, c)
+		if _, err := io.Copy(s, c); err != nil {
+			klog.Errorf("Error copying data: %v", err)
+		}
 		cancel <- true
 	}
 
@@ -126,8 +130,5 @@ func pipe(client, server net.Conn) {
 	go doCopy(server, client, cancel)
 	go doCopy(client, server, cancel)
 
-	select {
-	case <-cancel:
-		return
-	}
+	<-cancel
 }

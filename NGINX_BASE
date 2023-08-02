@@ -1,1 +1,1 @@
-registry.k8s.io/ingress-nginx/nginx:9fdbef829c327b95a3c6d6816a301df41bda997f@sha256:46c27294e467f46d0006ad1eb5fd3f7005eb3cbd00dd43be2ed9b02edfc6e828
+registry.k8s.io/ingress-nginx/nginx:v20230623-427f3d2fb@sha256:7b479f66872c0b1cb0f1315e305b8a3e9c6da846c7dd3855db99bc8cfd6791e1

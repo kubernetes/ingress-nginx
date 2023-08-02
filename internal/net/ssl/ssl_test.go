@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"crypto"
 	"crypto/rand"
-	cryptorand "crypto/rand"
 	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
@@ -336,7 +335,7 @@ const (
 
 // newPrivateKey creates an RSA private key
 func newPrivateKey() (*rsa.PrivateKey, error) {
-	return rsa.GenerateKey(cryptorand.Reader, rsaKeySize)
+	return rsa.GenerateKey(rand.Reader, rsaKeySize)
 }
 
 // newSignedCert creates a signed certificate using the given CA certificate and key
@@ -365,7 +364,7 @@ func newSignedCert(cfg certutil.Config, key crypto.Signer, caCert *x509.Certific
 		KeyUsage:     x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
 		ExtKeyUsage:  cfg.Usages,
 	}
-	certDERBytes, err := x509.CreateCertificate(cryptorand.Reader, &certTmpl, caCert, key.Public(), caKey)
+	certDERBytes, err := x509.CreateCertificate(rand.Reader, &certTmpl, caCert, key.Public(), caKey)
 	if err != nil {
 		return nil, err
 	}
@@ -398,7 +397,9 @@ func newFakeCertificate(t *testing.T) ([]byte, string, string) {
 		t.Errorf("failed to write test key: %v", err)
 	}
 
-	certFile.Write(cert)
+	if _, err := certFile.Write(cert); err != nil {
+		t.Errorf("failed to write cert: %v", err)
+	}
 	defer certFile.Close()
 
 	keyFile, err := os.CreateTemp("", "key-")
@@ -406,7 +407,9 @@ func newFakeCertificate(t *testing.T) ([]byte, string, string) {
 		t.Errorf("failed to write test key: %v", err)
 	}
 
-	keyFile.Write(key)
+	if _, err := keyFile.Write(key); err != nil {
+		t.Errorf("failed to write key: %v", err)
+	}
 	defer keyFile.Close()
 
 	return cert, certFile.Name(), keyFile.Name()

@@ -21,10 +21,10 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"os/exec"
 	"regexp"
 	"strings"
-	"time"
+
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
@@ -37,7 +37,7 @@ import (
 )
 
 var _ = framework.DescribeAnnotation("auth-*", func() {
-	f := framework.NewDefaultFramework("auth")
+	f := framework.NewDefaultFramework("auth", framework.WithHTTPBunEnabled())
 
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
@@ -139,6 +139,34 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 			Expect().
 			Status(http.StatusUnauthorized).
 			Body().Contains("401 Authorization Required")
+	})
+
+	ginkgo.It("should return status code 401 and cors headers when authentication and cors is configured but Authorization header is not configured", func() {
+		host := "auth"
+
+		s := f.EnsureSecret(buildSecret("foo", "bar", "test", f.Namespace))
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/auth-type":   "basic",
+			"nginx.ingress.kubernetes.io/auth-secret": s.Name,
+			"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
+			"nginx.ingress.kubernetes.io/enable-cors": "true",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "server_name auth")
+			})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusUnauthorized).
+			Header("Access-Control-Allow-Origin").Equal("*")
 	})
 
 	ginkgo.It("should return status code 200 when authentication is configured and Authorization header is sent", func() {
@@ -361,10 +389,10 @@ http {
 			assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets), 1, "expected at least one endpoint")
 			assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets[0].Addresses), 1, "expected at least one address ready in the endpoint")
 
-			httpbinIP := e.Subsets[0].Addresses[0].IP
+			nginxIP := e.Subsets[0].Addresses[0].IP
 
 			annotations = map[string]string{
-				"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/cookies/set/alma/armud", httpbinIP),
+				"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/cookies/set/alma/armud", nginxIP),
 				"nginx.ingress.kubernetes.io/auth-signin": "http://$host/auth/start",
 			}
 
@@ -428,21 +456,8 @@ http {
 		var ing *networking.Ingress
 
 		ginkgo.BeforeEach(func() {
-			f.NewHttpbinDeployment()
-
-			err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBinService, f.Namespace, 1)
-			assert.Nil(ginkgo.GinkgoT(), err)
-
-			e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(context.TODO(), framework.HTTPBinService, metav1.GetOptions{})
-			assert.Nil(ginkgo.GinkgoT(), err)
-
-			assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets), 1, "expected at least one endpoint")
-			assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets[0].Addresses), 1, "expected at least one address ready in the endpoint")
-
-			httpbinIP := e.Subsets[0].Addresses[0].IP
-
 			annotations = map[string]string{
-				"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/basic-auth/user/password", httpbinIP),
+				"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/basic-auth/user/password", f.HTTPBunIP),
 				"nginx.ingress.kubernetes.io/auth-signin": "http://$host/auth/start",
 			}
 
@@ -621,20 +636,8 @@ http {
 		var ing *networking.Ingress
 
 		ginkgo.BeforeEach(func() {
-			f.NewHttpbinDeployment()
-
-			var httpbinIP string
-
-			err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBinService, f.Namespace, 1)
-			assert.Nil(ginkgo.GinkgoT(), err)
-
-			e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(context.TODO(), framework.HTTPBinService, metav1.GetOptions{})
-			assert.Nil(ginkgo.GinkgoT(), err)
-
-			httpbinIP = e.Subsets[0].Addresses[0].IP
-
 			annotations = map[string]string{
-				"nginx.ingress.kubernetes.io/auth-url":                   fmt.Sprintf("http://%s/basic-auth/user/password", httpbinIP),
+				"nginx.ingress.kubernetes.io/auth-url":                   fmt.Sprintf("http://%s/basic-auth/user/password", f.HTTPBunIP),
 				"nginx.ingress.kubernetes.io/auth-signin":                "http://$host/auth/start",
 				"nginx.ingress.kubernetes.io/auth-signin-redirect-param": "orig",
 			}
@@ -700,23 +703,8 @@ http {
 		barPath := "/bar"
 
 		ginkgo.BeforeEach(func() {
-			f.NewHttpbinDeployment()
-
-			err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBinService, f.Namespace, 1)
-			assert.Nil(ginkgo.GinkgoT(), err)
-
-			framework.Sleep(1 * time.Second)
-
-			e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(context.TODO(), framework.HTTPBinService, metav1.GetOptions{})
-			assert.Nil(ginkgo.GinkgoT(), err)
-
-			assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets), 1, "expected at least one endpoint")
-			assert.GreaterOrEqual(ginkgo.GinkgoT(), len(e.Subsets[0].Addresses), 1, "expected at least one address ready in the endpoint")
-
-			httpbinIP := e.Subsets[0].Addresses[0].IP
-
 			annotations := map[string]string{
-				"nginx.ingress.kubernetes.io/auth-url":            fmt.Sprintf("http://%s/basic-auth/user/password", httpbinIP),
+				"nginx.ingress.kubernetes.io/auth-url":            fmt.Sprintf("http://%s/basic-auth/user/password", f.HTTPBunIP),
 				"nginx.ingress.kubernetes.io/auth-signin":         "http://$host/auth/start",
 				"nginx.ingress.kubernetes.io/auth-cache-key":      "fixed",
 				"nginx.ingress.kubernetes.io/auth-cache-duration": "200 201 401 30m",
@@ -749,7 +737,7 @@ http {
 				Expect().
 				Status(http.StatusOK)
 
-			err := f.DeleteDeployment(framework.HTTPBinService)
+			err := f.DeleteDeployment(framework.HTTPBunService)
 			assert.Nil(ginkgo.GinkgoT(), err)
 			framework.Sleep()
 
@@ -769,7 +757,7 @@ http {
 				Expect().
 				Status(http.StatusOK)
 
-			err := f.DeleteDeployment(framework.HTTPBinService)
+			err := f.DeleteDeployment(framework.HTTPBunService)
 			assert.Nil(ginkgo.GinkgoT(), err)
 			framework.Sleep()
 
@@ -798,7 +786,7 @@ http {
 				Expect().
 				Status(http.StatusOK)
 
-			err := f.DeleteDeployment(framework.HTTPBinService)
+			err := f.DeleteDeployment(framework.HTTPBunService)
 			assert.Nil(ginkgo.GinkgoT(), err)
 			framework.Sleep()
 
@@ -871,7 +859,8 @@ http {
 //   Auth error
 
 func buildSecret(username, password, name, namespace string) *corev1.Secret {
-	out, err := exec.Command("openssl", "passwd", "-crypt", password).CombinedOutput()
+	//out, err := exec.Command("openssl", "passwd", "-crypt", password).CombinedOutput()
+	out, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	encpass := fmt.Sprintf("%v:%s\n", username, out)
 	assert.Nil(ginkgo.GinkgoT(), err)
 
@@ -889,7 +878,8 @@ func buildSecret(username, password, name, namespace string) *corev1.Secret {
 }
 
 func buildMapSecret(username, password, name, namespace string) *corev1.Secret {
-	out, err := exec.Command("openssl", "passwd", "-crypt", password).CombinedOutput()
+	//out, err := exec.Command("openssl", "passwd", "-crypt", password).CombinedOutput()
+	out, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	assert.Nil(ginkgo.GinkgoT(), err)
 
 	return &corev1.Secret{
