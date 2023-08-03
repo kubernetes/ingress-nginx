@@ -101,7 +101,10 @@ func logs(flags *genericclioptions.ConfigFlags, podName string, deployment strin
 		return err
 	}
 
-	cmd := []string{"logs", "-n", pod.Namespace, "-c", container, pod.Name}
+	cmd := []string{"logs", "-n", pod.Namespace, pod.Name}
+	if len(container) > 0 {
+		cmd = append(cmd, "-c", container)
+	}
 	cmd = append(cmd, opts.toStrings()...)
 	return kubectl.Exec(flags, cmd)
 }

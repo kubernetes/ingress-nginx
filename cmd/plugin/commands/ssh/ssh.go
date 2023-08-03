@@ -17,6 +17,8 @@ limitations under the License.
 package ssh
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -50,6 +52,11 @@ func ssh(flags *genericclioptions.ConfigFlags, podName string, deployment string
 	if err != nil {
 		return err
 	}
-
-	return kubectl.Exec(flags, []string{"exec", "-it", "-n", pod.Namespace, "-c", container, pod.Name, "--", "/bin/bash"})
+	fmt.Printf("exec in %s\n", pod.Name)
+	args := []string{"exec", "-it", "-n", pod.Namespace, pod.Name}
+	if len(container) > 0 {
+		args = append(args, "-c", container)
+	}
+	args = append(args, "--", "/bin/bash")
+	return kubectl.Exec(flags, args)
 }

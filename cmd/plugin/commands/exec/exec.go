@@ -17,6 +17,8 @@ limitations under the License.
 package exec
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -60,7 +62,7 @@ func exec(flags *genericclioptions.ConfigFlags, podName string, deployment strin
 	if err != nil {
 		return err
 	}
-
+	fmt.Printf("exec in %s\n", pod.Name)
 	args := []string{"exec"}
 	if opts.TTY {
 		args = append(args, "-t")
@@ -69,7 +71,10 @@ func exec(flags *genericclioptions.ConfigFlags, podName string, deployment strin
 		args = append(args, "-i")
 	}
 
-	args = append(args, []string{"-n", pod.Namespace, "-c", container, pod.Name, "--"}...)
-	args = append(args, cmd...)
+	args = append(args, "-n", pod.Namespace, pod.Name)
+	if len(container) > 0 {
+		args = append(args, "-c", container)
+	}
+	args = append(args, append([]string{"--"}, cmd...)...)
 	return kubectl.Exec(flags, args)
 }
