@@ -268,28 +268,31 @@ func TestKeepaliveAnnotations(t *testing.T) {
 		title                string
 		url                  string
 		keepaliveConnections string
+		keepaliveShareVars   string
 		keepaliveRequests    string
 		keepaliveTimeout     string
 		expectedConnections  int
+		expectedShareVars    bool
 		expectedRequests     int
 		expectedTimeout      int
 	}{
-		{"all set", "http://goog.url", "5", "500", "50", 5, 500, 50},
-		{"no annotation", "http://goog.url", "", "", "", defaultKeepaliveConnections, defaultKeepaliveRequests, defaultKeepaliveTimeout},
-		{"default for connections", "http://goog.url", "x", "500", "50", defaultKeepaliveConnections, 500, 50},
-		{"default for requests", "http://goog.url", "5", "x", "50", 5, defaultKeepaliveRequests, 50},
-		{"default for invalid timeout", "http://goog.url", "5", "500", "x", 5, 500, defaultKeepaliveTimeout},
-		{"variable in host", "http://$host:5000/a/b", "5", "", "", 0, defaultKeepaliveRequests, defaultKeepaliveTimeout},
-		{"variable in path", "http://goog.url:5000/$path", "5", "", "", 5, defaultKeepaliveRequests, defaultKeepaliveTimeout},
-		{"negative connections", "http://goog.url", "-2", "", "", 0, defaultKeepaliveRequests, defaultKeepaliveTimeout},
-		{"negative requests", "http://goog.url", "5", "-1", "", 0, -1, defaultKeepaliveTimeout},
-		{"negative timeout", "http://goog.url", "5", "", "-1", 0, defaultKeepaliveRequests, -1},
-		{"negative request and timeout", "http://goog.url", "5", "-2", "-3", 0, -2, -3},
+		{"all set", "http://goog.url", "5", "false", "500", "50", 5, false, 500, 50},
+		{"no annotation", "http://goog.url", "", "", "", "", defaultKeepaliveConnections, defaultKeepaliveShareVars, defaultKeepaliveRequests, defaultKeepaliveTimeout},
+		{"default for connections", "http://goog.url", "x", "true", "500", "50", defaultKeepaliveConnections, true, 500, 50},
+		{"default for requests", "http://goog.url", "5", "x", "dummy", "50", 5, defaultKeepaliveShareVars, defaultKeepaliveRequests, 50},
+		{"default for invalid timeout", "http://goog.url", "5", "t", "500", "x", 5, true, 500, defaultKeepaliveTimeout},
+		{"variable in host", "http://$host:5000/a/b", "5", "1", "", "", 0, true, defaultKeepaliveRequests, defaultKeepaliveTimeout},
+		{"variable in path", "http://goog.url:5000/$path", "5", "t", "", "", 5, true, defaultKeepaliveRequests, defaultKeepaliveTimeout},
+		{"negative connections", "http://goog.url", "-2", "f", "", "", 0, false, defaultKeepaliveRequests, defaultKeepaliveTimeout},
+		{"negative requests", "http://goog.url", "5", "True", "-1", "", 0, true, -1, defaultKeepaliveTimeout},
+		{"negative timeout", "http://goog.url", "5", "0", "", "-1", 0, false, defaultKeepaliveRequests, -1},
+		{"negative request and timeout", "http://goog.url", "5", "False", "-2", "-3", 0, false, -2, -3},
 	}
 
 	for _, test := range tests {
 		data[parser.GetAnnotationWithPrefix("auth-url")] = test.url
 		data[parser.GetAnnotationWithPrefix("auth-keepalive")] = test.keepaliveConnections
+		data[parser.GetAnnotationWithPrefix("auth-keepalive-share-vars")] = test.keepaliveShareVars
 		data[parser.GetAnnotationWithPrefix("auth-keepalive-timeout")] = test.keepaliveTimeout
 		data[parser.GetAnnotationWithPrefix("auth-keepalive-requests")] = test.keepaliveRequests
 
@@ -311,6 +314,10 @@ func TestKeepaliveAnnotations(t *testing.T) {
 
 		if u.KeepaliveConnections != test.expectedConnections {
 			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.expectedConnections, u.KeepaliveConnections)
+		}
+
+		if u.KeepaliveShareVars != test.expectedShareVars {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.expectedShareVars, u.KeepaliveShareVars)
 		}
 
 		if u.KeepaliveRequests != test.expectedRequests {

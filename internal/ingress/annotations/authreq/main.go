@@ -33,20 +33,21 @@ import (
 )
 
 const (
-	authReqURLAnnotation               = "auth-url"
-	authReqMethodAnnotation            = "auth-method"
-	authReqSigninAnnotation            = "auth-signin"
-	authReqSigninRedirParamAnnotation  = "auth-signin-redirect-param"
-	authReqSnippetAnnotation           = "auth-snippet"
-	authReqCacheKeyAnnotation          = "auth-cache-key"
-	authReqKeepaliveAnnotation         = "auth-keepalive"
-	authReqKeepaliveRequestsAnnotation = "auth-keepalive-requests"
-	authReqKeepaliveTimeout            = "auth-keepalive-timeout"
-	authReqCacheDuration               = "auth-cache-duration"
-	authReqResponseHeadersAnnotation   = "auth-response-headers"
-	authReqProxySetHeadersAnnotation   = "auth-proxy-set-headers"
-	authReqRequestRedirectAnnotation   = "auth-request-redirect"
-	authReqAlwaysSetCookieAnnotation   = "auth-always-set-cookie"
+	authReqURLAnnotation                = "auth-url"
+	authReqMethodAnnotation             = "auth-method"
+	authReqSigninAnnotation             = "auth-signin"
+	authReqSigninRedirParamAnnotation   = "auth-signin-redirect-param"
+	authReqSnippetAnnotation            = "auth-snippet"
+	authReqCacheKeyAnnotation           = "auth-cache-key"
+	authReqKeepaliveAnnotation          = "auth-keepalive"
+	authReqKeepaliveShareVarsAnnotation = "auth-keepalive-share-vars"
+	authReqKeepaliveRequestsAnnotation  = "auth-keepalive-requests"
+	authReqKeepaliveTimeout             = "auth-keepalive-timeout"
+	authReqCacheDuration                = "auth-cache-duration"
+	authReqResponseHeadersAnnotation    = "auth-response-headers"
+	authReqProxySetHeadersAnnotation    = "auth-proxy-set-headers"
+	authReqRequestRedirectAnnotation    = "auth-request-redirect"
+	authReqAlwaysSetCookieAnnotation    = "auth-always-set-cookie"
 
 	// This should be exported as it is imported by other packages
 	AuthSecretAnnotation = "auth-secret"
@@ -96,6 +97,12 @@ var authReqAnnotations = parser.Annotation{
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskLow,
 			Documentation: `This annotation specifies the maximum number of keepalive connections to auth-url. Only takes effect when no variables are used in the host part of the URL`,
+		},
+		authReqKeepaliveShareVarsAnnotation: {
+			Validator:     parser.ValidateBool,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `This annotation specifies whether to share Nginx variables among the current request and the auth request`,
 		},
 		authReqKeepaliveRequestsAnnotation: {
 			Validator:     parser.ValidateInt,
@@ -158,6 +165,7 @@ type Config struct {
 	AuthCacheKey           string            `json:"authCacheKey"`
 	AuthCacheDuration      []string          `json:"authCacheDuration"`
 	KeepaliveConnections   int               `json:"keepaliveConnections"`
+	KeepaliveShareVars     bool              `json:"keepaliveShareVars"`
 	KeepaliveRequests      int               `json:"keepaliveRequests"`
 	KeepaliveTimeout       int               `json:"keepaliveTimeout"`
 	ProxySetHeaders        map[string]string `json:"proxySetHeaders,omitempty"`
@@ -170,6 +178,7 @@ const DefaultCacheDuration = "200 202 401 5m"
 // fallback values when no keepalive parameters are set
 const (
 	defaultKeepaliveConnections = 0
+	defaultKeepaliveShareVars   = false
 	defaultKeepaliveRequests    = 1000
 	defaultKeepaliveTimeout     = 60
 )
@@ -215,6 +224,10 @@ func (e1 *Config) Equal(e2 *Config) bool {
 	}
 
 	if e1.KeepaliveConnections != e2.KeepaliveConnections {
+		return false
+	}
+
+	if e1.KeepaliveShareVars != e2.KeepaliveShareVars {
 		return false
 	}
 
@@ -357,6 +370,12 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 		}
 	}
 
+	keepaliveShareVars, err := parser.GetBoolAnnotation(authReqKeepaliveShareVarsAnnotation, ing, a.annotationConfig.Annotations)
+	if err != nil {
+		klog.V(3).InfoS("auth-keepalive-share-vars annotation is undefined and will be set to its default value")
+		keepaliveShareVars = defaultKeepaliveShareVars
+	}
+
 	keepaliveRequests, err := parser.GetIntAnnotation(authReqKeepaliveRequestsAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		klog.V(3).InfoS("auth-keepalive-requests annotation is undefined or invalid and will be set to its default value")
@@ -467,6 +486,7 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 		AuthCacheKey:           authCacheKey,
 		AuthCacheDuration:      authCacheDuration,
 		KeepaliveConnections:   keepaliveConnections,
+		KeepaliveShareVars:     keepaliveShareVars,
 		KeepaliveRequests:      keepaliveRequests,
 		KeepaliveTimeout:       keepaliveTimeout,
 		ProxySetHeaders:        proxySetHeaders,
