@@ -29,21 +29,16 @@ import (
 
 // CreateCommand creates and returns this cobra subcommand
 func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
+	var service *string
 	cmd := &cobra.Command{
 		Use:   "info",
 		Short: "Show information about the ingress-nginx service",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			service, err := cmd.Flags().GetString("service")
-			if err != nil {
-				return err
-			}
-
-			util.PrintError(info(flags, service))
+			util.PrintError(info(flags, *service))
 			return nil
 		},
 	}
-
-	cmd.Flags().String("service", util.DefaultIngressServiceName, "The name of the ingress-nginx service")
+	service = util.AddServiceFlag(cmd)
 	return cmd
 }
 

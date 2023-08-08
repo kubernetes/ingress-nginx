@@ -135,6 +135,13 @@ func AddContainerFlag(cmd *cobra.Command) *string {
 	return &v
 }
 
+// AddServiceFlag adds a --service flag to a cobra command
+func AddServiceFlag(cmd *cobra.Command) *string {
+	v := ""
+	cmd.Flags().StringVar(&v, "service", DefaultIngressServiceName, "The name of the ingress-nginx service")
+	return &v
+}
+
 // GetNamespace takes a set of kubectl flag values and returns the namespace we should be operating in
 func GetNamespace(flags *genericclioptions.ConfigFlags) string {
 	namespace, _, err := flags.ToRawKubeConfigLoader().Namespace()

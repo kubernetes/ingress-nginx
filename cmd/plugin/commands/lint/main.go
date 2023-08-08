@@ -92,7 +92,7 @@ func addCommonOptions(flags *genericclioptions.ConfigFlags, cmd *cobra.Command) 
 	out := lintOptions{
 		flags: flags,
 	}
-	cmd.Flags().BoolVar(&out.allNamespaces, "all-namespaces", false, "Check resources in all namespaces")
+	cmd.Flags().BoolVarP(&out.allNamespaces, "all-namespaces", "A", false, "Check resources in all namespaces")
 	cmd.Flags().BoolVar(&out.showAll, "show-all", false, "Show all resources, not just the ones with problems")
 	cmd.Flags().BoolVarP(&out.verbose, "verbose", "v", false, "Show extra information about the lints")
 	cmd.Flags().StringVarP(&out.versionFrom, "from-version", "f", "0.0.0", "Use lints added for versions starting with this one")

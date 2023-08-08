@@ -32,6 +32,7 @@ import (
 
 // CreateCommand creates and returns this cobra subcommand
 func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
+	var allNamespaces bool
 	cmd := &cobra.Command{
 		Use:     "ingresses",
 		Aliases: []string{"ingress", "ing"},
@@ -42,18 +43,12 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 				return err
 			}
 
-			allNamespaces, err := cmd.Flags().GetBool("all-namespaces")
-			if err != nil {
-				return err
-			}
-
 			util.PrintError(ingresses(flags, host, allNamespaces))
 			return nil
 		},
 	}
 	cmd.Flags().String("host", "", "Show just the ingress definitions for this hostname")
-	cmd.Flags().Bool("all-namespaces", false, "Find ingress definitions from all namespaces")
-
+	cmd.Flags().BoolVarP(&allNamespaces, "all-namespaces", "A", false, "Find ingress definitions from all namespaces")
 	return cmd
 }
 
