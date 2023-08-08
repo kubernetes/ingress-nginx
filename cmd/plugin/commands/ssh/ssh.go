@@ -52,7 +52,7 @@ func ssh(flags *genericclioptions.ConfigFlags, podName string, deployment string
 	if err != nil {
 		return err
 	}
-	fmt.Printf("exec in %s\n", pod.Name)
+	fmt.Printf("exec in ns:%s pod:%s\n", pod.Namespace, pod.Name)
 	args := []string{"exec", "-it", "-n", pod.Namespace, pod.Name}
 	if len(container) > 0 {
 		args = append(args, "-c", container)

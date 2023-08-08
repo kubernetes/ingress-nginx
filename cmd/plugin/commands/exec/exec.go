@@ -62,7 +62,7 @@ func exec(flags *genericclioptions.ConfigFlags, podName string, deployment strin
 	if err != nil {
 		return err
 	}
-	fmt.Printf("exec in %s\n", pod.Name)
+	fmt.Printf("exec in ns:%s pod:%s\n", pod.Namespace, pod.Name)
 	args := []string{"exec"}
 	if opts.TTY {
 		args = append(args, "-t")
