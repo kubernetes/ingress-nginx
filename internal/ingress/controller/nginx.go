@@ -438,7 +438,9 @@ func (n *NGINXController) DefaultEndpoint() ingress.Endpoint {
 }
 
 // generateTemplate returns the nginx configuration file content
-func (n *NGINXController) generateTemplate(cfg *ngx_config.Configuration, ingressCfg *ingress.Configuration) ([]byte, error) {
+//
+//nolint:gocritic // the cfg shouldn't be changed, and shouldn't be mutated by other processes while being rendered.
+func (n *NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressCfg ingress.Configuration) ([]byte, error) {
 	if n.cfg.EnableSSLPassthrough {
 		servers := []*tcpproxy.TCPServer{}
 		for _, pb := range ingressCfg.PassthroughBackends {
@@ -598,7 +600,7 @@ func (n *NGINXController) generateTemplate(cfg *ngx_config.Configuration, ingres
 		Servers:                  ingressCfg.Servers,
 		TCPBackends:              ingressCfg.TCPEndpoints,
 		UDPBackends:              ingressCfg.UDPEndpoints,
-		Cfg:                      *cfg,
+		Cfg:                      cfg,
 		IsIPV6Enabled:            n.isIPV6Enabled && !cfg.DisableIpv6,
 		NginxStatusIpv4Whitelist: cfg.NginxStatusIpv4Whitelist,
 		NginxStatusIpv6Whitelist: cfg.NginxStatusIpv6Whitelist,
@@ -658,11 +660,13 @@ Error: %v
 // changes were detected. The received backend Configuration is merged with the
 // configuration ConfigMap before generating the final configuration file.
 // Returns nil in case the backend was successfully reloaded.
-func (n *NGINXController) OnUpdate(ingressCfg *ingress.Configuration) error {
+//
+//nolint:gocritic // the cfg shouldn't be changed, and shouldn't be mutated by other processes while being rendered.
+func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	cfg := n.store.GetBackendConfiguration()
 	cfg.Resolver = n.resolver
 
-	content, err := n.generateTemplate(&cfg, ingressCfg)
+	content, err := n.generateTemplate(cfg, ingressCfg)
 	if err != nil {
 		return err
 	}

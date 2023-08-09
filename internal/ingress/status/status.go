@@ -44,7 +44,7 @@ import (
 // which the status should check if an update is required.
 var UpdateInterval = 60
 
-// Syncer syncer
+// Syncer is an interface that implements syncer
 type Syncer interface {
 	Run(chan struct{})
 
@@ -56,7 +56,7 @@ type ingressLister interface {
 	ListIngresses() []*ingress.Ingress
 }
 
-// Config config
+// Config is a structure that implements Client interfaces
 type Config struct {
 	Client clientset.Interface
 

@@ -65,6 +65,9 @@ func TestParse(t *testing.T) {
 		if testCase.skipValidation {
 			parser.EnableAnnotationValidation = false
 		}
+		t.Cleanup(func() {
+			parser.EnableAnnotationValidation = true
+		})
 		result, err := ap.Parse(ing)
 		if (err != nil) != testCase.wantErr {
 			t.Errorf("ParseAliasAnnotation() annotation: %s, error = %v, wantErr %v", testCase.annotations, err, testCase.wantErr)
@@ -73,6 +76,4 @@ func TestParse(t *testing.T) {
 			t.Errorf("expected %v but returned %v, annotations: %s", testCase.expected, result, testCase.annotations)
 		}
 	}
-
-	parser.EnableAnnotationValidation = true
 }

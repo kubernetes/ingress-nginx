@@ -195,7 +195,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 
 		pcfg.ConfigurationChecksum = fmt.Sprintf("%v", hash)
 
-		err := n.OnUpdate(pcfg)
+		err := n.OnUpdate(*pcfg)
 		if err != nil {
 			n.metricCollector.IncReloadErrorCount()
 			n.metricCollector.ConfigSuccess(hash, false)
@@ -410,7 +410,7 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 		testedSize = 1
 	}
 
-	content, err := n.generateTemplate(&cfg, pcfg)
+	content, err := n.generateTemplate(cfg, *pcfg)
 	if err != nil {
 		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
 		return err
@@ -530,7 +530,7 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 			klog.V(3).Infof("Searching Endpoints with %v port number %d for Service %q", proto, targetPort, nsName)
 			for i := range svc.Spec.Ports {
 				sp := svc.Spec.Ports[i]
-				//nolint:gosec // Ingore G109 error
+				//nolint:gosec // Ignore G109 error
 				if sp.Port == int32(targetPort) {
 					if sp.Protocol == proto {
 						endps = getEndpointsFromSlices(svc, &sp, proto, zone, n.store.GetServiceEndpointsSlices)
@@ -1750,7 +1750,7 @@ func externalNamePorts(name string, svc *apiv1.Service) *apiv1.ServicePort {
 	}
 
 	for _, svcPort := range svc.Spec.Ports {
-		//nolint:gosec // Ingore G109 error
+		//nolint:gosec // Ignore G109 error
 		if svcPort.Port != int32(port) {
 			continue
 		}
@@ -1770,7 +1770,7 @@ func externalNamePorts(name string, svc *apiv1.Service) *apiv1.ServicePort {
 	// ExternalName without port
 	return &apiv1.ServicePort{
 		Protocol: "TCP",
-		//nolint:gosec // Ingore G109 error
+		//nolint:gosec // Ignore G109 error
 		Port:       int32(port),
 		TargetPort: intstr.FromInt(port),
 	}
