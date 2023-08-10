@@ -50,19 +50,41 @@ func ValidValue(header string) bool {
 	return valueRegexp.MatchString(header)
 }
 
+const (
+	customHeadersConfigMapAnnotation = "custom-headers"
+)
+
+var customHeadersAnnotation = parser.Annotation{
+	Group: "backend",
+	Annotations: parser.AnnotationFields{
+		customHeadersConfigMapAnnotation: {
+			Validator: parser.ValidateRegex(*parser.BasicCharsRegex, true),
+			Scope:     parser.AnnotationScopeLocation,
+			Risk:      parser.AnnotationRiskMedium,
+			Documentation: `This annotation sets the name of a ConfigMap that specifies headers to pass to the client.
+			Only ConfigMaps on the same namespace are allowed`,
+		},
+	},
+}
+
 type customHeaders struct {
-	r resolver.Resolver
+	r                resolver.Resolver
+	annotationConfig parser.Annotation
 }
 
 // NewParser creates a new custom response headers annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return customHeaders{r}
+	return customHeaders{r: r, annotationConfig: customHeadersAnnotation}
+}
+
+func (a customHeaders) GetDocumentation() parser.AnnotationFields {
+	return a.annotationConfig.Annotations
 }
 
 // Parse parses the annotations contained in the ingress to use
 // custom response headers
 func (a customHeaders) Parse(ing *networking.Ingress) (interface{}, error) {
-	clientHeadersConfigMapName, err := parser.GetStringAnnotation("custom-headers", ing)
+	clientHeadersConfigMapName, err := parser.GetStringAnnotation(customHeadersConfigMapAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		klog.V(3).InfoS("client-headers annotation is undefined and will not be set")
 	}
@@ -94,4 +116,9 @@ func (a customHeaders) Parse(ing *networking.Ingress) (interface{}, error) {
 	return &Config{
 		Headers: headers,
 	}, nil
+}
+
+func (a customHeaders) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+	return parser.CheckAnnotationRisk(anns, maxrisk, customHeadersAnnotation.Annotations)
 }
