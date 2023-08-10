@@ -135,7 +135,7 @@ func getHostIP() net.IP {
 	defer conn.Close()
 
 	localAddr, ok := conn.LocalAddr().(*net.UDPAddr)
-	assert.False(ginkgo.GinkgoT(), ok, "unexpected type: %T", conn.LocalAddr())
+	assert.True(ginkgo.GinkgoT(), ok, "unexpected type: %T", conn.LocalAddr())
 
 	return localAddr.IP
 }
