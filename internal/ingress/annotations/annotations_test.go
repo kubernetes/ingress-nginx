@@ -345,7 +345,11 @@ func TestCustomResponseHeaders(t *testing.T) {
 
 	for _, foo := range fooAnns {
 		ing.SetAnnotations(foo.annotations)
-		r := ec.Extract(ing).CustomHeaders.Headers
+		rann, err := ec.Extract(ing)
+		if err != nil {
+			t.Errorf("error should be null: %v", err)
+		}
+		r := rann.CustomHeaders.Headers
 
 		// Check that expected headers were created
 		for i := range foo.headers {
