@@ -52,7 +52,10 @@ func IsIPv6Enabled() bool {
 	}
 
 	for _, addr := range addrs {
-		ip, _, _ := _net.ParseCIDR(addr.String())
+		ip, _, err := _net.ParseCIDR(addr.String())
+		if err != nil {
+			return false
+		}
 		if IsIPV6(ip) {
 			return true
 		}

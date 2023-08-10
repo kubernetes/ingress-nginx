@@ -522,7 +522,10 @@ func New(
 
 	ingressClassEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			ingressclass := obj.(*networkingv1.IngressClass)
+			ingressclass, ok := obj.(*networkingv1.IngressClass)
+			if !ok {
+				klog.Errorf("unexpected type: %T", obj)
+			}
 			foundClassByName := false
 			if icConfig.IngressClassByName && ingressclass.Name == icConfig.AnnotationValue {
 				klog.InfoS("adding ingressclass as ingress-class-by-name is configured", "ingressclass", klog.KObj(ingressclass))
@@ -544,7 +547,10 @@ func New(
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
-			ingressclass := obj.(*networkingv1.IngressClass)
+			ingressclass, ok := obj.(*networkingv1.IngressClass)
+			if !ok {
+				klog.Errorf("unexpected type: %T", obj)
+			}
 			if ingressclass.Spec.Controller != icConfig.Controller {
 				klog.InfoS("ignoring ingressclass as the spec.controller is not the same of this ingress", "ingressclass", klog.KObj(ingressclass))
 				return
@@ -560,8 +566,14 @@ func New(
 			}
 		},
 		UpdateFunc: func(old, cur interface{}) {
-			oic := old.(*networkingv1.IngressClass)
-			cic := cur.(*networkingv1.IngressClass)
+			oic, ok := old.(*networkingv1.IngressClass)
+			if !ok {
+				klog.Errorf("unexpected type: %T", old)
+			}
+			cic, ok := cur.(*networkingv1.IngressClass)
+			if !ok {
+				klog.Errorf("unexpected type: %T", cur)
+			}
 			if cic.Spec.Controller != icConfig.Controller {
 				klog.InfoS("ignoring ingressclass as the spec.controller is not the same of this ingress", "ingressclass", klog.KObj(cic))
 				return
@@ -584,7 +596,10 @@ func New(
 
 	secrEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			sec := obj.(*corev1.Secret)
+			sec, ok := obj.(*corev1.Secret)
+			if !ok {
+				klog.Errorf("unexpected type: %T", obj)
+			}
 			key := k8s.MetaNamespaceKey(sec)
 
 			if store.defaultSSLCertificate == key {
@@ -611,7 +626,10 @@ func New(
 		},
 		UpdateFunc: func(old, cur interface{}) {
 			if !reflect.DeepEqual(old, cur) {
-				sec := cur.(*corev1.Secret)
+				sec, ok := cur.(*corev1.Secret)
+				if !ok {
+					klog.Errorf("unexpected type: %T", cur)
+				}
 				key := k8s.MetaNamespaceKey(sec)
 
 				if !watchedNamespace(sec.Namespace) {
@@ -698,8 +716,14 @@ func New(
 			}
 		},
 		UpdateFunc: func(old, cur interface{}) {
-			oeps := old.(*discoveryv1.EndpointSlice)
-			ceps := cur.(*discoveryv1.EndpointSlice)
+			oeps, ok := old.(*discoveryv1.EndpointSlice)
+			if !ok {
+				klog.Errorf("unexpected type: %T", old)
+			}
+			ceps, ok := cur.(*discoveryv1.EndpointSlice)
+			if !ok {
+				klog.Errorf("unexpected type: %T", cur)
+			}
 			if !reflect.DeepEqual(ceps.Endpoints, oeps.Endpoints) {
 				updateCh.In() <- Event{
 					Type: UpdateEvent,
@@ -753,7 +777,10 @@ func New(
 
 	cmEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			cfgMap := obj.(*corev1.ConfigMap)
+			cfgMap, ok := obj.(*corev1.ConfigMap)
+			if !ok {
+				klog.Errorf("unexpected type: %T", obj)
+			}
 			key := k8s.MetaNamespaceKey(cfgMap)
 			handleCfgMapEvent(key, cfgMap, "CREATE")
 		},
@@ -762,7 +789,10 @@ func New(
 				return
 			}
 
-			cfgMap := cur.(*corev1.ConfigMap)
+			cfgMap, ok := cur.(*corev1.ConfigMap)
+			if !ok {
+				klog.Errorf("unexpected type: %T", cur)
+			}
 			key := k8s.MetaNamespaceKey(cfgMap)
 			handleCfgMapEvent(key, cfgMap, "UPDATE")
 		},
@@ -770,7 +800,10 @@ func New(
 
 	serviceHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			svc := obj.(*corev1.Service)
+			svc, ok := obj.(*corev1.Service)
+			if !ok {
+				klog.Errorf("unexpected type: %T", obj)
+			}
 			if svc.Spec.Type == corev1.ServiceTypeExternalName {
 				updateCh.In() <- Event{
 					Type: CreateEvent,
@@ -779,7 +812,10 @@ func New(
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
-			svc := obj.(*corev1.Service)
+			svc, ok := obj.(*corev1.Service)
+			if !ok {
+				klog.Errorf("unexpected type: %T", obj)
+			}
 			if svc.Spec.Type == corev1.ServiceTypeExternalName {
 				updateCh.In() <- Event{
 					Type: DeleteEvent,
@@ -788,8 +824,14 @@ func New(
 			}
 		},
 		UpdateFunc: func(old, cur interface{}) {
-			oldSvc := old.(*corev1.Service)
-			curSvc := cur.(*corev1.Service)
+			oldSvc, ok := old.(*corev1.Service)
+			if !ok {
+				klog.Errorf("unexpected type: %T", old)
+			}
+			curSvc, ok := cur.(*corev1.Service)
+			if !ok {
+				klog.Errorf("unexpected type: %T", cur)
+			}
 
 			if reflect.DeepEqual(oldSvc, curSvc) {
 				return
@@ -824,7 +866,10 @@ func New(
 	}
 
 	// do not wait for informers to read the configmap configuration
-	ns, name, _ := k8s.ParseNameNS(configmap)
+	ns, name, err := k8s.ParseNameNS(configmap)
+	if err != nil {
+		klog.Errorf("unexpected error parsing name and ns: %v", err)
+	}
 	cm, err := client.CoreV1().ConfigMaps(ns).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		klog.Warningf("Unexpected error reading configuration configmap: %v", err)
@@ -1058,7 +1103,10 @@ func (s *k8sStore) ListIngresses() []*ingress.Ingress {
 	// filter ingress rules
 	ingresses := make([]*ingress.Ingress, 0)
 	for _, item := range s.listers.IngressWithAnnotation.List() {
-		ing := item.(*ingress.Ingress)
+		ing, ok := item.(*ingress.Ingress)
+		if !ok {
+			klog.Errorf("unexpected type: %T", item)
+		}
 		ingresses = append(ingresses, ing)
 	}
 

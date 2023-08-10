@@ -263,7 +263,10 @@ func ReadConfig(src map[string]string) config.Configuration {
 	if val, ok := conf[globalAuthSignin]; ok {
 		delete(conf, globalAuthSignin)
 
-		signinURL, _ := parser.StringToURL(val)
+		signinURL, err := parser.StringToURL(val)
+		if err != nil {
+			klog.Errorf("string to URL conversion failed: %v", err)
+		}
 		if signinURL == nil {
 			klog.Warningf("Global auth location denied - %v.", "global-auth-signin setting is undefined and will not be set")
 		} else {
@@ -276,7 +279,10 @@ func ReadConfig(src map[string]string) config.Configuration {
 		delete(conf, globalAuthSigninRedirectParam)
 
 		redirectParam := strings.TrimSpace(val)
-		dummySigninURL, _ := parser.StringToURL(fmt.Sprintf("%s?%s=dummy", to.GlobalExternalAuth.SigninURL, redirectParam))
+		dummySigninURL, err := parser.StringToURL(fmt.Sprintf("%s?%s=dummy", to.GlobalExternalAuth.SigninURL, redirectParam))
+		if err != nil {
+			klog.Errorf("string to URL conversion failed: %v", err)
+		}
 		if dummySigninURL == nil {
 			klog.Warningf("Global auth redirect parameter denied - %v.", "global-auth-signin-redirect-param setting is invalid and will not be set")
 		} else {
@@ -477,7 +483,10 @@ func dictStrToKb(sizeStr string) int {
 	if sizeMatch == nil {
 		return -1
 	}
-	size, _ := strconv.Atoi(sizeMatch[1]) // validated already with regex
+	size, err := strconv.Atoi(sizeMatch[1]) // validated already with regex
+	if err != nil {
+		klog.Errorf("unexpected error converting size string %s to int: %v", sizeStr, err)
+	}
 	if sizeMatch[2] == "" || strings.EqualFold(sizeMatch[2], "m") {
 		size *= 1024
 	}

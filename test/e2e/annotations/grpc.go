@@ -103,7 +103,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 				return strings.Contains(server, "grpc_pass grpc://upstream_balancer;")
 			})
 
-		conn, _ := grpc.Dial(f.GetNginxIP()+":443",
+		conn, err := grpc.Dial(f.GetNginxIP()+":443",
 			grpc.WithTransportCredentials(
 				credentials.NewTLS(&tls.Config{
 					ServerName:         echoHost,
@@ -111,6 +111,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 				}),
 			),
 		)
+		assert.Nil(ginkgo.GinkgoT(), err, "error creating a connection")
 		defer conn.Close()
 
 		client := pb.NewGRPCBinClient(conn)
@@ -163,7 +164,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 				return strings.Contains(server, "grpc_pass grpc://upstream_balancer;")
 			})
 
-		conn, _ := grpc.Dial(f.GetNginxIP()+":443",
+		conn, err := grpc.Dial(f.GetNginxIP()+":443",
 			grpc.WithTransportCredentials(
 				credentials.NewTLS(&tls.Config{
 					ServerName:         echoHost,
@@ -171,6 +172,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 				}),
 			),
 		)
+		assert.Nil(ginkgo.GinkgoT(), err)
 		defer conn.Close()
 
 		client := pb.NewGRPCBinClient(conn)
@@ -227,7 +229,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 				return strings.Contains(server, "grpc_pass grpcs://upstream_balancer;")
 			})
 
-		conn, _ := grpc.Dial(f.GetNginxIP()+":443",
+		conn, err := grpc.Dial(f.GetNginxIP()+":443",
 			grpc.WithTransportCredentials(
 				credentials.NewTLS(&tls.Config{
 					ServerName:         echoHost,
@@ -235,6 +237,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 				}),
 			),
 		)
+		assert.Nil(ginkgo.GinkgoT(), err)
 		defer conn.Close()
 
 		client := pb.NewGRPCBinClient(conn)

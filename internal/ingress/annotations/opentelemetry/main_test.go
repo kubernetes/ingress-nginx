@@ -78,7 +78,10 @@ func TestIngressAnnotationOpentelemetrySetTrue(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix(enableOpenTelemetryAnnotation)] = enableAnnotation
 	ing.SetAnnotations(data)
 
-	val, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	val, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	openTelemetry, ok := val.(*Config)
 	if !ok {
 		t.Errorf("expected a Config type")
@@ -105,7 +108,10 @@ func TestIngressAnnotationOpentelemetrySetFalse(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix(enableOpenTelemetryAnnotation)] = "false"
 	ing.SetAnnotations(data)
 
-	val, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	val, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	openTelemetry, ok := val.(*Config)
 	if !ok {
 		t.Errorf("expected a Config type")
@@ -182,7 +188,10 @@ func TestIngressAnnotationOpentelemetryUnset(t *testing.T) {
 	data := map[string]string{}
 	ing.SetAnnotations(data)
 
-	val, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	val, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	_, ok := val.(*Config)
 	if !ok {
 		t.Errorf("expected a Config type")

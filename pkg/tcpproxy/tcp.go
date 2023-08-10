@@ -91,8 +91,14 @@ func (p *TCPProxy) Handle(conn net.Conn) {
 
 	if proxy.ProxyProtocol {
 		// write out the Proxy Protocol header
-		localAddr := conn.LocalAddr().(*net.TCPAddr)
-		remoteAddr := conn.RemoteAddr().(*net.TCPAddr)
+		localAddr, ok := conn.LocalAddr().(*net.TCPAddr)
+		if !ok {
+			klog.Errorf("unexpected type: %T", conn.LocalAddr())
+		}
+		remoteAddr, ok := conn.RemoteAddr().(*net.TCPAddr)
+		if !ok {
+			klog.Errorf("unexpected type: %T", conn.RemoteAddr())
+		}
 		protocol := "UNKNOWN"
 		if remoteAddr.IP.To4() != nil {
 			protocol = "TCP4"

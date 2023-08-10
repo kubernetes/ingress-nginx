@@ -152,7 +152,11 @@ func waitForPodsReady(kubeClientSet kubernetes.Interface, timeout time.Duration,
 
 		r := 0
 		for i := range pl.Items {
-			if isRunning, _ := podRunningReady(&pl.Items[i]); isRunning {
+			isRunning, err := podRunningReady(&pl.Items[i])
+			if err != nil {
+				return false, err
+			}
+			if isRunning {
 				r++
 			}
 		}

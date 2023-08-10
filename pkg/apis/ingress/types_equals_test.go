@@ -25,19 +25,29 @@ import (
 )
 
 func TestEqualConfiguration(t *testing.T) {
-	ap, _ := filepath.Abs("../../../test/manifests/configuration-a.json")
+	ap, err := filepath.Abs("../../../test/manifests/configuration-a.json")
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	a, err := readJSON(ap)
 	if err != nil {
 		t.Errorf("unexpected error reading JSON file: %v", err)
 	}
 
-	bp, _ := filepath.Abs("../../../test/manifests/configuration-b.json")
+	bp, err := filepath.Abs("../../../test/manifests/configuration-b.json")
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
 	b, err := readJSON(bp)
 	if err != nil {
 		t.Errorf("unexpected error reading JSON file: %v", err)
 	}
 
-	cp, _ := filepath.Abs("../../../test/manifests/configuration-c.json")
+	cp, err := filepath.Abs("../../../test/manifests/configuration-c.json")
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	c, err := readJSON(cp)
 	if err != nil {
 		t.Errorf("unexpected error reading JSON file: %v", err)

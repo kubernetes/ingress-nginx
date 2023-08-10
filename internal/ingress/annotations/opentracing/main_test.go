@@ -78,7 +78,10 @@ func TestIngressAnnotationOpentracingSetTrue(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix(enableOpentracingAnnotation)] = enableAnnotation
 	ing.SetAnnotations(data)
 
-	val, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	val, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error %v", err)
+	}
 	openTracing, ok := val.(*Config)
 	if !ok {
 		t.Errorf("expected a Config type")
@@ -97,7 +100,10 @@ func TestIngressAnnotationOpentracingSetFalse(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix(enableOpentracingAnnotation)] = "false"
 	ing.SetAnnotations(data)
 
-	val, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	val, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error %v", err)
+	}
 	openTracing, ok := val.(*Config)
 	if !ok {
 		t.Errorf("expected a Config type")
@@ -116,7 +122,10 @@ func TestIngressAnnotationOpentracingTrustSetTrue(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix(opentracingTrustSpanAnnotation)] = enableAnnotation
 	ing.SetAnnotations(data)
 
-	val, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	val, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error %v", err)
+	}
 	openTracing, ok := val.(*Config)
 	if !ok {
 		t.Errorf("expected a Config type")
@@ -138,7 +147,11 @@ func TestIngressAnnotationOpentracingUnset(t *testing.T) {
 	data := map[string]string{}
 	ing.SetAnnotations(data)
 
-	val, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	val, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
 	_, ok := val.(*Config)
 	if !ok {
 		t.Errorf("expected a Config type")

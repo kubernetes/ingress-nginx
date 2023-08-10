@@ -309,7 +309,10 @@ func TestStatusActions(t *testing.T) {
 		t.Fatalf("expected a valid Sync")
 	}
 
-	fk := fkSync.(*statusSync)
+	fk, ok := fkSync.(*statusSync)
+	if !ok {
+		t.Errorf("unexpected type: %T", fkSync)
+	}
 
 	// start it and wait for the election and syn actions
 	stopCh := make(chan struct{})
@@ -586,7 +589,11 @@ func TestRunningAddressesWithPods(t *testing.T) {
 	fk := buildStatusSync()
 	fk.PublishService = ""
 
-	r, _ := fk.runningAddresses()
+	r, err := fk.runningAddresses()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
 	if r == nil {
 		t.Fatalf("returned nil but expected valid []networking.IngressLoadBalancerIngress")
 	}
@@ -604,7 +611,10 @@ func TestRunningAddressesWithPublishStatusAddress(t *testing.T) {
 	fk := buildStatusSync()
 	fk.PublishStatusAddress = localhost
 
-	ra, _ := fk.runningAddresses()
+	ra, err := fk.runningAddresses()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	if ra == nil {
 		t.Fatalf("returned nil but expected valid []networking.IngressLoadBalancerIngress")
 	}
@@ -622,7 +632,10 @@ func TestRunningAddressesWithPublishStatusAddresses(t *testing.T) {
 	fk := buildStatusSync()
 	fk.PublishStatusAddress = "127.0.0.1,1.1.1.1"
 
-	ra, _ := fk.runningAddresses()
+	ra, err := fk.runningAddresses()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	if ra == nil {
 		t.Fatalf("returned nil but expected valid []networking.IngressLoadBalancerIngress")
 	}
@@ -644,7 +657,10 @@ func TestRunningAddressesWithPublishStatusAddressesAndSpaces(t *testing.T) {
 	fk := buildStatusSync()
 	fk.PublishStatusAddress = "127.0.0.1,  1.1.1.1"
 
-	ra, _ := fk.runningAddresses()
+	ra, err := fk.runningAddresses()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	if ra == nil {
 		t.Fatalf("returned nil but expected valid []networking.IngressLoadBalancerIngresst")
 	}

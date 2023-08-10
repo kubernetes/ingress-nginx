@@ -154,10 +154,16 @@ func backendsList() {
 		fmt.Println(unmarshalErr)
 		return
 	}
-	backends := f.([]interface{})
+	backends, ok := f.([]interface{})
+	if !ok {
+		fmt.Printf("unexpected type: %T", f)
+	}
 
 	for _, backendi := range backends {
-		backend := backendi.(map[string]interface{})
+		backend, ok := backendi.(map[string]interface{})
+		if !ok {
+			fmt.Printf("unexpected type: %T", backendi)
+		}
 		fmt.Println(backend["name"].(string))
 	}
 }
@@ -179,10 +185,16 @@ func backendsGet(name string) {
 		fmt.Println(unmarshalErr)
 		return
 	}
-	backends := f.([]interface{})
+	backends, ok := f.([]interface{})
+	if !ok {
+		fmt.Printf("unexpected type: %T", f)
+	}
 
 	for _, backendi := range backends {
-		backend := backendi.(map[string]interface{})
+		backend, ok := backendi.(map[string]interface{})
+		if !ok {
+			fmt.Printf("unexpected type: %T", backendi)
+		}
 		if backend["name"].(string) == name {
 			printed, err := json.MarshalIndent(backend, "", "  ")
 			if err != nil {

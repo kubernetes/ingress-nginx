@@ -76,9 +76,12 @@ func TestControllerCounters(t *testing.T) {
 		{
 			name: "should set SSL certificates metrics",
 			test: func(cm *Controller) {
-				t1, _ := time.Parse(
+				t1, err := time.Parse(
 					time.RFC3339,
 					"2012-11-01T22:08:41+00:00")
+				if err != nil {
+					t.Errorf("unexpected error: %v", err)
+				}
 
 				servers := []*ingress.Server{
 					{
@@ -228,9 +231,12 @@ func TestRemoveMetrics(t *testing.T) {
 		t.Errorf("registering collector failed: %s", err)
 	}
 
-	t1, _ := time.Parse(
+	t1, err := time.Parse(
 		time.RFC3339,
 		"2012-11-01T22:08:41+00:00")
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
 
 	servers := []*ingress.Server{
 		{
@@ -275,10 +281,12 @@ func TestRemoveAllSSLMetrics(t *testing.T) {
 		t.Errorf("registering collector failed: %s", err)
 	}
 
-	t1, _ := time.Parse(
+	t1, err := time.Parse(
 		time.RFC3339,
 		"2012-11-01T22:08:41+00:00")
-
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	servers := []*ingress.Server{
 		{
 			Hostname: "demo",

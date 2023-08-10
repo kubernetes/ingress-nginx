@@ -219,7 +219,8 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 		assert.Nil(ginkgo.GinkgoT(), err, "loading GMT location")
 		assert.NotNil(ginkgo.GinkgoT(), local, "expected a location but none returned")
 
-		duration, _ := time.ParseDuration("48h")
+		duration, err := time.ParseDuration("48h")
+		assert.Nil(ginkgo.GinkgoT(), err, "parsing duration")
 		expected := time.Now().In(local).Add(duration).Format("Mon, 02-Jan-06 15:04")
 
 		f.HTTPTestClient().
@@ -478,12 +479,13 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 					strings.Contains(server, "listen 443")
 			})
 
-		f.HTTPTestClientWithTLSConfig(&tls.Config{ServerName: host, InsecureSkipVerify: true}). //nolint:gosec // Ignore the gosec error in testing
-													GET("/").
-													WithURL(f.GetURL(framework.HTTPS)).
-													WithHeader("Host", host).
-													Expect().
-													Status(http.StatusOK).
-													Header("Set-Cookie").Contains("; Secure")
+		//nolint:gosec // Ignore the gosec error in testing
+		f.HTTPTestClientWithTLSConfig(&tls.Config{ServerName: host, InsecureSkipVerify: true}).
+			GET("/").
+			WithURL(f.GetURL(framework.HTTPS)).
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Header("Set-Cookie").Contains("; Secure")
 	})
 })

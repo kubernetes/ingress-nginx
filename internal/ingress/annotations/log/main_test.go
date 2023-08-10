@@ -76,7 +76,10 @@ func TestIngressAccessLogConfig(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix(enableAccessLogAnnotation)] = "false"
 	ing.SetAnnotations(data)
 
-	log, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	log, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	nginxLogs, ok := log.(*Config)
 	if !ok {
 		t.Errorf("expected a Config type")
@@ -94,7 +97,10 @@ func TestIngressRewriteLogConfig(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix(enableRewriteLogAnnotation)] = "true"
 	ing.SetAnnotations(data)
 
-	log, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	log, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error parsing annotations %v", err)
+	}
 	nginxLogs, ok := log.(*Config)
 	if !ok {
 		t.Errorf("expected a Config type")
@@ -112,7 +118,10 @@ func TestInvalidBoolConfig(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix(enableRewriteLogAnnotation)] = "blo"
 	ing.SetAnnotations(data)
 
-	log, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	log, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	nginxLogs, ok := log.(*Config)
 	if !ok {
 		t.Errorf("expected a Config type")

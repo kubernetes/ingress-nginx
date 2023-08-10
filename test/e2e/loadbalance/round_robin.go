@@ -45,7 +45,9 @@ var _ = framework.DescribeSetting("[Load Balancer] round-robin", func() {
 				return strings.Contains(server, "server_name load-balance.com")
 			})
 
-		re, _ := regexp.Compile(fmt.Sprintf(`%v.*`, framework.EchoService))
+		re, err := regexp.Compile(fmt.Sprintf(`%v.*`, framework.EchoService))
+		assert.Nil(ginkgo.GinkgoT(), err, "error compiling regex")
+
 		replicaRequestCount := map[string]int{}
 
 		for i := 0; i < 600; i++ {

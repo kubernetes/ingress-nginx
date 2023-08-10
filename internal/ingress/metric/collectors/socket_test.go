@@ -58,7 +58,10 @@ func TestNewUDPLogListener(t *testing.T) {
 		}
 	}()
 
-	conn, _ := net.Dial("unix", tmpFile)
+	conn, err := net.Dial("unix", tmpFile)
+	if err != nil {
+		t.Errorf("unexpected error connecting to unix socket: %v", err)
+	}
 	if _, err := conn.Write([]byte("message")); err != nil {
 		t.Errorf("unexpected error writing to unix socket: %v", err)
 	}

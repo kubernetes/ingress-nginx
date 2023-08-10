@@ -701,7 +701,10 @@ func TestChangeHostPort(t *testing.T) {
 }
 
 func TestTemplateWithData(t *testing.T) {
-	pwd, _ := os.Getwd()
+	pwd, err := os.Getwd()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	f, err := os.Open(path.Join(pwd, "../../../../test/data/config.json"))
 	if err != nil {
 		t.Errorf("unexpected error reading json file: %v", err)
@@ -745,7 +748,10 @@ func TestTemplateWithData(t *testing.T) {
 }
 
 func BenchmarkTemplateWithData(b *testing.B) {
-	pwd, _ := os.Getwd()
+	pwd, err := os.Getwd()
+	if err != nil {
+		b.Errorf("unexpected error: %v", err)
+	}
 	f, err := os.Open(path.Join(pwd, "../../../../test/data/config.json"))
 	if err != nil {
 		b.Errorf("unexpected error reading json file: %v", err)

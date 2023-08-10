@@ -978,7 +978,11 @@ func buildNextUpstream(i, r interface{}) string {
 		return ""
 	}
 
-	retryNonIdempotent := r.(bool)
+	retryNonIdempotent, ok := r.(bool)
+	if !ok {
+		klog.Errorf("expected a 'bool' type but %T was returned", i)
+		return ""
+	}
 
 	parts := strings.Split(nextUpstream, " ")
 
@@ -1162,7 +1166,11 @@ func buildForwardedFor(input interface{}) string {
 }
 
 func buildAuthSignURL(authSignURL, authRedirectParam string) string {
-	u, _ := url.Parse(authSignURL)
+	u, err := url.Parse(authSignURL)
+	if err != nil {
+		klog.Errorf("error parsing authSignURL: %v", err)
+		return ""
+	}
 	q := u.Query()
 	if authRedirectParam == "" {
 		authRedirectParam = defaultGlobalAuthRedirectParam

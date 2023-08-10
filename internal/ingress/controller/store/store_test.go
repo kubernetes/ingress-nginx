@@ -91,7 +91,10 @@ func TestStore(t *testing.T) {
 		t.Fatalf("error: %v", err)
 	}
 
-	emptySelector, _ := labels.Parse("")
+	emptySelector, err := labels.Parse("")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	defer te.Stop() //nolint:errcheck // Ignore the error
 
@@ -177,7 +180,11 @@ func TestStore(t *testing.T) {
 					return
 				}
 
-				e := evt.(Event)
+				e, ok := evt.(Event)
+				if !ok {
+					return
+				}
+
 				if e.Obj == nil {
 					continue
 				}
@@ -282,7 +289,10 @@ func TestStore(t *testing.T) {
 					return
 				}
 
-				e := evt.(Event)
+				e, ok := evt.(Event)
+				if !ok {
+					return
+				}
 				if e.Obj == nil {
 					continue
 				}
@@ -393,7 +403,10 @@ func TestStore(t *testing.T) {
 					return
 				}
 
-				e := evt.(Event)
+				e, ok := evt.(Event)
+				if !ok {
+					return
+				}
 				if e.Obj == nil {
 					continue
 				}
@@ -524,7 +537,10 @@ func TestStore(t *testing.T) {
 					return
 				}
 
-				e := evt.(Event)
+				e, ok := evt.(Event)
+				if !ok {
+					return
+				}
 				if e.Obj == nil {
 					continue
 				}
@@ -631,7 +647,10 @@ func TestStore(t *testing.T) {
 					return
 				}
 
-				e := evt.(Event)
+				e, ok := evt.(Event)
+				if !ok {
+					return
+				}
 				if e.Obj == nil {
 					continue
 				}
@@ -726,7 +745,10 @@ func TestStore(t *testing.T) {
 					return
 				}
 
-				e := evt.(Event)
+				e, ok := evt.(Event)
+				if !ok {
+					return
+				}
 				if e.Obj == nil {
 					continue
 				}
@@ -817,7 +839,10 @@ func TestStore(t *testing.T) {
 					return
 				}
 
-				e := evt.(Event)
+				e, ok := evt.(Event)
+				if !ok {
+					return
+				}
 				if e.Obj == nil {
 					continue
 				}
@@ -909,7 +934,10 @@ func TestStore(t *testing.T) {
 					return
 				}
 
-				e := evt.(Event)
+				e, ok := evt.(Event)
+				if !ok {
+					return
+				}
 				if e.Obj == nil {
 					continue
 				}
@@ -1032,7 +1060,10 @@ func TestStore(t *testing.T) {
 					return
 				}
 
-				e := evt.(Event)
+				e, ok := evt.(Event)
+				if !ok {
+					return
+				}
 				if e.Obj == nil {
 					continue
 				}
@@ -1159,7 +1190,10 @@ func TestStore(t *testing.T) {
 					return
 				}
 
-				e := evt.(Event)
+				e, ok := evt.(Event)
+				if !ok {
+					return
+				}
 				if e.Obj == nil {
 					continue
 				}
@@ -1174,7 +1208,10 @@ func TestStore(t *testing.T) {
 			}
 		}(updateCh)
 
-		namesapceSelector, _ := labels.Parse("foo=bar")
+		namesapceSelector, err := labels.Parse("foo=bar")
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
 		storer := New(
 			ns,
 			namesapceSelector,

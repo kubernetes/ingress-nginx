@@ -687,7 +687,10 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	}
 
 	if klog.V(2).Enabled() {
-		src, _ := os.ReadFile(cfgPath)
+		src, err := os.ReadFile(cfgPath)
+		if err != nil {
+			return err
+		}
 		if !bytes.Equal(src, content) {
 			tmpfile, err := os.CreateTemp("", "new-nginx-cfg")
 			if err != nil {
@@ -702,7 +705,10 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 			diffOutput, err := exec.Command("diff", "-I", "'# Configuration.*'", "-u", cfgPath, tmpfile.Name()).CombinedOutput()
 			if err != nil {
 				if exitError, ok := err.(*exec.ExitError); ok {
-					ws := exitError.Sys().(syscall.WaitStatus)
+					ws, ok := exitError.Sys().(syscall.WaitStatus)
+					if !ok {
+						klog.Errorf("unexpected type: %T", exitError.Sys())
+					}
 					if ws.ExitStatus() == 2 {
 						klog.Warningf("Failed to executing diff command: %v", err)
 					}
@@ -1129,7 +1135,10 @@ func cleanTempNginxCfg() error {
 			return filepath.SkipDir
 		}
 
-		dur, _ := time.ParseDuration("-5m")
+		dur, err := time.ParseDuration("-5m")
+		if err != nil {
+			return err
+		}
 		fiveMinutesAgo := time.Now().Add(dur)
 		if strings.HasPrefix(info.Name(), tempNginxPattern) && info.ModTime().Before(fiveMinutesAgo) {
 			files = append(files, path)

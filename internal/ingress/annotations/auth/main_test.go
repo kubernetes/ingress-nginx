@@ -310,7 +310,10 @@ func dummySecretContent(t *testing.T) (fileName, dir string, s *api.Secret) {
 		t.Error(err)
 	}
 	defer tmpfile.Close()
-	s, _ = mockSecret{}.GetSecret(defaultDemoSecret)
+	s, err = mockSecret{}.GetSecret(defaultDemoSecret)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	return tmpfile.Name(), dir, s
 }
 

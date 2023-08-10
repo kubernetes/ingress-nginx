@@ -163,7 +163,10 @@ func Version() string {
 
 // IsRunning returns true if a process with the name 'nginx' is found
 func IsRunning() bool {
-	processes, _ := ps.Processes()
+	processes, err := ps.Processes()
+	if err != nil {
+		klog.ErrorS(err, "unexpected error obtaining process list")
+	}
 	for _, p := range processes {
 		if p.Executable() == "nginx" {
 			return true

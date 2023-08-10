@@ -49,7 +49,10 @@ func TestProcessCollector(t *testing.T) {
 			done := make(chan struct{})
 			go func() {
 				cmd.Wait() //nolint:errcheck // Ignore the error
-				status := cmd.ProcessState.Sys().(syscall.WaitStatus)
+				status, ok := cmd.ProcessState.Sys().(syscall.WaitStatus)
+				if !ok {
+					t.Errorf("unexpected type: %T", cmd.ProcessState.Sys())
+				}
 				if status.Signaled() {
 					t.Logf("Signal: %v", status.Signal())
 				} else {

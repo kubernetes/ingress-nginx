@@ -148,7 +148,10 @@ const IngressNGINXController = "k8s.io/ingress-nginx"
 // NetworkingIngressAvailable checks if the package "k8s.io/api/networking/v1"
 // is available or not and if Ingress V1 is supported (k8s >= v1.19.0)
 func NetworkingIngressAvailable(client clientset.Interface) bool {
-	version119, _ := version.ParseGeneric("v1.19.0")
+	version119, err := version.ParseGeneric("v1.19.0")
+	if err != nil {
+		return false
+	}
 
 	serverVersion, err := client.Discovery().ServerVersion()
 	if err != nil {

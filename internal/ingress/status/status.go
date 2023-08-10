@@ -341,7 +341,10 @@ func ingressSliceEqual(lhs, rhs []v1.IngressLoadBalancerIngress) bool {
 }
 
 func statusAddressFromService(service string, kubeClient clientset.Interface) ([]v1.IngressLoadBalancerIngress, error) {
-	ns, name, _ := k8s.ParseNameNS(service)
+	ns, name, err := k8s.ParseNameNS(service)
+	if err != nil {
+		return nil, err
+	}
 	svc, err := kubeClient.CoreV1().Services(ns).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err

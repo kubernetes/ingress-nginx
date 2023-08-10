@@ -35,7 +35,10 @@ type IngressLint struct {
 
 // Check returns true if the lint detects an issue
 func (lint IngressLint) Check(obj kmeta.Object) bool {
-	ing := obj.(*networking.Ingress)
+	ing, ok := obj.(*networking.Ingress)
+	if !ok {
+		util.PrintError(fmt.Errorf("unexpected type: %T", obj))
+	}
 	return lint.f(ing)
 }
 

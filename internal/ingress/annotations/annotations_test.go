@@ -64,7 +64,11 @@ func (m mockCfg) GetService(name string) (*apiv1.Service, error) {
 }
 
 func (m mockCfg) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error) {
-	if secret, _ := m.GetSecret(name); secret != nil {
+	secret, err := m.GetSecret(name)
+	if err != nil {
+		return nil, err
+	}
+	if secret != nil {
 		return &resolver.AuthSSLCert{
 			Secret:     name,
 			CAFileName: "/opt/ca.pem",

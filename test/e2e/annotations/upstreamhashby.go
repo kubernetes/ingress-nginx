@@ -55,7 +55,9 @@ func startIngress(f *framework.Framework, annotations map[string]string) map[str
 
 	assert.Nil(ginkgo.GinkgoT(), err)
 
-	re, _ := regexp.Compile(fmt.Sprintf(`Hostname: %v.*`, framework.EchoService))
+	re, err := regexp.Compile(fmt.Sprintf(`Hostname: %v.*`, framework.EchoService))
+	assert.Nil(ginkgo.GinkgoT(), err, "error compiling regex")
+
 	podMap := map[string]bool{}
 
 	for i := 0; i < 100; i++ {

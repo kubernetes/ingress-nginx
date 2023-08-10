@@ -35,7 +35,10 @@ type DeploymentLint struct {
 
 // Check returns true if the lint detects an issue
 func (lint DeploymentLint) Check(obj kmeta.Object) bool {
-	cmp := obj.(*v1.Deployment)
+	cmp, ok := obj.(*v1.Deployment)
+	if !ok {
+		util.PrintError(fmt.Errorf("unexpected type: %T", obj))
+	}
 	return lint.f(*cmp)
 }
 

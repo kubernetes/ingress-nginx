@@ -215,8 +215,10 @@ func TestGetIntAnnotation(t *testing.T) {
 
 func TestStringToURL(t *testing.T) {
 	validURL := "http://bar.foo.com/external-auth"
-	validParsedURL, _ := url.Parse(validURL)
-
+	validParsedURL, err := url.Parse(validURL)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	tests := []struct {
 		title   string
 		url     string

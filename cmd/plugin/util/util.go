@@ -54,10 +54,18 @@ func ParseVersionString(v string) (major, minor, patch int, err error) {
 		return 0, 0, 0, fmt.Errorf("could not parse %v as a version string (like 0.20.3)", v)
 	}
 
-	major, _ = strconv.Atoi(parts[1])
-	minor, _ = strconv.Atoi(parts[2])
-	patch, _ = strconv.Atoi(parts[3])
-
+	major, err = strconv.Atoi(parts[1])
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	minor, err = strconv.Atoi(parts[2])
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	patch, err = strconv.Atoi(parts[3])
+	if err != nil {
+		return 0, 0, 0, err
+	}
 	return major, minor, patch, nil
 }
 

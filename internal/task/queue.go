@@ -115,7 +115,10 @@ func (t *Queue) worker() {
 		}
 		ts := time.Now().UnixNano()
 
-		item := key.(Element)
+		item, ok := key.(Element)
+		if !ok {
+			klog.ErrorS(nil, "invalid item type", "key", key)
+		}
 		if item.Timestamp != 0 && t.lastSync > item.Timestamp {
 			klog.V(3).InfoS("skipping sync", "key", item.Key, "last", t.lastSync, "now", item.Timestamp)
 			t.queue.Forget(key)

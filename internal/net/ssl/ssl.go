@@ -503,9 +503,14 @@ func NewTLSListener(certificate, key string) *TLSListener {
 
 	l.load()
 
-	_, _ = file.NewFileWatcher(certificate, l.load)
-	_, _ = file.NewFileWatcher(key, l.load)
-
+	_, err := file.NewFileWatcher(certificate, l.load)
+	if err != nil {
+		klog.Errorf("unexpected error: %v", err)
+	}
+	_, err = file.NewFileWatcher(key, l.load)
+	if err != nil {
+		klog.Errorf("unexpected error: %v", err)
+	}
 	return &l
 }
 

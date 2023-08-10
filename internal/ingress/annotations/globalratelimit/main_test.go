@@ -192,7 +192,10 @@ func TestGlobalRateLimiting(t *testing.T) {
 			t.Errorf("expected error '%v' but got '%v'", testCase.expectedErr, actualErr)
 		}
 
-		actualConfig := i.(*Config)
+		actualConfig, ok := i.(*Config)
+		if !ok {
+			t.Errorf("expected Config type but got %T", i)
+		}
 		if !testCase.expectedConfig.Equal(actualConfig) {
 			expectedJSON, err := json.Marshal(testCase.expectedConfig)
 			if err != nil {

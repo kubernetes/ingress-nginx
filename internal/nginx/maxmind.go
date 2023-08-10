@@ -101,7 +101,7 @@ func DownloadGeoLite2DB(attempts int, period time.Duration) error {
 	var lastErr error
 	retries := 0
 
-	_ = wait.ExponentialBackoff(defaultRetry, func() (bool, error) {
+	lastErr = wait.ExponentialBackoff(defaultRetry, func() (bool, error) {
 		var dlError error
 		for _, dbName := range strings.Split(MaxmindEditionIDs, ",") {
 			dlError = downloadDatabase(dbName)
