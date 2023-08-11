@@ -35,7 +35,6 @@ import (
 	"text/template"
 	"time"
 
-	proxyproto "github.com/armon/go-proxyproto"
 	"github.com/eapache/channels"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -294,10 +293,6 @@ func (n *NGINXController) Start() {
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setpgid: true,
 		Pgid:    0,
-	}
-
-	if n.cfg.EnableSSLPassthrough {
-		n.setupSSLProxy()
 	}
 
 	klog.InfoS("Starting NGINX process")
@@ -759,53 +754,6 @@ func nextPowerOf2(v int) int {
 	v++
 
 	return v
-}
-
-func (n *NGINXController) setupSSLProxy() {
-	cfg := n.store.GetBackendConfiguration()
-	sslPort := n.cfg.ListenPorts.HTTPS
-	proxyPort := n.cfg.ListenPorts.SSLProxy
-
-	klog.InfoS("Starting TLS proxy for SSL Passthrough")
-	n.Proxy = &tcpproxy.TCPProxy{
-		Default: &tcpproxy.TCPServer{
-			Hostname:      "localhost",
-			IP:            "127.0.0.1",
-			Port:          proxyPort,
-			ProxyProtocol: true,
-		},
-	}
-
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%v", sslPort))
-	if err != nil {
-		klog.Fatalf("%v", err)
-	}
-
-	proxyList := &proxyproto.Listener{Listener: listener, ProxyHeaderTimeout: cfg.ProxyProtocolHeaderTimeout}
-
-	// accept TCP connections on the configured HTTPS port
-	go func() {
-		for {
-			var conn net.Conn
-			var err error
-
-			if n.store.GetBackendConfiguration().UseProxyProtocol {
-				// wrap the listener in order to decode Proxy
-				// Protocol before handling the connection
-				conn, err = proxyList.Accept()
-			} else {
-				conn, err = listener.Accept()
-			}
-
-			if err != nil {
-				klog.Warningf("Error accepting TCP connection: %v", err)
-				continue
-			}
-
-			klog.V(3).InfoS("Handling TCP connection", "remote", conn.RemoteAddr(), "local", conn.LocalAddr())
-			go n.Proxy.Handle(conn)
-		}
-	}()
 }
 
 // configureDynamically encodes new Backends in JSON format and POSTs the
