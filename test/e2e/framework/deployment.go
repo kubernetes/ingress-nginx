@@ -67,11 +67,11 @@ func WithDeploymentNamespace(n string) func(*deploymentOptions) {
 	}
 }
 
-// WithSvcTopologyAnnotations create svc with topology aware hints sets to auto
+// WithSvcTopologyAnnotations create svc with topology mode sets to auto
 func WithSvcTopologyAnnotations() func(*deploymentOptions) {
 	return func(o *deploymentOptions) {
 		o.svcAnnotations = map[string]string{
-			"service.kubernetes.io/topology-aware-hints": "auto",
+			corev1.AnnotationTopologyMode: "auto",
 		}
 	}
 }
@@ -213,7 +213,7 @@ func (f *Framework) NewHttpbunDeployment(opts ...func(*deploymentOptions)) strin
 		80,
 		int32(options.replicas),
 		nil, nil,
-		//Required to get hostname information
+		// Required to get hostname information
 		[]corev1.EnvVar{
 			{
 				Name:  "HTTPBUN_INFO_ENABLED",
