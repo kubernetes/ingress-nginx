@@ -142,7 +142,7 @@ type Configuration struct {
 
 func getIngressPodZone(svc *apiv1.Service) string {
 	svcKey := k8s.MetaNamespaceKey(svc)
-	if svcZoneAnnotation, ok := svc.ObjectMeta.GetAnnotations()[apiv1.AnnotationTopologyAwareHints]; ok {
+	if svcZoneAnnotation, ok := svc.ObjectMeta.GetAnnotations()[apiv1.AnnotationTopologyMode]; ok {
 		if strings.ToLower(svcZoneAnnotation) == "auto" {
 			if foundZone, ok := k8s.IngressNodeDetails.GetLabels()[apiv1.LabelTopologyZone]; ok {
 				klog.V(3).Infof("Svc has topology aware annotation enabled, try to use zone %q where controller pod is running for Service %q ", foundZone, svcKey)
