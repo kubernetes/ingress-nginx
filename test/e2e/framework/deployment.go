@@ -67,11 +67,11 @@ func WithDeploymentNamespace(n string) func(*deploymentOptions) {
 	}
 }
 
-// WithSvcTopologyAnnotations create svc with topology aware hints sets to auto
+// WithSvcTopologyAnnotations create svc with topology mode sets to auto
 func WithSvcTopologyAnnotations() func(*deploymentOptions) {
 	return func(o *deploymentOptions) {
 		o.svcAnnotations = map[string]string{
-			"service.kubernetes.io/topology-aware-hints": "auto",
+			corev1.AnnotationTopologyMode: "auto",
 		}
 	}
 }
