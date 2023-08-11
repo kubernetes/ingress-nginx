@@ -45,7 +45,7 @@ if ! command -v helm &> /dev/null; then
   exit 1
 fi
 
-function ver { printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' '); }
+function ver { printf "%d%03d%03d" $(echo "$1" | tr '.' ' '); }
 
 HELM_VERSION=$(helm version 2>&1 | cut -f1 -d"," | grep -oE '[0-9]+\.[0-9]+\.[0-9]+') || true
 echo $HELM_VERSION
