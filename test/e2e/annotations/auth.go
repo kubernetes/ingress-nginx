@@ -435,7 +435,7 @@ http {
 		})
 
 		ginkgo.It("user with annotated ingress retains cookie if upstream returns error status code", func() {
-			annotations["nginx.ingress.kubernetes.io/auth-always-set-cookie"] = "true"
+			annotations["nginx.ingress.kubernetes.io/auth-always-set-cookie"] = enableAnnotation
 			f.UpdateIngress(ing1)
 			f.UpdateIngress(ing2)
 
@@ -661,7 +661,7 @@ http {
 			framework.Sleep()
 
 			annotations["nginx.ingress.kubernetes.io/auth-keepalive"] = "10"
-			annotations["nginx.ingress.kubernetes.io/auth-keepalive-share-vars"] = "true"
+			annotations["nginx.ingress.kubernetes.io/auth-keepalive-share-vars"] = enableAnnotation
 			f.UpdateIngress(ing)
 
 			f.WaitForNginxServer("",
