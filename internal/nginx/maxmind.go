@@ -185,11 +185,12 @@ func downloadDatabase(dbName string) error {
 				return err
 			}
 
+			//nolint:gocritic // TODO: will fix it on a followup PR
+			defer outFile.Close()
+
 			if _, err := io.CopyN(outFile, tarReader, header.Size); err != nil {
 				return err
 			}
-
-			outFile.Close()
 
 			return nil
 		}

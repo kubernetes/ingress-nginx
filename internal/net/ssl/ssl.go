@@ -227,7 +227,7 @@ func ConfigureCRL(name string, crl []byte, sslCert *ingress.SSLCert) error {
 
 	_, err := x509.ParseRevocationList(pemCRLBlock.Bytes)
 	if err != nil {
-		return errors.New(err.Error())
+		return err
 	}
 
 	err = os.WriteFile(crlFileName, crl, 0o600)
