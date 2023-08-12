@@ -40,7 +40,6 @@ RUN apk update \
   pcre \
   zlib \
   geoip \
-  curl \
   ca-certificates \
   patch \
   yajl \
