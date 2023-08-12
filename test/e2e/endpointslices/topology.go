@@ -28,7 +28,6 @@ import (
 	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 
-	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -71,8 +70,8 @@ var _ = framework.IngressNginxDescribeSerial("[TopologyHints] topology aware rou
 			}
 		}
 
-		curlCmd := fmt.Sprintf("curl --fail --silent http://localhost:%v/configuration/backends", nginx.StatusPort)
-		status, err := f.ExecIngressPod(curlCmd)
+		dbgCmd := "/dbg backends all"
+		status, err := f.ExecIngressPod(dbgCmd)
 		assert.Nil(ginkgo.GinkgoT(), err)
 		var backends []map[string]interface{}
 		err = json.Unmarshal([]byte(status), &backends)

@@ -267,6 +267,7 @@ func (f *Framework) updateIngressNGINXPod() error {
 // WaitForNginxServer waits until the nginx configuration contains a particular server section.
 // `cfg` passed to matcher is normalized by replacing all tabs and spaces with single space.
 func (f *Framework) WaitForNginxServer(name string, matcher func(cfg string) bool) {
+	//nolint:staticcheck // TODO: will replace it since wait.Poll is deprecated
 	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxConditions(name, matcher))
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
 	Sleep(1 * time.Second)
@@ -275,6 +276,7 @@ func (f *Framework) WaitForNginxServer(name string, matcher func(cfg string) boo
 // WaitForNginxConfiguration waits until the nginx configuration contains a particular configuration
 // `cfg` passed to matcher is normalized by replacing all tabs and spaces with single space.
 func (f *Framework) WaitForNginxConfiguration(matcher func(cfg string) bool) {
+	//nolint:staticcheck // TODO: will replace it since wait.Poll is deprecated
 	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxConditions("", matcher))
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
 	Sleep(1 * time.Second)
@@ -282,6 +284,7 @@ func (f *Framework) WaitForNginxConfiguration(matcher func(cfg string) bool) {
 
 // WaitForNginxCustomConfiguration waits until the nginx configuration given part (from, to) contains a particular configuration
 func (f *Framework) WaitForNginxCustomConfiguration(from, to string, matcher func(cfg string) bool) {
+	//nolint:staticcheck // TODO: will replace it since wait.Poll is deprecated
 	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxCustomConditions(from, to, matcher))
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
 }
@@ -418,6 +421,7 @@ func (f *Framework) WaitForReload(fn func()) {
 	fn()
 
 	count := 0
+	//nolint:staticcheck // TODO: will replace it since wait.Poll is deprecated
 	err := wait.Poll(1*time.Second, DefaultTimeout, func() (bool, error) {
 		reloads := getReloadCount(f.pod, f.Namespace, f.KubeClientSet)
 		// most of the cases reload the ingress controller
@@ -454,7 +458,7 @@ func (f *Framework) DeleteNGINXPod(grace int64) {
 
 	err := f.KubeClientSet.CoreV1().Pods(ns).Delete(context.TODO(), f.pod.GetName(), *metav1.NewDeleteOptions(grace))
 	assert.Nil(ginkgo.GinkgoT(), err, "deleting ingress nginx pod")
-
+	//nolint:staticcheck // TODO: will replace it since wait.Poll is deprecated
 	err = wait.Poll(Poll, DefaultTimeout, func() (bool, error) {
 		err := f.updateIngressNGINXPod()
 		if err != nil || f.pod == nil {
@@ -510,6 +514,7 @@ func (f *Framework) WaitForNginxListening(port int) {
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for ingress pods to be ready")
 
 	podIP := f.GetNginxIP()
+	//nolint:staticcheck // TODO: will replace it since wait.Poll is deprecated
 	err = wait.Poll(500*time.Millisecond, DefaultTimeout, func() (bool, error) {
 		hostPort := net.JoinHostPort(podIP, fmt.Sprintf("%v", port))
 		conn, err := net.Dial("tcp", hostPort)
@@ -579,6 +584,7 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace, name string
 }
 
 func waitForDeploymentRollout(kubeClientSet kubernetes.Interface, resource *appsv1.Deployment) error {
+	//nolint:staticcheck // TODO: will replace it since wait.Poll is deprecated
 	return wait.Poll(Poll, 5*time.Minute, func() (bool, error) {
 		d, err := kubeClientSet.AppsV1().Deployments(resource.Namespace).Get(context.TODO(), resource.Name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {

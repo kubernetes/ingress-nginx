@@ -39,6 +39,7 @@ func startIngress(f *framework.Framework, annotations map[string]string) map[str
 			return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 		})
 
+	//nolint:staticcheck // TODO: will replace it since wait.Poll is deprecated
 	err := wait.Poll(framework.Poll, framework.DefaultTimeout, func() (bool, error) {
 		resp := f.HTTPTestClient().
 			GET("/").

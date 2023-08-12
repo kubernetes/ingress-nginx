@@ -144,6 +144,7 @@ func CreateIngressMASecret(client kubernetes.Interface, host, secretName, namesp
 
 // WaitForTLS waits until the TLS handshake with a given server completes successfully.
 func WaitForTLS(url string, tlsConfig *tls.Config) {
+	//nolint:staticcheck // TODO: will replace it since wait.Poll is deprecated
 	err := wait.Poll(Poll, DefaultTimeout, matchTLSServerName(url, tlsConfig))
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for TLS configuration in URL %s", url)
 }

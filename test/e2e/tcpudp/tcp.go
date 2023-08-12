@@ -157,7 +157,7 @@ var _ = framework.IngressNginxDescribe("[TCP] tcp-services", func() {
 
 			return false, nil
 		})
-
+		//nolint:staticcheck // TODO: will replace it since wait.ErrWaitTimeout is deprecated
 		if err == wait.ErrWaitTimeout {
 			err = errRetry
 		}
