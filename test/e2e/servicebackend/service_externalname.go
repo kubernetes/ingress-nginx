@@ -30,7 +30,6 @@ import (
 	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -330,17 +329,13 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 		assert.Contains(ginkgo.GinkgoT(), body, `"X-Forwarded-Host": "echo"`)
 
 		ginkgo.By("checking the service is updated to use new host")
-		curlCmd := fmt.Sprintf(
-			"curl --fail --silent http://localhost:%v/configuration/backends",
-			nginx.StatusPort,
-		)
-
-		output, err := f.ExecIngressPod(curlCmd)
+		dbgCmd := "/dbg backends all"
+		output, err := f.ExecIngressPod(dbgCmd)
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.Contains(
 			ginkgo.GinkgoT(),
 			output,
-			fmt.Sprintf("{\"address\":\"%s\"", framework.BuildNIPHost(ip)),
+			fmt.Sprintf(`"address": "%s"`, framework.BuildNIPHost(ip)),
 		)
 	})
 
