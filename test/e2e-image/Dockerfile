@@ -7,7 +7,6 @@ RUN apk update \
 	&& apk upgrade && apk add -U --no-cache \
   ca-certificates \
   bash \
-  curl \
   tzdata \
   libc6-compat \
   openssl
