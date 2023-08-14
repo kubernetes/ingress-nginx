@@ -50,7 +50,6 @@ RUN apk update \
   && apk add -U --no-cache \
      bash \
      openssl \
-     curl \
      ca-certificates \
      dumb-init \
      tzdata \
