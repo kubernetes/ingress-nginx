@@ -76,11 +76,11 @@ RUN apk add --no-cache libcap \
   && apk del libcap \
   && ln -sf /usr/local/nginx/sbin/nginx /usr/bin/nginx
 
-USER www-data
-
 # Create symlinks to redirect nginx logs to stdout and stderr docker log collector
 RUN  ln -sf /dev/stdout /var/log/nginx/access.log \
   && ln -sf /dev/stderr /var/log/nginx/error.log
+
+USER www-data
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
