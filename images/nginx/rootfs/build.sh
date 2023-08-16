@@ -63,7 +63,7 @@ export MODSECURITY_VERSION=1.0.3
 export MODSECURITY_LIB_VERSION=e9a7ba4a60be48f761e0328c6dfcc668d70e35a0
 
 # Check for recent changes: https://github.com/coreruleset/coreruleset/compare/v3.3.2...v3.3/master
-export OWASP_MODSECURITY_CRS_VERSION=v3.3.4
+export OWASP_MODSECURITY_CRS_VERSION=v3.3.5
 
 # Check for recent changes: https://github.com/openresty/lua-nginx-module/compare/v0.10.25...master
 export LUA_NGX_VERSION=0.10.25
