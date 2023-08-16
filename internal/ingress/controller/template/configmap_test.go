@@ -364,6 +364,38 @@ func TestGlobalExternalAuthCacheDurationParsing(t *testing.T) {
 	}
 }
 
+func TestForwardedRFC7239Parsing(t *testing.T) {
+	testCases := map[string]struct {
+		params string
+		expect []string
+	}{
+		"nothing":          {"", []string{}},
+		"spaces":           {"  ", []string{}},
+		"one param":        {"for", []string{"for"}},
+		"two params":       {"by,for", []string{"by", "for"}},
+		"case insensitive": {"for,HOST,By", []string{"for", "host", "by"}},
+		"duplicate params": {"for,host,for,by", []string{"for", "host", "by"}},
+	}
+
+	{
+		name := "absent field"
+		expect := []string{"for"} // default
+		cfg := ReadConfig(map[string]string{})
+
+		if !reflect.DeepEqual(cfg.ForwardedRFC7239, expect) {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", name, expect, cfg.ForwardedRFC7239)
+		}
+	}
+
+	for name, tc := range testCases {
+		cfg := ReadConfig(map[string]string{"forwarded-rfc7239": tc.params})
+
+		if !reflect.DeepEqual(cfg.ForwardedRFC7239, tc.expect) {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", name, tc.expect, cfg.ForwardedRFC7239)
+		}
+	}
+}
+
 func TestLuaSharedDictsParsing(t *testing.T) {
 	testsCases := []struct {
 		name   string
@@ -527,6 +559,60 @@ func TestDictKbToStr(t *testing.T) {
 	for _, tc := range testCases {
 		if sizeStr := dictKbToStr(tc.input); sizeStr != tc.expect {
 			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", tc.name, tc.expect, sizeStr)
+		}
+	}
+}
+
+func TestSliceContains(t *testing.T) {
+	testCases := map[string]struct {
+		slice  []string
+		find   string
+		expect bool
+	}{
+		"containing": {
+			slice:  []string{"ip", "_obf"},
+			find:   "ip",
+			expect: true,
+		},
+		"not containing": {
+			slice:  []string{"ip", "_obf"},
+			find:   "obfuscated",
+			expect: false,
+		},
+	}
+
+	for name, tc := range testCases {
+		if b := sliceContains(tc.slice, tc.find); b != tc.expect {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", name, tc.expect, b)
+		}
+	}
+}
+
+func TestIsValidObfuscatedIdentifier(t *testing.T) {
+	testCases := map[string]struct {
+		input  string
+		expect bool
+	}{
+		"rfc example _hidden": {
+			input:  "_hidden",
+			expect: true,
+		},
+		"rfc example _SEVKISEK": {
+			input:  "_SEVKISEK",
+			expect: true,
+		},
+		"non-leading underscore": {
+			input:  "hidden",
+			expect: false,
+		},
+		"containing invalid characters": {
+			input:  "_hidden:",
+			expect: false,
+		},
+	}
+	for name, tc := range testCases {
+		if isValid := isValidObfuscatedIdentifier(tc.input); isValid != tc.expect {
+			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", name, tc.input, isValid)
 		}
 	}
 }

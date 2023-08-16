@@ -281,7 +281,12 @@ var (
 		"shouldLoadAuthDigestModule":         shouldLoadAuthDigestModule,
 		"buildServerName":                    buildServerName,
 		"buildCorsOriginRegex":               buildCorsOriginRegex,
+		"fieldValueComponet":                 fieldValueComponet,
 	}
+)
+
+var (
+	headerFieldValueTokenChars = regexp.MustCompile("^[!#$%&'*+.^_`|~0-9A-Za-z-]+$")
 )
 
 // escapeLiteralDollar will replace the $ character with ${literal_dollar}
@@ -1853,4 +1858,13 @@ func buildCorsOriginRegex(corsOrigins []string) string {
 	}
 	originsRegex = originsRegex + ")$ ) { set $cors 'true'; }"
 	return originsRegex
+}
+
+// Token containing character other than tchar must be quoted using
+// double-quote marks (section 3.2.6 of RFC 7230).
+func fieldValueComponet(s string) string {
+	if headerFieldValueTokenChars.MatchString(s) {
+		return s
+	}
+	return fmt.Sprintf("%q", s)
 }

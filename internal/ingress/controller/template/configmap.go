@@ -53,6 +53,9 @@ const (
 	nginxStatusIpv4Whitelist      = "nginx-status-ipv4-whitelist"
 	nginxStatusIpv6Whitelist      = "nginx-status-ipv6-whitelist"
 	proxyHeaderTimeout            = "proxy-protocol-header-timeout"
+	forwardedRFC7239              = "forwarded-rfc7239"
+	forwardedRFC7239For           = "forwarded-rfc7239-for"
+	forwardedRFC7239By            = "forwarded-rfc7239-by"
 	workerProcesses               = "worker-processes"
 	globalAuthURL                 = "global-auth-url"
 	globalAuthMethod              = "global-auth-method"
@@ -83,6 +86,7 @@ var (
 		"global_throttle_cache":         10240,
 	}
 	defaultGlobalAuthRedirectParam = "rd"
+	forwardedRFC7239ValidParams    = [...]string{"for", "by", "host", "proto"}
 )
 
 const (
@@ -346,6 +350,36 @@ func ReadConfig(src map[string]string) config.Configuration {
 		}
 	}
 
+	if val, ok := conf[forwardedRFC7239]; ok {
+		delete(conf, forwardedRFC7239)
+		params := []string{} // non-nil value
+		for _, param := range splitAndTrimSpace(val, ",") {
+			param = strings.ToLower(param)
+			if sliceContains(forwardedRFC7239ValidParams[:], param) {
+				if sliceContains(params, param) {
+					klog.Warningf("%v ignores duplicate parameter: %v", forwardedRFC7239, param)
+					continue
+				}
+				params = append(params, param)
+			}
+		}
+		to.ForwardedRFC7239 = params
+	}
+
+	if val, ok := conf[forwardedRFC7239For]; ok {
+		if !isValidObfuscatedIdentifier(val) {
+			delete(conf, forwardedRFC7239For)
+			klog.Warningf("%v is not a valid obfuscated identifier", val)
+		}
+	}
+
+	if val, ok := conf[forwardedRFC7239By]; ok {
+		if !isValidObfuscatedIdentifier(val) {
+			delete(conf, forwardedRFC7239By)
+			klog.Warningf("%v is not a valid obfuscated identifier", val)
+		}
+	}
+
 	streamResponses := 1
 	if val, ok := conf[proxyStreamResponses]; ok {
 		delete(conf, proxyStreamResponses)
@@ -486,4 +520,20 @@ func dictKbToStr(size int) string {
 		return fmt.Sprintf("%dM", size/1024)
 	}
 	return fmt.Sprintf("%dK", size)
+}
+
+func sliceContains(slice []string, s string) bool {
+	for _, value := range slice {
+		if value == s {
+			return true
+		}
+	}
+	return false
+}
+
+// isValidObfuscatedIdentifier tests if s is a valid obfuscated identifier
+// as section 6.3 of rfc7239 defines.
+func isValidObfuscatedIdentifier(s string) bool {
+	re := regexp.MustCompile("^_[0-9a-zA-Z._-]*$")
+	return re.MatchString(s)
 }

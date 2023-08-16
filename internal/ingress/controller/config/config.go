@@ -558,6 +558,26 @@ type Configuration struct {
 	// Default: false
 	ComputeFullForwardedFor bool `json:"compute-full-forwarded-for,omitempty"`
 
+	// Enable standard forwarded header.
+	// Default: false
+	EnableForwardedRFC7239 bool `json:"enable-forwarded-rfc7239"`
+
+	// Sets if strips incoming Forwarded header.
+	// Default: false
+	ForwardedRFC7239StripIncomming bool `json:"forwarded-rfc7239-strip-incomming"`
+
+	// Sets Forwarded parameters and their order. Available options are "for", "by", "host", "proto".
+	// Default: "for"
+	ForwardedRFC7239 []string `json:"forwarded-rfc7239"`
+
+	// Sets Forwarded "for" parameter node identifier, should be "ip" or a static string.
+	// Default: "ip"
+	ForwardedRFC7239For string `json:"forwarded-rfc7239-for,omitempty"`
+
+	// Sets Forwarded "by" parameter node identifier, should be "ip" or a static string.
+	// Default: "ip"
+	ForwardedRFC7239By string `json:"forwarded-rfc7239-by,omitempty"`
+
 	// If the request does not have a request-id, should we generate a random value?
 	// Default: true
 	GenerateRequestID bool `json:"generate-request-id,omitempty"`
@@ -889,6 +909,11 @@ func NewDefault() Configuration {
 		EnableRealIp:                     false,
 		ForwardedForHeader:               "X-Forwarded-For",
 		ComputeFullForwardedFor:          false,
+		EnableForwardedRFC7239:           false,
+		ForwardedRFC7239StripIncomming:   false,
+		ForwardedRFC7239:                 []string{"for"},
+		ForwardedRFC7239For:              "ip",
+		ForwardedRFC7239By:               "ip",
 		ProxyAddOriginalURIHeader:        false,
 		GenerateRequestID:                true,
 		HTTP2MaxFieldSize:                "",

@@ -130,6 +130,11 @@ The following table shows a configuration option's name, type, and the default v
 |[enable-real-ip](#enable-real-ip)|bool|"false"||
 |[forwarded-for-header](#forwarded-for-header)|string|"X-Forwarded-For"||
 |[compute-full-forwarded-for](#compute-full-forwarded-for)|bool|"false"||
+|[enable-forwarded-rfc7239](#enable-forwarded-rfc7239)|bool|"false"||
+|[forwarded-rfc7239-strip-incomming](#forwarded-rfc7239-strip-incomming)|bool|"false"||
+|[forwarded-rfc7239](#forwarded-rfc7239)|[]string|"for"||
+|[forwarded-rfc7239-for](#forwarded-rfc7239-for)|string|"ip"||
+|[forwarded-rfc7239-by](#forwarded-rfc7239-by)|string|"ip"||
 |[proxy-add-original-uri-header](#proxy-add-original-uri-header)|bool|"false"||
 |[generate-request-id](#generate-request-id)|bool|"true"||
 |[enable-opentracing](#enable-opentracing)|bool|"false"||
@@ -921,6 +926,26 @@ Sets the header field for identifying the originating IP address of a client. _*
 ## compute-full-forwarded-for
 
 Append the remote address to the X-Forwarded-For header instead of replacing it. When this option is enabled, the upstream application is responsible for extracting the client IP based on its own list of trusted proxies.
+
+## enable-forwarded-rfc7239
+
+Enable standard Forwarded header defined in RFC 7239, or the Forwared header will not be sent to upstream and the incoming Forwarded header will be discarded. The parameters can be configured using [forwarded-rfc7239](#forwarded-rfc7239). Transition between Forwarded header and X-Forwarded headers will not happen. _**default:** false
+
+## forwarded-rfc7239-strip-incomming
+
+Whether or not retain Forwarded header from downstream. _**default:**_ false
+
+## forwarded-rfc7239
+
+Sets enabled parameters and their order. Supported parameters are "for", "by", "host" and, "proto". _**default:**_ for
+
+## forwarded-rfc7239-for
+
+Sets value of "for" parameter. It can be "ip" or static obfuscated string. If "ip" is given, the remote client address will be used. The static obfuscated string is selected by user and must start with a underscore "_" and consist of only digits, letters and characters ".", "_", and "-". _**default:**_ ip
+
+## forwarded-rfc7239-by
+
+Sets value of "by" parameter. It can be "ip" or static obfuscated string. If "ip" is given, the server's host-port pair that remote client connects to will be used. The static obfuscated string is selected by user and must start with a underscore "_" and consist of only digits, letters and characters ".", "_", and "-". _**default:**_ ip
 
 ## proxy-add-original-uri-header
 

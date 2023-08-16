@@ -453,6 +453,137 @@ http {
 
     {{ end }}
 
+    {{ if $cfg.EnableForwardedRFC7239 }}
+    # Enabled standard forwarded (RFC 7239).
+
+    # Used to declare constant variables.
+    map $nginx_version $nginx_constant {
+        default '';
+    }
+
+    {{ if eq "ip" $cfg.ForwardedRFC7239For }}
+    # Set proxy_forwarded_rfc2379_for as IP of remote end.
+    # We use $remote_addr instead of $realip_remote_addr because we don't
+    # translate "x-" header to standard forwarded header.
+    map $remote_addr $proxy_forwarded_rfc2379_for {
+        # IPv4 addresses can be sent as-is
+        ~^[0-9.]+$          "for=$remote_addr";
+
+        # IPv6 addresses need to be bracketed and quoted
+        ~^[0-9A-Fa-f:.]+$   "for=\"[$remote_addr]\"";
+
+        # Unix domain socket names cannot be represented in RFC 7239 syntax
+        default             "for=unknown";
+    }
+    {{ else }}
+    # Set proxy_forwarded_rfc2379_for as a constant string.
+    map $nginx_constant $proxy_forwarded_rfc2379_for {
+        default {{ $cfg.ForwardedRFC7239For | fieldValueComponet | quote }};
+    }
+    {{ end }}
+
+    {{ if eq "ip" $cfg.ForwardedRFC7239By }}
+    # Set proxy_forwarded_rfc2379_by as "IP:port" that the remote end connects to.
+    map $server_addr $proxy_forwarded_rfc2379_by {
+        # IPv4:port need to be quoted since ":" is not a valid
+        # header field value character.
+        ~^[0-9.]+$          "by=\"$server_addr:$server_port\"";
+
+        # IPv6 addresses need to be bracketed and quoted with port joined by ":"
+        ~^[0-9A-Fa-f:.]+$   "by=\"[$server_addr]:$server_port\"";
+
+        # Unix domain socket names cannot be represented in RFC 7239 syntax
+        default             "by=unknown";
+    }
+    {{ else }}
+    # Set proxy_forwarded_rfc2379_by as a constant string.
+    map $nginx_constant $proxy_forwarded_rfc2379_by {
+        default {{ $cfg.ForwardedRFC7239By | fieldValueComponet | quote }};
+    }
+    {{ end }}
+
+    # Set proxy_forwarded_rfc2379_host as the original HOST header and quote
+    # it if needed. Section 3.2.2 of RFC 3986 defines host syntax, and it must
+    # be one of ipv4, ipv6, and reg-name optionaly followed by a port after
+    # a colon.
+    map $http_host $proxy_forwarded_rfc2379_host {
+		# IPv4 and reg-name formed of valid field value characters can be sent
+		# as-is. The regular expression of IPv4 is subset of this one, and this
+		# expression also matches IPv4.
+		# Since characters "#", "^", "|", and "`" are invalid for reg-name,
+		# these four characters are removed from character set.
+		"~^[!$%&'*+._~0-9A-Za-z-]+$"               "host=$http_host";
+		
+		# reg-names are not matched last regular expression need to be quoted.
+		"~^[!$&'()*+,;=._~%0-9A-Za-z-]$"           "host=\"$http_host\"";
+		
+		# IPv6 addresses (with port or not) need to quoted (it must be already
+		# bracketed).
+		"~^\[[^]]+\](:[0-9]+)*$"                   "host=\"$http_host\"";
+		
+		# IPv4:port and reg-name:port and need to be quoted.
+		"~^[!$&'()*+,;=._~%0-9A-Za-z-]+:[0-9]+$"   "host=\"$http_host\"";
+		
+		# Otherwise it is invalid.
+		default                                    "host=unknown";
+	}
+
+    # Section 3.1 of RFC3986 defines scheme syntax.
+    map $scheme $proxy_forwarded_rfc2379_proto {
+        ~^[a-zA-Z][0-9a-zA-Z.+-]+$  "proto=$scheme";
+        default                     "proto=unknown";
+    }
+
+    # Add incoming Forwarded header if valid and not strip.
+    # Ref: https://www.nginx.com/resources/wiki/start/topics/examples/forwarded/#how-to-use-it-in-nginx
+    map $http_forwarded $proxy_forwarded_rfc2379_incoming {
+        {{ if not $cfg.ForwardedRFC7239StripIncomming }}
+        # If the incoming Forwarded header is syntactically valid, use it.
+        "~^(,[ \\t]*)*([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?(;([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?)*([ \\t]*,([ \\t]*([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?(;([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?)*)?)*$" "$http_forwarded";
+
+        # Otherwise, discard it.
+        default '';
+        {{ else }}
+        # Strip incomming forwarded header.
+        default '';
+        {{ end }}
+    }
+    
+    # Add a comma separator when both the incoming part and the current node's part exist.
+    map $proxy_forwarded_rfc2379_incoming $proxy_forwarded_rfc2379_sep {
+        {{ if not $cfg.ForwardedRFC7239 }}
+        # Pass through the incoming forwarded header.
+        default '';
+        {{ else }}
+        # Incoming forwarded header is empty.
+        ''      '';
+        # Both of two parts exist, so insert a comma.
+        default ', ';
+        {{ end }}
+    }
+
+    # Append Forwarded field to the existing Forwarded header after a comma separator,
+    # or generate a new one if the incoming Forwarded header is invalid or empty.
+    map $proxy_forwarded_rfc2379_incoming $proxy_add_forwarded_rfc2379 {
+        default "$proxy_forwarded_rfc2379_incoming$proxy_forwarded_rfc2379_sep
+        {{- /* NOTE: We need to trip both leading and trailing spaces to ensure the format correct. */ -}}
+        {{- range $index, $param := $cfg.ForwardedRFC7239 -}}
+        {{- if gt $index 0 -}} ; {{- end -}}
+        {{- if eq "for" $param -}}
+            $proxy_forwarded_rfc2379_for
+        {{- else if eq "by" $param -}}
+            $proxy_forwarded_rfc2379_by
+        {{- else if eq "host" $param -}}
+            $proxy_forwarded_rfc2379_host
+        {{- else if eq "proto" $param -}}
+            $proxy_forwarded_rfc2379_proto
+        {{- end -}}
+        {{- end -}}
+        ";
+    }
+
+    {{ end }}{{- /* if $cfg.EnableForwardedRFC7239 */ -}}
+
     # Create a variable that contains the literal $ character.
     # This works because the geo module will not resolve variables.
     geo $literal_dollar {
@@ -1153,6 +1284,10 @@ stream {
             proxy_set_header            X-Forwarded-For        $remote_addr;
             {{ end }}
 
+            {{ if $all.Cfg.EnableForwardedRFC7239 }}
+            proxy_set_header            Forwarded               $proxy_add_forwarded_rfc2379;
+            {{ end }}
+
             {{ if $externalAuth.RequestRedirect }}
             proxy_set_header            X-Auth-Request-Redirect {{ $externalAuth.RequestRedirect }};
             {{ else }}
@@ -1438,6 +1573,10 @@ stream {
 
             # Pass the original X-Forwarded-For
             {{ $proxySetHeader }} X-Original-Forwarded-For {{ buildForwardedFor $all.Cfg.ForwardedForHeader }};
+
+            {{ if $all.Cfg.EnableForwardedRFC7239 }}
+            {{ $proxySetHeader }} Forwarded              $proxy_add_forwarded_rfc2379;
+            {{ end }}
 
             # mitigate HTTPoxy Vulnerability
             # https://www.nginx.com/blog/mitigating-the-httpoxy-vulnerability-with-nginx/
