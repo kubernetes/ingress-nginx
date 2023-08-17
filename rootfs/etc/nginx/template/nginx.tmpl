@@ -456,7 +456,7 @@ http {
     {{ if $cfg.EnableForwardedRFC7239 }}
     # Enabled standard forwarded (RFC 7239).
 
-    # Used to declare constant variables.
+    # Used to declare variables as constants.
     map $nginx_version $nginx_constant {
         default '';
     }
@@ -476,9 +476,9 @@ http {
         default             "for=unknown";
     }
     {{ else }}
-    # Set proxy_forwarded_rfc2379_for as a constant string.
+    # Set proxy_forwarded_rfc2379_for as a obfuscated string.
     map $nginx_constant $proxy_forwarded_rfc2379_for {
-        default {{ $cfg.ForwardedRFC7239For | fieldValueComponet | printf "for=%s" | quote }};
+        default "for={{ $cfg.ForwardedRFC7239For }}";
     }
     {{ end }}
 
@@ -496,9 +496,9 @@ http {
         default             "by=unknown";
     }
     {{ else }}
-    # Set proxy_forwarded_rfc2379_by as a constant string.
+    # Set proxy_forwarded_rfc2379_by as a static obfuscated string.
     map $nginx_constant $proxy_forwarded_rfc2379_by {
-        default {{ $cfg.ForwardedRFC7239By | fieldValueComponet | printf "by=%s" | quote }};
+        default "by={{ $cfg.ForwardedRFC7239By }}";
     }
     {{ end }}
 

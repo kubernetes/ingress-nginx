@@ -2237,24 +2237,3 @@ func TestCleanConf(t *testing.T) {
 		t.Errorf("cleanConf result don't match with expected: %s", diff)
 	}
 }
-
-func TestFieldValueComponet(t *testing.T) {
-	testCases := map[string]struct {
-		input  string
-		expect string
-	}{
-		"empty":                 {"", `""`},
-		"spaces":                {"  ", `"  "`},
-		"ipv4":                  {"1.2.3.4", `1.2.3.4`},
-		"ipv6":                  {"[::1]", `"[::1]"`},
-		"obfuscated identifier": {"_hidden", `_hidden`},
-		"ipv4 port":             {"1.2.3.4:80", `"1.2.3.4:80"`},
-		"domain":                {"example.com", `example.com`},
-		"http schema":           {"http", `http`},
-	}
-	for name, tc := range testCases {
-		if comp := fieldValueComponet(tc.input); comp != tc.expect {
-			t.Errorf("%v: expected '%v' but returned '%v'", name, tc.expect, comp)
-		}
-	}
-}
