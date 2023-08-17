@@ -478,7 +478,7 @@ http {
     {{ else }}
     # Set proxy_forwarded_rfc2379_for as a constant string.
     map $nginx_constant $proxy_forwarded_rfc2379_for {
-        default {{ $cfg.ForwardedRFC7239For | fieldValueComponet | quote }};
+        default {{ $cfg.ForwardedRFC7239For | fieldValueComponet | printf "for=%s" | quote }};
     }
     {{ end }}
 
@@ -498,7 +498,7 @@ http {
     {{ else }}
     # Set proxy_forwarded_rfc2379_by as a constant string.
     map $nginx_constant $proxy_forwarded_rfc2379_by {
-        default {{ $cfg.ForwardedRFC7239By | fieldValueComponet | quote }};
+        default {{ $cfg.ForwardedRFC7239By | fieldValueComponet | printf "by=%s" | quote }};
     }
     {{ end }}
 

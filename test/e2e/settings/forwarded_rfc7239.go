@@ -17,6 +17,9 @@ limitations under the License.
 package settings
 
 import (
+	"fmt"
+	"log"
+	"net"
 	"net/http"
 	"strings"
 
@@ -59,12 +62,13 @@ var _ = framework.DescribeSetting("Configure Forwarded RFC7239", func() {
 
 		body := f.HTTPTestClient().
 			GET("/").
+			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusOK).
 			Body().
 			Raw()
 
-		assert.NotContains(ginkgo.GinkgoT(), body, "forwarded=1.2.3.4")
+		assert.NotContains(ginkgo.GinkgoT(), body, "forwarded=")
 	})
 
 	ginkgo.It("should trust Forwarded header when striping-incoming is false", func() {
@@ -86,27 +90,32 @@ var _ = framework.DescribeSetting("Configure Forwarded RFC7239", func() {
 					strings.Contains(server, "proxy_set_header Forwarded $proxy_add_forwarded_rfc2379;")
 			})
 
+		serverIP := f.GetNginxPodIP()
+		clientIP := getClientIP(serverIP)
+
 		ginkgo.By("ensuring valid headers are passed through correctly")
 		body := f.HTTPTestClient().
 			GET("/").
-			WithHeader("Forwarded", "for=1.1.1.1;secret=_5ecREy").
+			WithHeader("Host", host).
+			WithHeader("Forwarded", "for=1.1.1.1;secret=_5ecREy, for=\"[2001:4860:4860::8888]\"").
 			Expect().
 			Status(http.StatusOK).
 			Body().
 			Raw()
 
-		assert.Contains(ginkgo.GinkgoT(), body, "for=1.1.1.1;secret=_5e(REy, for=1.2.3.4")
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("forwarded=for=1.1.1.1;secret=_5ecREy, for=\"[2001:4860:4860::8888]\", for=%s", clientIP))
 
 		ginkgo.By("ensuring invalid headers are striped")
 		body = f.HTTPTestClient().
 			GET("/").
-			WithHeader("Forwarded", "for=1.1.1.1;secret=:x:"). // colon should be quoted
+			WithHeader("Host", host).
+			WithHeader("Forwarded", "for=2001:4860:4860::8888"). // invalid header, ipv6 should be bracked and quoted
 			Expect().
 			Status(http.StatusOK).
 			Body().
 			Raw()
 
-		assert.Contains(ginkgo.GinkgoT(), body, "for=1.2.3.4")
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("forwarded=for=%s", clientIP))
 	})
 
 	ginkgo.It("should contain parameters in order as setting forwarded-rfc7239 specified", func() {
@@ -129,17 +138,21 @@ var _ = framework.DescribeSetting("Configure Forwarded RFC7239", func() {
 					strings.Contains(server, "proxy_set_header Forwarded $proxy_add_forwarded_rfc2379;")
 			})
 
+		serverIP := f.GetNginxPodIP()
+		clientIP := getClientIP(serverIP)
+
 		ginkgo.By("ensuring singly pass through incoming header when empty parameter list")
 		f.UpdateNginxConfigMapData(forwardedRFC7239, "")
 		body := f.HTTPTestClient().
 			GET("/").
+			WithHeader("Host", host).
 			WithHeader("Forwarded", "for=1.1.1.1").
 			Expect().
 			Status(http.StatusOK).
 			Body().
 			Raw()
 
-		assert.Contains(ginkgo.GinkgoT(), body, "for=1.1.1.1")
+		assert.Contains(ginkgo.GinkgoT(), body, "forwarded=for=1.1.1.1")
 
 		ginkgo.By("ensuring any parameter combinations work")
 		f.UpdateNginxConfigMapData(forwardedRFC7239, "for,by,proto,host")
@@ -151,10 +164,10 @@ var _ = framework.DescribeSetting("Configure Forwarded RFC7239", func() {
 			Body().
 			Raw()
 
-		assert.Contains(ginkgo.GinkgoT(), body, `for=1.2.3.4;by="1.2.3.4:80";proto=http;host=forwarded-rfc7239`)
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf(`forwarded=for=%s;by="%s:80";proto=http;host=forwarded-rfc7239`, clientIP, serverIP))
 	})
 
-	ginkgo.It("should config for and by parameters as static obfuscated values", func() {
+	ginkgo.It("should config \"for\" and \"by\" parameters as static obfuscated strings", func() {
 		host := "forwarded-rfc7239"
 
 		config := map[string]string{}
@@ -174,40 +187,57 @@ var _ = framework.DescribeSetting("Configure Forwarded RFC7239", func() {
 					strings.Contains(server, "proxy_set_header Forwarded $proxy_add_forwarded_rfc2379;")
 			})
 
-		ginkgo.By("ensuring \"by\" parameter is a static obfuscated value")
+		serverIP := f.GetNginxPodIP()
+		clientIP := getClientIP(serverIP)
+
+		ginkgo.By("ensuring \"by\" parameter is a static obfuscated string")
 		body := f.HTTPTestClient().
 			GET("/").
+			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusOK).
 			Body().
 			Raw()
 
-		assert.Contains(ginkgo.GinkgoT(), body, "for=1.2.3.4;by=_SERVER1")
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("forwarded=for=%s;by=_SERVER1", clientIP))
 
-		ginkgo.By("ensuring \"for\" parameter is a static obfuscated value")
+		ginkgo.By("ensuring \"for\" parameter is a static obfuscated string")
 		config[forwardedRFC7239For] = "_HOST1"
 		config[forwardedRFC7239By] = "ip"
 		f.SetNginxConfigMapData(config)
 		body = f.HTTPTestClient().
 			GET("/").
+			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusOK).
 			Body().
 			Raw()
 
-		assert.Contains(ginkgo.GinkgoT(), body, `for="_HOST1";by="1.2.3.4:80"`)
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf(`forwarded=for=_HOST1;by="%s:80"`, serverIP))
 
-		ginkgo.By("ensuring invalid static obfuscated values are ingored")
+		ginkgo.By("ensuring invalid static obfuscated strings are ingored")
 		config[forwardedRFC7239For] = "_HOST1"
 		config[forwardedRFC7239By] = "_%"
 		f.SetNginxConfigMapData(config)
 		body = f.HTTPTestClient().
 			GET("/").
+			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusOK).
 			Body().
 			Raw()
 
-		assert.Contains(ginkgo.GinkgoT(), body, `for=1.2.3.4;by="1.2.3.4:80"`)
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf(`forwarded=for=_HOST1;by="%s:80"`, serverIP))
 	})
 })
+
+func getClientIP(serverIP string) net.IP {
+	conn, err := net.Dial("tcp", serverIP+":80")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+
+	localAddr := conn.LocalAddr().(*net.TCPAddr)
+	return localAddr.IP
+}
