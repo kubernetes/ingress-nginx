@@ -519,7 +519,7 @@ http {
 		
 		# IPv6 addresses (with port or not) need to quoted (it must be already
 		# bracketed).
-		"~^\[[^]]+\](:[0-9]+)*$"                   "host=\"$http_host\"";
+		"~^\[[0-9A-Fa-f:.]+\](:[0-9]+)*$"          "host=\"$http_host\"";
 		
 		# IPv4:port and reg-name:port and need to be quoted.
 		"~^[!$&'()*+,;=._~%0-9A-Za-z-]+:[0-9]+$"   "host=\"$http_host\"";
