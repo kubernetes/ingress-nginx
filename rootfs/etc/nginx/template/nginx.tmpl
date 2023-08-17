@@ -507,25 +507,25 @@ http {
     # be one of ipv4, ipv6, and reg-name optionaly followed by a port after
     # a colon.
     map $http_host $proxy_forwarded_rfc2379_host {
-		# IPv4 and reg-name formed of valid field value characters can be sent
-		# as-is. The regular expression of IPv4 is subset of this one, and this
-		# expression also matches IPv4.
-		# Since characters "#", "^", "|", and "`" are invalid for reg-name,
-		# these four characters are removed from character set.
-		"~^[!$%&'*+._~0-9A-Za-z-]+$"               "host=$http_host";
-		
-		# reg-names are not matched last regular expression need to be quoted.
-		"~^[!$&'()*+,;=._~%0-9A-Za-z-]$"           "host=\"$http_host\"";
-		
-		# IPv6 addresses (with port or not) need to quoted (it must be already
-		# bracketed).
-		"~^\[[0-9A-Fa-f:.]+\](:[0-9]+)*$"          "host=\"$http_host\"";
-		
-		# IPv4:port and reg-name:port and need to be quoted.
-		"~^[!$&'()*+,;=._~%0-9A-Za-z-]+:[0-9]+$"   "host=\"$http_host\"";
-		
-		# Otherwise it is invalid.
-		default                                    "host=unknown";
+        # IPv4 and reg-name formed of valid field value characters can be sent
+        # as-is. The regular expression of IPv4 is subset of this one, and this
+        # expression also matches IPv4.
+        # Since characters "#", "^", "|", and "`" are invalid for reg-name,
+        # these four characters are removed from character set.
+        "~^[!$%&'*+._~0-9A-Za-z-]+$"               "host=$http_host";
+        
+        # reg-names are not matched last regular expression need to be quoted.
+        "~^[!$&'()*+,;=._~%0-9A-Za-z-]$"           "host=\"$http_host\"";
+        
+        # IPv6 addresses (with port or not) need to quoted (it must be already
+        # bracketed).
+        "~^\[[0-9A-Fa-f:.]+\](:[0-9]+)*$"          "host=\"$http_host\"";
+        
+        # IPv4:port and reg-name:port and need to be quoted.
+        "~^[!$&'()*+,;=._~%0-9A-Za-z-]+:[0-9]+$"   "host=\"$http_host\"";
+        
+        # Otherwise it is invalid.
+        default                                    "host=unknown";
 	}
 
     # Section 3.1 of RFC3986 defines scheme syntax.

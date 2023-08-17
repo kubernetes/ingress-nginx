@@ -570,11 +570,11 @@ type Configuration struct {
 	// Default: "for"
 	ForwardedRFC7239 []string `json:"forwarded-rfc7239"`
 
-	// Sets Forwarded "for" parameter node identifier, should be "ip" or a static string.
+	// Sets Forwarded "for" parameter node identifier, should be "ip" or a static obfuscated string.
 	// Default: "ip"
 	ForwardedRFC7239For string `json:"forwarded-rfc7239-for,omitempty"`
 
-	// Sets Forwarded "by" parameter node identifier, should be "ip" or a static string.
+	// Sets Forwarded "by" parameter node identifier, should be "ip" or a static obfuscated string.
 	// Default: "ip"
 	ForwardedRFC7239By string `json:"forwarded-rfc7239-by,omitempty"`
 
