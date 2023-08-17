@@ -929,7 +929,7 @@ Append the remote address to the X-Forwarded-For header instead of replacing it.
 
 ## enable-forwarded-rfc7239
 
-Enable standard Forwarded header defined in RFC 7239, or the Forwared header will not be sent to upstream and the incoming Forwarded header will be discarded. The parameters can be configured using [forwarded-rfc7239](#forwarded-rfc7239). Transition between Forwarded header and X-Forwarded headers will not happen. _**default:** false
+Enable standard Forwarded header defined in RFC 7239, or the Forwared header will not be sent to upstream and the incoming Forwarded header will be discarded. The parameters can be configured using [forwarded-rfc7239](#forwarded-rfc7239). Transition between Forwarded header and X-Forwarded headers will not happen. _**default:**_ false
 
 ## forwarded-rfc7239-strip-incomming
 
