@@ -70,9 +70,12 @@ var _ = framework.DescribeSetting("Configure Forwarded RFC7239", func() {
 	ginkgo.It("should trust Forwarded header when striping-incoming is false", func() {
 		host := "forwarded-rfc7239"
 
-		f.UpdateNginxConfigMapData(enableForwardedRFC7239, "true")
-		f.UpdateNginxConfigMapData(forwardedRFC7239StripIncomming, "false")
-		f.UpdateNginxConfigMapData(forwardedRFC7239For, "ip")
+		config := map[string]string{}
+		config[enableForwardedRFC7239] = "true"
+		config[forwardedRFC7239StripIncomming] = "false"
+		config[forwardedRFC7239] = "for"
+		config[forwardedRFC7239For] = "ip"
+		f.SetNginxConfigMapData(config)
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
@@ -109,10 +112,13 @@ var _ = framework.DescribeSetting("Configure Forwarded RFC7239", func() {
 	ginkgo.It("should contain parameters in order as setting forwarded-rfc7239 specified", func() {
 		host := "forwarded-rfc7239"
 
-		f.UpdateNginxConfigMapData(enableForwardedRFC7239, "true")
-		f.UpdateNginxConfigMapData(forwardedRFC7239StripIncomming, "false")
-		f.UpdateNginxConfigMapData(forwardedRFC7239For, "ip")
-		f.UpdateNginxConfigMapData(forwardedRFC7239By, "ip")
+		config := map[string]string{}
+		config[enableForwardedRFC7239] = "true"
+		config[forwardedRFC7239StripIncomming] = "false"
+		config[forwardedRFC7239] = "for"
+		config[forwardedRFC7239For] = "ip"
+		config[forwardedRFC7239By] = "ip"
+		f.SetNginxConfigMapData(config)
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
@@ -148,15 +154,16 @@ var _ = framework.DescribeSetting("Configure Forwarded RFC7239", func() {
 		assert.Contains(ginkgo.GinkgoT(), body, `for=1.2.3.4;by="1.2.3.4:80";proto=http;host=forwarded-rfc7239`)
 	})
 
-	ginkgo.It("should config for and by parameters as constants", func() {
+	ginkgo.It("should config for and by parameters as static obfuscated values", func() {
 		host := "forwarded-rfc7239"
 
-		f.UpdateNginxConfigMapData(enableForwardedRFC7239, "true")
-		f.UpdateNginxConfigMapData(forwardedRFC7239, "for,by")
-		f.UpdateNginxConfigMapData(forwardedRFC7239For, "ip")
-		f.UpdateNginxConfigMapData(forwardedRFC7239By, "host2")
-
-		f.UpdateNginxConfigMapData(forwardedRFC7239, "")
+		config := map[string]string{}
+		config[enableForwardedRFC7239] = "true"
+		config[forwardedRFC7239StripIncomming] = "false"
+		config[forwardedRFC7239] = "for,by"
+		config[forwardedRFC7239For] = "ip"
+		config[forwardedRFC7239By] = "_SERVER1"
+		f.SetNginxConfigMapData(config)
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
@@ -167,7 +174,7 @@ var _ = framework.DescribeSetting("Configure Forwarded RFC7239", func() {
 					strings.Contains(server, "proxy_set_header Forwarded $proxy_add_forwarded_rfc2379;")
 			})
 
-		ginkgo.By("ensuring by parameter is specified value")
+		ginkgo.By("ensuring \"by\" parameter is a static obfuscated value")
 		body := f.HTTPTestClient().
 			GET("/").
 			Expect().
@@ -175,11 +182,12 @@ var _ = framework.DescribeSetting("Configure Forwarded RFC7239", func() {
 			Body().
 			Raw()
 
-		assert.Contains(ginkgo.GinkgoT(), body, "for=1.2.3.4;by=host2")
+		assert.Contains(ginkgo.GinkgoT(), body, "for=1.2.3.4;by=_SERVER1")
 
-		ginkgo.By("ensuring for parameter is specified value")
-		f.UpdateNginxConfigMapData(forwardedRFC7239For, "a@cY")
-		f.UpdateNginxConfigMapData(forwardedRFC7239By, "ip")
+		ginkgo.By("ensuring \"for\" parameter is a static obfuscated value")
+		config[forwardedRFC7239For] = "_HOST1"
+		config[forwardedRFC7239By] = "ip"
+		f.SetNginxConfigMapData(config)
 		body = f.HTTPTestClient().
 			GET("/").
 			Expect().
@@ -187,6 +195,19 @@ var _ = framework.DescribeSetting("Configure Forwarded RFC7239", func() {
 			Body().
 			Raw()
 
-		assert.Contains(ginkgo.GinkgoT(), body, `for="a@cY";by="1.2.3.4:80"`)
+		assert.Contains(ginkgo.GinkgoT(), body, `for="_HOST1";by="1.2.3.4:80"`)
+
+		ginkgo.By("ensuring invalid static obfuscated values are ingored")
+		config[forwardedRFC7239For] = "_HOST1"
+		config[forwardedRFC7239By] = "_%"
+		f.SetNginxConfigMapData(config)
+		body = f.HTTPTestClient().
+			GET("/").
+			Expect().
+			Status(http.StatusOK).
+			Body().
+			Raw()
+
+		assert.Contains(ginkgo.GinkgoT(), body, `for=1.2.3.4;by="1.2.3.4:80"`)
 	})
 })
