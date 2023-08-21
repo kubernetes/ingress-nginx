@@ -71,7 +71,7 @@ jobs:
         uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
 
       - name: Run Gosec Security Scanner
-        uses: securego/gosec@c5ea1b7bdd9efc3792e513258853552b0ae31e06 # v2.16.0
+        uses: securego/gosec@a89e9d5a7acb4457f3891ac18532b142b1bf9221 # v2.17.0
         with:
           # G601 for zz_generated.deepcopy.go
           # G306 TODO: Expect WriteFile permissions to be 0600 or less
