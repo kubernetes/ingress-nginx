@@ -16,7 +16,9 @@
 - --election-id={{ include "ingress-nginx.controller.electionID" . }}
 - --controller-class={{ .Values.controller.ingressClassResource.controllerValue }}
 {{- if .Values.controller.ingressClass }}
-- --ingress-class={{ .Values.controller.ingressClass }}
+{{- range $index, $name := ( split "," .Values.controller.ingressClassResource.name ) }}
+- --ingress-class={{ $name | trim }}
+{{- end }}
 {{- end }}
 - --configmap={{ default "$(POD_NAMESPACE)" .Values.controller.configMapNamespace }}/{{ include "ingress-nginx.controller.fullname" . }}
 {{- if .Values.tcp }}
