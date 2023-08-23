@@ -174,6 +174,7 @@ The following table shows a configuration option's name, type, and the default v
 |[otel-sampler-ratio](#otel-sampler-ratio)|float|0.01||
 |[main-snippet](#main-snippet)|string|""||
 |[http-snippet](#http-snippet)|string|""||
+|[default-server-snippet](#default-server-snippet)|string|""||
 |[server-snippet](#server-snippet)|string|""||
 |[stream-snippet](#stream-snippet)|string|""||
 |[location-snippet](#location-snippet)|string|""||
@@ -735,7 +736,7 @@ _**default:**_ false
 ## enable-brotli
 
 Enables or disables compression of HTTP responses using the ["brotli" module](https://github.com/google/ngx_brotli).
-The default mime type list to compress is: `application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component`. 
+The default mime type list to compress is: `application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component`.
 _**default:**_ false
 
 > __Note:__ Brotli does not works in Safari < 11. For more information see [https://caniuse.com/#feat=brotli](https://caniuse.com/#feat=brotli)
@@ -1097,6 +1098,10 @@ Adds custom configuration to the main section of the nginx configuration.
 
 Adds custom configuration to the http section of the nginx configuration.
 
+## default-server-snippet
+
+Adds custom configuration to the default server in the nginx configuration.
+
 ## server-snippet
 
 Adds custom configuration to all the servers in the nginx configuration.
@@ -1418,5 +1423,5 @@ and containing invalid characters to be denied.
 
 This means that Ingress objects that rely on paths containing regex characters should use `ImplementationSpecific` pathType.
 
-The cluster admin should establish validation rules using mechanisms like [Open Policy Agent](https://www.openpolicyagent.org/) to 
+The cluster admin should establish validation rules using mechanisms like [Open Policy Agent](https://www.openpolicyagent.org/) to
 validate that only authorized users can use `ImplementationSpecific` pathType and that only the authorized characters can be used.

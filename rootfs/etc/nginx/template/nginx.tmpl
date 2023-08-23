@@ -729,6 +729,11 @@ http {
         {{ if $cfg.EnableOpentelemetry }}
         opentelemetry off;
         {{ end }}
+        
+        {{ if not (empty $cfg.DefaultServerSnippet) }}
+        # Custom code snippet configured for default server
+        {{ $cfg.DefaultServerSnippet }}
+        {{ end }}
         location {{ $healthzURI }} {
             return 200;
         }

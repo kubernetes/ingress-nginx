@@ -727,6 +727,9 @@ type Configuration struct {
 	// HTTPSnippet adds custom configuration to the http section of the nginx configuration
 	HTTPSnippet string `json:"http-snippet"`
 
+	// DefaultServerSnippet adds custom configuration to the default server in the nginx configuration
+	DefaultServerSnippet string `json:"default-server-snippet"`
+
 	// ServerSnippet adds custom configuration to all the servers in the nginx configuration
 	ServerSnippet string `json:"server-snippet"`
 
