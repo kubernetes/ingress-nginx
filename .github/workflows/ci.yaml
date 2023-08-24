@@ -259,6 +259,12 @@ jobs:
 
       - name: Load images from cache
         run: |
+          PIGZ_INSTALLED=$(dpkg -l | grep -iq pigz && echo "installed")
+          if [[ -z ${PIGZ_INSTALLED} ]]; then
+              echo "pigz is not installed, installing it now ..."
+              sudo apt-get -qq update || true
+              sudo apt-get install -y pigz
+          fi
           echo "loading docker images..."
           pigz -dc docker.tar.gz | docker load
 
@@ -300,6 +306,12 @@ jobs:
 
       - name: Load images from cache
         run: |
+          PIGZ_INSTALLED=$(dpkg -l | grep -iq pigz && echo "installed")
+          if [[ -z ${PIGZ_INSTALLED} ]]; then
+              echo "pigz is not installed, installing it now ..."
+              sudo apt-get -qq update || true
+              sudo apt-get install -y pigz
+          fi
           echo "loading docker images..."
           pigz -dc docker.tar.gz | docker load
 
@@ -348,6 +360,12 @@ jobs:
 
       - name: Load images from cache
         run: |
+          PIGZ_INSTALLED=$(dpkg -l | grep -iq pigz && echo "installed")
+          if [[ -z ${PIGZ_INSTALLED} ]]; then
+              echo "pigz is not installed, installing it now ..."
+              sudo apt-get -qq update || true
+              sudo apt-get install -y pigz
+          fi
           echo "loading docker images..."
           pigz -dc docker.tar.gz | docker load
 
@@ -399,6 +417,12 @@ jobs:
 
       - name: Load images from cache
         run: |
+          PIGZ_INSTALLED=$(dpkg -l | grep -iq pigz && echo "installed")
+          if [[ -z ${PIGZ_INSTALLED} ]]; then
+              echo "pigz is not installed, installing it now ..."
+              sudo apt-get -qq update || true
+              sudo apt-get install -y pigz
+          fi
           echo "loading docker images..."
           pigz -dc docker.tar.gz | docker load
 
