@@ -167,8 +167,6 @@ jobs:
 
       - name: Prepare Host
         run: |
-          sudo apt-get -qq update || true
-          sudo apt-get install -y pigz
           curl -LO https://dl.k8s.io/release/v1.25.5/bin/linux/amd64/kubectl
           chmod +x ./kubectl
           sudo mv ./kubectl /usr/local/bin/kubectl
@@ -188,7 +186,7 @@ jobs:
             nginx-ingress-controller:e2e \
             ingress-controller/controller:1.0.0-dev \
             ingress-controller/controller-chroot:1.0.0-dev \
-            | pigz > docker.tar.gz
+            | gzip > docker.tar.gz
 
       - name: cache
         uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
@@ -260,7 +258,7 @@ jobs:
       - name: Load images from cache
         run: |
           echo "loading docker images..."
-          pigz -dc docker.tar.gz | docker load
+          gzip -dc docker.tar.gz | docker load
 
       - name: Test
         env:
@@ -301,7 +299,7 @@ jobs:
       - name: Load images from cache
         run: |
           echo "loading docker images..."
-          pigz -dc docker.tar.gz | docker load
+          gzip -dc docker.tar.gz | docker load
 
       - name: Run e2e tests
         env:
@@ -349,7 +347,7 @@ jobs:
       - name: Load images from cache
         run: |
           echo "loading docker images..."
-          pigz -dc docker.tar.gz | docker load
+          gzip -dc docker.tar.gz | docker load
 
       - name: Run e2e tests
         env:
@@ -400,7 +398,7 @@ jobs:
       - name: Load images from cache
         run: |
           echo "loading docker images..."
-          pigz -dc docker.tar.gz | docker load
+          gzip -dc docker.tar.gz | docker load
 
       - name: Run e2e tests
         env:
