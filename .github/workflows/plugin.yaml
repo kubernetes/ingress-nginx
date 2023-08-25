@@ -4,10 +4,8 @@ on:
   push:
     branches:
       - "main"
-    paths:
-      - "cmd/plugin/**"
     tags:
-      - "v*"
+      - 'v*.*.*\+plugin'
 
 permissions:
   contents: write # for goreleaser/goreleaser-action
@@ -24,14 +22,14 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
-          go-version: 1.20
+          go-version: '1.20'
           check-latest: true
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@3fa32b8bb5620a2c1afe798654bbad59f9da4906 # v4.4.0
         with:
           version: latest
-          args: release --rm-dist
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
