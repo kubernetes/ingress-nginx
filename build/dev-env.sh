@@ -52,7 +52,7 @@ if [[ ${HELM_VERSION} -lt 3.10.0 ]]; then
   exit 1
 fi
 
-KUBE_CLIENT_VERSION=$(kubectl version --client --short 2>/dev/null | grep Client | awk '{print $3}' | cut -d. -f2) || true
+KUBE_CLIENT_VERSION=$(kubectl version --client -oyaml 2>/dev/null | grep "minor:" | awk '{print $2}' | tr -d '"') || true
 if [[ ${KUBE_CLIENT_VERSION} -lt 24 ]]; then
   echo "Please update kubectl to 1.24.2 or higher"
   exit 1
