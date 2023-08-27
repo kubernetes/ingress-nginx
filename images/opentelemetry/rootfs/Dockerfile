@@ -24,16 +24,21 @@ RUN apk update \
 	&& apk add -U bash cmake ninja \
 	&& bash /opt/third_party/build.sh -p
 
-ENV NINJA_STATUS "[%p/%f/%t]"
+ENV NINJA_STATUS "[%p/%f/%t] "
 
 # install gRPC
 FROM base as grpc
-RUN bash /opt/third_party/build.sh -g v1.49.2
+RUN bash /opt/third_party/build.sh -g v1.57.0
+
+# install abseil-cpp
+FROM base as absl-cpp
+RUN bash /opt/third_party/build.sh -a 20230802.0
 
 # install OpenTelemetry-cpp
 FROM base as otel-cpp
 COPY --from=grpc /opt/third_party/install/ /usr
-RUN bash /opt/third_party/build.sh -o v1.8.1
+COPY --from=absl-cpp /opt/third_party/install/ /usr
+RUN bash /opt/third_party/build.sh -o v1.11.0
 
 # install otel_ngx_module.so
 FROM base as nginx
