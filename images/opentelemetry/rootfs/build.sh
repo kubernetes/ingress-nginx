@@ -55,6 +55,8 @@ prepare()
 {
   apk add \
     linux-headers \
+    cmake \
+    ninja \
     openssl \
     curl-dev \
     openssl-dev \
@@ -90,6 +92,7 @@ install_absl()
 
   cmake -DCMAKE_BUILD_TYPE=Release \
         -G Ninja \
+        -DCMAKE_CXX_STANDARD=17 \
         -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
         -DBUILD_TESTING=OFF \
         -DCMAKE_INSTALL_PREFIX=${INSTAL_DIR} \
@@ -148,7 +151,7 @@ install_nginx()
   export NGINX_VERSION=1.21.6
 
   # Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp-contrib/compare/2656a4...main
-  export OPENTELEMETRY_CONTRIB_COMMIT=1ec94c82095bab61f06c7393b6f3272469d285af
+  export OPENTELEMETRY_CONTRIB_COMMIT=aaa51e2297bcb34297f3c7aa44fa790497d2f7f3
 
   mkdir -p /etc/nginx
   cd "$BUILD_PATH"
@@ -165,27 +168,19 @@ install_nginx()
   mkdir -p build
   cd build
   cmake -DCMAKE_BUILD_TYPE=Release \
-    -G Ninja \
-    -DCMAKE_INSTALL_PREFIX=${INSTAL_DIR} \
-    -DBUILD_SHARED_LIBS=ON \
-    -DNGINX_VERSION=${NGINX_VERSION} \
-    ..
+        -G Ninja \
+        -DCMAKE_CXX_STANDARD=17 \
+        -DCMAKE_INSTALL_PREFIX=${INSTAL_DIR} \
+        -DBUILD_SHARED_LIBS=ON \
+        -DNGINX_VERSION=${NGINX_VERSION} \
+        ..
   cmake --build . -j ${CORES} --target install
 
   mkdir -p /etc/nginx/modules
-
-  ldd_output=$(ldd "${INSTAL_DIR}/otel_ngx_module.so" 2>&1)
-  if [ $? -ne 0 ]; then
-      echo "ldd encountered an error:"
-      echo "$ldd_output"
-      exit 1
-  fi
   cp ${INSTAL_DIR}/otel_ngx_module.so /etc/nginx/modules/otel_ngx_module.so
-
-  mkdir -p ${INSTAL_DIR}/lib
 }
 
-while getopts ":hpn:a:g:o:" option; do
+while getopts ":pha:g:o:n" option; do
    case $option in
     h) # display Help
          Help

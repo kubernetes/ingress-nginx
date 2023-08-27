@@ -21,7 +21,7 @@ COPY . /opt/third_party/
 # install build tools
 RUN apk update \
 	&& apk upgrade \
-	&& apk add -U bash cmake ninja \
+	&& apk add -U bash \
 	&& bash /opt/third_party/build.sh -p
 
 ENV NINJA_STATUS "[%p/%f/%t] "
@@ -57,6 +57,5 @@ RUN CGO_ENABLED=0 go build -o /go/bin/init_module
 FROM cgr.dev/chainguard/static as final
 COPY --from=build-init /go/bin/init_module /
 COPY --from=nginx /etc/nginx/modules /etc/nginx/modules
-COPY --from=nginx /opt/third_party/install/lib /etc/nginx/modules
 
 CMD ["/init_module"]
