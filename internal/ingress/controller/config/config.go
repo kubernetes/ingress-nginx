@@ -131,6 +131,10 @@ type Configuration struct {
 	// By default this is disabled
 	EnableAccessLogForDefaultBackend bool `json:"enable-access-log-for-default-backend"`
 
+	// EnableAuthAccessLog enable auth access log
+	// By default this is disabled
+	EnableAuthAccessLog bool `json:"enable-auth-access-log"`
+
 	// AccessLogPath sets the path of the access logs for both http and stream contexts if enabled
 	// http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log
 	// http://nginx.org/en/docs/stream/ngx_stream_log_module.html#access_log
@@ -871,6 +875,7 @@ func NewDefault() Configuration {
 		AccessLogPath:                    "/var/log/nginx/access.log",
 		AccessLogParams:                  "",
 		EnableAccessLogForDefaultBackend: false,
+		EnableAuthAccessLog:              false,
 		WorkerCPUAffinity:                "",
 		ErrorLogPath:                     "/var/log/nginx/error.log",
 		BlockCIDRs:                       defBlockEntity,
