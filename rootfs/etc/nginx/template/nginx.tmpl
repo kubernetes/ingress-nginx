@@ -1102,7 +1102,9 @@ stream {
             opentelemetry_propagate;
             {{ end }}
 
+            {{ if not $all.Cfg.EnableAuthAccessLog }}
             access_log off;
+            {{ end }}
 
             # Ensure that modsecurity will not run on an internal location as this is not accessible from outside
             {{ if $all.Cfg.EnableModsecurity }}
