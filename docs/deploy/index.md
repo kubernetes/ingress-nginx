@@ -80,6 +80,12 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
     Because of api deprecations, the default manifest may not work on your cluster.
     Specific manifests for supported Kubernetes versions are available within a sub-folder of each provider.
 
+### Firewall configuration
+
+To check which ports are used by your installation of ingress-nginx, look at the output of `kubectl -n ingress-nginx get pod -o yaml`. In general, you need:
+- Port 8443 open between all hosts on which the kubernetes nodes are running. This is used for the ingress-nginx [admission controller](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/).
+- Port 80 (for HTTP) and/or 443 (for HTTPS) open to the public on the kubernetes nodes to which the DNS of your apps are pointing.
+
 ### Pre-flight check
 
 A few pods should start in the `ingress-nginx` namespace:
