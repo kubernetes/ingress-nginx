@@ -208,7 +208,8 @@ func ConfigureCACertWithCertAndKey(_ string, ca []byte, sslCert *ingress.SSLCert
 		return fmt.Errorf("could not write ca data to cert file %v: %v", sslCert.CAFileName, err)
 	}
 
-	return os.WriteFile(sslCert.CAFileName, buffer.Bytes(), 0o600)
+	//nolint:gosec // Not change permission to avoid possible issues
+	return os.WriteFile(sslCert.CAFileName, buffer.Bytes(), 0o644)
 }
 
 // ConfigureCRL creates a CRL file and append it into the SSLCert
@@ -230,7 +231,8 @@ func ConfigureCRL(name string, crl []byte, sslCert *ingress.SSLCert) error {
 		return err
 	}
 
-	err = os.WriteFile(crlFileName, crl, 0o600)
+	//nolint:gosec // Not change permission to avoid possible issues
+	err = os.WriteFile(crlFileName, crl, 0o644)
 	if err != nil {
 		return fmt.Errorf("could not write CRL file %v: %v", crlFileName, err)
 	}
@@ -247,7 +249,8 @@ func ConfigureCACert(name string, ca []byte, sslCert *ingress.SSLCert) error {
 	caName := fmt.Sprintf("ca-%v.pem", name)
 	fileName := fmt.Sprintf("%v/%v", file.DefaultSSLDirectory, caName)
 
-	err := os.WriteFile(fileName, ca, 0o600)
+	//nolint:gosec // Not change permission to avoid possible issues
+	err := os.WriteFile(fileName, ca, 0o644)
 	if err != nil {
 		return fmt.Errorf("could not write CA file %v: %v", fileName, err)
 	}

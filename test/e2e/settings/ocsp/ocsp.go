@@ -195,7 +195,8 @@ const configTemplate = `
 
 func prepareCertificates(namespace string) error {
 	config := fmt.Sprintf(configTemplate, namespace)
-	err := os.WriteFile("cfssl_config.json", []byte(config), 0o600)
+	//nolint:gosec // Not change permission to avoid possible issues
+	err := os.WriteFile("cfssl_config.json", []byte(config), 0o644)
 	if err != nil {
 		return fmt.Errorf("creating cfssl_config.json file: %v", err)
 	}
