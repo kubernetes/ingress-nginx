@@ -50,7 +50,7 @@ var HTTPBunImage = os.Getenv("HTTPBUN_IMAGE")
 const EchoImage = "registry.k8s.io/ingress-nginx/e2e-test-echo@sha256:4938d1d91a2b7d19454460a8c1b010b89f6ff92d2987fd889ac3e8fc3b70d91a"
 
 // TODO: change all Deployment functions to use these options
-// in order to reduce complexity and have a unified API accross the
+// in order to reduce complexity and have a unified API across the
 // framework
 type deploymentOptions struct {
 	name           string
@@ -317,7 +317,7 @@ func (f *Framework) GetNginxBaseImage() string {
 
 // NGINXDeployment creates a new simple NGINX Deployment using NGINX base image
 // and passing the desired configuration
-func (f *Framework) NGINXDeployment(name string, cfg string, waitendpoint bool) {
+func (f *Framework) NGINXDeployment(name, cfg string, waitendpoint bool) {
 	cfgMap := map[string]string{
 		"nginx.conf": cfg,
 	}
@@ -389,7 +389,7 @@ func (f *Framework) NGINXDeployment(name string, cfg string, waitendpoint bool) 
 }
 
 // NGINXWithConfigDeployment creates an NGINX deployment using a configmap containing the nginx.conf configuration
-func (f *Framework) NGINXWithConfigDeployment(name string, cfg string) {
+func (f *Framework) NGINXWithConfigDeployment(name, cfg string) {
 	f.NGINXDeployment(name, cfg, true)
 }
 
@@ -487,7 +487,8 @@ func (f *Framework) NewGRPCBinDeployment() {
 }
 
 func newDeployment(name, namespace, image string, port int32, replicas int32, command []string, args []string, env []corev1.EnvVar,
-	volumeMounts []corev1.VolumeMount, volumes []corev1.Volume, setProbe bool) *appsv1.Deployment {
+	volumeMounts []corev1.VolumeMount, volumes []corev1.Volume, setProbe bool,
+) *appsv1.Deployment {
 	probe := &corev1.Probe{
 		InitialDelaySeconds: 2,
 		PeriodSeconds:       1,
@@ -559,12 +560,12 @@ func newDeployment(name, namespace, image string, port int32, replicas int32, co
 	return d
 }
 
-func (f *Framework) NewDeployment(name, image string, port int32, replicas int32) {
+func (f *Framework) NewDeployment(name, image string, port, replicas int32) {
 	f.NewDeploymentWithOpts(name, image, port, replicas, nil, nil, nil, nil, nil, true)
 }
 
 // NewDeployment creates a new deployment in a particular namespace.
-func (f *Framework) NewDeploymentWithOpts(name, image string, port int32, replicas int32, command []string, args []string, env []corev1.EnvVar, volumeMounts []corev1.VolumeMount, volumes []corev1.Volume, setProbe bool) {
+func (f *Framework) NewDeploymentWithOpts(name, image string, port, replicas int32, command, args []string, env []corev1.EnvVar, volumeMounts []corev1.VolumeMount, volumes []corev1.Volume, setProbe bool) {
 	deployment := newDeployment(name, f.Namespace, image, port, replicas, command, args, env, volumeMounts, volumes, setProbe)
 
 	f.EnsureDeployment(deployment)
@@ -606,7 +607,7 @@ func (f *Framework) DeleteDeployment(name string) error {
 	})
 	assert.Nil(ginkgo.GinkgoT(), err, "deleting deployment")
 
-	return waitForPodsDeleted(f.KubeClientSet, 2*time.Minute, f.Namespace, metav1.ListOptions{
+	return waitForPodsDeleted(f.KubeClientSet, 2*time.Minute, f.Namespace, &metav1.ListOptions{
 		LabelSelector: labelSelectorToString(d.Spec.Selector.MatchLabels),
 	})
 }

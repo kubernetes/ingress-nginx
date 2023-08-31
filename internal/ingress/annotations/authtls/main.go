@@ -18,10 +18,9 @@ package authtls
 
 import (
 	"fmt"
+	"regexp"
 
 	networking "k8s.io/api/networking/v1"
-
-	"regexp"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
@@ -45,20 +44,20 @@ var (
 	regexChars            = regexp.QuoteMeta(`()|=`)
 	authVerifyClientRegex = regexp.MustCompile(`on|off|optional|optional_no_ca`)
 	commonNameRegex       = regexp.MustCompile(`^CN=[/\-.\_\~a-zA-Z0-9` + regexChars + `]*$`)
-	redirectRegex         = regexp.MustCompile(`^((https?://)?[A-Za-z0-9\-\.]*(:[0-9]+)?/[A-Za-z0-9\-\.]*)?$`)
+	redirectRegex         = regexp.MustCompile(`^((https?://)?[A-Za-z0-9\-.]*(:\d+)?/[A-Za-z0-9\-.]*)?$`)
 )
 
 var authTLSAnnotations = parser.Annotation{
 	Group: "authentication",
 	Annotations: parser.AnnotationFields{
 		annotationAuthTLSSecret: {
-			Validator:     parser.ValidateRegex(*parser.BasicCharsRegex, true),
+			Validator:     parser.ValidateRegex(parser.BasicCharsRegex, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskMedium, // Medium as it allows a subset of chars
 			Documentation: `This annotation defines the secret that contains the certificate chain of allowed certs`,
 		},
 		annotationAuthTLSVerifyClient: {
-			Validator:     parser.ValidateRegex(*authVerifyClientRegex, true),
+			Validator:     parser.ValidateRegex(authVerifyClientRegex, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskMedium, // Medium as it allows a subset of chars
 			Documentation: `This annotation enables verification of client certificates. Can be "on", "off", "optional" or "optional_no_ca"`,
@@ -70,7 +69,7 @@ var authTLSAnnotations = parser.Annotation{
 			Documentation: `This annotation defines validation depth between the provided client certificate and the Certification Authority chain.`,
 		},
 		annotationAuthTLSErrorPage: {
-			Validator:     parser.ValidateRegex(*redirectRegex, true),
+			Validator:     parser.ValidateRegex(redirectRegex, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskHigh,
 			Documentation: `This annotation defines the URL/Page that user should be redirected in case of a Certificate Authentication Error`,
@@ -82,7 +81,7 @@ var authTLSAnnotations = parser.Annotation{
 			Documentation: `This annotation defines if the received certificates should be passed or not to the upstream server in the header "ssl-client-cert"`,
 		},
 		annotationAuthTLSMatchCN: {
-			Validator:     parser.ValidateRegex(*commonNameRegex, true),
+			Validator:     parser.ValidateRegex(commonNameRegex, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskHigh,
 			Documentation: `This annotation adds a sanity check for the CN of the client certificate that is sent over using a string / regex starting with "CN="`,
@@ -130,9 +129,9 @@ func (assl1 *Config) Equal(assl2 *Config) bool {
 }
 
 // NewParser creates a new TLS authentication annotation parser
-func NewParser(resolver resolver.Resolver) parser.IngressAnnotation {
+func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 	return authTLS{
-		r:                resolver,
+		r:                r,
 		annotationConfig: authTLSAnnotations,
 	}
 }
@@ -169,7 +168,7 @@ func (a authTLS) Parse(ing *networking.Ingress) (interface{}, error) {
 	authCert, err := a.r.GetAuthCertificate(tlsauthsecret)
 	if err != nil {
 		e := fmt.Errorf("error obtaining certificate: %w", err)
-		return &Config{}, ing_errors.LocationDenied{Reason: e}
+		return &Config{}, ing_errors.LocationDeniedError{Reason: e}
 	}
 	config.AuthSSLCert = *authCert
 

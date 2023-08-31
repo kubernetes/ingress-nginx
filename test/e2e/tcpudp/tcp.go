@@ -148,18 +148,18 @@ var _ = framework.IngressNginxDescribe("[TCP] tcp-services", func() {
 		}
 
 		var ips []string
-		var retryErr error
+		var errRetry error
 		err = wait.ExponentialBackoff(retry, func() (bool, error) {
-			ips, retryErr = resolver.LookupHost(context.Background(), "google-public-dns-b.google.com")
-			if retryErr == nil {
+			ips, errRetry = resolver.LookupHost(context.Background(), "google-public-dns-b.google.com")
+			if errRetry == nil {
 				return true, nil
 			}
 
 			return false, nil
 		})
-
+		//nolint:staticcheck // TODO: will replace it since wait.ErrWaitTimeout is deprecated
 		if err == wait.ErrWaitTimeout {
-			err = retryErr
+			err = errRetry
 		}
 
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error from DNS resolver")
@@ -167,7 +167,6 @@ var _ = framework.IngressNginxDescribe("[TCP] tcp-services", func() {
 	})
 
 	ginkgo.It("should reload after an update in the configuration", func() {
-
 		ginkgo.By("setting up a first deployment")
 		f.NewEchoDeployment(framework.WithDeploymentName("first-service"))
 
@@ -217,5 +216,4 @@ var _ = framework.IngressNginxDescribe("[TCP] tcp-services", func() {
 		assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
 		assert.Contains(ginkgo.GinkgoT(), logs, "Backend successfully reloaded")
 	})
-
 })

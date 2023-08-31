@@ -51,7 +51,7 @@ var otelAnnotations = parser.Annotation{
 			Documentation: `This annotation enables or disables using spans from incoming requests as parent for created ones`,
 		},
 		otelOperationNameAnnotation: {
-			Validator:     parser.ValidateRegex(*regexOperationName, true),
+			Validator:     parser.ValidateRegex(regexOperationName, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskMedium,
 			Documentation: `This annotation defines what operation name should be added to the span`,
@@ -75,7 +75,6 @@ type Config struct {
 
 // Equal tests for equality between two Config types
 func (bd1 *Config) Equal(bd2 *Config) bool {
-
 	if bd1.Set != bd2.Set {
 		return false
 	}
@@ -150,7 +149,7 @@ func (c opentelemetry) GetDocumentation() parser.AnnotationFields {
 	return c.annotationConfig.Annotations
 }
 
-func (a opentelemetry) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+func (c opentelemetry) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(c.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, otelAnnotations.Annotations)
 }

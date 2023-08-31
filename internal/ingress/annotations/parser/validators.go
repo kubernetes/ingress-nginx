@@ -52,7 +52,7 @@ var (
 var IsValidRegex = regexp.MustCompile("^[/" + alphaNumericChars + regexEnabledChars + "]*$")
 
 // SizeRegex validates sizes understood by NGINX, like 1000, 100k, 1000M
-var SizeRegex = regexp.MustCompile("^(?i)[0-9]+[bkmg]?$")
+var SizeRegex = regexp.MustCompile(`^(?i)\d+[bkmg]?$`)
 
 // URLRegex is used to validate a URL but with only a specific set of characters:
 // It is alphanumericChar + ":", "?", "&"
@@ -103,7 +103,7 @@ func ValidateServerName(value string) error {
 // ValidateRegex receives a regex as an argument and uses it to validate
 // the value of the field.
 // Annotation can define if the spaces should be trimmed before validating the value
-func ValidateRegex(regex regexp.Regexp, removeSpace bool) AnnotationValidator {
+func ValidateRegex(regex *regexp.Regexp, removeSpace bool) AnnotationValidator {
 	return func(s string) error {
 		if removeSpace {
 			s = strings.ReplaceAll(s, " ", "")
@@ -117,7 +117,7 @@ func ValidateRegex(regex regexp.Regexp, removeSpace bool) AnnotationValidator {
 
 // ValidateOptions receives an array of valid options that can be the value of annotation.
 // If no valid option is found, it will return an error
-func ValidateOptions(options []string, caseSensitive bool, trimSpace bool) AnnotationValidator {
+func ValidateOptions(options []string, caseSensitive, trimSpace bool) AnnotationValidator {
 	return func(s string) error {
 		if trimSpace {
 			s = strings.TrimSpace(s)
@@ -161,7 +161,7 @@ func ValidateDuration(value string) error {
 // ValidateNull always return null values and should not be widely used.
 // It is used on the "snippet" annotations, as it is up to the admin to allow its
 // usage, knowing it can be critical!
-func ValidateNull(value string) error {
+func ValidateNull(_ string) error {
 	return nil
 }
 

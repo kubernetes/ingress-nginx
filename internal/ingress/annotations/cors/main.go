@@ -43,9 +43,9 @@ var (
 	// * Sets a group that can be (https?://)?*?.something.com:port?
 	// * Allows this to be repeated as much as possible, and separated by comma
 	// Otherwise it should be '*'
-	corsOriginRegexValidator = regexp.MustCompile(`^((((https?://)?(\*\.)?[A-Za-z0-9\-\.]*(:[0-9]+)?,?)+)|\*)?$`)
+	corsOriginRegexValidator = regexp.MustCompile(`^((((https?://)?(\*\.)?[A-Za-z0-9\-.]*(:\d+)?,?)+)|\*)?$`)
 	// corsOriginRegex defines the regex for validation inside Parse
-	corsOriginRegex = regexp.MustCompile(`^(https?://(\*\.)?[A-Za-z0-9\-\.]*(:[0-9]+)?|\*)?$`)
+	corsOriginRegex = regexp.MustCompile(`^(https?://(\*\.)?[A-Za-z0-9\-.]*(:\d+)?|\*)?$`)
 	// Method must contain valid methods list (PUT, GET, POST, BLA)
 	// May contain or not spaces between each verb
 	corsMethodsRegex = regexp.MustCompile(`^([A-Za-z]+,?\s?)+$`)
@@ -74,7 +74,7 @@ var corsAnnotation = parser.Annotation{
 			Documentation: `This annotation enables Cross-Origin Resource Sharing (CORS) in an Ingress rule`,
 		},
 		corsAllowOriginAnnotation: {
-			Validator: parser.ValidateRegex(*corsOriginRegexValidator, true),
+			Validator: parser.ValidateRegex(corsOriginRegexValidator, true),
 			Scope:     parser.AnnotationScopeIngress,
 			Risk:      parser.AnnotationRiskMedium,
 			Documentation: `This annotation controls what's the accepted Origin for CORS.
@@ -82,14 +82,14 @@ var corsAnnotation = parser.Annotation{
 			It also supports single level wildcard subdomains and follows this format: http(s)://*.foo.bar, http(s)://*.bar.foo:8080 or http(s)://*.abc.bar.foo:9000`,
 		},
 		corsAllowHeadersAnnotation: {
-			Validator: parser.ValidateRegex(*parser.HeadersVariable, true),
+			Validator: parser.ValidateRegex(parser.HeadersVariable, true),
 			Scope:     parser.AnnotationScopeIngress,
 			Risk:      parser.AnnotationRiskMedium,
 			Documentation: `This annotation controls which headers are accepted.
 			This is a multi-valued field, separated by ',' and accepts letters, numbers, _ and -`,
 		},
 		corsAllowMethodsAnnotation: {
-			Validator: parser.ValidateRegex(*corsMethodsRegex, true),
+			Validator: parser.ValidateRegex(corsMethodsRegex, true),
 			Scope:     parser.AnnotationScopeIngress,
 			Risk:      parser.AnnotationRiskMedium,
 			Documentation: `This annotation controls which methods are accepted.
@@ -102,7 +102,7 @@ var corsAnnotation = parser.Annotation{
 			Documentation: `This annotation controls if credentials can be passed during CORS operations.`,
 		},
 		corsExposeHeadersAnnotation: {
-			Validator: parser.ValidateRegex(*corsExposeHeadersRegex, true),
+			Validator: parser.ValidateRegex(corsExposeHeadersRegex, true),
 			Scope:     parser.AnnotationScopeIngress,
 			Risk:      parser.AnnotationRiskMedium,
 			Documentation: `This annotation controls which headers are exposed to response.
@@ -260,7 +260,7 @@ func (c cors) GetDocumentation() parser.AnnotationFields {
 	return c.annotationConfig.Annotations
 }
 
-func (a cors) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+func (c cors) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(c.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, corsAnnotation.Annotations)
 }

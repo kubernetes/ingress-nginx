@@ -66,6 +66,5 @@ func TestParse(t *testing.T) {
 		if !p.Equal(testCase.expected) {
 			t.Errorf("expected %v but returned %v, annotations: %s", testCase.expected, p, testCase.annotations)
 		}
-
 	}
 }

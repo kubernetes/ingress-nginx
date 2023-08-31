@@ -27,6 +27,7 @@ import (
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 )
 
+//nolint:dupl // Ignore dupl errors for similar test case
 func TestGetEndpointsFromSlices(t *testing.T) {
 	tests := []struct {
 		name   string

@@ -17,7 +17,6 @@ limitations under the License.
 package authreq
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -113,7 +112,7 @@ func TestAnnotations(t *testing.T) {
 		data[parser.GetAnnotationWithPrefix("auth-url")] = test.url
 		data[parser.GetAnnotationWithPrefix("auth-signin")] = test.signinURL
 		data[parser.GetAnnotationWithPrefix("auth-signin-redirect-param")] = test.signinURLRedirectParam
-		data[parser.GetAnnotationWithPrefix("auth-method")] = fmt.Sprintf("%v", test.method)
+		data[parser.GetAnnotationWithPrefix("auth-method")] = test.method
 		data[parser.GetAnnotationWithPrefix("auth-request-redirect")] = test.requestRedirect
 		data[parser.GetAnnotationWithPrefix("auth-snippet")] = test.authSnippet
 		data[parser.GetAnnotationWithPrefix("auth-cache-key")] = test.authCacheKey
@@ -331,7 +330,6 @@ func TestKeepaliveAnnotations(t *testing.T) {
 }
 
 func TestParseStringToCacheDurations(t *testing.T) {
-
 	tests := []struct {
 		title             string
 		duration          string
@@ -346,7 +344,6 @@ func TestParseStringToCacheDurations(t *testing.T) {
 	}
 
 	for _, test := range tests {
-
 		dur, err := ParseStringToCacheDurations(test.duration)
 		if test.expErr {
 			if err == nil {

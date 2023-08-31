@@ -50,7 +50,7 @@ var (
 )
 
 var AuthSecretConfig = parser.AnnotationConfig{
-	Validator:     parser.ValidateRegex(*parser.BasicCharsRegex, true),
+	Validator:     parser.ValidateRegex(parser.BasicCharsRegex, true),
 	Scope:         parser.AnnotationScopeLocation,
 	Risk:          parser.AnnotationRiskMedium, // Medium as it allows a subset of chars
 	Documentation: `This annotation defines the name of the Secret that contains the usernames and passwords which are granted access to the paths defined in the Ingress rules. `,
@@ -61,20 +61,20 @@ var authSecretAnnotations = parser.Annotation{
 	Annotations: parser.AnnotationFields{
 		AuthSecretAnnotation: AuthSecretConfig,
 		authSecretTypeAnnotation: {
-			Validator: parser.ValidateRegex(*authSecretTypeRegex, true),
+			Validator: parser.ValidateRegex(authSecretTypeRegex, true),
 			Scope:     parser.AnnotationScopeLocation,
 			Risk:      parser.AnnotationRiskLow,
 			Documentation: `This annotation what is the format of auth-secret value. Can be "auth-file" that defines the content of an htpasswd file, or "auth-map" where each key
 			is a user and each value is the password.`,
 		},
 		authRealmAnnotation: {
-			Validator:     parser.ValidateRegex(*parser.CharsWithSpace, false),
+			Validator:     parser.ValidateRegex(parser.CharsWithSpace, false),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskMedium, // Medium as it allows a subset of chars
 			Documentation: `This annotation defines the realm (message) that should be shown to user when authentication is requested.`,
 		},
 		authTypeAnnotation: {
-			Validator:     parser.ValidateRegex(*authTypeRegex, true),
+			Validator:     parser.ValidateRegex(authTypeRegex, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskLow,
 			Documentation: `This annotation defines the basic authentication type. Should be "basic" or "digest"`,
@@ -167,14 +167,14 @@ func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	s, err := parser.GetStringAnnotation(AuthSecretAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
-		return nil, ing_errors.LocationDenied{
+		return nil, ing_errors.LocationDeniedError{
 			Reason: fmt.Errorf("error reading secret name from annotation: %w", err),
 		}
 	}
 
 	sns, sname, err := cache.SplitMetaNamespaceKey(s)
 	if err != nil {
-		return nil, ing_errors.LocationDenied{
+		return nil, ing_errors.LocationDeniedError{
 			Reason: fmt.Errorf("error reading secret name from annotation: %w", err),
 		}
 	}
@@ -185,7 +185,7 @@ func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 	secCfg := a.r.GetSecurityConfiguration()
 	// We don't accept different namespaces for secrets.
 	if !secCfg.AllowCrossNamespaceResources && sns != ing.Namespace {
-		return nil, ing_errors.LocationDenied{
+		return nil, ing_errors.LocationDeniedError{
 			Reason: fmt.Errorf("cross namespace usage of secrets is not allowed"),
 		}
 	}
@@ -193,7 +193,7 @@ func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 	name := fmt.Sprintf("%v/%v", sns, sname)
 	secret, err := a.r.GetSecret(name)
 	if err != nil {
-		return nil, ing_errors.LocationDenied{
+		return nil, ing_errors.LocationDeniedError{
 			Reason: fmt.Errorf("unexpected error reading secret %s: %w", name, err),
 		}
 	}
@@ -217,7 +217,7 @@ func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 			return nil, err
 		}
 	default:
-		return nil, ing_errors.LocationDenied{
+		return nil, ing_errors.LocationDeniedError{
 			Reason: fmt.Errorf("invalid auth-secret-type in annotation, must be 'auth-file' or 'auth-map': %w", err),
 		}
 	}
@@ -238,14 +238,14 @@ func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 func dumpSecretAuthFile(filename string, secret *api.Secret) error {
 	val, ok := secret.Data["auth"]
 	if !ok {
-		return ing_errors.LocationDenied{
+		return ing_errors.LocationDeniedError{
 			Reason: fmt.Errorf("the secret %s does not contain a key with value auth", secret.Name),
 		}
 	}
 
 	err := os.WriteFile(filename, val, file.ReadWriteByUser)
 	if err != nil {
-		return ing_errors.LocationDenied{
+		return ing_errors.LocationDeniedError{
 			Reason: fmt.Errorf("unexpected error creating password file: %w", err),
 		}
 	}
@@ -264,7 +264,7 @@ func dumpSecretAuthMap(filename string, secret *api.Secret) error {
 
 	err := os.WriteFile(filename, []byte(builder.String()), file.ReadWriteByUser)
 	if err != nil {
-		return ing_errors.LocationDenied{
+		return ing_errors.LocationDeniedError{
 			Reason: fmt.Errorf("unexpected error creating password file: %w", err),
 		}
 	}

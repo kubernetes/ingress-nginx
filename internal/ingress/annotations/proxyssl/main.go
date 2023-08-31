@@ -24,7 +24,6 @@ import (
 
 	networking "k8s.io/api/networking/v1"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-	"k8s.io/ingress-nginx/internal/ingress/errors"
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/internal/k8s"
@@ -42,7 +41,7 @@ const (
 var (
 	proxySSLOnOffRegex    = regexp.MustCompile(`^(on|off)$`)
 	proxySSLProtocolRegex = regexp.MustCompile(`^(SSLv2|SSLv3|TLSv1|TLSv1\.1|TLSv1\.2|TLSv1\.3| )*$`)
-	proxySSLCiphersRegex  = regexp.MustCompile(`^[A-Za-z0-9\+\:\_\-\!]*$`)
+	proxySSLCiphersRegex  = regexp.MustCompile(`^[A-Za-z0-9\+:\_\-!]*$`)
 )
 
 const (
@@ -59,7 +58,7 @@ var proxySSLAnnotation = parser.Annotation{
 	Group: "proxy",
 	Annotations: parser.AnnotationFields{
 		proxySSLSecretAnnotation: {
-			Validator: parser.ValidateRegex(*parser.BasicCharsRegex, true),
+			Validator: parser.ValidateRegex(parser.BasicCharsRegex, true),
 			Scope:     parser.AnnotationScopeIngress,
 			Risk:      parser.AnnotationRiskMedium,
 			Documentation: `This annotation specifies a Secret with the certificate tls.crt, key tls.key in PEM format used for authentication to a proxied HTTPS server. 
@@ -68,14 +67,14 @@ var proxySSLAnnotation = parser.Annotation{
 			Just secrets on the same namespace of the ingress can be used.`,
 		},
 		proxySSLCiphersAnnotation: {
-			Validator: parser.ValidateRegex(*proxySSLCiphersRegex, true),
+			Validator: parser.ValidateRegex(proxySSLCiphersRegex, true),
 			Scope:     parser.AnnotationScopeIngress,
 			Risk:      parser.AnnotationRiskMedium,
 			Documentation: `This annotation Specifies the enabled ciphers for requests to a proxied HTTPS server. 
 			The ciphers are specified in the format understood by the OpenSSL library.`,
 		},
 		proxySSLProtocolsAnnotation: {
-			Validator:     parser.ValidateRegex(*proxySSLProtocolRegex, true),
+			Validator:     parser.ValidateRegex(proxySSLProtocolRegex, true),
 			Scope:         parser.AnnotationScopeIngress,
 			Risk:          parser.AnnotationRiskLow,
 			Documentation: `This annotation enables the specified protocols for requests to a proxied HTTPS server.`,
@@ -88,7 +87,7 @@ var proxySSLAnnotation = parser.Annotation{
 			This value is also passed through SNI when a connection is established to the proxied HTTPS server.`,
 		},
 		proxySSLVerifyAnnotation: {
-			Validator:     parser.ValidateRegex(*proxySSLOnOffRegex, true),
+			Validator:     parser.ValidateRegex(proxySSLOnOffRegex, true),
 			Scope:         parser.AnnotationScopeIngress,
 			Risk:          parser.AnnotationRiskLow,
 			Documentation: `This annotation enables or disables verification of the proxied HTTPS server certificate. (default: off)`,
@@ -100,7 +99,7 @@ var proxySSLAnnotation = parser.Annotation{
 			Documentation: `This annotation Sets the verification depth in the proxied HTTPS server certificates chain. (default: 1).`,
 		},
 		proxySSLServerNameAnnotation: {
-			Validator:     parser.ValidateRegex(*proxySSLOnOffRegex, true),
+			Validator:     parser.ValidateRegex(proxySSLOnOffRegex, true),
 			Scope:         parser.AnnotationScopeIngress,
 			Risk:          parser.AnnotationRiskLow,
 			Documentation: `This annotation enables passing of the server name through TLS Server Name Indication extension (SNI, RFC 6066) when establishing a connection with the proxied HTTPS server.`,
@@ -150,10 +149,11 @@ func (pssl1 *Config) Equal(pssl2 *Config) bool {
 }
 
 // NewParser creates a new TLS authentication annotation parser
-func NewParser(resolver resolver.Resolver) parser.IngressAnnotation {
+func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 	return proxySSL{
-		r:                resolver,
-		annotationConfig: proxySSLAnnotation}
+		r:                r,
+		annotationConfig: proxySSLAnnotation,
+	}
 }
 
 type proxySSL struct {
@@ -208,13 +208,13 @@ func (p proxySSL) Parse(ing *networking.Ingress) (interface{}, error) {
 	proxyCert, err := p.r.GetAuthCertificate(proxysslsecret)
 	if err != nil {
 		e := fmt.Errorf("error obtaining certificate: %w", err)
-		return &Config{}, ing_errors.LocationDenied{Reason: e}
+		return &Config{}, ing_errors.LocationDeniedError{Reason: e}
 	}
 	config.AuthSSLCert = *proxyCert
 
 	config.Ciphers, err = parser.GetStringAnnotation(proxySSLCiphersAnnotation, ing, p.annotationConfig.Annotations)
 	if err != nil {
-		if errors.IsValidationError(err) {
+		if ing_errors.IsValidationError(err) {
 			klog.Warningf("invalid value passed to proxy-ssl-ciphers, defaulting to %s", defaultProxySSLCiphers)
 		}
 		config.Ciphers = defaultProxySSLCiphers
@@ -222,7 +222,7 @@ func (p proxySSL) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	config.Protocols, err = parser.GetStringAnnotation(proxySSLProtocolsAnnotation, ing, p.annotationConfig.Annotations)
 	if err != nil {
-		if errors.IsValidationError(err) {
+		if ing_errors.IsValidationError(err) {
 			klog.Warningf("invalid value passed to proxy-ssl-protocols, defaulting to %s", defaultProxySSLProtocols)
 		}
 		config.Protocols = defaultProxySSLProtocols
@@ -232,7 +232,7 @@ func (p proxySSL) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	config.ProxySSLName, err = parser.GetStringAnnotation(proxySSLNameAnnotation, ing, p.annotationConfig.Annotations)
 	if err != nil {
-		if errors.IsValidationError(err) {
+		if ing_errors.IsValidationError(err) {
 			klog.Warningf("invalid value passed to proxy-ssl-name, defaulting to empty")
 		}
 		config.ProxySSLName = ""
@@ -260,7 +260,7 @@ func (p proxySSL) GetDocumentation() parser.AnnotationFields {
 	return p.annotationConfig.Annotations
 }
 
-func (a proxySSL) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+func (p proxySSL) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(p.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, proxySSLAnnotation.Annotations)
 }

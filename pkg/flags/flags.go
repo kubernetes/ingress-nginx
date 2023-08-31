@@ -298,12 +298,12 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		nginx.HealthCheckTimeout = time.Duration(*defHealthCheckTimeout) * time.Second
 	}
 
-	if len(*watchNamespace) != 0 && len(*watchNamespaceSelector) != 0 {
+	if *watchNamespace != "" && *watchNamespaceSelector != "" {
 		return false, nil, fmt.Errorf("flags --watch-namespace and --watch-namespace-selector are mutually exclusive")
 	}
 
 	var namespaceSelector labels.Selector
-	if len(*watchNamespaceSelector) != 0 {
+	if *watchNamespaceSelector != "" {
 		var err error
 		namespaceSelector, err = labels.Parse(*watchNamespaceSelector)
 		if err != nil {
@@ -311,7 +311,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		}
 	}
 
-	var histogramBuckets = &collectors.HistogramBuckets{
+	histogramBuckets := &collectors.HistogramBuckets{
 		TimeBuckets:   *timeBuckets,
 		LengthBuckets: *lengthBuckets,
 		SizeBuckets:   *sizeBuckets,
@@ -360,7 +360,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 			HTTPS:    *httpsPort,
 			SSLProxy: *sslProxyPort,
 		},
-		IngressClassConfiguration: &ingressclass.IngressClassConfiguration{
+		IngressClassConfiguration: &ingressclass.Configuration{
 			Controller:         *ingressClassController,
 			AnnotationValue:    *ingressClassAnnotation,
 			WatchWithoutClass:  *watchWithoutClass,
@@ -380,7 +380,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 
 	var err error
 	if nginx.MaxmindEditionIDs != "" {
-		if err = nginx.ValidateGeoLite2DBEditions(); err != nil {
+		if err := nginx.ValidateGeoLite2DBEditions(); err != nil {
 			return false, nil, err
 		}
 		if nginx.MaxmindLicenseKey != "" || nginx.MaxmindMirror != "" {

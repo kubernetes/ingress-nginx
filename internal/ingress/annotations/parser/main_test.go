@@ -93,14 +93,16 @@ func TestGetStringAnnotation(t *testing.T) {
 		{"valid - A", "string", "A ", "A", false},
 		{"valid - B", "string", "	B", "B", false},
 		{"empty", "string", " ", "", true},
-		{"valid multiline", "string", `
+		{
+			"valid multiline", "string", `
 		rewrite (?i)/arcgis/rest/services/Utilities/Geometry/GeometryServer(.*)$ /arcgis/rest/services/Utilities/Geometry/GeometryServer$1 break;
 		rewrite (?i)/arcgis/services/Utilities/Geometry/GeometryServer(.*)$ /arcgis/services/Utilities/Geometry/GeometryServer$1 break;
 		`, `
 rewrite (?i)/arcgis/rest/services/Utilities/Geometry/GeometryServer(.*)$ /arcgis/rest/services/Utilities/Geometry/GeometryServer$1 break;
 rewrite (?i)/arcgis/services/Utilities/Geometry/GeometryServer(.*)$ /arcgis/services/Utilities/Geometry/GeometryServer$1 break;
 `,
-			false},
+			false,
+		},
 	}
 
 	data := map[string]string{}
@@ -213,8 +215,10 @@ func TestGetIntAnnotation(t *testing.T) {
 
 func TestStringToURL(t *testing.T) {
 	validURL := "http://bar.foo.com/external-auth"
-	validParsedURL, _ := url.Parse(validURL)
-
+	validParsedURL, err := url.Parse(validURL)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	tests := []struct {
 		title   string
 		url     string

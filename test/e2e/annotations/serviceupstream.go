@@ -27,6 +27,8 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
+const dbgCmd = "/dbg backends all"
+
 var _ = framework.DescribeAnnotation("service-upstream", func() {
 	f := framework.NewDefaultFramework("serviceupstream")
 	host := "serviceupstream"
@@ -57,10 +59,9 @@ var _ = framework.DescribeAnnotation("service-upstream", func() {
 
 			ginkgo.By("checking if the Service Cluster IP and Port are used")
 			s := f.GetService(f.Namespace, framework.EchoService)
-			dbgCmd := "/dbg backends all"
 			output, err := f.ExecIngressPod(dbgCmd)
 			assert.Nil(ginkgo.GinkgoT(), err)
-			assert.Contains(ginkgo.GinkgoT(), output, fmt.Sprintf(`"address": "%s"`, s.Spec.ClusterIP))
+			assert.Contains(ginkgo.GinkgoT(), output, fmt.Sprintf(`"address": %q`, s.Spec.ClusterIP))
 		})
 	})
 
@@ -86,10 +87,9 @@ var _ = framework.DescribeAnnotation("service-upstream", func() {
 
 			ginkgo.By("checking if the Service Cluster IP and Port are used")
 			s := f.GetService(f.Namespace, framework.EchoService)
-			dbgCmd := "/dbg backends all"
 			output, err := f.ExecIngressPod(dbgCmd)
 			assert.Nil(ginkgo.GinkgoT(), err)
-			assert.Contains(ginkgo.GinkgoT(), output, fmt.Sprintf(`"address": "%s"`, s.Spec.ClusterIP))
+			assert.Contains(ginkgo.GinkgoT(), output, fmt.Sprintf(`"address": %q`, s.Spec.ClusterIP))
 		})
 	})
 
@@ -117,10 +117,9 @@ var _ = framework.DescribeAnnotation("service-upstream", func() {
 
 			ginkgo.By("checking if the Service Cluster IP and Port are not used")
 			s := f.GetService(f.Namespace, framework.EchoService)
-			dbgCmd := "/dbg backends all"
 			output, err := f.ExecIngressPod(dbgCmd)
 			assert.Nil(ginkgo.GinkgoT(), err)
-			assert.NotContains(ginkgo.GinkgoT(), output, fmt.Sprintf(`"address": "%s"`, s.Spec.ClusterIP))
+			assert.NotContains(ginkgo.GinkgoT(), output, fmt.Sprintf(`"address": %q`, s.Spec.ClusterIP))
 		})
 	})
 })

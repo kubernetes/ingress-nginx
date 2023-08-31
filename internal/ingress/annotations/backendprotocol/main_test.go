@@ -44,6 +44,7 @@ func buildIngress() *networking.Ingress {
 		},
 	}
 }
+
 func TestParseInvalidAnnotations(t *testing.T) {
 	ing := buildIngress()
 
@@ -56,7 +57,7 @@ func TestParseInvalidAnnotations(t *testing.T) {
 	if !ok {
 		t.Errorf("expected a string type")
 	}
-	if val != "HTTP" {
+	if val != http {
 		t.Errorf("expected HTTPS but %v returned", val)
 	}
 
@@ -72,7 +73,7 @@ func TestParseInvalidAnnotations(t *testing.T) {
 	if !ok {
 		t.Errorf("expected a string type")
 	}
-	if val != "HTTP" {
+	if val != http {
 		t.Errorf("expected HTTPS but %v returned", val)
 	}
 
@@ -88,7 +89,7 @@ func TestParseInvalidAnnotations(t *testing.T) {
 	if !ok {
 		t.Errorf("expected a string type")
 	}
-	if val != "HTTP" {
+	if val != http {
 		t.Errorf("expected HTTPS but %v returned", val)
 	}
 }

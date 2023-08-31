@@ -31,16 +31,14 @@ const (
 	customHTTPErrorsAnnotation = "custom-http-errors"
 )
 
-var (
-	// We accept anything between 400 and 599, on a comma separated.
-	arrayOfHTTPErrors = regexp.MustCompile(`^(?:[4,5][0-9][0-9],?)*$`)
-)
+// We accept anything between 400 and 599, on a comma separated.
+var arrayOfHTTPErrors = regexp.MustCompile(`^(?:[4,5]\d{2},?)*$`)
 
 var customHTTPErrorsAnnotations = parser.Annotation{
 	Group: "backend",
 	Annotations: parser.AnnotationFields{
 		customHTTPErrorsAnnotation: {
-			Validator: parser.ValidateRegex(*arrayOfHTTPErrors, true),
+			Validator: parser.ValidateRegex(arrayOfHTTPErrors, true),
 			Scope:     parser.AnnotationScopeLocation,
 			Risk:      parser.AnnotationRiskLow,
 			Documentation: `If a default backend annotation is specified on the ingress, the errors code specified on this annotation 
@@ -72,7 +70,7 @@ func (e customhttperrors) Parse(ing *networking.Ingress) (interface{}, error) {
 	}
 
 	cSplit := strings.Split(c, ",")
-	var codes []int
+	codes := make([]int, 0, len(cSplit))
 	for _, i := range cSplit {
 		num, err := strconv.Atoi(i)
 		if err != nil {
@@ -88,7 +86,7 @@ func (e customhttperrors) GetDocumentation() parser.AnnotationFields {
 	return e.annotationConfig.Annotations
 }
 
-func (a customhttperrors) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+func (e customhttperrors) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(e.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, customHTTPErrorsAnnotations.Annotations)
 }

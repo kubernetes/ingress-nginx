@@ -38,7 +38,7 @@ func (s *EndpointSliceLister) MatchByKey(key string) ([]*discoveryv1.EndpointSli
 		keyNsLen = 0
 	} else {
 		// count '/' char
-		keyNsLen += 1
+		keyNsLen++
 	}
 	// filter endpointSlices owned by svc
 	for _, listKey := range s.ListKeys() {

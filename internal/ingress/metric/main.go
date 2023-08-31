@@ -115,11 +115,11 @@ func (c *collector) ConfigSuccess(hash uint64, success bool) {
 	c.ingressController.ConfigSuccess(hash, success)
 }
 
-func (c *collector) IncCheckCount(namespace string, name string) {
+func (c *collector) IncCheckCount(namespace, name string) {
 	c.ingressController.IncCheckCount(namespace, name)
 }
 
-func (c *collector) IncCheckErrorCount(namespace string, name string) {
+func (c *collector) IncCheckErrorCount(namespace, name string) {
 	c.ingressController.IncCheckErrorCount(namespace, name)
 }
 
@@ -183,11 +183,11 @@ func (c *collector) SetSSLInfo(servers []*ingress.Server) {
 	c.ingressController.SetSSLInfo(servers)
 }
 
-func (c *collector) IncOrphanIngress(namespace string, name string, orphanityType string) {
+func (c *collector) IncOrphanIngress(namespace, name, orphanityType string) {
 	c.ingressController.IncOrphanIngress(namespace, name, orphanityType)
 }
 
-func (c *collector) DecOrphanIngress(namespace string, name string, orphanityType string) {
+func (c *collector) DecOrphanIngress(namespace, name, orphanityType string) {
 	c.ingressController.DecOrphanIngress(namespace, name, orphanityType)
 }
 
@@ -195,7 +195,7 @@ func (c *collector) SetHosts(hosts sets.Set[string]) {
 	c.socket.SetHosts(hosts)
 }
 
-func (c *collector) SetAdmissionMetrics(testedIngressLength float64, testedIngressTime float64, renderingIngressLength float64, renderingIngressTime float64, testedConfigurationSize float64, admissionTime float64) {
+func (c *collector) SetAdmissionMetrics(testedIngressLength, testedIngressTime, renderingIngressLength, renderingIngressTime, testedConfigurationSize, admissionTime float64) {
 	c.admissionController.SetAdmissionMetrics(
 		testedIngressLength,
 		testedIngressTime,
@@ -219,9 +219,7 @@ func (c *collector) OnStoppedLeading(electionID string) {
 	c.ingressController.RemoveAllSSLMetrics(c.registry)
 }
 
-var (
-	currentLeader uint32
-)
+var currentLeader uint32
 
 func setLeader(leader bool) {
 	var i uint32

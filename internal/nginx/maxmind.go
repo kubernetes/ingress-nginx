@@ -101,7 +101,7 @@ func DownloadGeoLite2DB(attempts int, period time.Duration) error {
 	var lastErr error
 	retries := 0
 
-	_ = wait.ExponentialBackoff(defaultRetry, func() (bool, error) {
+	lastErr = wait.ExponentialBackoff(defaultRetry, func() (bool, error) {
 		var dlError error
 		for _, dbName := range strings.Split(MaxmindEditionIDs, ",") {
 			dlError = downloadDatabase(dbName)
@@ -139,8 +139,8 @@ func createURL(mirror, licenseKey, dbName string) string {
 }
 
 func downloadDatabase(dbName string) error {
-	url := createURL(MaxmindMirror, MaxmindLicenseKey, dbName)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	newURL := createURL(MaxmindMirror, MaxmindLicenseKey, dbName)
+	req, err := http.NewRequest(http.MethodGet, newURL, http.NoBody)
 	if err != nil {
 		return err
 	}
@@ -175,8 +175,7 @@ func downloadDatabase(dbName string) error {
 			return err
 		}
 
-		switch header.Typeflag {
-		case tar.TypeReg:
+		if header.Typeflag == tar.TypeReg {
 			if !strings.HasSuffix(header.Name, mmdbFile) {
 				continue
 			}
@@ -186,6 +185,7 @@ func downloadDatabase(dbName string) error {
 				return err
 			}
 
+			//nolint:gocritic // TODO: will fix it on a followup PR
 			defer outFile.Close()
 
 			if _, err := io.CopyN(outFile, tarReader, header.Size); err != nil {

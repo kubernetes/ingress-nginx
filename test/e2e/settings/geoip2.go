@@ -19,10 +19,9 @@ package settings
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"path/filepath"
 	"strings"
-
-	"net/http"
 
 	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
@@ -72,8 +71,7 @@ var _ = framework.DescribeSetting("Geoip2", func() {
 
 		f.UpdateNginxConfigMapData("use-geoip2", "true")
 
-		httpSnippetAllowingOnlyAustralia :=
-			`map $geoip2_city_country_code $blocked_country {
+		httpSnippetAllowingOnlyAustralia := `map $geoip2_city_country_code $blocked_country {
   default 1;
   AU 0;
 }`
@@ -85,8 +83,7 @@ var _ = framework.DescribeSetting("Geoip2", func() {
 				return strings.Contains(cfg, "map $geoip2_city_country_code $blocked_country")
 			})
 
-		configSnippet :=
-			`if ($blocked_country) {
+		configSnippet := `if ($blocked_country) {
   return 403;
 }`
 

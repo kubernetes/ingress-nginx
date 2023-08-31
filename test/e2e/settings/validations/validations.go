@@ -29,7 +29,7 @@ import (
 
 var _ = framework.IngressNginxDescribeSerial("annotation validations", func() {
 	f := framework.NewDefaultFramework("validations")
-
+	//nolint:dupl // Ignore dupl errors for similar test case
 	ginkgo.It("should allow ingress based on their risk on webhooks", func() {
 		host := "annotation-validations"
 
@@ -54,9 +54,8 @@ var _ = framework.IngressNginxDescribeSerial("annotation validations", func() {
 		ing = framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
 		assert.NotNil(ginkgo.GinkgoT(), err, "creating ingress with risky annotations should trigger an error")
-
 	})
-
+	//nolint:dupl // Ignore dupl errors for similar test case
 	ginkgo.It("should allow ingress based on their risk on webhooks", func() {
 		host := "annotation-validations"
 
@@ -81,6 +80,5 @@ var _ = framework.IngressNginxDescribeSerial("annotation validations", func() {
 		ing = framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
 		assert.NotNil(ginkgo.GinkgoT(), err, "creating ingress with risky annotations should trigger an error")
-
 	})
 })

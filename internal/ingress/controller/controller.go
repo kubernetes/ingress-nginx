@@ -114,7 +114,7 @@ type Configuration struct {
 
 	DisableCatchAll bool
 
-	IngressClassConfiguration *ingressclass.IngressClassConfiguration
+	IngressClassConfiguration *ingressclass.Configuration
 
 	ValidationWebhook         string
 	ValidationWebhookCertPath string
@@ -143,7 +143,7 @@ type Configuration struct {
 func getIngressPodZone(svc *apiv1.Service) string {
 	svcKey := k8s.MetaNamespaceKey(svc)
 	if svcZoneAnnotation, ok := svc.ObjectMeta.GetAnnotations()[apiv1.AnnotationTopologyMode]; ok {
-		if strings.ToLower(svcZoneAnnotation) == "auto" {
+		if strings.EqualFold(svcZoneAnnotation, "auto") {
 			if foundZone, ok := k8s.IngressNodeDetails.GetLabels()[apiv1.LabelTopologyZone]; ok {
 				klog.V(3).Infof("Svc has topology aware annotation enabled, try to use zone %q where controller pod is running for Service %q ", foundZone, svcKey)
 				return foundZone
@@ -154,7 +154,7 @@ func getIngressPodZone(svc *apiv1.Service) string {
 }
 
 // GetPublishService returns the Service used to set the load-balancer status of Ingresses.
-func (n NGINXController) GetPublishService() *apiv1.Service {
+func (n *NGINXController) GetPublishService() *apiv1.Service {
 	s, err := n.store.GetService(n.cfg.PublishService)
 	if err != nil {
 		return nil
@@ -189,13 +189,16 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	if !utilingress.IsDynamicConfigurationEnough(pcfg, n.runningConfig) {
 		klog.InfoS("Configuration changes detected, backend reload required")
 
-		hash, _ := hashstructure.Hash(pcfg, hashstructure.FormatV1, &hashstructure.HashOptions{
+		hash, err := hashstructure.Hash(pcfg, hashstructure.FormatV1, &hashstructure.HashOptions{
 			TagName: "json",
 		})
+		if err != nil {
+			klog.Errorf("unexpected error hashing configuration: %v", err)
+		}
 
 		pcfg.ConfigurationChecksum = fmt.Sprintf("%v", hash)
 
-		err := n.OnUpdate(*pcfg)
+		err = n.OnUpdate(*pcfg)
 		if err != nil {
 			n.metricCollector.IncReloadErrorCount()
 			n.metricCollector.ConfigSuccess(hash, false)
@@ -263,7 +266,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 func (n *NGINXController) CheckWarning(ing *networking.Ingress) ([]string, error) {
 	warnings := make([]string, 0)
 
-	var deprecatedAnnotations = sets.NewString()
+	deprecatedAnnotations := sets.NewString()
 	deprecatedAnnotations.Insert(
 		"enable-influxdb",
 		"influxdb-measurement",
@@ -335,7 +338,7 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 	}
 
 	if n.cfg.DisableCatchAll && ing.Spec.DefaultBackend != nil {
-		return fmt.Errorf("This deployment is trying to create a catch-all ingress while DisableCatchAll flag is set to true. Remove '.spec.defaultBackend' or set DisableCatchAll flag to false.")
+		return fmt.Errorf("this deployment is trying to create a catch-all ingress while DisableCatchAll flag is set to true. Remove '.spec.defaultBackend' or set DisableCatchAll flag to false")
 	}
 	startRender := time.Now().UnixNano() / 1000000
 	cfg := n.store.GetBackendConfiguration()
@@ -355,10 +358,9 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 	}
 
 	for key, value := range ing.ObjectMeta.GetAnnotations() {
-
 		if parser.AnnotationsPrefix != parser.DefaultAnnotationsPrefix {
 			if strings.HasPrefix(key, fmt.Sprintf("%s/", parser.DefaultAnnotationsPrefix)) {
-				return fmt.Errorf("This deployment has a custom annotation prefix defined. Use '%s' instead of '%s'", parser.AnnotationsPrefix, parser.DefaultAnnotationsPrefix)
+				return fmt.Errorf("this deployment has a custom annotation prefix defined. Use '%s' instead of '%s'", parser.AnnotationsPrefix, parser.DefaultAnnotationsPrefix)
 			}
 		}
 
@@ -374,10 +376,9 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 			return fmt.Errorf("%s annotation cannot be used. Snippet directives are disabled by the Ingress administrator", key)
 		}
 
-		if len(cfg.GlobalRateLimitMemcachedHost) == 0 && strings.HasPrefix(key, fmt.Sprintf("%s/%s", parser.AnnotationsPrefix, "global-rate-limit")) {
+		if cfg.GlobalRateLimitMemcachedHost == "" && strings.HasPrefix(key, fmt.Sprintf("%s/%s", parser.AnnotationsPrefix, "global-rate-limit")) {
 			return fmt.Errorf("'global-rate-limit*' annotations require 'global-rate-limit-memcached-host' settings configured in the global configmap")
 		}
-
 	}
 
 	k8s.SetDefaultNGINXPathType(ing)
@@ -401,7 +402,7 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 	startTest := time.Now().UnixNano() / 1000000
 	_, servers, pcfg := n.getConfiguration(ings)
 
-	err = checkOverlap(ing, allIngresses, servers)
+	err = checkOverlap(ing, servers)
 	if err != nil {
 		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
 		return err
@@ -452,7 +453,7 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 		return []ingress.L4Service{}
 	}
 
-	var svcs []ingress.L4Service
+	svcs := make([]ingress.L4Service, 0, len(configmap.Data))
 	var svcProxyProtocol ingress.ProxyProtocol
 
 	rp := []int{
@@ -489,10 +490,10 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 		svcProxyProtocol.Encode = false
 		// Proxy Protocol is only compatible with TCP Services
 		if len(nsSvcPort) >= 3 && proto == apiv1.ProtocolTCP {
-			if len(nsSvcPort) >= 3 && strings.ToUpper(nsSvcPort[2]) == "PROXY" {
+			if len(nsSvcPort) >= 3 && strings.EqualFold(nsSvcPort[2], "PROXY") {
 				svcProxyProtocol.Decode = true
 			}
-			if len(nsSvcPort) == 4 && strings.ToUpper(nsSvcPort[3]) == "PROXY" {
+			if len(nsSvcPort) == 4 && strings.EqualFold(nsSvcPort[3], "PROXY") {
 				svcProxyProtocol.Encode = true
 			}
 		}
@@ -532,6 +533,7 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 			klog.V(3).Infof("Searching Endpoints with %v port number %d for Service %q", proto, targetPort, nsName)
 			for i := range svc.Spec.Ports {
 				sp := svc.Spec.Ports[i]
+				//nolint:gosec // Ignore G109 error
 				if sp.Port == int32(targetPort) {
 					if sp.Protocol == proto {
 						endps = getEndpointsFromSlices(svc, &sp, proto, zone, n.store.GetServiceEndpointsSlices)
@@ -574,7 +576,7 @@ func (n *NGINXController) getDefaultUpstream() *ingress.Backend {
 	}
 	svcKey := n.cfg.DefaultService
 
-	if len(svcKey) == 0 {
+	if svcKey == "" {
 		upstream.Endpoints = append(upstream.Endpoints, n.DefaultEndpoint())
 		return upstream
 	}
@@ -690,13 +692,14 @@ func dropSnippetDirectives(anns *annotations.Ingress, ingKey string) {
 			klog.V(3).Infof("Ingress %q tried to use stream-snippet and the annotation is disabled by the admin. Removing the annotation", ingKey)
 			anns.StreamSnippet = ""
 		}
-
 	}
 }
 
 // getBackendServers returns a list of Upstream and Server to be used by the
 // backend.  An upstream can be used in multiple servers if the namespace,
 // service name and port are the same.
+//
+//nolint:gocyclo // Ignore function complexity error
 func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*ingress.Backend, []*ingress.Server) {
 	du := n.getDefaultUpstream()
 	upstreams := n.createUpstreams(ingresses, du)
@@ -1030,7 +1033,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 			// configure traffic shaping for canary
 			if anns.Canary.Enabled {
 				upstreams[defBackend].NoServer = true
-				upstreams[defBackend].TrafficShapingPolicy = newTrafficShapingPolicy(anns.Canary)
+				upstreams[defBackend].TrafficShapingPolicy = newTrafficShapingPolicy(&anns.Canary)
 			}
 
 			if len(upstreams[defBackend].Endpoints) == 0 {
@@ -1095,7 +1098,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 				// configure traffic shaping for canary
 				if anns.Canary.Enabled {
 					upstreams[name].NoServer = true
-					upstreams[name].TrafficShapingPolicy = newTrafficShapingPolicy(anns.Canary)
+					upstreams[name].TrafficShapingPolicy = newTrafficShapingPolicy(&anns.Canary)
 				}
 
 				if len(upstreams[name].Endpoints) == 0 {
@@ -1206,7 +1209,6 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 		if strconv.Itoa(int(servicePort.Port)) == backendPort ||
 			servicePort.TargetPort.String() == backendPort ||
 			servicePort.Name == backendPort {
-
 			endps := getEndpointsFromSlices(svc, &servicePort, apiv1.ProtocolTCP, zone, n.store.GetServiceEndpointsSlices)
 			if len(endps) == 0 {
 				klog.Warningf("Service %q does not have any active Endpoint.", svcKey)
@@ -1239,8 +1241,8 @@ func (n *NGINXController) getDefaultSSLCertificate() *ingress.SSLCert {
 // one root location, which uses a default backend if left unspecified.
 func (n *NGINXController) createServers(data []*ingress.Ingress,
 	upstreams map[string]*ingress.Backend,
-	du *ingress.Backend) map[string]*ingress.Server {
-
+	du *ingress.Backend,
+) map[string]*ingress.Server {
 	servers := make(map[string]*ingress.Server, len(data))
 	allAliases := make(map[string][]string, len(data))
 
@@ -1282,7 +1284,8 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 					Rewrite: false,
 				},
 			},
-		}}
+		},
+	}
 
 	// initialize all other servers
 	for _, ing := range data {
@@ -1532,7 +1535,7 @@ func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) 
 }
 
 // OK to merge canary ingresses iff there exists one or more ingresses to potentially merge into
-func nonCanaryIngressExists(ingresses []*ingress.Ingress, canaryIngresses []*ingress.Ingress) bool {
+func nonCanaryIngressExists(ingresses, canaryIngresses []*ingress.Ingress) bool {
 	return len(ingresses)-len(canaryIngresses) > 0
 }
 
@@ -1540,12 +1543,12 @@ func nonCanaryIngressExists(ingresses []*ingress.Ingress, canaryIngresses []*ing
 // 1) names of backends do not match and canary doesn't merge into itself
 // 2) primary name is not the default upstream
 // 3) the primary has a server
-func canMergeBackend(primary *ingress.Backend, alternative *ingress.Backend) bool {
+func canMergeBackend(primary, alternative *ingress.Backend) bool {
 	return alternative != nil && primary.Name != alternative.Name && primary.Name != defUpstreamName && !primary.NoServer
 }
 
 // Performs the merge action and checks to ensure that one two alternative backends do not merge into each other
-func mergeAlternativeBackend(ing *ingress.Ingress, priUps *ingress.Backend, altUps *ingress.Backend) bool {
+func mergeAlternativeBackend(ing *ingress.Ingress, priUps, altUps *ingress.Backend) bool {
 	if priUps.NoServer {
 		klog.Warningf("unable to merge alternative backend %v into primary backend %v because %v is a primary backend",
 			altUps.Name, priUps.Name, priUps.Name)
@@ -1563,8 +1566,7 @@ func mergeAlternativeBackend(ing *ingress.Ingress, priUps *ingress.Backend, altU
 		priUps.SessionAffinity.DeepCopyInto(&altUps.SessionAffinity)
 	}
 
-	priUps.AlternativeBackends =
-		append(priUps.AlternativeBackends, altUps.Name)
+	priUps.AlternativeBackends = append(priUps.AlternativeBackends, altUps.Name)
 
 	return true
 }
@@ -1574,8 +1576,8 @@ func mergeAlternativeBackend(ing *ingress.Ingress, priUps *ingress.Backend, altU
 // to a backend's alternative list.
 // If no match is found, then the serverless backend is deleted.
 func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingress.Backend,
-	servers map[string]*ingress.Server) {
-
+	servers map[string]*ingress.Server,
+) {
 	// merge catch-all alternative backends
 	if ing.Spec.DefaultBackend != nil {
 		upsName := upstreamName(ing.Namespace, ing.Spec.DefaultBackend.Service)
@@ -1585,7 +1587,6 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 		if altUps == nil {
 			klog.Warningf("alternative backend %s has already been removed", upsName)
 		} else {
-
 			merged := false
 			altEqualsPri := false
 
@@ -1676,8 +1677,8 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 // extractTLSSecretName returns the name of the Secret containing a SSL
 // certificate for the given host name, or an empty string.
 func extractTLSSecretName(host string, ing *ingress.Ingress,
-	getLocalSSLCert func(string) (*ingress.SSLCert, error)) string {
-
+	getLocalSSLCert func(string) (*ingress.SSLCert, error),
+) string {
 	if ing == nil {
 		return ""
 	}
@@ -1694,7 +1695,6 @@ func extractTLSSecretName(host string, ing *ingress.Ingress,
 
 	// no TLS host matching host name, try each TLS host for matching SAN or CN
 	for _, tls := range ing.Spec.TLS {
-
 		if tls.SecretName == "" {
 			// There's no secretName specified, so it will never be available
 			continue
@@ -1753,6 +1753,7 @@ func externalNamePorts(name string, svc *apiv1.Service) *apiv1.ServicePort {
 	}
 
 	for _, svcPort := range svc.Spec.Ports {
+		//nolint:gosec // Ignore G109 error
 		if svcPort.Port != int32(port) {
 			continue
 		}
@@ -1771,13 +1772,14 @@ func externalNamePorts(name string, svc *apiv1.Service) *apiv1.ServicePort {
 
 	// ExternalName without port
 	return &apiv1.ServicePort{
-		Protocol:   "TCP",
+		Protocol: "TCP",
+		//nolint:gosec // Ignore G109 error
 		Port:       int32(port),
 		TargetPort: intstr.FromInt(port),
 	}
 }
 
-func checkOverlap(ing *networking.Ingress, ingresses []*ingress.Ingress, servers []*ingress.Server) error {
+func checkOverlap(ing *networking.Ingress, servers []*ingress.Server) error {
 	for _, rule := range ing.Spec.Rules {
 		if rule.HTTP == nil {
 			continue
@@ -1870,7 +1872,7 @@ func (n *NGINXController) getStreamSnippets(ingresses []*ingress.Ingress) []stri
 }
 
 // newTrafficShapingPolicy creates new ingress.TrafficShapingPolicy instance using canary configuration
-func newTrafficShapingPolicy(cfg canary.Config) ingress.TrafficShapingPolicy {
+func newTrafficShapingPolicy(cfg *canary.Config) ingress.TrafficShapingPolicy {
 	return ingress.TrafficShapingPolicy{
 		Weight:        cfg.Weight,
 		WeightTotal:   cfg.WeightTotal,
