@@ -28,7 +28,6 @@ import (
 )
 
 var _ = framework.IngressNginxDescribe("[Flag] custom HTTP and HTTPS ports", func() {
-
 	host := "forwarded-headers"
 
 	f := framework.NewDefaultFramework("forwarded-port-headers", framework.WithHTTPBunEnabled())
@@ -44,7 +43,6 @@ var _ = framework.IngressNginxDescribe("[Flag] custom HTTP and HTTPS ports", fun
 
 	ginkgo.Context("with a plain HTTP ingress", func() {
 		ginkgo.It("should set X-Forwarded-Port headers accordingly when listening on a non-default HTTP port", func() {
-
 			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 			f.EnsureIngress(ing)
 
@@ -64,9 +62,7 @@ var _ = framework.IngressNginxDescribe("[Flag] custom HTTP and HTTPS ports", fun
 	})
 
 	ginkgo.Context("with a TLS enabled ingress", func() {
-
 		ginkgo.It("should set X-Forwarded-Port header to 443", func() {
-
 			ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, nil)
 			f.EnsureIngress(ing)
 
@@ -94,7 +90,6 @@ var _ = framework.IngressNginxDescribe("[Flag] custom HTTP and HTTPS ports", fun
 		})
 
 		ginkgo.Context("when external authentication is configured", func() {
-
 			ginkgo.It("should set the X-Forwarded-Port header to 443", func() {
 				annotations := map[string]string{
 					"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/basic-auth/user/password", f.HTTPBunIP),

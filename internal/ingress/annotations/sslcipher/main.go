@@ -17,14 +17,45 @@ limitations under the License.
 package sslcipher
 
 import (
+	"regexp"
+
 	networking "k8s.io/api/networking/v1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
+	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
+const (
+	sslPreferServerCipherAnnotation = "ssl-prefer-server-ciphers"
+	sslCipherAnnotation             = "ssl-ciphers"
+)
+
+// Should cover something like "ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP"
+var regexValidSSLCipher = regexp.MustCompile(`^[A-Za-z0-9!:+\-]*$`)
+
+var sslCipherAnnotations = parser.Annotation{
+	Group: "backend",
+	Annotations: parser.AnnotationFields{
+		sslPreferServerCipherAnnotation: {
+			Validator: parser.ValidateBool,
+			Scope:     parser.AnnotationScopeIngress,
+			Risk:      parser.AnnotationRiskLow,
+			Documentation: `The following annotation will set the ssl_prefer_server_ciphers directive at the server level. 
+			This configuration specifies that server ciphers should be preferred over client ciphers when using the SSLv3 and TLS protocols.`,
+		},
+		sslCipherAnnotation: {
+			Validator:     parser.ValidateRegex(regexValidSSLCipher, true),
+			Scope:         parser.AnnotationScopeIngress,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `Using this annotation will set the ssl_ciphers directive at the server level. This configuration is active for all the paths in the host.`,
+		},
+	},
+}
+
 type sslCipher struct {
-	r resolver.Resolver
+	r                resolver.Resolver
+	annotationConfig parser.Annotation
 }
 
 // Config contains the ssl-ciphers & ssl-prefer-server-ciphers configuration
@@ -35,7 +66,10 @@ type Config struct {
 
 // NewParser creates a new sslCipher annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return sslCipher{r}
+	return sslCipher{
+		r:                r,
+		annotationConfig: sslCipherAnnotations,
+	}
 }
 
 // Parse parses the annotations contained in the ingress rule
@@ -45,7 +79,7 @@ func (sc sslCipher) Parse(ing *networking.Ingress) (interface{}, error) {
 	var err error
 	var sslPreferServerCiphers bool
 
-	sslPreferServerCiphers, err = parser.GetBoolAnnotation("ssl-prefer-server-ciphers", ing)
+	sslPreferServerCiphers, err = parser.GetBoolAnnotation(sslPreferServerCipherAnnotation, ing, sc.annotationConfig.Annotations)
 	if err != nil {
 		config.SSLPreferServerCiphers = ""
 	} else {
@@ -56,7 +90,19 @@ func (sc sslCipher) Parse(ing *networking.Ingress) (interface{}, error) {
 		}
 	}
 
-	config.SSLCiphers, _ = parser.GetStringAnnotation("ssl-ciphers", ing)
+	config.SSLCiphers, err = parser.GetStringAnnotation(sslCipherAnnotation, ing, sc.annotationConfig.Annotations)
+	if err != nil && !errors.IsInvalidContent(err) && !errors.IsMissingAnnotations(err) {
+		return config, err
+	}
 
 	return config, nil
+}
+
+func (sc sslCipher) GetDocumentation() parser.AnnotationFields {
+	return sc.annotationConfig.Annotations
+}
+
+func (sc sslCipher) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(sc.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+	return parser.CheckAnnotationRisk(anns, maxrisk, sslCipherAnnotations.Annotations)
 }

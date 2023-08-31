@@ -55,7 +55,7 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	return cmd
 }
 
-func conf(flags *genericclioptions.ConfigFlags, host string, podName string, deployment string, selector string, container string) error {
+func conf(flags *genericclioptions.ConfigFlags, host, podName, deployment, selector, container string) error {
 	pod, err := request.ChoosePod(flags, podName, deployment, selector)
 	if err != nil {
 		return err

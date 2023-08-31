@@ -44,14 +44,11 @@ type socketData struct {
 	Latency      float64 `json:"upstreamLatency"`
 	HeaderTime   float64 `json:"upstreamHeaderTime"`
 	ResponseTime float64 `json:"upstreamResponseTime"`
-	//ResponseLength float64 `json:"upstreamResponseLength"`
-	//Status         string  `json:"upstreamStatus"`
-
-	Namespace string `json:"namespace"`
-	Ingress   string `json:"ingress"`
-	Service   string `json:"service"`
-	Canary    string `json:"canary"`
-	Path      string `json:"path"`
+	Namespace    string  `json:"namespace"`
+	Ingress      string  `json:"ingress"`
+	Service      string  `json:"service"`
+	Canary       string  `json:"canary"`
+	Path         string  `json:"path"`
 }
 
 // HistogramBuckets allow customizing prometheus histogram buckets values
@@ -89,19 +86,17 @@ type SocketCollector struct {
 	reportStatusClasses bool
 }
 
-var (
-	requestTags = []string{
-		"status",
+var requestTags = []string{
+	"status",
 
-		"method",
-		"path",
+	"method",
+	"path",
 
-		"namespace",
-		"ingress",
-		"service",
-		"canary",
-	}
-)
+	"namespace",
+	"ingress",
+	"service",
+	"canary",
+}
 
 // DefObjectives was removed in https://github.com/prometheus/client_golang/pull/262
 // updating the library to latest version changed the output of the metrics
@@ -112,6 +107,7 @@ var defObjectives = map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001}
 func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStatusClasses bool, buckets HistogramBuckets, excludeMetrics []string) (*SocketCollector, error) {
 	socket := "/tmp/nginx/prometheus-nginx.socket"
 	// unix sockets must be unlink()ed before being used
+	//nolint:errcheck // Ignore unlink error
 	_ = syscall.Unlink(socket)
 
 	listener, err := net.Listen("unix", socket)
@@ -119,7 +115,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 		return nil, err
 	}
 
-	err = os.Chmod(socket, 0777) // #nosec
+	err = os.Chmod(socket, 0o777) // #nosec
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +148,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 		reportStatusClasses: reportStatusClasses,
 
 		connectTime: histogramMetric(
-			prometheus.HistogramOpts{
+			&prometheus.HistogramOpts{
 				Name:        "connect_duration_seconds",
 				Help:        "The time spent on establishing a connection with the upstream server",
 				Namespace:   PrometheusNamespace,
@@ -165,7 +161,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 		),
 
 		headerTime: histogramMetric(
-			prometheus.HistogramOpts{
+			&prometheus.HistogramOpts{
 				Name:        "header_duration_seconds",
 				Help:        "The time spent on receiving first header from the upstream server",
 				Namespace:   PrometheusNamespace,
@@ -177,7 +173,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 			mm,
 		),
 		responseTime: histogramMetric(
-			prometheus.HistogramOpts{
+			&prometheus.HistogramOpts{
 				Name:        "response_duration_seconds",
 				Help:        "The time spent on receiving the response from the upstream server",
 				Namespace:   PrometheusNamespace,
@@ -190,7 +186,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 		),
 
 		requestTime: histogramMetric(
-			prometheus.HistogramOpts{
+			&prometheus.HistogramOpts{
 				Name:        "request_duration_seconds",
 				Help:        "The request processing time in milliseconds",
 				Namespace:   PrometheusNamespace,
@@ -203,7 +199,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 		),
 
 		responseLength: histogramMetric(
-			prometheus.HistogramOpts{
+			&prometheus.HistogramOpts{
 				Name:        "response_size",
 				Help:        "The response length (including request line, header, and request body)",
 				Namespace:   PrometheusNamespace,
@@ -216,7 +212,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 		),
 
 		requestLength: histogramMetric(
-			prometheus.HistogramOpts{
+			&prometheus.HistogramOpts{
 				Name:        "request_size",
 				Help:        "The request length (including request line, header, and request body)",
 				Namespace:   PrometheusNamespace,
@@ -229,7 +225,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 		),
 
 		requests: counterMetric(
-			prometheus.CounterOpts{
+			&prometheus.CounterOpts{
 				Name:        "requests",
 				Help:        "The total number of client requests",
 				Namespace:   PrometheusNamespace,
@@ -241,7 +237,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 		),
 
 		bytesSent: histogramMetric(
-			prometheus.HistogramOpts{
+			&prometheus.HistogramOpts{
 				Name:        "bytes_sent",
 				Help:        "DEPRECATED The number of bytes sent to a client",
 				Namespace:   PrometheusNamespace,
@@ -254,7 +250,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 		),
 
 		upstreamLatency: summaryMetric(
-			prometheus.SummaryOpts{
+			&prometheus.SummaryOpts{
 				Name:        "ingress_upstream_latency_seconds",
 				Help:        "DEPRECATED Upstream service latency per Ingress",
 				Namespace:   PrometheusNamespace,
@@ -279,36 +275,36 @@ func containsMetric(excludeMetrics map[string]struct{}, name string) bool {
 	return false
 }
 
-func summaryMetric(opts prometheus.SummaryOpts, requestTags []string, excludeMetrics map[string]struct{}, metricMapping metricMapping) *prometheus.SummaryVec {
+func summaryMetric(opts *prometheus.SummaryOpts, requestTags []string, excludeMetrics map[string]struct{}, metricMapping metricMapping) *prometheus.SummaryVec {
 	if containsMetric(excludeMetrics, opts.Name) {
 		return nil
 	}
 	m := prometheus.NewSummaryVec(
-		opts,
+		*opts,
 		requestTags,
 	)
 	metricMapping[prometheus.BuildFQName(PrometheusNamespace, "", opts.Name)] = m
 	return m
 }
 
-func counterMetric(opts prometheus.CounterOpts, requestTags []string, excludeMetrics map[string]struct{}, metricMapping metricMapping) *prometheus.CounterVec {
+func counterMetric(opts *prometheus.CounterOpts, requestTags []string, excludeMetrics map[string]struct{}, metricMapping metricMapping) *prometheus.CounterVec {
 	if containsMetric(excludeMetrics, opts.Name) {
 		return nil
 	}
 	m := prometheus.NewCounterVec(
-		opts,
+		*opts,
 		requestTags,
 	)
 	metricMapping[prometheus.BuildFQName(PrometheusNamespace, "", opts.Name)] = m
 	return m
 }
 
-func histogramMetric(opts prometheus.HistogramOpts, requestTags []string, excludeMetrics map[string]struct{}, metricMapping metricMapping) *prometheus.HistogramVec {
+func histogramMetric(opts *prometheus.HistogramOpts, requestTags []string, excludeMetrics map[string]struct{}, metricMapping metricMapping) *prometheus.HistogramVec {
 	if containsMetric(excludeMetrics, opts.Name) {
 		return nil
 	}
 	m := prometheus.NewHistogramVec(
-		opts,
+		*opts,
 		requestTags,
 	)
 	metricMapping[prometheus.BuildFQName(PrometheusNamespace, "", opts.Name)] = m
@@ -326,7 +322,8 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 		return
 	}
 
-	for _, stats := range statsBatch {
+	for i := range statsBatch {
+		stats := &statsBatch[i]
 		if sc.metricsPerHost && !sc.hosts.Has(stats.Host) {
 			klog.V(3).InfoS("Skipping metric for host not being served", "host", stats.Host)
 			continue
@@ -543,14 +540,14 @@ func (sc *SocketCollector) RemoveMetrics(ingresses []string, registry prometheus
 }
 
 // Describe implements prometheus.Collector
-func (sc SocketCollector) Describe(ch chan<- *prometheus.Desc) {
+func (sc *SocketCollector) Describe(ch chan<- *prometheus.Desc) {
 	for _, metric := range sc.metricMapping {
 		metric.Describe(ch)
 	}
 }
 
 // Collect implements the prometheus.Collector interface.
-func (sc SocketCollector) Collect(ch chan<- prometheus.Metric) {
+func (sc *SocketCollector) Collect(ch chan<- prometheus.Metric) {
 	for _, metric := range sc.metricMapping {
 		metric.Collect(ch)
 	}

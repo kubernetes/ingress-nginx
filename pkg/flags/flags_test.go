@@ -33,7 +33,8 @@ func TestDefaults(t *testing.T) {
 
 	oldArgs := os.Args
 	defer func() { os.Args = oldArgs }()
-	os.Args = []string{"cmd",
+	os.Args = []string{
+		"cmd",
 		"--default-backend-service", "namespace/test",
 		"--http-port", "0",
 		"--https-port", "0",
@@ -53,8 +54,8 @@ func TestDefaults(t *testing.T) {
 	}
 }
 
-func TestSetupSSLProxy(t *testing.T) {
-	// TODO
+func TestSetupSSLProxy(_ *testing.T) {
+	// TODO TestSetupSSLProxy
 }
 
 func TestFlagConflict(t *testing.T) {

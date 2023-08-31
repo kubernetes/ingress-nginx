@@ -47,7 +47,7 @@ func TestIsPortAvailable(t *testing.T) {
 		t.Fatal("expected port 0 to be available (random port) but returned false")
 	}
 
-	ln, err := net.Listen("tcp", ":0")
+	ln, err := net.Listen("tcp", ":0") //nolint:gosec // Ignore the gosec error in testing
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

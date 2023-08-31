@@ -69,8 +69,14 @@ func TestParse(t *testing.T) {
 
 	for _, testCase := range testCases {
 		ing.SetAnnotations(testCase.annotations)
-		result, _ := ap.Parse(ing)
-		config := result.(*Config)
+		result, err := ap.Parse(ing)
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+		config, ok := result.(*Config)
+		if !ok {
+			t.Errorf("unexpected type: %T", result)
+		}
 		if !config.Equal(&testCase.expected) {
 			t.Errorf("expected %v but returned %v, annotations: %s", testCase.expected, result, testCase.annotations)
 		}
