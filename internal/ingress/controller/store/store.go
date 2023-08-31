@@ -470,10 +470,9 @@ func New(
 
 			var errOld, errCur error
 			var classCur string
-			if !icConfig.IgnoreIngressClass {
-				_, errOld = store.GetIngressClass(oldIng, icConfig)
-				classCur, errCur = store.GetIngressClass(curIng, icConfig)
-			}
+			_, errOld = store.GetIngressClass(oldIng, icConfig)
+			classCur, errCur = store.GetIngressClass(curIng, icConfig)
+
 			if errOld != nil && errCur == nil {
 				if hasCatchAllIngressRule(curIng.Spec) && disableCatchAll {
 					klog.InfoS("ignoring update for catch-all ingress because of --disable-catch-all", "ingress", klog.KObj(curIng))
@@ -494,6 +493,9 @@ func New(
 				}
 
 				recorder.Eventf(curIng, corev1.EventTypeNormal, "Sync", "Scheduled for sync")
+			} else if errOld != nil && errCur != nil {
+				klog.InfoS("Ingress doesn't match the ingress class. Skipping update", "ingress", klog.KObj(curIng))
+				return
 			} else {
 				klog.V(3).InfoS("No changes on ingress. Skipping update", "ingress", klog.KObj(curIng))
 				return
