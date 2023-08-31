@@ -30,7 +30,10 @@ func IsRespawnIfRequired(err error) bool {
 		return false
 	}
 
-	waitStatus := exitError.Sys().(syscall.WaitStatus)
+	waitStatus, ok := exitError.Sys().(syscall.WaitStatus)
+	if !ok {
+		return false
+	}
 	klog.Warningf(`
 -------------------------------------------------------------------------------
 NGINX master process died (%v): %v

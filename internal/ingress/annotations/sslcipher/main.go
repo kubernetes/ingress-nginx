@@ -31,10 +31,8 @@ const (
 	sslCipherAnnotation             = "ssl-ciphers"
 )
 
-var (
-	// Should cover something like "ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP"
-	regexValidSSLCipher = regexp.MustCompile(`^[A-Za-z0-9!:+\-]*$`)
-)
+// Should cover something like "ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP"
+var regexValidSSLCipher = regexp.MustCompile(`^[A-Za-z0-9!:+\-]*$`)
 
 var sslCipherAnnotations = parser.Annotation{
 	Group: "backend",
@@ -47,7 +45,7 @@ var sslCipherAnnotations = parser.Annotation{
 			This configuration specifies that server ciphers should be preferred over client ciphers when using the SSLv3 and TLS protocols.`,
 		},
 		sslCipherAnnotation: {
-			Validator:     parser.ValidateRegex(*regexValidSSLCipher, true),
+			Validator:     parser.ValidateRegex(regexValidSSLCipher, true),
 			Scope:         parser.AnnotationScopeIngress,
 			Risk:          parser.AnnotationRiskLow,
 			Documentation: `Using this annotation will set the ssl_ciphers directive at the server level. This configuration is active for all the paths in the host.`,
@@ -104,7 +102,7 @@ func (sc sslCipher) GetDocumentation() parser.AnnotationFields {
 	return sc.annotationConfig.Annotations
 }
 
-func (a sslCipher) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+func (sc sslCipher) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(sc.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, sslCipherAnnotations.Annotations)
 }

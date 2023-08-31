@@ -87,9 +87,7 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 	})
 
 	ginkgo.Context("should configure HSTS policy header", func() {
-		var (
-			tlsConfig *tls.Config
-		)
+		var tlsConfig *tls.Config
 
 		const (
 			hstsMaxAge            = "hsts-max-age"
@@ -182,7 +180,6 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 			got := header["Strict-Transport-Security"]
 			assert.Equal(ginkgo.GinkgoT(), 1, len(got))
 		})
-
 	})
 
 	ginkgo.Context("ports or X-Forwarded-Host check during HTTP tp HTTPS redirection", func() {

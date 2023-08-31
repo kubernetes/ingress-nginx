@@ -30,13 +30,16 @@ type IngressLint struct {
 	message string
 	issue   int
 	version string
-	f       func(ing networking.Ingress) bool
+	f       func(ing *networking.Ingress) bool
 }
 
 // Check returns true if the lint detects an issue
 func (lint IngressLint) Check(obj kmeta.Object) bool {
-	ing := obj.(*networking.Ingress)
-	return lint.f(*ing)
+	ing, ok := obj.(*networking.Ingress)
+	if !ok {
+		util.PrintError(fmt.Errorf("unexpected type: %T", obj))
+	}
+	return lint.f(ing)
 }
 
 // Message is a description of the lint
@@ -94,7 +97,7 @@ func GetIngressLints() []IngressLint {
 	}
 }
 
-func xForwardedPrefixIsBool(ing networking.Ingress) bool {
+func xForwardedPrefixIsBool(ing *networking.Ingress) bool {
 	for name, val := range ing.Annotations {
 		if strings.HasSuffix(name, "/x-forwarded-prefix") && (val == "true" || val == "false") {
 			return true
@@ -103,7 +106,7 @@ func xForwardedPrefixIsBool(ing networking.Ingress) bool {
 	return false
 }
 
-func annotationPrefixIsNginxCom(ing networking.Ingress) bool {
+func annotationPrefixIsNginxCom(ing *networking.Ingress) bool {
 	for name := range ing.Annotations {
 		if strings.HasPrefix(name, "nginx.com/") {
 			return true
@@ -112,7 +115,7 @@ func annotationPrefixIsNginxCom(ing networking.Ingress) bool {
 	return false
 }
 
-func annotationPrefixIsNginxOrg(ing networking.Ingress) bool {
+func annotationPrefixIsNginxOrg(ing *networking.Ingress) bool {
 	for name := range ing.Annotations {
 		if strings.HasPrefix(name, "nginx.org/") {
 			return true
@@ -121,7 +124,7 @@ func annotationPrefixIsNginxOrg(ing networking.Ingress) bool {
 	return false
 }
 
-func rewriteTargetWithoutCaptureGroup(ing networking.Ingress) bool {
+func rewriteTargetWithoutCaptureGroup(ing *networking.Ingress) bool {
 	for name, val := range ing.Annotations {
 		if strings.HasSuffix(name, "/rewrite-target") && !strings.Contains(val, "$1") {
 			return true
@@ -135,7 +138,7 @@ func removedAnnotation(annotationName string, issueNumber int, version string) I
 		message: fmt.Sprintf("Contains the removed %v annotation.", annotationName),
 		issue:   issueNumber,
 		version: version,
-		f: func(ing networking.Ingress) bool {
+		f: func(ing *networking.Ingress) bool {
 			for annotation := range ing.Annotations {
 				if strings.HasSuffix(annotation, "/"+annotationName) {
 					return true
@@ -146,7 +149,7 @@ func removedAnnotation(annotationName string, issueNumber int, version string) I
 	}
 }
 
-func satisfyDirective(ing networking.Ingress) bool {
+func satisfyDirective(ing *networking.Ingress) bool {
 	for name, val := range ing.Annotations {
 		if strings.HasSuffix(name, "/configuration-snippet") {
 			return strings.Contains(val, "satisfy")

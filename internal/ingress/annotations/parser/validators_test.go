@@ -223,7 +223,6 @@ func Test_checkAnnotation(t *testing.T) {
 }
 
 func TestCheckAnnotationRisk(t *testing.T) {
-
 	tests := []struct {
 		name        string
 		annotations map[string]string

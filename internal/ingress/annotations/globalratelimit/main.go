@@ -25,7 +25,6 @@ import (
 	"k8s.io/klog/v2"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
-	"k8s.io/ingress-nginx/internal/ingress/errors"
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/internal/net"
@@ -57,7 +56,7 @@ var globalRateLimitAnnotationConfig = parser.Annotation{
 			Documentation: `Configures a time window (i.e 1m) that the limit is applied`,
 		},
 		globalRateLimitKeyAnnotation: {
-			Validator: parser.ValidateRegex(*parser.NGINXVariable, true),
+			Validator: parser.ValidateRegex(parser.NGINXVariable, true),
 			Scope:     parser.AnnotationScopeIngress,
 			Risk:      parser.AnnotationRiskHigh,
 			Documentation: `This annotation Configures a key for counting the samples. Defaults to $remote_addr. 
@@ -123,23 +122,23 @@ func (a globalratelimit) Parse(ing *networking.Ingress) (interface{}, error) {
 	config := &Config{}
 
 	limit, err := parser.GetIntAnnotation(globalRateLimitAnnotation, ing, a.annotationConfig.Annotations)
-	if err != nil && errors.IsInvalidContent(err) {
+	if err != nil && ing_errors.IsInvalidContent(err) {
 		return nil, err
 	}
 	rawWindowSize, err := parser.GetStringAnnotation(globalRateLimitWindowAnnotation, ing, a.annotationConfig.Annotations)
-	if err != nil && errors.IsValidationError(err) {
-		return config, ing_errors.LocationDenied{
+	if err != nil && ing_errors.IsValidationError(err) {
+		return config, ing_errors.LocationDeniedError{
 			Reason: fmt.Errorf("failed to parse 'global-rate-limit-window' value: %w", err),
 		}
 	}
 
-	if limit == 0 || len(rawWindowSize) == 0 {
+	if limit == 0 || rawWindowSize == "" {
 		return config, nil
 	}
 
 	windowSize, err := time.ParseDuration(rawWindowSize)
 	if err != nil {
-		return config, ing_errors.LocationDenied{
+		return config, ing_errors.LocationDeniedError{
 			Reason: fmt.Errorf("failed to parse 'global-rate-limit-window' value: %w", err),
 		}
 	}
@@ -148,12 +147,12 @@ func (a globalratelimit) Parse(ing *networking.Ingress) (interface{}, error) {
 	if err != nil {
 		klog.Warningf("invalid %s, defaulting to %s", globalRateLimitKeyAnnotation, defaultKey)
 	}
-	if len(key) == 0 {
+	if key == "" {
 		key = defaultKey
 	}
 
 	rawIgnoredCIDRs, err := parser.GetStringAnnotation(globalRateLimitIgnoredCidrsAnnotation, ing, a.annotationConfig.Annotations)
-	if err != nil && errors.IsInvalidContent(err) {
+	if err != nil && ing_errors.IsInvalidContent(err) {
 		return nil, err
 	}
 	ignoredCIDRs, err := net.ParseCIDRs(rawIgnoredCIDRs)
@@ -161,7 +160,7 @@ func (a globalratelimit) Parse(ing *networking.Ingress) (interface{}, error) {
 		return nil, err
 	}
 
-	config.Namespace = strings.Replace(string(ing.UID), "-", "", -1)
+	config.Namespace = strings.ReplaceAll(string(ing.UID), "-", "")
 	config.Limit = limit
 	config.WindowSize = int(windowSize.Seconds())
 	config.Key = key

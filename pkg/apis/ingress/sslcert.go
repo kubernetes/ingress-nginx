@@ -66,12 +66,12 @@ type SSLCert struct {
 }
 
 // GetObjectKind implements the ObjectKind interface as a noop
-func (s SSLCert) GetObjectKind() schema.ObjectKind {
+func (s *SSLCert) GetObjectKind() schema.ObjectKind {
 	return schema.EmptyObjectKind
 }
 
 // Identifier returns a the couple issuer / serial number if they both exist, an empty string otherwise
-func (s SSLCert) Identifier() string {
+func (s *SSLCert) Identifier() string {
 	if s.Certificate != nil {
 		if s.Certificate.SerialNumber != nil {
 			return fmt.Sprintf("%s-%s", s.Certificate.Issuer.SerialNumber, s.Certificate.SerialNumber.String())
@@ -81,7 +81,7 @@ func (s SSLCert) Identifier() string {
 }
 
 // HashInclude defines if a field should be used or not to calculate the hash
-func (s SSLCert) HashInclude(field string, v interface{}) (bool, error) {
+func (s *SSLCert) HashInclude(field string, _ interface{}) (bool, error) {
 	switch field {
 	case "PemSHA", "CASHA", "ExpireTime":
 		return true, nil

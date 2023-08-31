@@ -31,7 +31,7 @@ var clientBodyBufferSizeConfig = parser.Annotation{
 	Group: "backend",
 	Annotations: parser.AnnotationFields{
 		clientBodyBufferSizeAnnotation: {
-			Validator: parser.ValidateRegex(*parser.SizeRegex, true),
+			Validator: parser.ValidateRegex(parser.SizeRegex, true),
 			Scope:     parser.AnnotationScopeLocation,
 			Risk:      parser.AnnotationRiskLow, // Low, as it allows just a set of options
 			Documentation: `Sets buffer size for reading client request body per location. 
@@ -65,7 +65,7 @@ func (cbbs clientBodyBufferSize) Parse(ing *networking.Ingress) (interface{}, er
 	return parser.GetStringAnnotation(clientBodyBufferSizeAnnotation, ing, cbbs.annotationConfig.Annotations)
 }
 
-func (a clientBodyBufferSize) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+func (cbbs clientBodyBufferSize) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(cbbs.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, clientBodyBufferSizeConfig.Annotations)
 }

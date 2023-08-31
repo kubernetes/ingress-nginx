@@ -47,7 +47,8 @@ type sslpt struct {
 
 // NewParser creates a new SSL passthrough annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return sslpt{r: r,
+	return sslpt{
+		r:                r,
 		annotationConfig: sslPassthroughAnnotations,
 	}
 }

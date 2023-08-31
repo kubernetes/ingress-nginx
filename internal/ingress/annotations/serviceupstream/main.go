@@ -69,7 +69,7 @@ func (s serviceUpstream) GetDocumentation() parser.AnnotationFields {
 	return s.annotationConfig.Annotations
 }
 
-func (a serviceUpstream) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+func (s serviceUpstream) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(s.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, serviceUpstreamAnnotations.Annotations)
 }

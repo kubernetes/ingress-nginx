@@ -35,14 +35,13 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] exact", func() {
 	})
 
 	ginkgo.It("should choose exact location for /exact", func() {
-
 		host := "exact.path"
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/configuration-snippet": `more_set_input_headers "pathType: exact";`,
 		}
 
-		var exactPathType = networking.PathTypeExact
+		exactPathType := networking.PathTypeExact
 		ing := framework.NewSingleIngress("exact", "/exact", host, f.Namespace, framework.EchoService, 80, annotations)
 		ing.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &exactPathType
 		f.EnsureIngress(ing)

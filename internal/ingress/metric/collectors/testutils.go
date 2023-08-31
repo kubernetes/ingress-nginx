@@ -31,7 +31,7 @@ import (
 // GatherAndCompare retrieves all metrics exposed by a collector and compares it
 // to an expected output in the Prometheus text exposition format.
 // metricNames allows only comparing the given metrics. All are compared if it's nil.
-func GatherAndCompare(c prometheus.Collector, expected string, metricNames []string, reg prometheus.Gatherer) error {
+func GatherAndCompare(_ prometheus.Collector, expected string, metricNames []string, reg prometheus.Gatherer) error {
 	expected = removeUnusedWhitespace(expected)
 
 	metrics, err := reg.Gather()
@@ -77,9 +77,7 @@ metric output does not match expectation; want:
 
 got:
 
-'%s'
-
-`, buf2.String(), buf1.String())
+'%s'`, buf2.String(), buf1.String())
 	}
 	return nil
 }

@@ -106,7 +106,7 @@ func TestStatusCollector(t *testing.T) {
 
 			server := &httptest.Server{
 				Listener: listener,
-				Config: &http.Server{Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				Config: &http.Server{Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { //nolint:gosec // Ignore the gosec error in testing
 					w.WriteHeader(http.StatusOK)
 
 					if r.URL.Path == "/nginx_status" {
