@@ -510,6 +510,10 @@ spec:
       - name: webhook-cert
         secret:
           secretName: ingress-nginx-admission
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
 ---
 apiVersion: batch/v1
 kind: Job

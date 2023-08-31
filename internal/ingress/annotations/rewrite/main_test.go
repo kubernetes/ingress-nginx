@@ -120,7 +120,10 @@ func TestSSLRedirect(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("rewrite-target")] = defRoute
 	ing.SetAnnotations(data)
 
-	i, _ := NewParser(mockBackend{redirect: true}).Parse(ing)
+	i, err := NewParser(mockBackend{redirect: true}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	redirect, ok := i.(*Config)
 	if !ok {
 		t.Errorf("expected a Redirect type")
@@ -129,10 +132,43 @@ func TestSSLRedirect(t *testing.T) {
 		t.Errorf("Expected true but returned false")
 	}
 
+	data[parser.GetAnnotationWithPrefix("rewrite-target")] = "/xpto/$1/abc/$2"
+	ing.SetAnnotations(data)
+
+	i, err = NewParser(mockBackend{redirect: true}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	redirect, ok = i.(*Config)
+	if !ok {
+		t.Errorf("expected a Redirect type")
+	}
+	if redirect.Target != "/xpto/$1/abc/$2" {
+		t.Errorf("Expected /xpto/$1/abc/$2 but returned %s", redirect.Target)
+	}
+
+	data[parser.GetAnnotationWithPrefix("rewrite-target")] = "/xpto/xas{445}"
+	ing.SetAnnotations(data)
+
+	i, err = NewParser(mockBackend{redirect: true}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	redirect, ok = i.(*Config)
+	if !ok {
+		t.Errorf("expected a Redirect type")
+	}
+	if redirect.Target != "" {
+		t.Errorf("Expected empty rewrite target but returned %s", redirect.Target)
+	}
+
 	data[parser.GetAnnotationWithPrefix("ssl-redirect")] = "false"
 	ing.SetAnnotations(data)
 
-	i, _ = NewParser(mockBackend{redirect: false}).Parse(ing)
+	i, err = NewParser(mockBackend{redirect: false}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	redirect, ok = i.(*Config)
 	if !ok {
 		t.Errorf("expected a Redirect type")
@@ -149,7 +185,10 @@ func TestForceSSLRedirect(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("rewrite-target")] = defRoute
 	ing.SetAnnotations(data)
 
-	i, _ := NewParser(mockBackend{redirect: true}).Parse(ing)
+	i, err := NewParser(mockBackend{redirect: true}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	redirect, ok := i.(*Config)
 	if !ok {
 		t.Errorf("expected a Redirect type")
@@ -161,7 +200,10 @@ func TestForceSSLRedirect(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("force-ssl-redirect")] = "true"
 	ing.SetAnnotations(data)
 
-	i, _ = NewParser(mockBackend{redirect: false}).Parse(ing)
+	i, err = NewParser(mockBackend{redirect: false}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	redirect, ok = i.(*Config)
 	if !ok {
 		t.Errorf("expected a Redirect type")
@@ -170,6 +212,7 @@ func TestForceSSLRedirect(t *testing.T) {
 		t.Errorf("Expected true but returned false")
 	}
 }
+
 func TestAppRoot(t *testing.T) {
 	ap := NewParser(mockBackend{redirect: true})
 
@@ -217,7 +260,10 @@ func TestUseRegex(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("use-regex")] = "true"
 	ing.SetAnnotations(data)
 
-	i, _ := NewParser(mockBackend{redirect: true}).Parse(ing)
+	i, err := NewParser(mockBackend{redirect: true}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	redirect, ok := i.(*Config)
 	if !ok {
 		t.Errorf("expected a App Context")
