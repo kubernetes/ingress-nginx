@@ -132,6 +132,9 @@ func TestAnnotations(t *testing.T) {
 	if u.PassCertToUpstream != false {
 		t.Errorf("expected %v but got %v", false, u.PassCertToUpstream)
 	}
+	if u.PassCertToUpstreamHeader != "ssl-client-cert" {
+		t.Errorf("expected %v but got %v", "ssl-client-cert", u.PassCertToUpstreamHeader)
+	}
 	if u.MatchCN != "" {
 		t.Errorf("expected empty string, but got %v", u.MatchCN)
 	}
@@ -140,6 +143,7 @@ func TestAnnotations(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix(annotationAuthTLSVerifyDepth)] = "2"
 	data[parser.GetAnnotationWithPrefix(annotationAuthTLSErrorPage)] = "ok.com/error"
 	data[parser.GetAnnotationWithPrefix(annotationAuthTLSPassCertToUpstream)] = "true"
+	data[parser.GetAnnotationWithPrefix(annotationAuthTLSPassCertToUpstreamHeader)] = "X-SSL-CERT"
 	data[parser.GetAnnotationWithPrefix(annotationAuthTLSMatchCN)] = "CN=(hello-app|ok|goodbye)"
 
 	ing.SetAnnotations(data)
@@ -168,6 +172,9 @@ func TestAnnotations(t *testing.T) {
 	}
 	if u.PassCertToUpstream != true {
 		t.Errorf("expected %v but got %v", true, u.PassCertToUpstream)
+	}
+	if u.PassCertToUpstreamHeader != "X-SSL-CERT" {
+		t.Errorf("expected %v but got %v", "X-SSL-CERT", u.PassCertToUpstreamHeader)
 	}
 	if u.MatchCN != "CN=(hello-app|ok|goodbye)" {
 		t.Errorf("expected %v but got %v", "CN=(hello-app|ok|goodbye)", u.MatchCN)
@@ -235,6 +242,14 @@ func TestInvalidAnnotations(t *testing.T) {
 	}
 	delete(data, parser.GetAnnotationWithPrefix(annotationAuthTLSPassCertToUpstream))
 
+	data[parser.GetAnnotationWithPrefix(annotationAuthTLSPassCertToUpstreamHeader)] = 1
+	ing.SetAnnotations(data)
+	_, err = NewParser(fakeSecret).Parse(ing)
+	if err == nil {
+		t.Errorf("Expected error with ingress but got nil")
+	}
+	delete(data, parser.GetAnnotationWithPrefix(annotationAuthTLSPassCertToUpstreamHeader))
+
 	data[parser.GetAnnotationWithPrefix(annotationAuthTLSMatchCN)] = "<script>nope</script>"
 	ing.SetAnnotations(data)
 	_, err = NewParser(fakeSecret).Parse(ing)
@@ -262,6 +277,9 @@ func TestInvalidAnnotations(t *testing.T) {
 	}
 	if u.PassCertToUpstream != false {
 		t.Errorf("expected %v but got %v", false, u.PassCertToUpstream)
+	}
+	if u.PassCertToUpstreamHeader != "ssl-client-cert" {
+		t.Errorf("expected %v but got %v", "ssl-client-cert", u.PassCertToUpstreamHeader)
 	}
 	if u.MatchCN != "" {
 		t.Errorf("expected empty string but got %v", u.MatchCN)
@@ -332,6 +350,15 @@ func TestEquals(t *testing.T) {
 		t.Errorf("Expected false")
 	}
 	cfg2.PassCertToUpstream = true
+
+	// Different Pass to Upstream Header
+	cfg1.PassCertToUpstreamHeader = "ssl-client-cert"
+	cfg2.PassCertToUpstreamHeader = "X-SSL-CERT"
+	result = cfg1.Equal(cfg2)
+	if result != false {
+		t.Errorf("Expected false")
+	}
+	cfg2.PassCertToUpstreamHeader = "ssl-client-cert"
 
 	// Equal Configs
 	result = cfg1.Equal(cfg2)

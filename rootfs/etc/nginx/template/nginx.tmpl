@@ -1182,7 +1182,7 @@ stream {
             # Pass the extracted client certificate to the auth provider
             {{ if not (empty $server.CertificateAuth.CAFileName) }}
             {{ if $server.CertificateAuth.PassCertToUpstream }}
-            proxy_set_header ssl-client-cert        $ssl_client_escaped_cert;
+            proxy_set_header {{ $server.CertificateAuth.PassCertToUpstreamHeader }} $ssl_client_escaped_cert;
             {{ end }}
             proxy_set_header ssl-client-verify      $ssl_client_verify;
             proxy_set_header ssl-client-subject-dn  $ssl_client_s_dn;

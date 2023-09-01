@@ -32,12 +32,13 @@ const (
 	defaultAuthTLSDepth     = 1
 	defaultAuthVerifyClient = "on"
 
-	annotationAuthTLSSecret             = "auth-tls-secret" //#nosec G101
-	annotationAuthTLSVerifyClient       = "auth-tls-verify-client"
-	annotationAuthTLSVerifyDepth        = "auth-tls-verify-depth"
-	annotationAuthTLSErrorPage          = "auth-tls-error-page"
-	annotationAuthTLSPassCertToUpstream = "auth-tls-pass-certificate-to-upstream" //#nosec G101
-	annotationAuthTLSMatchCN            = "auth-tls-match-cn"
+	annotationAuthTLSSecret                   = "auth-tls-secret" //#nosec G101
+	annotationAuthTLSVerifyClient             = "auth-tls-verify-client"
+	annotationAuthTLSVerifyDepth              = "auth-tls-verify-depth"
+	annotationAuthTLSErrorPage                = "auth-tls-error-page"
+	annotationAuthTLSPassCertToUpstream       = "auth-tls-pass-certificate-to-upstream" //#nosec G101
+	annotationAuthTLSPassCertToUpstreamHeader = "auth-tls-pass-certificate-to-upstream-header" //#nosec G101
+	annotationAuthTLSMatchCN                  = "auth-tls-match-cn"
 )
 
 var (
@@ -80,6 +81,12 @@ var authTLSAnnotations = parser.Annotation{
 			Risk:          parser.AnnotationRiskLow,
 			Documentation: `This annotation defines if the received certificates should be passed or not to the upstream server in the header "ssl-client-cert"`,
 		},
+		annotationAuthTLSPassCertToUpstreamHeader: {
+			Validator:     parser.ValidateNull,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `This annotation defines the header name in which the client certificate will be passed to the upstream server`,
+		},
 		annotationAuthTLSMatchCN: {
 			Validator:     parser.ValidateRegex(commonNameRegex, true),
 			Scope:         parser.AnnotationScopeLocation,
@@ -93,12 +100,13 @@ var authTLSAnnotations = parser.Annotation{
 // and the configured ValidationDepth
 type Config struct {
 	resolver.AuthSSLCert
-	VerifyClient       string `json:"verify_client"`
-	ValidationDepth    int    `json:"validationDepth"`
-	ErrorPage          string `json:"errorPage"`
-	PassCertToUpstream bool   `json:"passCertToUpstream"`
-	MatchCN            string `json:"matchCN"`
-	AuthTLSError       string
+	VerifyClient             string `json:"verify_client"`
+	ValidationDepth          int    `json:"validationDepth"`
+	ErrorPage                string `json:"errorPage"`
+	PassCertToUpstream       bool   `json:"passCertToUpstream"`
+	PassCertToUpstreamHeader string `json:"passCertToUpstreamHeader"`
+	MatchCN                  string `json:"matchCN"`
+	AuthTLSError             string
 }
 
 // Equal tests for equality between two Config types
@@ -122,6 +130,10 @@ func (assl1 *Config) Equal(assl2 *Config) bool {
 		return false
 	}
 	if assl1.PassCertToUpstream != assl2.PassCertToUpstream {
+		return false
+	}
+
+	if assl1.PassCertToUpstreamHeader != assl2.PassCertToUpstreamHeader {
 		return false
 	}
 
@@ -198,6 +210,14 @@ func (a authTLS) Parse(ing *networking.Ingress) (interface{}, error) {
 			return &Config{}, err
 		}
 		config.PassCertToUpstream = false
+	}
+
+	config.PassCertToUpstreamHeader, err = parser.GetStringAnnotation(annotationAuthTLSPassCertToUpstreamHeader, ing, a.annotationConfig.Annotations)
+	if err != nil {
+		if ing_errors.IsValidationError(err) {
+			return &Config{}, err
+		}
+		config.PassCertToUpstreamHeader = "ssl-client-cert"
 	}
 
 	config.MatchCN, err = parser.GetStringAnnotation(annotationAuthTLSMatchCN, ing, a.annotationConfig.Annotations)
