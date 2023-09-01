@@ -33,6 +33,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/auth-cache-key](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-cache-duration](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-keepalive](#external-authentication)|number|
+|[nginx.ingress.kubernetes.io/auth-keepalive-share-vars](#external-authentication)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/auth-keepalive-requests](#external-authentication)|number|
 |[nginx.ingress.kubernetes.io/auth-keepalive-timeout](#external-authentication)|number|
 |[nginx.ingress.kubernetes.io/auth-proxy-set-headers](#external-authentication)|string|
@@ -479,6 +480,9 @@ Additionally it is possible to set:
 > Note: does not work with HTTP/2 listener because of a limitation in Lua [subrequests](https://github.com/openresty/lua-nginx-module#spdy-mode-not-fully-supported).
 > [UseHTTP2](./configmap.md#use-http2) configuration should be disabled!
 
+* `nginx.ingress.kubernetes.io/auth-keepalive-share-vars`:
+  Whether to share Nginx variables among the current request and the auth request. Example use case is to track requests: when set to "true" X-Request-ID HTTP header will be the same for the backend and the auth request.
+  Defaults to "false".
 * `nginx.ingress.kubernetes.io/auth-keepalive-requests`:
   `<Requests>` to specify the maximum number of requests that can be served through one keepalive connection.
   Defaults to `1000` and only applied if `auth-keepalive` is set to higher than `0`.

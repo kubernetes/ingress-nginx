@@ -18,12 +18,12 @@ package settings
 
 import (
 	"fmt"
-	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"strings"
 
 	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/crypto/bcrypt"
 	corev1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,7 +34,7 @@ var _ = framework.DescribeSetting("[Security] no-auth-locations", func() {
 	f := framework.NewDefaultFramework("no-auth-locations")
 
 	setting := "no-auth-locations"
-	username := "foo"
+	username := fooHost
 	password := "bar"
 	secretName := "test-secret"
 	host := "no-auth-locations"
@@ -100,7 +100,8 @@ func buildBasicAuthIngressWithSecondPath(host, namespace, secretName, pathName s
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      host,
 			Namespace: namespace,
-			Annotations: map[string]string{"nginx.ingress.kubernetes.io/auth-type": "basic",
+			Annotations: map[string]string{
+				"nginx.ingress.kubernetes.io/auth-type":   "basic",
 				"nginx.ingress.kubernetes.io/auth-secret": secretName,
 				"nginx.ingress.kubernetes.io/auth-realm":  "test auth",
 			},
@@ -147,7 +148,6 @@ func buildBasicAuthIngressWithSecondPath(host, namespace, secretName, pathName s
 }
 
 func buildSecret(username, password, name, namespace string) *corev1.Secret {
-	//out, err := exec.Command("openssl", "passwd", "-crypt", password).CombinedOutput()
 	out, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	assert.Nil(ginkgo.GinkgoT(), err, "creating password")
 

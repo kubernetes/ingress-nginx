@@ -89,6 +89,5 @@ var _ = framework.DescribeAnnotation("server-snippet", func() {
 			Status(http.StatusOK).Headers().
 			NotContainsKey("Foo").
 			NotContainsKey("Xpto")
-
 	})
 })

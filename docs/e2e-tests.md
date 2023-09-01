@@ -716,7 +716,7 @@ Do not try to edit it manually.
 
 ### [[Flag] watch namespace selector](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/settings/namespace_selector.go#L30)
 
-- [should ingore Ingress of namespace without label foo=bar and accept those of namespace with label foo=bar](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/settings/namespace_selector.go#L63)
+- [should ignore Ingress of namespace without label foo=bar and accept those of namespace with label foo=bar](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/settings/namespace_selector.go#L63)
 
 ### [[Security] no-auth-locations](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/settings/no_auth_locations.go#L33)
 

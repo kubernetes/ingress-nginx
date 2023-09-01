@@ -30,16 +30,17 @@ import (
 	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
+
+const echoHost = "echo"
 
 var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 	f := framework.NewDefaultFramework("type-externalname", framework.WithHTTPBunEnabled())
 
 	ginkgo.It("works with external name set to incomplete fqdn", func() {
 		f.NewEchoDeployment()
-		host := "echo"
+		host := echoHost
 
 		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
@@ -75,7 +76,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 	})
 
 	ginkgo.It("should return 200 for service type=ExternalName without a port defined", func() {
-		host := "echo"
+		host := echoHost
 
 		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
@@ -115,7 +116,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 	})
 
 	ginkgo.It("should return 200 for service type=ExternalName with a port defined", func() {
-		host := "echo"
+		host := echoHost
 
 		svc := framework.BuildNIPExternalNameService(f, f.HTTPBunIP, host)
 		f.EnsureService(svc)
@@ -145,7 +146,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 	})
 
 	ginkgo.It("should return status 502 for service type=ExternalName with an invalid host", func() {
-		host := "echo"
+		host := echoHost
 
 		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
@@ -181,7 +182,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 	})
 
 	ginkgo.It("should return 200 for service type=ExternalName using a port name", func() {
-		host := "echo"
+		host := echoHost
 
 		svc := framework.BuildNIPExternalNameService(f, f.HTTPBunIP, host)
 		f.EnsureService(svc)
@@ -222,7 +223,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 	})
 
 	ginkgo.It("should return 200 for service type=ExternalName using FQDN with trailing dot", func() {
-		host := "echo"
+		host := echoHost
 
 		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
@@ -258,7 +259,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 	})
 
 	ginkgo.It("should update the external name after a service update", func() {
-		host := "echo"
+		host := echoHost
 
 		svc := framework.BuildNIPExternalNameService(f, f.HTTPBunIP, host)
 		f.EnsureService(svc)
@@ -307,7 +308,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 			Get(context.TODO(), framework.NIPService, metav1.GetOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error obtaining external service")
 
-		//Deploy a new instance to switch routing to
+		// Deploy a new instance to switch routing to
 		ip := f.NewHttpbunDeployment(framework.WithDeploymentName("eu-server"))
 		svc.Spec.ExternalName = framework.BuildNIPHost(ip)
 
@@ -330,22 +331,18 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 		assert.Contains(ginkgo.GinkgoT(), body, `"X-Forwarded-Host": "echo"`)
 
 		ginkgo.By("checking the service is updated to use new host")
-		curlCmd := fmt.Sprintf(
-			"curl --fail --silent http://localhost:%v/configuration/backends",
-			nginx.StatusPort,
-		)
-
-		output, err := f.ExecIngressPod(curlCmd)
+		dbgCmd := "/dbg backends all"
+		output, err := f.ExecIngressPod(dbgCmd)
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.Contains(
 			ginkgo.GinkgoT(),
 			output,
-			fmt.Sprintf("{\"address\":\"%s\"", framework.BuildNIPHost(ip)),
+			fmt.Sprintf(`"address": %q`, framework.BuildNIPHost(ip)),
 		)
 	})
 
 	ginkgo.It("should sync ingress on external name service addition/deletion", func() {
-		host := "echo"
+		host := echoHost
 
 		// Create the Ingress first
 		ing := framework.NewSingleIngress(host,

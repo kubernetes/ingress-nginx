@@ -64,7 +64,11 @@ func (m mockCfg) GetService(name string) (*apiv1.Service, error) {
 }
 
 func (m mockCfg) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error) {
-	if secret, _ := m.GetSecret(name); secret != nil {
+	secret, err := m.GetSecret(name)
+	if err != nil {
+		return nil, err
+	}
+	if secret != nil {
 		return &resolver.AuthSSLCert{
 			Secret:     name,
 			CAFileName: "/opt/ca.pem",
@@ -270,9 +274,9 @@ func TestCors(t *testing.T) {
 		if r.CorsAllowCredentials != foo.credentials {
 			t.Errorf("Returned %v but expected %v for Cors Credentials", r.CorsAllowCredentials, foo.credentials)
 		}
-
 	}
 }
+
 func TestCustomHTTPErrors(t *testing.T) {
 	ec := NewAnnotationExtractor(mockCfg{})
 	ing := buildIngress()

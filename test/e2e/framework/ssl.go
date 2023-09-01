@@ -93,8 +93,8 @@ func CreateIngressTLSSecret(client kubernetes.Interface, hosts []string, secretN
 // CreateIngressMASecret creates or updates a Secret containing a Mutual Auth
 // certificate-chain for the given Ingress and returns a TLS configuration suitable
 // for HTTP clients to use against that particular Ingress.
-func CreateIngressMASecret(client kubernetes.Interface, host string, secretName, namespace string) (*tls.Config, error) {
-	if len(host) == 0 {
+func CreateIngressMASecret(client kubernetes.Interface, host, secretName, namespace string) (*tls.Config, error) {
+	if host == "" {
 		return nil, fmt.Errorf("requires a non-empty host")
 	}
 
@@ -138,12 +138,13 @@ func CreateIngressMASecret(client kubernetes.Interface, host string, secretName,
 	return &tls.Config{
 		ServerName:         host,
 		Certificates:       []tls.Certificate{clientPair},
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: true, //nolint:gosec // Ignore the gosec error in testing
 	}, nil
 }
 
 // WaitForTLS waits until the TLS handshake with a given server completes successfully.
 func WaitForTLS(url string, tlsConfig *tls.Config) {
+	//nolint:staticcheck // TODO: will replace it since wait.Poll is deprecated
 	err := wait.Poll(Poll, DefaultTimeout, matchTLSServerName(url, tlsConfig))
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for TLS configuration in URL %s", url)
 }
@@ -160,7 +161,6 @@ func generateRSACert(host string, isCA bool, keyOut, certOut io.Writer) error {
 
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
-
 	if err != nil {
 		return fmt.Errorf("failed to generate serial number: %s", err)
 	}
@@ -329,7 +329,7 @@ func tlsConfig(serverName string, pemCA []byte) (*tls.Config, error) {
 	if !rootCAPool.AppendCertsFromPEM(pemCA) {
 		return nil, fmt.Errorf("error creating CA certificate pool (%s)", serverName)
 	}
-	return &tls.Config{
+	return &tls.Config{ //nolint:gosec // Ignore the gosec error in testing
 		ServerName: serverName,
 		RootCAs:    rootCAPool,
 	}, nil

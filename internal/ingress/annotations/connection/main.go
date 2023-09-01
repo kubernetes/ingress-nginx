@@ -29,15 +29,13 @@ const (
 	connectionProxyHeaderAnnotation = "connection-proxy-header"
 )
 
-var (
-	validConnectionHeaderValue = regexp.MustCompile(`^(close|keep-alive)$`)
-)
+var validConnectionHeaderValue = regexp.MustCompile(`^(close|keep-alive)$`)
 
 var connectionHeadersAnnotations = parser.Annotation{
 	Group: "backend",
 	Annotations: parser.AnnotationFields{
 		connectionProxyHeaderAnnotation: {
-			Validator:     parser.ValidateRegex(*validConnectionHeaderValue, true),
+			Validator:     parser.ValidateRegex(validConnectionHeaderValue, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskLow,
 			Documentation: `This annotation allows setting a specific value for "proxy_set_header Connection" directive. Right now it is restricted to "close" or "keep-alive"`,

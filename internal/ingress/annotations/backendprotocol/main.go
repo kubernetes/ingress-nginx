@@ -25,9 +25,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-var (
-	validProtocols = []string{"auto_http", "http", "https", "grpc", "grpcs", "fcgi"}
-)
+var validProtocols = []string{"auto_http", "http", "https", "grpc", "grpcs", "fcgi"}
 
 const (
 	http                      = "HTTP"

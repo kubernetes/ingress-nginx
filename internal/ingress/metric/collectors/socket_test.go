@@ -30,6 +30,7 @@ import (
 func TestNewUDPLogListener(t *testing.T) {
 	var count uint64
 
+	//nolint:unparam // Unused `message` param is required by the handleMessages function
 	fn := func(message []byte) {
 		atomic.AddUint64(&count, 1)
 	}
@@ -57,7 +58,10 @@ func TestNewUDPLogListener(t *testing.T) {
 		}
 	}()
 
-	conn, _ := net.Dial("unix", tmpFile)
+	conn, err := net.Dial("unix", tmpFile)
+	if err != nil {
+		t.Errorf("unexpected error connecting to unix socket: %v", err)
+	}
 	if _, err := conn.Write([]byte("message")); err != nil {
 		t.Errorf("unexpected error writing to unix socket: %v", err)
 	}
@@ -70,7 +74,6 @@ func TestNewUDPLogListener(t *testing.T) {
 }
 
 func TestCollector(t *testing.T) {
-
 	buckets := struct {
 		TimeBuckets   []float64
 		LengthBuckets []float64

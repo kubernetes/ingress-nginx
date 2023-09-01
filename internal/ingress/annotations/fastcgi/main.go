@@ -35,22 +35,20 @@ const (
 	fastCGIParamsAnnotation = "fastcgi-params-configmap"
 )
 
-var (
-	// fast-cgi valid parameters is just a single file name (like index.php)
-	regexValidIndexAnnotationAndKey = regexp.MustCompile(`^[A-Za-z0-9\.\-\_]+$`)
-)
+// fast-cgi valid parameters is just a single file name (like index.php)
+var regexValidIndexAnnotationAndKey = regexp.MustCompile(`^[A-Za-z0-9.\-\_]+$`)
 
 var fastCGIAnnotations = parser.Annotation{
 	Group: "fastcgi",
 	Annotations: parser.AnnotationFields{
 		fastCGIIndexAnnotation: {
-			Validator:     parser.ValidateRegex(*regexValidIndexAnnotationAndKey, true),
+			Validator:     parser.ValidateRegex(regexValidIndexAnnotationAndKey, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskMedium,
 			Documentation: `This annotation can be used to specify an index file`,
 		},
 		fastCGIParamsAnnotation: {
-			Validator: parser.ValidateRegex(*parser.BasicCharsRegex, true),
+			Validator: parser.ValidateRegex(parser.BasicCharsRegex, true),
 			Scope:     parser.AnnotationScopeLocation,
 			Risk:      parser.AnnotationRiskMedium,
 			Documentation: `This annotation can be used to specify a ConfigMap containing the fastcgi parameters as a key/value.
@@ -98,7 +96,6 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to indicate the fastcgiConfig.
 func (a fastcgi) Parse(ing *networking.Ingress) (interface{}, error) {
-
 	fcgiConfig := Config{}
 
 	if ing.GetAnnotations() == nil {
@@ -125,7 +122,7 @@ func (a fastcgi) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	cmns, cmn, err := cache.SplitMetaNamespaceKey(cm)
 	if err != nil {
-		return fcgiConfig, ing_errors.LocationDenied{
+		return fcgiConfig, ing_errors.LocationDeniedError{
 			Reason: fmt.Errorf("error reading configmap name from annotation: %w", err),
 		}
 	}
@@ -139,7 +136,7 @@ func (a fastcgi) Parse(ing *networking.Ingress) (interface{}, error) {
 	cm = fmt.Sprintf("%v/%v", ing.Namespace, cmn)
 	cmap, err := a.r.GetConfigMap(cm)
 	if err != nil {
-		return fcgiConfig, ing_errors.LocationDenied{
+		return fcgiConfig, ing_errors.LocationDeniedError{
 			Reason: fmt.Errorf("unexpected error reading configmap %s: %w", cm, err),
 		}
 	}

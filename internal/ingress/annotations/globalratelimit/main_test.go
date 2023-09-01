@@ -30,8 +30,10 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-const UID = "31285d47-b150-4dcf-bd6f-12c46d769f6e"
-const expectedUID = "31285d47b1504dcfbd6f12c46d769f6e"
+const (
+	UID         = "31285d47-b150-4dcf-bd6f-12c46d769f6e"
+	expectedUID = "31285d47b1504dcfbd6f12c46d769f6e"
+)
 
 func buildIngress() *networking.Ingress {
 	defaultBackend := networking.IngressBackend{
@@ -190,10 +192,19 @@ func TestGlobalRateLimiting(t *testing.T) {
 			t.Errorf("expected error '%v' but got '%v'", testCase.expectedErr, actualErr)
 		}
 
-		actualConfig := i.(*Config)
+		actualConfig, ok := i.(*Config)
+		if !ok {
+			t.Errorf("expected Config type but got %T", i)
+		}
 		if !testCase.expectedConfig.Equal(actualConfig) {
-			expectedJSON, _ := json.Marshal(testCase.expectedConfig)
-			actualJSON, _ := json.Marshal(actualConfig)
+			expectedJSON, err := json.Marshal(testCase.expectedConfig)
+			if err != nil {
+				t.Errorf("failed to marshal expected config: %v", err)
+			}
+			actualJSON, err := json.Marshal(actualConfig)
+			if err != nil {
+				t.Errorf("failed to marshal actual config: %v", err)
+			}
 			t.Errorf("%v: expected config '%s' but got '%s'", testCase.title, expectedJSON, actualJSON)
 		}
 	}

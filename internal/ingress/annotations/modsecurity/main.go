@@ -27,7 +27,7 @@ import (
 const (
 	modsecEnableAnnotation          = "enable-modsecurity"
 	modsecEnableOwaspCoreAnnotation = "enable-owasp-core-rules"
-	modesecTransactionIdAnnotation  = "modsecurity-transaction-id"
+	modesecTransactionIDAnnotation  = "modsecurity-transaction-id"
 	modsecSnippetAnnotation         = "modsecurity-snippet"
 )
 
@@ -46,8 +46,8 @@ var modsecurityAnnotation = parser.Annotation{
 			Risk:          parser.AnnotationRiskLow,
 			Documentation: `This annotation enables the OWASP Core Rule Set`,
 		},
-		modesecTransactionIdAnnotation: {
-			Validator:     parser.ValidateRegex(*parser.NGINXVariable, true),
+		modesecTransactionIDAnnotation: {
+			Validator:     parser.ValidateRegex(parser.NGINXVariable, true),
 			Scope:         parser.AnnotationScopeIngress,
 			Risk:          parser.AnnotationRiskHigh,
 			Documentation: `This annotation enables passing an NGINX variable to ModSecurity.`,
@@ -98,9 +98,9 @@ func (modsec1 *Config) Equal(modsec2 *Config) bool {
 }
 
 // NewParser creates a new ModSecurity annotation parser
-func NewParser(resolver resolver.Resolver) parser.IngressAnnotation {
+func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 	return modSecurity{
-		r:                resolver,
+		r:                r,
 		annotationConfig: modsecurityAnnotation,
 	}
 }
@@ -134,10 +134,10 @@ func (a modSecurity) Parse(ing *networking.Ingress) (interface{}, error) {
 		config.OWASPRules = false
 	}
 
-	config.TransactionID, err = parser.GetStringAnnotation(modesecTransactionIdAnnotation, ing, a.annotationConfig.Annotations)
+	config.TransactionID, err = parser.GetStringAnnotation(modesecTransactionIDAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		if errors.IsInvalidContent(err) {
-			klog.Warningf("annotation %s contains invalid directive, defaulting", modesecTransactionIdAnnotation)
+			klog.Warningf("annotation %s contains invalid directive, defaulting", modesecTransactionIDAnnotation)
 		}
 		config.TransactionID = ""
 	}

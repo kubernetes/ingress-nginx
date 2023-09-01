@@ -57,7 +57,7 @@ var CanaryAnnotations = parser.Annotation{
 			Documentation: `This annotation The total weight of traffic. If unspecified, it defaults to 100`,
 		},
 		canaryByHeaderAnnotation: {
-			Validator: parser.ValidateRegex(*parser.BasicCharsRegex, true),
+			Validator: parser.ValidateRegex(parser.BasicCharsRegex, true),
 			Scope:     parser.AnnotationScopeIngress,
 			Risk:      parser.AnnotationRiskMedium,
 			Documentation: `This annotation defines the header that should be used for notifying the Ingress to route the request to the service specified in the Canary Ingress.
@@ -65,7 +65,7 @@ var CanaryAnnotations = parser.Annotation{
 			For any other value, the header will be ignored and the request compared against the other canary rules by precedence`,
 		},
 		canaryByHeaderValueAnnotation: {
-			Validator: parser.ValidateRegex(*parser.BasicCharsRegex, true),
+			Validator: parser.ValidateRegex(parser.BasicCharsRegex, true),
 			Scope:     parser.AnnotationScopeIngress,
 			Risk:      parser.AnnotationRiskMedium,
 			Documentation: `This annotation defines the header value to match for notifying the Ingress to route the request to the service specified in the Canary Ingress. 
@@ -74,7 +74,7 @@ var CanaryAnnotations = parser.Annotation{
 			It doesn't have any effect if the 'canary-by-header' annotation is not defined`,
 		},
 		canaryByHeaderPatternAnnotation: {
-			Validator: parser.ValidateRegex(*parser.IsValidRegex, false),
+			Validator: parser.ValidateRegex(parser.IsValidRegex, false),
 			Scope:     parser.AnnotationScopeIngress,
 			Risk:      parser.AnnotationRiskMedium,
 			Documentation: `This annotation works the same way as canary-by-header-value except it does PCRE Regex matching. 
@@ -82,7 +82,7 @@ var CanaryAnnotations = parser.Annotation{
 			When the given Regex causes error during request processing, the request will be considered as not matching.`,
 		},
 		canaryByCookieAnnotation: {
-			Validator: parser.ValidateRegex(*parser.BasicCharsRegex, true),
+			Validator: parser.ValidateRegex(parser.BasicCharsRegex, true),
 			Scope:     parser.AnnotationScopeIngress,
 			Risk:      parser.AnnotationRiskMedium,
 			Documentation: `This annotation defines the cookie that should be used for notifying the Ingress to route the request to the service specified in the Canary Ingress.
@@ -189,7 +189,7 @@ func (c canary) GetDocumentation() parser.AnnotationFields {
 	return c.annotationConfig.Annotations
 }
 
-func (a canary) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+func (c canary) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(c.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, CanaryAnnotations.Annotations)
 }

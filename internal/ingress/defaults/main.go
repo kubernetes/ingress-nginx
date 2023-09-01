@@ -107,7 +107,7 @@ type Backend struct {
 
 	// Name server/s used to resolve names of upstream servers into IP addresses.
 	// The file /etc/resolv.conf is used as DNS resolution configuration.
-	Resolver []net.IP
+	Resolver []net.IP `json:"Resolver"`
 
 	// SkipAccessLogURLs sets a list of URLs that should not appear in the NGINX access log
 	// This is useful with urls like `/health` or `health-check` that make "complex" reading the logs

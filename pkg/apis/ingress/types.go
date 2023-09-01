@@ -73,7 +73,7 @@ type Configuration struct {
 
 	DefaultSSLCertificate *SSLCert `json:"-"`
 
-	StreamSnippets []string
+	StreamSnippets []string `json:"StreamSnippets"`
 }
 
 // Backend describes one or more remote server/s (endpoints) associated with a service
@@ -129,7 +129,7 @@ type TrafficShapingPolicy struct {
 }
 
 // HashInclude defines if a field should be used or not to calculate the hash
-func (s Backend) HashInclude(field string, v interface{}) (bool, error) {
+func (b *Backend) HashInclude(field string, _ interface{}) (bool, error) {
 	switch field {
 	case "Endpoints":
 		return false, nil
@@ -415,5 +415,4 @@ type Ingress struct {
 }
 
 // GeneralConfig holds the definition of lua general configuration data
-type GeneralConfig struct {
-}
+type GeneralConfig struct{}
