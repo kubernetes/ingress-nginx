@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -102,6 +103,34 @@ func NewPostStatusRequest(path, contentType string, data interface{}) (statusCod
 	}
 
 	return res.StatusCode, body, nil
+}
+
+// TODO: Turn port configurable
+func NewPassthroughConfigRequest(data interface{}) (status string, err error) {
+
+	buf, err := json.Marshal(data)
+	if err != nil {
+		return "NOK", err
+	}
+
+	conn, err := net.Dial("tcp", "127.0.0.1:19090")
+	if err != nil {
+		return "NOK", err
+	}
+
+	defer conn.Close()
+	_, err = conn.Write(buf)
+	if err != nil {
+		return "NOK", err
+	}
+	// We need a really small reply
+	reply := make([]byte, 64)
+	_, err = conn.Read(reply)
+	if err != nil {
+		return "NOK", err
+	}
+
+	return string(reply), nil
 }
 
 // GetServerBlock takes an nginx.conf file and a host and tries to find the server block for that host

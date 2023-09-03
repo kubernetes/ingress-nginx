@@ -37,7 +37,6 @@ load_module /etc/nginx/modules/ngx_http_opentracing_module.so;
 load_module /modules_mount/etc/nginx/modules/otel/otel_ngx_module.so;
 {{ end }}
 
-load_module modules/ngx_http_js_module.so;
 load_module modules/ngx_stream_js_module.so;
 
 daemon off;
@@ -763,76 +762,7 @@ http {
         }
     }
 
-    # NGX Server for NJS Operations
-    # TODO: Check if the shared map can be accessed between stream and server directives
-    server {
-        listen 127.0.0.1:11111; # TODO: Turn this configurable
-        set $proxy_upstream_name "njs";
-
-        keepalive_timeout 0;
-        gzip off;
-
-        access_log off;
-
-        {{ if $cfg.EnableOpentracing }}
-        opentracing off;
-        {{ end }}
-
-        {{ if $cfg.EnableOpentelemetry }}
-        opentelemetry off;
-        {{ end }}
-
-        {{ if $cfg.EnableModsecurity }}
-        modsecurity off;
-        {{ end }}
-
-        location {{ $healthzURI }} {
-            return 200;
-        }
-
-        location /is-dynamic-lb-initialized {
-            content_by_lua_block {
-                local configuration = require("configuration")
-                local backend_data = configuration.get_backends_data()
-                if not backend_data then
-                    ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
-                    return
-                end
-
-                ngx.say("OK")
-                ngx.exit(ngx.HTTP_OK)
-            }
-        }
-
-        location {{ .StatusPath }} {
-            stub_status on;
-        }
-
-        location /ptcfg/truncate {
-            client_max_body_size                    {{ luaConfigurationRequestBodySize $cfg }};
-            client_body_buffer_size                 {{ luaConfigurationRequestBodySize $cfg }};
-            proxy_buffering                         off;
-
-            js_content passthrough.truncate;
-        }
-
-        location /ptcfg/set {
-            client_max_body_size                    {{ luaConfigurationRequestBodySize $cfg }};
-            client_body_buffer_size                 {{ luaConfigurationRequestBodySize $cfg }};
-            proxy_buffering                         off;
-
-            js_content passthrough.set;
-        }
-
-        location / {
-            content_by_lua_block {
-                ngx.exit(ngx.HTTP_NOT_FOUND)
-            }
-        }
-    }
-    
-}
-
+ 
 stream {
     lua_package_path "/etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/?.lua;;";
 
@@ -900,19 +830,30 @@ stream {
         }
     }
 
-    {{ if and $all.IsSSLPassthroughEnabled }} 
-    # Start SSLPassthrough configuration
-    
+    {{/* Begin of the new SSLPassthrough approach */}}
+
+    {{/* This is the configuration endpoint for dynamic passthrough
+     It should be made configurable before reaching GA
+     We want this server to be always running
+    */}}
+
     js_import njs/passthrough.js;
     js_shared_dict_zone zone=ptbackends:32m type=string;
-    js_set $ptupstream passthrough.getUpstream;
-
+    server {
+        listen 19090;
+        js_preread passthrough.configBackends;
+        js_set $cfgreturn passthrough.getConfigStatus;
+        return $cfgreturn;
+    }
+    {{ if and $all.IsSSLPassthroughEnabled }} 
     server {
         {{ buildSSLPassthroughListener $all }}
         ssl_preread on;
+        js_set $ptupstream passthrough.getBackend;
         proxy_pass $ptupstream;
     }
     {{ end }}
+    {{/* End of new SSLPassthrough approach */}}
 
     server {
         listen 127.0.0.1:{{ .StreamPort }};
