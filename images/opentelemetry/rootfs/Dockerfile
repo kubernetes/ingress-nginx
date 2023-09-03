@@ -21,19 +21,24 @@ COPY . /opt/third_party/
 # install build tools
 RUN apk update \
 	&& apk upgrade \
-	&& apk add -U bash cmake ninja \
+	&& apk add -U bash \
 	&& bash /opt/third_party/build.sh -p
 
-ENV NINJA_STATUS "[%p/%f/%t]"
+ENV NINJA_STATUS "[%p/%f/%t] "
 
 # install gRPC
 FROM base as grpc
-RUN bash /opt/third_party/build.sh -g v1.49.2
+RUN bash /opt/third_party/build.sh -g v1.57.0
+
+# install abseil-cpp
+FROM base as absl-cpp
+RUN bash /opt/third_party/build.sh -a 20230802.0
 
 # install OpenTelemetry-cpp
 FROM base as otel-cpp
 COPY --from=grpc /opt/third_party/install/ /usr
-RUN bash /opt/third_party/build.sh -o v1.8.1
+COPY --from=absl-cpp /opt/third_party/install/ /usr
+RUN bash /opt/third_party/build.sh -o v1.11.0
 
 # install otel_ngx_module.so
 FROM base as nginx
@@ -52,6 +57,5 @@ RUN CGO_ENABLED=0 go build -o /go/bin/init_module
 FROM cgr.dev/chainguard/static as final
 COPY --from=build-init /go/bin/init_module /
 COPY --from=nginx /etc/nginx/modules /etc/nginx/modules
-COPY --from=nginx /opt/third_party/install/lib /etc/nginx/modules
 
 CMD ["/init_module"]
