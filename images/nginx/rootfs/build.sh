@@ -20,6 +20,8 @@ set -o pipefail
 
 export NGINX_VERSION=1.21.6
 
+export NJS_VERSION=0.8.0
+
 # Check for recent changes: https://github.com/vision5/ngx_devel_kit/compare/v0.3.2...master
 export NDK_VERSION=0.3.2
 
@@ -198,6 +200,9 @@ cd "$BUILD_PATH"
 # download, verify and extract the source files
 get_src 66dc7081488811e9f925719e34d1b4504c2801c81dee2920e5452a86b11405ae \
         "https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
+
+get_src c6645f07f89b52d8169492f1101a767ce93d46554f48d3330cae343bee4c1695 \
+        "https://hg.nginx.org/njs/archive/$NJS_VERSION.tar.gz"
 
 get_src aa961eafb8317e0eb8da37eb6e2c9ff42267edd18b56947384e719b85188f58b \
         "https://github.com/vision5/ngx_devel_kit/archive/v$NDK_VERSION.tar.gz"
@@ -629,7 +634,8 @@ WITH_MODULES=" \
   --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/opentracing \
   --add-dynamic-module=$BUILD_PATH/ModSecurity-nginx-$MODSECURITY_VERSION \
   --add-dynamic-module=$BUILD_PATH/ngx_http_geoip2_module-${GEOIP2_VERSION} \
-  --add-dynamic-module=$BUILD_PATH/ngx_brotli"
+  --add-dynamic-module=$BUILD_PATH/ngx_brotli \
+  --add-dynamic-module=$BUILD_PATH/njs-$NJS_VERSION/nginx"
 
 ./configure \
   --prefix=/usr/local/nginx \
