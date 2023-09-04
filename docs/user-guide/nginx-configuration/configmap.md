@@ -1122,7 +1122,9 @@ Example usage: `custom-http-errors: 404,415`
 
 ## disable-proxy-intercept-errors
 
-Allows to disable proxy-intercept-errors if [custom-http-errors](#custom-http-errors) are set. Disabling [proxy_intercept_errors](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors) allows to pass upstream errors to client even if [custom-http-errors](#custom-http-errors) are set.
+Allows to disable [proxy-intercept-errors](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors).
+
+Disabling [proxy_intercept_errors](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors) allows to pass upstream errors to client even if [custom-http-errors](#custom-http-errors) are set.
 
 Example usage: `disable-proxy-intercept-errors: "true"`
 
