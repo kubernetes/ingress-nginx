@@ -130,7 +130,10 @@ func NewPassthroughConfigRequest(data interface{}) (status string, err error) {
 		return "NOK", err
 	}
 
-	return string(reply), nil
+    if strings.Contains(string(reply), "NOK") {
+        return "NOK", fmt.Errorf("fail to reconfigure dynamically")
+    }
+	return "OK", nil
 }
 
 // GetServerBlock takes an nginx.conf file and a host and tries to find the server block for that host

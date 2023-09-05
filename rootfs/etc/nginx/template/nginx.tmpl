@@ -37,7 +37,7 @@ load_module /etc/nginx/modules/ngx_http_opentracing_module.so;
 load_module /modules_mount/etc/nginx/modules/otel/otel_ngx_module.so;
 {{ end }}
 
-load_module modules/ngx_stream_js_module.so;
+load_module /etc/nginx/modules/ngx_stream_js_module.so;
 
 daemon off;
 
@@ -761,6 +761,7 @@ http {
             }
         }
     }
+}
 
  
 stream {
@@ -837,8 +838,9 @@ stream {
      We want this server to be always running
     */}}
 
-    js_import njs/passthrough.js;
+    js_import /etc/nginx/njs/passthrough.js;
     js_shared_dict_zone zone=ptbackends:32m type=string;
+    
     server {
         listen 19090;
         js_preread passthrough.configBackends;
@@ -847,7 +849,8 @@ stream {
     }
     {{ if and $all.IsSSLPassthroughEnabled }} 
     server {
-        {{ buildSSLPassthroughListener $all }}
+        # TODO: Remove Hardcode
+        listen 443;
         ssl_preread on;
         js_set $ptupstream passthrough.getBackend;
         proxy_pass $ptupstream;

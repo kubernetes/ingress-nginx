@@ -81,7 +81,7 @@ function configureWithData(configdata, s) {
 
         // Clear method is not working, we should verify with NGX folks 
         //ngx.shared.passthrough.clear();
-        ngx.shared.passthrough.set(KEYNAME, JSON.stringify(backends))
+        ngx.shared.ptbackends.set(KEYNAME, JSON.stringify(backends))
 
         return OK
     } catch (e) {
@@ -97,7 +97,7 @@ function getBackend(s) {
         if (hostname == null || hostname == "undefined" || hostname == "") {
             throw("hostname was not provided")
         }
-        let backends = ngx.shared.passthrough.get(KEYNAME)
+        let backends = ngx.shared.ptbackends.get(KEYNAME)
         if (backends == null || backends == "") {
             throw('no entry on endpoint map')
         }
