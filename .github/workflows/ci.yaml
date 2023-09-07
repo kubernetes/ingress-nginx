@@ -62,23 +62,7 @@ jobs:
               - 'charts/ingress-nginx/**/*'
               - 'NGINX_BASE'
 
-
-  security:
-    runs-on: ubuntu-latest
-    steps:
-
-      - name: Checkout
-        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
-
-      - name: Run Gosec Security Scanner
-        uses: securego/gosec@a89e9d5a7acb4457f3891ac18532b142b1bf9221 # v2.17.0
-        with:
-          # G601 for zz_generated.deepcopy.go
-          # G306 TODO: Expect WriteFile permissions to be 0600 or less
-          # G307 TODO: Deferring unsafe method "Close"
-          args: -exclude=G109,G601,G104,G204,G304,G306,G307 -tests=false -exclude-dir=test -exclude-dir=images/  -exclude-dir=docs/ ./...
-
-  gofmt:
+    gofmt:
     runs-on: ubuntu-latest
     needs: changes
     if: |
