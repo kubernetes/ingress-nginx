@@ -179,20 +179,19 @@ func downloadDatabase(dbName string) error {
 			if !strings.HasSuffix(header.Name, mmdbFile) {
 				continue
 			}
+			return func() error {
+				outFile, err := os.Create(path.Join(geoIPPath, mmdbFile))
+				if err != nil {
+					return err
+				}
 
-			outFile, err := os.Create(path.Join(geoIPPath, mmdbFile))
-			if err != nil {
-				return err
-			}
+				defer outFile.Close()
 
-			//nolint:gocritic // TODO: will fix it on a followup PR
-			defer outFile.Close()
-
-			if _, err := io.CopyN(outFile, tarReader, header.Size); err != nil {
-				return err
-			}
-
-			return nil
+				if _, err := io.CopyN(outFile, tarReader, header.Size); err != nil {
+					return err
+				}
+				return nil
+			}()
 		}
 	}
 
