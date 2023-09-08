@@ -63,25 +63,25 @@ var _ = framework.IngressNginxDescribe("[Default Backend]", func() {
 		framework.Sleep()
 
 		for _, test := range testCases {
-			ginkgo.By(test.Name)
+			ginkgo.By(test.Name, func() {
+				var req *httpexpect.HTTPRequest
 
-			var req *httpexpect.HTTPRequest
+				switch test.Scheme {
+				case framework.HTTP:
+					req = f.HTTPTestClient().DoRequest(test.Method, test.Path).WithURL(f.GetURL(framework.HTTP) + test.Path)
+				case framework.HTTPS:
+					req = f.HTTPTestClient().DoRequest(test.Method, test.Path).WithURL(f.GetURL(framework.HTTPS) + test.Path)
+				default:
+					ginkgo.Fail("Unexpected request scheme")
+				}
 
-			switch test.Scheme {
-			case framework.HTTP:
-				req = f.HTTPTestClient().DoRequest(test.Method, test.Path).WithURL(f.GetURL(framework.HTTP) + test.Path)
-			case framework.HTTPS:
-				req = f.HTTPTestClient().DoRequest(test.Method, test.Path).WithURL(f.GetURL(framework.HTTPS) + test.Path)
-			default:
-				ginkgo.Fail("Unexpected request scheme")
-			}
+				if test.Host != "" {
+					req.WithHeader("Host", test.Host)
+				}
 
-			if test.Host != "" {
-				req.WithHeader("Host", test.Host)
-			}
-
-			req.Expect().
-				Status(test.Status)
+				req.Expect().
+					Status(test.Status)
+			})
 		}
 	})
 
