@@ -62,7 +62,7 @@ jobs:
               - 'charts/ingress-nginx/**/*'
               - 'NGINX_BASE'
 
-    gofmt:
+  gofmt:
     runs-on: ubuntu-latest
     needs: changes
     if: |
