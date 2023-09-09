@@ -3,6 +3,32 @@ entries:
   ingress-nginx:
   - annotations:
       artifacthub.io/changes: |
+        - "Update Ingress-Nginx version controller-v1.8.2"
+      artifacthub.io/prerelease: "false"
+    apiVersion: v2
+    appVersion: 1.8.2
+    created: "2023-09-09T15:45:27.074369436Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
+    digest: ab8f81314249bd4fbd9d51782381a9b8a9ccb5a2592d21b89da20d81e3ed658b
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.20.0-0'
+    maintainers:
+    - name: rikatz
+    - name: strongjz
+    - name: tao12345666333
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-4.7.2/ingress-nginx-4.7.2.tgz
+    version: 4.7.2
+  - annotations:
+      artifacthub.io/changes: |
         - "Added a doc line to the missing helm value service.internal.loadBalancerIP (#9406)"
         - "feat(helm): Add loadBalancerClass (#9562)"
         - "added helmshowvalues example (#10019)"
@@ -2930,4 +2956,4 @@ entries:
     urls:
     - https://github.com/kubernetes/ingress-nginx/releases/download/ingress-nginx-2.0.0/ingress-nginx-2.0.0.tgz
     version: 2.0.0
-generated: "2023-06-30T21:38:33.058035542Z"
+generated: "2023-09-09T15:45:27.075389043Z"
