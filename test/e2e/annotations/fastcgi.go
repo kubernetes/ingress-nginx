@@ -82,7 +82,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - FastCGI", func() {
 
 		f.EnsureConfigMap(configuration)
 
-		host := "fastcgi-params-configmap"
+		host := "fastcgi-params-configmap" //#nosec G101
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/backend-protocol":         "FCGI",

@@ -64,13 +64,13 @@ func TestParse(t *testing.T) {
 		Spec: networking.IngressSpec{},
 	}
 
-	for _, testCase := range testCases {
+	for i, testCase := range testCases {
 		ing.SetAnnotations(testCase.annotations)
 		result, err := ap.Parse(ing)
 		if (err != nil) != testCase.expectErr {
 			t.Fatalf("expected error: %t got error: %t err value: %s. %+v", testCase.expectErr, err != nil, err, testCase.annotations)
 		}
-		if !reflect.DeepEqual(result, &testCase.expected) {
+		if !reflect.DeepEqual(result, &testCases[i].expected) {
 			t.Errorf("expected %v but returned %v, annotations: %s", testCase.expected, result, testCase.annotations)
 		}
 	}

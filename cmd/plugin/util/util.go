@@ -29,8 +29,8 @@ import (
 
 // The default deployment and service names for ingress-nginx
 const (
-	DefaultIngressDeploymentName = "ingress-nginx-controller"
-	DefaultIngressServiceName    = "ingress-nginx-controller"
+	DefaultIngressDeploymentName = "ingress-nginx-controller" //#nosec G101
+	DefaultIngressServiceName    = "ingress-nginx-controller" //#nosec G101
 	DefaultIngressContainerName  = "controller"
 )
 
