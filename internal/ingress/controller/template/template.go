@@ -1555,9 +1555,9 @@ func httpsListener(addresses []string, co string, tc *config.TemplateConfig) []s
 				lo = append(lo, fmt.Sprintf("%v:%v", address, tc.ListenPorts.SSLProxy))
 			}
 
-			if !strings.Contains(co, "proxy_protocol") {
+			/*if !strings.Contains(co, "proxy_protocol") {
 				lo = append(lo, "proxy_protocol")
-			}
+			}*/
 		} else {
 			if address == "" {
 				lo = append(lo, fmt.Sprintf("%v", tc.ListenPorts.HTTPS))

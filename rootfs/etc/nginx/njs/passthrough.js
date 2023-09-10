@@ -76,7 +76,7 @@ function configureWithData(configdata, s) {
                 s.warn(`endpoint of ${key} is not string, skipping`)
                 return;
             }
-            backends[key] = serviceitem.endpoint;
+            backends[key] = serviceitem;
         });
 
         // Clear method is not working, we should verify with NGX folks 
@@ -90,30 +90,61 @@ function configureWithData(configdata, s) {
     }
 }
 
+const PROXYSOCKET="unix:/var/run/nginxstreamproxy.sock";
 // getBackend fetches the backend given a hostname sent via SNI
 function getBackend(s) {
     try {
-        var hostname = s.variables.ssl_preread_server_name;
-        if (hostname == null || hostname == "undefined" || hostname == "") {
-            throw("hostname was not provided")
+        const backendCfg = getBackendEndpoint(s);
+        if(backendCfg[1]) {
+            return PROXYSOCKET
         }
-        let backends = ngx.shared.ptbackends.get(KEYNAME)
-        if (backends == null || backends == "") {
-            throw('no entry on endpoint map')
-        }
-        const backendmap = JSON.parse(backends)
-        s.warn(JSON.stringify(backendmap))
-        if (backendmap[hostname] == null || backendmap[hostname] == undefined) {
-            throw `no endpoint is configured for service ${hostname}"`
-        }
-
-        return backendmap[hostname]
-
-    } catch (e) {
+        return backendCfg[0]
+    } catch(e) {
         s.warn(`error occurred while getting the backend ` +
-            `sending to default backend: ${e}`)
+        `sending to default backend: ${e}`)
+    
         return "127.0.0.1:442"
     }
 }
 
-export default {getConfigStatus, configBackends, getBackend};
+// getProxiedBackend fetches the backend given a hostname sent via SNI, to be used by proxy_protocol endpoint.
+// An error here should be a final error
+function getProxiedBackend(s) {
+    try {
+        const backend = getBackendEndpoint(s)[0];
+        return backend;
+
+    } catch(e) {
+        s.warn(`error occurred while getting the backend ` +
+        `sending to default backend: ${e}`) 
+        s.deny()
+    }
+}
+
+// getBackendEndpoint is the common function to return the endpoint and optinally if it should
+// use proxy_protocol from the map
+function getBackendEndpoint(s) {
+    var hostname = s.variables.ssl_preread_server_name;
+    if (hostname == null || hostname == "undefined" || hostname == "") {
+        throw("hostname was not provided")
+    }
+
+    let backends = ngx.shared.ptbackends.get(KEYNAME)
+    if (backends == null || backends == "") {
+        throw('no entry on endpoint map')
+    }
+    const backendmap = JSON.parse(backends)
+    if (backendmap[hostname] == null || backendmap[hostname] == undefined || 
+            backendmap[hostname].endpoint == null || backendmap[hostname].endpoint == undefined) {
+        throw `no endpoint is configured for service ${hostname}"`
+    }
+
+    var isProxy = false
+    if (typeof backendmap[hostname].use_proxy == "boolean" && backendmap[hostname].use_proxy) {
+        isProxy = backendmap[hostname].use_proxy
+    }
+
+    return [backendmap[hostname].endpoint, isProxy];
+}
+
+export default {getConfigStatus, configBackends, getBackend, getProxiedBackend};

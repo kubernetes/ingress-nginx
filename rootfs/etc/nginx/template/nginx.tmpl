@@ -848,6 +848,15 @@ stream {
         return $cfgreturn;
     }
     {{ if and $all.IsSSLPassthroughEnabled }} 
+    # This server is here just for proxy protocol enabled passthroughs
+    server {
+        ssl_preread on;
+        listen unix:/var/run/nginxstreamproxy.sock;
+        js_set $proxyupstream passthrough.getProxiedBackend;
+        proxy_pass $proxyupstream;
+        proxy_protocol on;
+    }
+
     server {
         # TODO: Remove Hardcode
         listen 443;
