@@ -30,7 +30,7 @@ var _ = framework.DescribeSetting("aio-write", func() {
 	ginkgo.It("should be enabled by default", func() {
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
-				return strings.Contains(cfg, "aio_write           on;")
+				return strings.Contains(cfg, "aio_write on")
 			})
 	})
 
@@ -39,7 +39,7 @@ var _ = framework.DescribeSetting("aio-write", func() {
 
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
-				return strings.Contains(cfg, "aio_write           on;")
+				return strings.Contains(cfg, "aio_write on")
 			})
 	})
 
@@ -48,7 +48,7 @@ var _ = framework.DescribeSetting("aio-write", func() {
 
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
-				return !strings.Contains(cfg, "aio_write           on;")
+				return !strings.Contains(cfg, "aio_write on")
 			})
 	})
 })
