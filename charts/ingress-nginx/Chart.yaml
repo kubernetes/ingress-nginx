@@ -1,9 +1,9 @@
 annotations:
-  artifacthub.io/changes: |
-     - "Update Ingress-Nginx version controller-v1.8.2"
-  artifacthub.io/prerelease: "false"
+  artifacthub.io/changes: |2
+     - "Update Ingress-Nginx version controller-v1.9.0-beta.0"
+  artifacthub.io/prerelease: "true"
 apiVersion: v2
-appVersion: 1.8.2
+appVersion: 1.9.0-beta.0
 description: Ingress controller for Kubernetes using NGINX as a reverse proxy and
   load balancer
 engine: gotpl
@@ -20,4 +20,4 @@ maintainers:
 name: ingress-nginx
 sources:
 - https://github.com/kubernetes/ingress-nginx
-version: 4.7.2
+version: 4.8.0-beta.0
