@@ -33,6 +33,9 @@ Do not try to edit it manually.
 for FILE in $(find $DIR/test/e2e -name "*.go");do
     # describe definition
     DESCRIBE=$(cat $FILE | grep -n -oP 'Describe.*')
+    if [ -z "$DESCRIBE" ]; then
+        continue
+    fi
     # line number
     DESCRIBE_LINE=$(echo $DESCRIBE | cut -f1 -d ':')
     # clean describe, extracting the string
