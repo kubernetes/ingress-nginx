@@ -153,7 +153,6 @@ func main() {
 	if errExists == nil {
 		conf.IsChroot = true
 		go logger(conf.InternalLoggerAddress)
-
 	}
 
 	go metrics.StartHTTPServer(conf.HealthCheckHost, conf.ListenPorts.Health, mux)
@@ -282,10 +281,10 @@ func checkService(key string, kubeClient *kubernetes.Clientset) error {
 		}
 
 		if errors.IsNotFound(err) {
-			return fmt.Errorf("No service with name %v found in namespace %v: %v", name, ns, err)
+			return fmt.Errorf("no service with name %v found in namespace %v: %v", name, ns, err)
 		}
 
-		return fmt.Errorf("Unexpected error searching service with name %v in namespace %v: %v", name, ns, err)
+		return fmt.Errorf("unexpected error searching service with name %v in namespace %v: %v", name, ns, err)
 	}
 
 	return nil

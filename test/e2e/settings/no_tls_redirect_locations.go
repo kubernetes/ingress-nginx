@@ -44,6 +44,5 @@ var _ = framework.DescribeSetting("Add no tls redirect locations", func() {
 		f.WaitForNginxConfiguration(func(server string) bool {
 			return strings.Contains(server, "force_no_ssl_redirect = true,")
 		})
-
 	})
 })

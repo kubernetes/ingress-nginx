@@ -44,6 +44,7 @@ func buildIngress() *networking.Ingress {
 		},
 	}
 }
+
 func TestParseInvalidAnnotations(t *testing.T) {
 	ing := buildIngress()
 
@@ -56,7 +57,7 @@ func TestParseInvalidAnnotations(t *testing.T) {
 	if !ok {
 		t.Errorf("expected a string type")
 	}
-	if val != "HTTP" {
+	if val != http {
 		t.Errorf("expected HTTPS but %v returned", val)
 	}
 
@@ -72,12 +73,12 @@ func TestParseInvalidAnnotations(t *testing.T) {
 	if !ok {
 		t.Errorf("expected a string type")
 	}
-	if val != "HTTP" {
+	if val != http {
 		t.Errorf("expected HTTPS but %v returned", val)
 	}
 
 	// Test invalid annotation set
-	data[parser.GetAnnotationWithPrefix("backend-protocol")] = "INVALID"
+	data[parser.GetAnnotationWithPrefix(backendProtocolAnnotation)] = "INVALID"
 	ing.SetAnnotations(data)
 
 	i, err = NewParser(&resolver.Mock{}).Parse(ing)
@@ -88,7 +89,7 @@ func TestParseInvalidAnnotations(t *testing.T) {
 	if !ok {
 		t.Errorf("expected a string type")
 	}
-	if val != "HTTP" {
+	if val != http {
 		t.Errorf("expected HTTPS but %v returned", val)
 	}
 }
@@ -97,7 +98,7 @@ func TestParseAnnotations(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("backend-protocol")] = "HTTPS"
+	data[parser.GetAnnotationWithPrefix(backendProtocolAnnotation)] = "  HTTPS  "
 	ing.SetAnnotations(data)
 
 	i, err := NewParser(&resolver.Mock{}).Parse(ing)

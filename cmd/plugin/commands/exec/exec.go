@@ -55,7 +55,7 @@ type execFlags struct {
 	Stdin bool
 }
 
-func exec(flags *genericclioptions.ConfigFlags, podName string, deployment string, selector string, container string, cmd []string, opts execFlags) error {
+func exec(flags *genericclioptions.ConfigFlags, podName, deployment, selector, container string, cmd []string, opts execFlags) error {
 	pod, err := request.ChoosePod(flags, podName, deployment, selector)
 	if err != nil {
 		return err

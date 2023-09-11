@@ -45,6 +45,9 @@ spec:
     {{- if .Values.controller.dnsConfig }}
       dnsConfig: {{ toYaml .Values.controller.dnsConfig | nindent 8 }}
     {{- end }}
+    {{- if .Values.controller.hostAliases }}
+      hostAliases: {{ tpl (toYaml .Values.controller.hostAliases) $ | nindent 8 }}
+    {{- end }}
     {{- if .Values.controller.hostname }}
       hostname: {{ toYaml .Values.controller.hostname | nindent 8 }}
     {{- end }}
@@ -180,13 +183,13 @@ spec:
       {{- end }}
       {{- if .Values.controller.extraModules }}
         {{- range .Values.controller.extraModules }}
-          {{ $containerSecurityContext := .containerSecurityContext | default $.Values.controller.containerSecurityContext }}
-{{ include "extraModules" (dict "name" .name "image" .image "containerSecurityContext" $containerSecurityContext) | indent 8 }}
+          {{- $containerSecurityContext := .containerSecurityContext | default $.Values.controller.containerSecurityContext }}
+          {{- include "extraModules" (dict "name" .name "image" .image "containerSecurityContext" $containerSecurityContext) | nindent 8 }}
         {{- end }}
       {{- end }}
       {{- if .Values.controller.opentelemetry.enabled}}
-          {{ $otelContainerSecurityContext := $.Values.controller.opentelemetry.containerSecurityContext | default $.Values.controller.containerSecurityContext }}
-          {{- include "extraModules" (dict "name" "opentelemetry" "image" .Values.controller.opentelemetry.image "containerSecurityContext" $otelContainerSecurityContext) | nindent 8}}
+          {{- $otelContainerSecurityContext := $.Values.controller.opentelemetry.containerSecurityContext | default $.Values.controller.containerSecurityContext }}
+          {{- include "extraModules" (dict "name" "opentelemetry" "image" .Values.controller.opentelemetry.image "containerSecurityContext" $otelContainerSecurityContext "distroless" true) | nindent 8}}
       {{- end}}
     {{- end }}
     {{- if .Values.controller.hostNetwork }}
@@ -202,7 +205,7 @@ spec:
       affinity: {{ toYaml .Values.controller.affinity | nindent 8 }}
     {{- end }}
     {{- if .Values.controller.topologySpreadConstraints }}
-      topologySpreadConstraints: {{ toYaml .Values.controller.topologySpreadConstraints | nindent 8 }}
+      topologySpreadConstraints: {{ tpl (toYaml .Values.controller.topologySpreadConstraints) $ | nindent 8 }}
     {{- end }}
       serviceAccountName: {{ template "ingress-nginx.serviceAccountName" . }}
       terminationGracePeriodSeconds: {{ .Values.controller.terminationGracePeriodSeconds }}

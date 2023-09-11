@@ -24,7 +24,7 @@ import (
 
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
-	//Just importing this is supposed to allow cloud authentication
+	// Just importing this is supposed to allow cloud authentication
 	// eg GCP, AWS, Azure ...
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 

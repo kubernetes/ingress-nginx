@@ -19,7 +19,6 @@ package inspector
 import "testing"
 
 func TestCheckRegex(t *testing.T) {
-
 	tests := []struct {
 		name    string
 		value   string

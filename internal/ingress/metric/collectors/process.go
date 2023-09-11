@@ -53,6 +53,8 @@ type BinaryNameMatcher struct {
 
 // MatchAndName returns false if the match failed, otherwise
 // true and the resulting name.
+//
+//nolint:gocritic // nacl param cannot be a pointer since it's to implement common.MatchNamer interface
 func (em BinaryNameMatcher) MatchAndName(nacl common.ProcAttributes) (bool, string) {
 	if len(nacl.Cmdline) == 0 {
 		return false, ""
@@ -94,8 +96,10 @@ type NGINXProcessCollector interface {
 	Stop()
 }
 
-var name = "nginx"
-var binary = "/usr/bin/nginx"
+var (
+	name   = "nginx"
+	binary = "/usr/bin/nginx"
+)
 
 // NewNGINXProcess returns a new prometheus collector for the nginx process
 func NewNGINXProcess(pod, namespace, ingressClass string) (NGINXProcessCollector, error) {
@@ -106,7 +110,7 @@ func NewNGINXProcess(pod, namespace, ingressClass string) (NGINXProcessCollector
 
 	nm := newBinaryNameMatcher(name, binary)
 
-	p := namedProcess{
+	p := &namedProcess{
 		scrapeChan: make(chan scrapeRequest),
 		Grouper:    proc.NewGrouper(nm, true, false, false, false),
 		fs:         fs,
@@ -164,7 +168,7 @@ func NewNGINXProcess(pod, namespace, ingressClass string) (NGINXProcessCollector
 }
 
 // Describe implements prometheus.Collector.
-func (p namedProcess) Describe(ch chan<- *prometheus.Desc) {
+func (p *namedProcess) Describe(ch chan<- *prometheus.Desc) {
 	ch <- p.data.cpuSecs
 	ch <- p.data.numProcs
 	ch <- p.data.readBytes
@@ -175,13 +179,13 @@ func (p namedProcess) Describe(ch chan<- *prometheus.Desc) {
 }
 
 // Collect implements prometheus.Collector.
-func (p namedProcess) Collect(ch chan<- prometheus.Metric) {
+func (p *namedProcess) Collect(ch chan<- prometheus.Metric) {
 	req := scrapeRequest{results: ch, done: make(chan struct{})}
 	p.scrapeChan <- req
 	<-req.done
 }
 
-func (p namedProcess) Start() {
+func (p *namedProcess) Start() {
 	for req := range p.scrapeChan {
 		ch := req.results
 		p.scrape(ch)
@@ -189,18 +193,19 @@ func (p namedProcess) Start() {
 	}
 }
 
-func (p namedProcess) Stop() {
+func (p *namedProcess) Stop() {
 	close(p.scrapeChan)
 }
 
-func (p namedProcess) scrape(ch chan<- prometheus.Metric) {
+func (p *namedProcess) scrape(ch chan<- prometheus.Metric) {
 	_, groups, err := p.Update(p.fs.AllProcs())
 	if err != nil {
 		klog.Warningf("unexpected error obtaining nginx process info: %v", err)
 		return
 	}
 
-	for _, gcounts := range groups {
+	for i := range groups {
+		gcounts := groups[i]
 		ch <- prometheus.MustNewConstMetric(p.data.numProcs,
 			prometheus.GaugeValue, float64(gcounts.Procs))
 		ch <- prometheus.MustNewConstMetric(p.data.memResidentbytes,

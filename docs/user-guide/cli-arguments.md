@@ -15,6 +15,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--default-backend-service`        | Service used to serve HTTP requests not matching any known server name (catch-all). Takes the form "namespace/name". The controller configures NGINX to forward requests to the first port of this Service. |
 | `--default-server-port`            | Port to use for exposing the default server (catch-all). (default 8181) |
 | `--default-ssl-certificate`        | Secret containing a SSL certificate to be used by the default HTTPS server (catch-all). Takes the form "namespace/name". |
+| `--enable-annotation-validation`  | If true, will enable the annotation validation feature. This value will be defaulted to true on a future release. |
 | `--disable-catch-all`              | Disable support for catch-all Ingresses. (default false) |
 | `--disable-full-test` | Disable full test of all merged ingresses at the admission stage and tests the template of the ingress being created or updated  (full test of all ingresses is enabled by default). |
 | `--disable-svc-external-name` | Disable support for Services of type ExternalName. (default false) |
@@ -24,7 +25,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--enable-metrics`                 | Enables the collection of NGINX metrics. (default true) |
 | `--enable-ssl-chain-completion`    | Autocomplete SSL certificate chains with missing intermediate CA certificates. Certificates uploaded to Kubernetes must have the "Authority Information Access" X.509 v3 extension for this to succeed. (default false)|
 | `--enable-ssl-passthrough`         | Enable SSL Passthrough. (default false) |
-| `--enable-topology-aware-routing`  | Enable topology aware hints feature, needs service object annotation service.kubernetes.io/topology-aware-hints sets to auto. (default false) |
+| `--enable-topology-aware-routing`  | Enable topology aware routing feature, needs service object annotation service.kubernetes.io/topology-mode sets to auto. (default false) |
 | `--exclude-socket-metrics`         | Set of socket request metrics to exclude which won't be exported nor being calculated. The possible socket request metrics to exclude are documented in the monitoring guide e.g. 'nginx_ingress_controller_request_duration_seconds,nginx_ingress_controller_response_size'|
 | `--health-check-path`              | URL path of the health check endpoint. Configured inside the NGINX status server. All requests received on the port defined by the healthz-port parameter are forwarded internally to this path. (default "/healthz") |
 | `--health-check-timeout`           | Time limit, in seconds, for a probe to health-check-path to succeed. (default 10) |

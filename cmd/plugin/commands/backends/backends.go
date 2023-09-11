@@ -63,13 +63,14 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	return cmd
 }
 
-func backends(flags *genericclioptions.ConfigFlags, podName string, deployment string, selector string, container string, backend string, onlyList bool) error {
+func backends(flags *genericclioptions.ConfigFlags, podName, deployment, selector, container, backend string, onlyList bool) error {
 	var command []string
-	if onlyList {
+	switch {
+	case onlyList:
 		command = []string{"/dbg", "backends", "list"}
-	} else if backend != "" {
+	case backend != "":
 		command = []string{"/dbg", "backends", "get", backend}
-	} else {
+	default:
 		command = []string{"/dbg", "backends", "all"}
 	}
 

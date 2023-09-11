@@ -36,6 +36,12 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
+const (
+	differentHost = "different"
+	authHost      = "auth"
+	authURL       = "http://foo.bar.baz:5000/path"
+)
+
 var _ = framework.DescribeAnnotation("auth-*", func() {
 	f := framework.NewDefaultFramework("auth", framework.WithHTTPBunEnabled())
 
@@ -44,7 +50,7 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 	})
 
 	ginkgo.It("should return status code 200 when no authentication is configured", func() {
-		host := "auth"
+		host := authHost
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
@@ -63,7 +69,7 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 	})
 
 	ginkgo.It("should return status code 503 when authentication is configured with an invalid secret", func() {
-		host := "auth"
+		host := authHost
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-type":   "basic",
 			"nginx.ingress.kubernetes.io/auth-secret": "something",
@@ -87,9 +93,9 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 	})
 
 	ginkgo.It("should return status code 401 when authentication is configured but Authorization header is not configured", func() {
-		host := "auth"
+		host := authHost
 
-		s := f.EnsureSecret(buildSecret("foo", "bar", "test", f.Namespace))
+		s := f.EnsureSecret(buildSecret(fooHost, "bar", "test", f.Namespace))
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-type":   "basic",
@@ -114,9 +120,9 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 	})
 
 	ginkgo.It("should return status code 401 when authentication is configured and Authorization header is sent with invalid credentials", func() {
-		host := "auth"
+		host := authHost
 
-		s := f.EnsureSecret(buildSecret("foo", "bar", "test", f.Namespace))
+		s := f.EnsureSecret(buildSecret(fooHost, "bar", "test", f.Namespace))
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-type":   "basic",
@@ -142,9 +148,9 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 	})
 
 	ginkgo.It("should return status code 401 and cors headers when authentication and cors is configured but Authorization header is not configured", func() {
-		host := "auth"
+		host := authHost
 
-		s := f.EnsureSecret(buildSecret("foo", "bar", "test", f.Namespace))
+		s := f.EnsureSecret(buildSecret(fooHost, "bar", "test", f.Namespace))
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-type":   "basic",
@@ -170,9 +176,9 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 	})
 
 	ginkgo.It("should return status code 200 when authentication is configured and Authorization header is sent", func() {
-		host := "auth"
+		host := authHost
 
-		s := f.EnsureSecret(buildSecret("foo", "bar", "test", f.Namespace))
+		s := f.EnsureSecret(buildSecret(fooHost, "bar", "test", f.Namespace))
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-type":   "basic",
@@ -191,15 +197,15 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 		f.HTTPTestClient().
 			GET("/").
 			WithHeader("Host", host).
-			WithBasicAuth("foo", "bar").
+			WithBasicAuth(fooHost, "bar").
 			Expect().
 			Status(http.StatusOK)
 	})
 
 	ginkgo.It("should return status code 200 when authentication is configured with a map and Authorization header is sent", func() {
-		host := "auth"
+		host := authHost
 
-		s := f.EnsureSecret(buildMapSecret("foo", "bar", "test", f.Namespace))
+		s := f.EnsureSecret(buildMapSecret(fooHost, "bar", "test", f.Namespace))
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-type":        "basic",
@@ -219,13 +225,13 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 		f.HTTPTestClient().
 			GET("/").
 			WithHeader("Host", host).
-			WithBasicAuth("foo", "bar").
+			WithBasicAuth(fooHost, "bar").
 			Expect().
 			Status(http.StatusOK)
 	})
 
 	ginkgo.It("should return status code 401 when authentication is configured with invalid content and Authorization header is sent", func() {
-		host := "auth"
+		host := authHost
 
 		s := f.EnsureSecret(
 			&corev1.Secret{
@@ -258,19 +264,27 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 		f.HTTPTestClient().
 			GET("/").
 			WithHeader("Host", host).
-			WithBasicAuth("foo", "bar").
+			WithBasicAuth(fooHost, "bar").
 			Expect().
 			Status(http.StatusUnauthorized)
 	})
 
 	ginkgo.It(`should set snippet "proxy_set_header My-Custom-Header 42;" when external auth is configured`, func() {
-		host := "auth"
+		host := authHost
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-url": "http://foo.bar/basic-auth/user/password",
 			"nginx.ingress.kubernetes.io/auth-snippet": `
 				proxy_set_header My-Custom-Header 42;`,
 		}
+		f.SetNginxConfigMapData(map[string]string{
+			"allow-snippet-annotations": "true",
+		})
+		defer func() {
+			f.SetNginxConfigMapData(map[string]string{
+				"allow-snippet-annotations": "false",
+			})
+		}()
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
@@ -282,7 +296,16 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 	})
 
 	ginkgo.It(`should not set snippet "proxy_set_header My-Custom-Header 42;" when external auth is not configured`, func() {
-		host := "auth"
+		host := authHost
+
+		f.SetNginxConfigMapData(map[string]string{
+			"allow-snippet-annotations": "true",
+		})
+		defer func() {
+			f.SetNginxConfigMapData(map[string]string{
+				"allow-snippet-annotations": "false",
+			})
+		}()
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-snippet": `
@@ -299,7 +322,7 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 	})
 
 	ginkgo.It(`should set "proxy_set_header 'My-Custom-Header' '42';" when auth-headers are set`, func() {
-		host := "auth"
+		host := authHost
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-url":               "http://foo.bar/basic-auth/user/password",
@@ -320,11 +343,11 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 	})
 
 	ginkgo.It(`should set cache_key when external auth cache is configured`, func() {
-		host := "auth"
+		host := authHost
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-url":            "http://foo.bar/basic-auth/user/password",
-			"nginx.ingress.kubernetes.io/auth-cache-key":      "foo",
+			"nginx.ingress.kubernetes.io/auth-cache-key":      fooHost,
 			"nginx.ingress.kubernetes.io/auth-cache-duration": "200 202 401 30m",
 		}
 
@@ -337,7 +360,6 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 			func(server string) bool {
 				return cacheRegex.MatchString(server) &&
 					strings.Contains(server, `proxy_cache_valid 200 202 401 30m;`)
-
 			})
 	})
 
@@ -405,7 +427,6 @@ http {
 			f.WaitForNginxServer(host, func(server string) bool {
 				return strings.Contains(server, "server_name "+host)
 			})
-
 		})
 
 		ginkgo.It("user retains cookie by default", func() {
@@ -431,7 +452,7 @@ http {
 		})
 
 		ginkgo.It("user with annotated ingress retains cookie if upstream returns error status code", func() {
-			annotations["nginx.ingress.kubernetes.io/auth-always-set-cookie"] = "true"
+			annotations["nginx.ingress.kubernetes.io/auth-always-set-cookie"] = enableAnnotation
 			f.UpdateIngress(ing1)
 			f.UpdateIngress(ing2)
 
@@ -451,7 +472,7 @@ http {
 	})
 
 	ginkgo.Context("when external authentication is configured", func() {
-		host := "auth"
+		host := authHost
 		var annotations map[string]string
 		var ing *networking.Ingress
 
@@ -495,7 +516,7 @@ http {
 			annotations["nginx.ingress.kubernetes.io/auth-realm"] = "test auth"
 			f.UpdateIngress(ing)
 
-			anotherHost := "different"
+			anotherHost := differentHost
 			anotherAnnotations := map[string]string{}
 
 			anotherIng := framework.NewSingleIngress(anotherHost, "/", anotherHost, f.Namespace, framework.EchoService, 80, anotherAnnotations)
@@ -544,12 +565,12 @@ http {
 			// Sleep a while just to guarantee that the configmap is applied
 			framework.Sleep()
 
-			annotations["nginx.ingress.kubernetes.io/auth-url"] = "http://foo.bar.baz:5000/path"
+			annotations["nginx.ingress.kubernetes.io/auth-url"] = authURL
 			f.UpdateIngress(ing)
 
 			f.WaitForNginxServer("",
 				func(server string) bool {
-					return strings.Contains(server, "http://foo.bar.baz:5000/path") &&
+					return strings.Contains(server, authURL) &&
 						!strings.Contains(server, `upstream auth-external-auth`)
 				})
 		})
@@ -582,19 +603,19 @@ http {
 			// Sleep a while just to guarantee that the configmap is applied
 			framework.Sleep()
 
-			annotations["nginx.ingress.kubernetes.io/auth-url"] = "http://foo.bar.baz:5000/path"
+			annotations["nginx.ingress.kubernetes.io/auth-url"] = authURL
 			annotations["nginx.ingress.kubernetes.io/auth-keepalive"] = "-1"
 			f.UpdateIngress(ing)
 
 			f.WaitForNginxServer("",
 				func(server string) bool {
-					return strings.Contains(server, "http://foo.bar.baz:5000/path") &&
+					return strings.Contains(server, authURL) &&
 						!strings.Contains(server, `upstream auth-external-auth`)
 				})
 		})
 
 		ginkgo.It(`should not create additional upstream block when auth-keepalive is set with HTTP/2`, func() {
-			annotations["nginx.ingress.kubernetes.io/auth-url"] = "http://foo.bar.baz:5000/path"
+			annotations["nginx.ingress.kubernetes.io/auth-url"] = authURL
 			annotations["nginx.ingress.kubernetes.io/auth-keepalive"] = "123"
 			annotations["nginx.ingress.kubernetes.io/auth-keepalive-requests"] = "456"
 			annotations["nginx.ingress.kubernetes.io/auth-keepalive-timeout"] = "789"
@@ -602,7 +623,7 @@ http {
 
 			f.WaitForNginxServer("",
 				func(server string) bool {
-					return strings.Contains(server, "http://foo.bar.baz:5000/path") &&
+					return strings.Contains(server, authURL) &&
 						!strings.Contains(server, `upstream auth-external-auth`)
 				})
 		})
@@ -628,10 +649,49 @@ http {
 						strings.Contains(server, `keepalive_timeout 789s;`)
 				})
 		})
+
+		ginkgo.It(`should disable set_all_vars when auth-keepalive-share-vars is not set`, func() {
+			f.UpdateNginxConfigMapData("use-http2", "false")
+			defer func() {
+				f.UpdateNginxConfigMapData("use-http2", "true")
+			}()
+			// Sleep a while just to guarantee that the configmap is applied
+			framework.Sleep()
+
+			annotations["nginx.ingress.kubernetes.io/auth-keepalive"] = "10"
+			f.UpdateIngress(ing)
+
+			f.WaitForNginxServer("",
+				func(server string) bool {
+					return strings.Contains(server, `upstream auth-external-auth`) &&
+						strings.Contains(server, `keepalive 10;`) &&
+						strings.Contains(server, `share_all_vars = false`)
+				})
+		})
+
+		ginkgo.It(`should enable set_all_vars when auth-keepalive-share-vars is true`, func() {
+			f.UpdateNginxConfigMapData("use-http2", "false")
+			defer func() {
+				f.UpdateNginxConfigMapData("use-http2", "true")
+			}()
+			// Sleep a while just to guarantee that the configmap is applied
+			framework.Sleep()
+
+			annotations["nginx.ingress.kubernetes.io/auth-keepalive"] = "10"
+			annotations["nginx.ingress.kubernetes.io/auth-keepalive-share-vars"] = enableAnnotation
+			f.UpdateIngress(ing)
+
+			f.WaitForNginxServer("",
+				func(server string) bool {
+					return strings.Contains(server, `upstream auth-external-auth`) &&
+						strings.Contains(server, `keepalive 10;`) &&
+						strings.Contains(server, `share_all_vars = true`)
+				})
+		})
 	})
 
 	ginkgo.Context("when external authentication is configured with a custom redirect param", func() {
-		host := "auth"
+		host := authHost
 		var annotations map[string]string
 		var ing *networking.Ingress
 
@@ -676,7 +736,7 @@ http {
 			annotations["nginx.ingress.kubernetes.io/auth-realm"] = "test auth"
 			f.UpdateIngress(ing)
 
-			anotherHost := "different"
+			anotherHost := differentHost
 			anotherAnnotations := map[string]string{}
 
 			anotherIng := framework.NewSingleIngress(anotherHost, "/", anotherHost, f.Namespace, framework.EchoService, 80, anotherAnnotations)
@@ -696,8 +756,8 @@ http {
 	})
 
 	ginkgo.Context("when external authentication with caching is configured", func() {
-		thisHost := "auth"
-		thatHost := "different"
+		thisHost := authHost
+		thatHost := differentHost
 
 		fooPath := "/foo"
 		barPath := "/bar"
@@ -819,7 +879,7 @@ http {
 	})
 
 	ginkgo.Context("with invalid auth-url should deny whole location", func() {
-		host := "auth"
+		host := authHost
 		var annotations map[string]string
 		var ing *networking.Ingress
 
@@ -859,7 +919,6 @@ http {
 //   Auth error
 
 func buildSecret(username, password, name, namespace string) *corev1.Secret {
-	//out, err := exec.Command("openssl", "passwd", "-crypt", password).CombinedOutput()
 	out, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	encpass := fmt.Sprintf("%v:%s\n", username, out)
 	assert.Nil(ginkgo.GinkgoT(), err)
@@ -878,7 +937,6 @@ func buildSecret(username, password, name, namespace string) *corev1.Secret {
 }
 
 func buildMapSecret(username, password, name, namespace string) *corev1.Secret {
-	//out, err := exec.Command("openssl", "passwd", "-crypt", password).CombinedOutput()
 	out, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	assert.Nil(ginkgo.GinkgoT(), err)
 
@@ -889,7 +947,7 @@ func buildMapSecret(username, password, name, namespace string) *corev1.Secret {
 			DeletionGracePeriodSeconds: framework.NewInt64(1),
 		},
 		Data: map[string][]byte{
-			username: []byte(out),
+			username: out,
 		},
 		Type: corev1.SecretTypeOpaque,
 	}

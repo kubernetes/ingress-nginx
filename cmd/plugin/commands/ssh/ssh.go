@@ -45,7 +45,7 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	return cmd
 }
 
-func ssh(flags *genericclioptions.ConfigFlags, podName string, deployment string, selector string, container string) error {
+func ssh(flags *genericclioptions.ConfigFlags, podName, deployment, selector, container string) error {
 	pod, err := request.ChoosePod(flags, podName, deployment, selector)
 	if err != nil {
 		return err

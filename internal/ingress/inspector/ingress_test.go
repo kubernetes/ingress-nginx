@@ -24,7 +24,6 @@ import (
 )
 
 func makeSimpleIngress(hostname string, paths ...string) *networking.Ingress {
-
 	newIngress := networking.Ingress{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      "test1",

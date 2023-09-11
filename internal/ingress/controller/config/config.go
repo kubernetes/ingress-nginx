@@ -29,10 +29,8 @@ import (
 	"k8s.io/ingress-nginx/pkg/util/runtime"
 )
 
-var (
-	// EnableSSLChainCompletion Autocomplete SSL certificate chains with missing intermediate CA certificates.
-	EnableSSLChainCompletion = false
-)
+// EnableSSLChainCompletion Autocomplete SSL certificate chains with missing intermediate CA certificates.
+var EnableSSLChainCompletion = false
 
 const (
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
@@ -91,11 +89,22 @@ const (
 
 // Configuration represents the content of nginx.conf file
 type Configuration struct {
-	defaults.Backend `json:",squash"` //nolint:staticcheck
+	defaults.Backend `json:",squash"` //nolint:staticcheck // Ignore unknown JSON option "squash" error
 
 	// AllowSnippetAnnotations enable users to add their own snippets via ingress annotation.
 	// If disabled, only snippets added via ConfigMap are added to ingress.
 	AllowSnippetAnnotations bool `json:"allow-snippet-annotations"`
+
+	// AllowCrossNamespaceResources enables users to consume cross namespace resource on annotations
+	// Case disabled, attempts to use secrets or configmaps from a namespace different from Ingress will
+	// be denied
+	// This value will default to `false` on future releases
+	AllowCrossNamespaceResources bool `json:"allow-cross-namespace-resources"`
+
+	// AnnotationsRiskLevel represents the risk accepted on an annotation. If the risk is, for instance `Medium`, annotations
+	// with risk High and Critical will not be accepted.
+	// Default Risk is Critical by default, but this may be changed in future releases
+	AnnotationsRiskLevel string `json:"annotations-risk-level"`
 
 	// AnnotationValueWordBlocklist defines words that should not be part of an user annotation value
 	// (can be used to run arbitrary code or configs, for example) and that should be dropped.
@@ -120,15 +129,19 @@ type Configuration struct {
 	// By default this is disabled
 	EnableAccessLogForDefaultBackend bool `json:"enable-access-log-for-default-backend"`
 
+	// EnableAuthAccessLog enable auth access log
+	// By default this is disabled
+	EnableAuthAccessLog bool `json:"enable-auth-access-log"`
+
 	// AccessLogPath sets the path of the access logs for both http and stream contexts if enabled
 	// http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log
 	// http://nginx.org/en/docs/stream/ngx_stream_log_module.html#access_log
 	// By default access logs go to /var/log/nginx/access.log
 	AccessLogPath string `json:"access-log-path,omitempty"`
 
-	// HttpAccessLogPath sets the path of the access logs for http context globally if enabled
+	// HTTPAccessLogPath sets the path of the access logs for http context globally if enabled
 	// http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log
-	HttpAccessLogPath string `json:"http-access-log-path,omitempty"`
+	HTTPAccessLogPath string `json:"http-access-log-path,omitempty"`
 
 	// StreamAccessLogPath sets the path of the access logs for stream context globally if enabled
 	// http://nginx.org/en/docs/stream/ngx_stream_log_module.html#access_log
@@ -215,19 +228,19 @@ type Configuration struct {
 
 	// https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_field_size
 	// HTTP2MaxFieldSize Limits the maximum size of an HPACK-compressed request header field
-	// NOTE: Deprecated
+	// Deprecated: HTTP2MaxFieldSize is deprecated.
 	HTTP2MaxFieldSize string `json:"http2-max-field-size,omitempty"`
 
 	// https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_header_size
 	// HTTP2MaxHeaderSize Limits the maximum size of the entire request header list after HPACK decompression
-	// NOTE: Deprecated
+	// Deprecated: HTTP2MaxHeaderSize is deprecated.
 	HTTP2MaxHeaderSize string `json:"http2-max-header-size,omitempty"`
 
 	// http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_requests
 	// HTTP2MaxRequests Sets the maximum number of requests (including push requests) that can be served
 	// through one HTTP/2 connection, after which the next client request will lead to connection closing
 	// and the need of establishing a new connection.
-	// NOTE: Deprecated
+	// Deprecated: HTTP2MaxRequests is deprecated.
 	HTTP2MaxRequests int `json:"http2-max-requests,omitempty"`
 
 	// http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_concurrent_streams
@@ -537,7 +550,7 @@ type Configuration struct {
 	UseForwardedHeaders bool `json:"use-forwarded-headers"`
 
 	// Sets whether to enable the real ip module
-	EnableRealIp bool `json:"enable-real-ip"`
+	EnableRealIP bool `json:"enable-real-ip"`
 
 	// Sets the header field for identifying the originating IP address of a client
 	// Default is X-Forwarded-For
@@ -606,7 +619,7 @@ type Configuration struct {
 	// Default: 0.01
 	OtelSamplerRatio float32 `json:"otel-sampler-ratio"`
 
-	//OtelSamplerParentBased specifies the parent based sampler to be use for any traces created
+	// OtelSamplerParentBased specifies the parent based sampler to be use for any traces created
 	// Default: true
 	OtelSamplerParentBased bool `json:"otel-sampler-parent-based"`
 
@@ -708,7 +721,7 @@ type Configuration struct {
 
 	// DatadogSampleRate specifies sample rate for any traces created.
 	// Default: use a dynamic rate instead
-	DatadogSampleRate *float32 `json:"datadog-sample-rate",omitempty`
+	DatadogSampleRate *float32 `json:"datadog-sample-rate,omitempty"`
 
 	// MainSnippet adds custom configuration to the main section of the nginx configuration
 	MainSnippet string `json:"main-snippet"`
@@ -852,12 +865,15 @@ func NewDefault() Configuration {
 	defGlobalExternalAuth := GlobalExternalAuth{"", "", "", "", "", append(defResponseHeaders, ""), "", "", "", []string{}, map[string]string{}, false}
 
 	cfg := Configuration{
-		AllowSnippetAnnotations:          true,
+		AllowSnippetAnnotations:          false,
+		AllowCrossNamespaceResources:     true,
 		AllowBackendServerHeader:         false,
 		AnnotationValueWordBlocklist:     "",
+		AnnotationsRiskLevel:             "Critical",
 		AccessLogPath:                    "/var/log/nginx/access.log",
 		AccessLogParams:                  "",
 		EnableAccessLogForDefaultBackend: false,
+		EnableAuthAccessLog:              false,
 		WorkerCPUAffinity:                "",
 		ErrorLogPath:                     "/var/log/nginx/error.log",
 		BlockCIDRs:                       defBlockEntity,
@@ -873,7 +889,7 @@ func NewDefault() Configuration {
 		EnableUnderscoresInHeaders:       false,
 		ErrorLogLevel:                    errorLevel,
 		UseForwardedHeaders:              false,
-		EnableRealIp:                     false,
+		EnableRealIP:                     false,
 		ForwardedForHeader:               "X-Forwarded-For",
 		ComputeFullForwardedFor:          false,
 		ProxyAddOriginalURIHeader:        false,
@@ -1021,41 +1037,41 @@ func NewDefault() Configuration {
 
 // TemplateConfig contains the nginx configuration to render the file nginx.conf
 type TemplateConfig struct {
-	ProxySetHeaders          map[string]string
-	AddHeaders               map[string]string
-	BacklogSize              int
-	Backends                 []*ingress.Backend
-	PassthroughBackends      []*ingress.SSLPassthroughBackend
-	Servers                  []*ingress.Server
-	TCPBackends              []ingress.L4Service
-	UDPBackends              []ingress.L4Service
-	HealthzURI               string
-	Cfg                      Configuration
-	IsIPV6Enabled            bool
-	IsSSLPassthroughEnabled  bool
-	NginxStatusIpv4Whitelist []string
-	NginxStatusIpv6Whitelist []string
-	RedirectServers          interface{}
-	ListenPorts              *ListenPorts
-	PublishService           *apiv1.Service
-	EnableMetrics            bool
-	MaxmindEditionFiles      *[]string
-	MonitorMaxBatchSize      int
-	PID                      string
-	StatusPath               string
-	StatusPort               int
-	StreamPort               int
-	StreamSnippets           []string
+	ProxySetHeaders          map[string]string                `json:"ProxySetHeaders"`
+	AddHeaders               map[string]string                `json:"AddHeaders"`
+	BacklogSize              int                              `json:"BacklogSize"`
+	Backends                 []*ingress.Backend               `json:"Backends"`
+	PassthroughBackends      []*ingress.SSLPassthroughBackend `json:"PassthroughBackends"`
+	Servers                  []*ingress.Server                `json:"Servers"`
+	TCPBackends              []ingress.L4Service              `json:"TCPBackends"`
+	UDPBackends              []ingress.L4Service              `json:"UDPBackends"`
+	HealthzURI               string                           `json:"HealthzURI"`
+	Cfg                      Configuration                    `json:"Cfg"`
+	IsIPV6Enabled            bool                             `json:"IsIPV6Enabled"`
+	IsSSLPassthroughEnabled  bool                             `json:"IsSSLPassthroughEnabled"`
+	NginxStatusIpv4Whitelist []string                         `json:"NginxStatusIpv4Whitelist"`
+	NginxStatusIpv6Whitelist []string                         `json:"NginxStatusIpv6Whitelist"`
+	RedirectServers          interface{}                      `json:"RedirectServers"`
+	ListenPorts              *ListenPorts                     `json:"ListenPorts"`
+	PublishService           *apiv1.Service                   `json:"PublishService"`
+	EnableMetrics            bool                             `json:"EnableMetrics"`
+	MaxmindEditionFiles      *[]string                        `json:"MaxmindEditionFiles"`
+	MonitorMaxBatchSize      int                              `json:"MonitorMaxBatchSize"`
+	PID                      string                           `json:"PID"`
+	StatusPath               string                           `json:"StatusPath"`
+	StatusPort               int                              `json:"StatusPort"`
+	StreamPort               int                              `json:"StreamPort"`
+	StreamSnippets           []string                         `json:"StreamSnippets"`
 }
 
 // ListenPorts describe the ports required to run the
 // NGINX Ingress controller
 type ListenPorts struct {
-	HTTP     int
-	HTTPS    int
-	Health   int
-	Default  int
-	SSLProxy int
+	HTTP     int `json:"HTTP"`
+	HTTPS    int `json:"HTTPS"`
+	Health   int `json:"Health"`
+	Default  int `json:"Default"`
+	SSLProxy int `json:"SSLProxy"`
 }
 
 // GlobalExternalAuth describe external authentication configuration for the
