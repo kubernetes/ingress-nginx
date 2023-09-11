@@ -424,6 +424,10 @@ type Configuration struct {
 	// Example '60s'
 	ProxyProtocolHeaderTimeout time.Duration `json:"proxy-protocol-header-timeout,omitempty"`
 
+	// Enables or disables the directive aio_write that writes files files asynchronously
+	// https://nginx.org/en/docs/http/ngx_http_core_module.html#aio_write
+	EnableAioWrite bool `json:"enable-aio-write,omitempty"`
+
 	// Enables or disables the use of the nginx module that compresses responses using the "gzip" method
 	// http://nginx.org/en/docs/http/ngx_http_gzip_module.html
 	UseGzip bool `json:"use-gzip,omitempty"`
@@ -938,6 +942,7 @@ func NewDefault() Configuration {
 		SSLSessionTickets:                false,
 		SSLSessionTimeout:                sslSessionTimeout,
 		EnableBrotli:                     false,
+		EnableAioWrite:                   true,
 		UseGzip:                          false,
 		UseGeoIP:                         true,
 		UseGeoIP2:                        false,

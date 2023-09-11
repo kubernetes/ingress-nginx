@@ -97,6 +97,7 @@ The following table shows a configuration option's name, type, and the default v
 |[ssl-buffer-size](#ssl-buffer-size)|string|"4k"||
 |[use-proxy-protocol](#use-proxy-protocol)|bool|"false"||
 |[proxy-protocol-header-timeout](#proxy-protocol-header-timeout)|string|"5s"||
+|[enable-aio-write](#enable-aio-write)|bool|"true"||
 |[use-gzip](#use-gzip)|bool|"false"||
 |[use-geoip](#use-geoip)|bool|"true"||
 |[use-geoip2](#use-geoip2)|bool|"false"||
@@ -708,6 +709,10 @@ Enables or disables the [PROXY protocol](https://www.nginx.com/resources/admin-g
 
 Sets the timeout value for receiving the proxy-protocol headers. The default of 5 seconds prevents the TLS passthrough handler from waiting indefinitely on a dropped connection.
 _**default:**_ 5s
+
+## enable-aio-write
+
+Enables or disables the directive [aio_write](https://nginx.org/en/docs/http/ngx_http_core_module.html#aio_write) that writes files asynchronously. _**default:**_ true
 
 ## use-gzip
 
