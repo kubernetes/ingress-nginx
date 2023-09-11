@@ -17,4 +17,4 @@ limitations under the License.
 package collectors
 
 // PrometheusNamespace default metric namespace
-var PrometheusNamespace = "nginx_ingress_controller"
+var PrometheusNamespace = "nginx_ingress_controller" //#nosec G101

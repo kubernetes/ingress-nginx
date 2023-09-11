@@ -20,11 +20,12 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	semver "github.com/blang/semver/v4"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
-	"os"
-	"strings"
 )
 
 type Tag mg.Namespace
@@ -42,7 +43,7 @@ func getIngressNGINXVersion() (string, error) {
 	dat, err := os.ReadFile("TAG")
 	CheckIfError(err, "Could not read TAG file")
 	datString := string(dat)
-	//remove newline
+	// remove newline
 	datString = strings.Replace(datString, "\n", "", -1)
 	return datString, nil
 }
@@ -88,14 +89,14 @@ func (Tag) BumpNginx(newTag string) {
 }
 
 func bump(currentTag, newTag string) {
-	//check if semver is valid
+	// check if semver is valid
 	if !checkSemVer(currentTag, newTag) {
 		ErrorF("ERROR: Semver is not valid %v", newTag)
 		os.Exit(1)
 	}
 
 	Info("Updating Tag %v to %v", currentTag, newTag)
-	err := os.WriteFile("TAG", []byte(newTag), 0666)
+	err := os.WriteFile("TAG", []byte(newTag), 0o666)
 	CheckIfError(err, "Error Writing New Tag File")
 }
 
