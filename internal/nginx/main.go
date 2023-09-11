@@ -107,7 +107,6 @@ func NewPostStatusRequest(path, contentType string, data interface{}) (statusCod
 
 // TODO: Turn port configurable
 func NewPassthroughConfigRequest(data interface{}) (status string, err error) {
-
 	buf, err := json.Marshal(data)
 	if err != nil {
 		return "NOK", err
@@ -130,9 +129,9 @@ func NewPassthroughConfigRequest(data interface{}) (status string, err error) {
 		return "NOK", err
 	}
 
-    if strings.Contains(string(reply), "NOK") {
-        return "NOK", fmt.Errorf("fail to reconfigure dynamically")
-    }
+	if strings.Contains(string(reply), "NOK") {
+		return "NOK", fmt.Errorf("fail to reconfigure dynamically")
+	}
 	return "OK", nil
 }
 

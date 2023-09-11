@@ -90,7 +90,7 @@ function configureWithData(configdata, s) {
     }
 }
 
-const PROXYSOCKET="unix:/var/run/nginxstreamproxy.sock";
+const PROXYSOCKET="unix:/var/run/nginx/streamproxy.sock";
 // getBackend fetches the backend given a hostname sent via SNI
 function getBackend(s) {
     try {

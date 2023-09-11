@@ -431,7 +431,6 @@ func (n *NGINXController) DefaultEndpoint() ingress.Endpoint {
 //
 //nolint:gocritic // the cfg shouldn't be changed, and shouldn't be mutated by other processes while being rendered.
 func (n *NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressCfg ingress.Configuration) ([]byte, error) {
-
 	// NGINX cannot resize the hash tables used to store server names. For
 	// this reason we check if the current size is correct for the host
 	// names defined in the Ingress rules and adjust the value if
@@ -715,10 +714,12 @@ func nextPowerOf2(v int) int {
 }
 
 // TODO: Move to the right place
-type PassthroughConfig map[string]PassthrougBackend
-type PassthrougBackend struct {
-	Endpoint string `json:"endpoint,omitempty"`
-}
+type (
+	PassthroughConfig map[string]PassthrougBackend
+	PassthrougBackend struct {
+		Endpoint string `json:"endpoint,omitempty"`
+	}
+)
 
 func configurePassthroughBackends(backends []*ingress.SSLPassthroughBackend) error {
 	configPassthrough := make(PassthroughConfig)
@@ -754,13 +755,11 @@ func configurePassthroughBackends(backends []*ingress.SSLPassthroughBackend) err
 		return fmt.Errorf("error configuring passthrough: %s %v", status, err)
 	}
 	return nil
-
 }
 
 // configureDynamically encodes new Backends in JSON format and POSTs the
 // payload to an internal HTTP endpoint handled by Lua.
 func (n *NGINXController) configureDynamically(pcfg *ingress.Configuration) error {
-
 	if n.cfg.EnableSSLPassthrough {
 		if err := configurePassthroughBackends(pcfg.PassthroughBackends); err != nil {
 			return err

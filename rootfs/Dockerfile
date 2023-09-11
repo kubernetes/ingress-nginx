@@ -52,6 +52,7 @@ RUN bash -xeu -c ' \
     /etc/ingress-controller \
     /etc/ingress-controller/ssl \
     /etc/ingress-controller/auth \
+    /var/run/nginx \
     /var/log \
     /var/log/nginx \
     /tmp/nginx \
