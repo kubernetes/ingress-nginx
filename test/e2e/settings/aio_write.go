@@ -24,8 +24,8 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.DescribeSetting("aio_write", func() {
-	f := framework.NewDefaultFramework("aio_write")
+var _ = framework.DescribeSetting("aio-write", func() {
+	f := framework.NewDefaultFramework("aio-write")
 
 	ginkgo.It("should be enabled by default", func() {
 		f.WaitForNginxConfiguration(
