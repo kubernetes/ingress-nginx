@@ -113,7 +113,7 @@ jobs:
 
       - name: Prepare Host
         run: |
-          curl -LO https://dl.k8s.io/release/v1.25.5/bin/linux/amd64/kubectl
+          curl -LO https://dl.k8s.io/release/v1.27.3/bin/linux/amd64/kubectl
           chmod +x ./kubectl
           sudo mv ./kubectl /usr/local/bin/kubectl
 
@@ -151,7 +151,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.15, v1.25.11, v1.26.6, v1.27.3]
+        k8s: [v1.25.11, v1.26.6, v1.27.3, v1.28.0]
 
     steps:
       - name: Checkout
@@ -226,7 +226,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.15, v1.25.11, v1.26.6, v1.27.3]
+        k8s: [v1.25.11, v1.26.6, v1.27.3, v1.28.0]
 
     steps:
       - name: Checkout
@@ -274,7 +274,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.15, v1.25.11, v1.26.6, v1.27.3]
+        k8s: [v1.25.11, v1.26.6, v1.27.3, v1.28.0]
 
     steps:
       - name: Checkout
@@ -324,7 +324,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.15, v1.25.11, v1.26.6, v1.27.3]
+        k8s: [v1.25.11, v1.26.6, v1.27.3, v1.28.0]
 
     steps:
 
@@ -442,7 +442,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.15, v1.25.11, v1.26.6, v1.27.3]
+        k8s: [v1.25.11, v1.26.6, v1.27.3, v1.28.0]
 
     steps:
       - name: Checkout
