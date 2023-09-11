@@ -136,7 +136,6 @@ func TestTemporalRedirect(t *testing.T) {
 }
 
 func TestIsValidURL(t *testing.T) {
-
 	invalid := "ok.com"
 	urlParse, err := url.Parse(invalid)
 	if err != nil {

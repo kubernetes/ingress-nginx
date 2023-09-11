@@ -33,20 +33,21 @@ import (
 )
 
 const (
-	authReqURLAnnotation               = "auth-url"
-	authReqMethodAnnotation            = "auth-method"
-	authReqSigninAnnotation            = "auth-signin"
-	authReqSigninRedirParamAnnotation  = "auth-signin-redirect-param"
-	authReqSnippetAnnotation           = "auth-snippet"
-	authReqCacheKeyAnnotation          = "auth-cache-key"
-	authReqKeepaliveAnnotation         = "auth-keepalive"
-	authReqKeepaliveRequestsAnnotation = "auth-keepalive-requests"
-	authReqKeepaliveTimeout            = "auth-keepalive-timeout"
-	authReqCacheDuration               = "auth-cache-duration"
-	authReqResponseHeadersAnnotation   = "auth-response-headers"
-	authReqProxySetHeadersAnnotation   = "auth-proxy-set-headers"
-	authReqRequestRedirectAnnotation   = "auth-request-redirect"
-	authReqAlwaysSetCookieAnnotation   = "auth-always-set-cookie"
+	authReqURLAnnotation                = "auth-url"
+	authReqMethodAnnotation             = "auth-method"
+	authReqSigninAnnotation             = "auth-signin"
+	authReqSigninRedirParamAnnotation   = "auth-signin-redirect-param"
+	authReqSnippetAnnotation            = "auth-snippet"
+	authReqCacheKeyAnnotation           = "auth-cache-key"
+	authReqKeepaliveAnnotation          = "auth-keepalive"
+	authReqKeepaliveShareVarsAnnotation = "auth-keepalive-share-vars"
+	authReqKeepaliveRequestsAnnotation  = "auth-keepalive-requests"
+	authReqKeepaliveTimeout             = "auth-keepalive-timeout"
+	authReqCacheDuration                = "auth-cache-duration"
+	authReqResponseHeadersAnnotation    = "auth-response-headers"
+	authReqProxySetHeadersAnnotation    = "auth-proxy-set-headers"
+	authReqRequestRedirectAnnotation    = "auth-request-redirect"
+	authReqAlwaysSetCookieAnnotation    = "auth-always-set-cookie"
 
 	// This should be exported as it is imported by other packages
 	AuthSecretAnnotation = "auth-secret"
@@ -56,25 +57,25 @@ var authReqAnnotations = parser.Annotation{
 	Group: "authentication",
 	Annotations: parser.AnnotationFields{
 		authReqURLAnnotation: {
-			Validator:     parser.ValidateRegex(*parser.URLWithNginxVariableRegex, true),
+			Validator:     parser.ValidateRegex(parser.URLWithNginxVariableRegex, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskHigh,
 			Documentation: `This annotation allows to indicate the URL where the HTTP request should be sent`,
 		},
 		authReqMethodAnnotation: {
-			Validator:     parser.ValidateRegex(*methodsRegex, true),
+			Validator:     parser.ValidateRegex(methodsRegex, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskLow,
 			Documentation: `This annotation allows to specify the HTTP method to use`,
 		},
 		authReqSigninAnnotation: {
-			Validator:     parser.ValidateRegex(*parser.URLWithNginxVariableRegex, true),
+			Validator:     parser.ValidateRegex(parser.URLWithNginxVariableRegex, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskHigh,
 			Documentation: `This annotation allows to specify the location of the error page`,
 		},
 		authReqSigninRedirParamAnnotation: {
-			Validator:     parser.ValidateRegex(*parser.URLIsValidRegex, true),
+			Validator:     parser.ValidateRegex(parser.URLIsValidRegex, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskMedium,
 			Documentation: `This annotation allows to specify the URL parameter in the error page which should contain the original URL for a failed signin request`,
@@ -86,7 +87,7 @@ var authReqAnnotations = parser.Annotation{
 			Documentation: `This annotation allows to specify a custom snippet to use with external authentication`,
 		},
 		authReqCacheKeyAnnotation: {
-			Validator:     parser.ValidateRegex(*parser.NGINXVariable, true),
+			Validator:     parser.ValidateRegex(parser.NGINXVariable, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskMedium,
 			Documentation: `This annotation enables caching for auth requests.`,
@@ -96,6 +97,12 @@ var authReqAnnotations = parser.Annotation{
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskLow,
 			Documentation: `This annotation specifies the maximum number of keepalive connections to auth-url. Only takes effect when no variables are used in the host part of the URL`,
+		},
+		authReqKeepaliveShareVarsAnnotation: {
+			Validator:     parser.ValidateBool,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `This annotation specifies whether to share Nginx variables among the current request and the auth request`,
 		},
 		authReqKeepaliveRequestsAnnotation: {
 			Validator:     parser.ValidateInt,
@@ -110,26 +117,26 @@ var authReqAnnotations = parser.Annotation{
 			Documentation: `This annotation specifies a duration in seconds which an idle keepalive connection to an upstream server will stay open`,
 		},
 		authReqCacheDuration: {
-			Validator:     parser.ValidateRegex(*parser.ExtendedCharsRegex, false),
+			Validator:     parser.ValidateRegex(parser.ExtendedCharsRegex, false),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskMedium,
 			Documentation: `This annotation allows to specify a caching time for auth responses based on their response codes, e.g. 200 202 30m`,
 		},
 		authReqResponseHeadersAnnotation: {
-			Validator:     parser.ValidateRegex(*parser.HeadersVariable, true),
+			Validator:     parser.ValidateRegex(parser.HeadersVariable, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskMedium,
 			Documentation: `This annotation sets the headers to pass to backend once authentication request completes. They should be separated by comma.`,
 		},
 		authReqProxySetHeadersAnnotation: {
-			Validator: parser.ValidateRegex(*parser.BasicCharsRegex, true),
+			Validator: parser.ValidateRegex(parser.BasicCharsRegex, true),
 			Scope:     parser.AnnotationScopeLocation,
 			Risk:      parser.AnnotationRiskMedium,
 			Documentation: `This annotation sets the name of a ConfigMap that specifies headers to pass to the authentication service.
 			Only ConfigMaps on the same namespace are allowed`,
 		},
 		authReqRequestRedirectAnnotation: {
-			Validator:     parser.ValidateRegex(*parser.URLIsValidRegex, true),
+			Validator:     parser.ValidateRegex(parser.URLIsValidRegex, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskMedium,
 			Documentation: `This annotation allows to specify the X-Auth-Request-Redirect header value`,
@@ -158,6 +165,7 @@ type Config struct {
 	AuthCacheKey           string            `json:"authCacheKey"`
 	AuthCacheDuration      []string          `json:"authCacheDuration"`
 	KeepaliveConnections   int               `json:"keepaliveConnections"`
+	KeepaliveShareVars     bool              `json:"keepaliveShareVars"`
 	KeepaliveRequests      int               `json:"keepaliveRequests"`
 	KeepaliveTimeout       int               `json:"keepaliveTimeout"`
 	ProxySetHeaders        map[string]string `json:"proxySetHeaders,omitempty"`
@@ -170,6 +178,7 @@ const DefaultCacheDuration = "200 202 401 5m"
 // fallback values when no keepalive parameters are set
 const (
 	defaultKeepaliveConnections = 0
+	defaultKeepaliveShareVars   = false
 	defaultKeepaliveRequests    = 1000
 	defaultKeepaliveTimeout     = 60
 )
@@ -218,6 +227,10 @@ func (e1 *Config) Equal(e2 *Config) bool {
 		return false
 	}
 
+	if e1.KeepaliveShareVars != e2.KeepaliveShareVars {
+		return false
+	}
+
 	if e1.KeepaliveRequests != e2.KeepaliveRequests {
 		return false
 	}
@@ -236,8 +249,8 @@ func (e1 *Config) Equal(e2 *Config) bool {
 var (
 	methodsRegex    = regexp.MustCompile("(GET|HEAD|POST|PUT|PATCH|DELETE|CONNECT|OPTIONS|TRACE)")
 	headerRegexp    = regexp.MustCompile(`^[a-zA-Z\d\-_]+$`)
-	statusCodeRegex = regexp.MustCompile(`^[\d]{3}$`)
-	durationRegex   = regexp.MustCompile(`^[\d]+(ms|s|m|h|d|w|M|y)$`) // see http://nginx.org/en/docs/syntax.html
+	statusCodeRegex = regexp.MustCompile(`^\d{3}$`)
+	durationRegex   = regexp.MustCompile(`^\d+(ms|s|m|h|d|w|M|y)$`) // see http://nginx.org/en/docs/syntax.html
 )
 
 // ValidMethod checks is the provided string a valid HTTP method
@@ -260,7 +273,7 @@ func ValidCacheDuration(duration string) bool {
 	seenDuration := false
 
 	for _, element := range elements {
-		if len(element) == 0 {
+		if element == "" {
 			continue
 		}
 		if statusCodeRegex.MatchString(element) {
@@ -291,6 +304,8 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to use an Config URL as source for authentication
+//
+//nolint:gocyclo // Ignore function complexity error
 func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 	// Required Parameters
 	urlString, err := parser.GetStringAnnotation(authReqURLAnnotation, ing, a.annotationConfig.Annotations)
@@ -300,7 +315,7 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	authURL, err := parser.StringToURL(urlString)
 	if err != nil {
-		return nil, ing_errors.LocationDenied{Reason: fmt.Errorf("could not parse auth-url annotation: %v", err)}
+		return nil, ing_errors.LocationDeniedError{Reason: fmt.Errorf("could not parse auth-url annotation: %v", err)}
 	}
 
 	authMethod, err := parser.GetStringAnnotation(authReqMethodAnnotation, ing, a.annotationConfig.Annotations)
@@ -357,6 +372,12 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 		}
 	}
 
+	keepaliveShareVars, err := parser.GetBoolAnnotation(authReqKeepaliveShareVarsAnnotation, ing, a.annotationConfig.Annotations)
+	if err != nil {
+		klog.V(3).InfoS("auth-keepalive-share-vars annotation is undefined and will be set to its default value")
+		keepaliveShareVars = defaultKeepaliveShareVars
+	}
+
 	keepaliveRequests, err := parser.GetIntAnnotation(authReqKeepaliveRequestsAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		klog.V(3).InfoS("auth-keepalive-requests annotation is undefined or invalid and will be set to its default value")
@@ -391,7 +412,7 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 	if err != nil && ing_errors.IsValidationError(err) {
 		return nil, ing_errors.NewLocationDenied("validation error")
 	}
-	if len(hstr) != 0 {
+	if hstr != "" {
 		harr := strings.Split(hstr, ",")
 		for _, header := range harr {
 			header = strings.TrimSpace(header)
@@ -411,7 +432,7 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	cns, _, err := cache.SplitMetaNamespaceKey(proxySetHeaderMap)
 	if err != nil {
-		return nil, ing_errors.LocationDenied{
+		return nil, ing_errors.LocationDeniedError{
 			Reason: fmt.Errorf("error reading configmap name %s from annotation: %w", proxySetHeaderMap, err),
 		}
 	}
@@ -423,7 +444,7 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 	secCfg := a.r.GetSecurityConfiguration()
 	// We don't accept different namespaces for secrets.
 	if !secCfg.AllowCrossNamespaceResources && cns != ing.Namespace {
-		return nil, ing_errors.LocationDenied{
+		return nil, ing_errors.LocationDeniedError{
 			Reason: fmt.Errorf("cross namespace usage of secrets is not allowed"),
 		}
 	}
@@ -467,6 +488,7 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 		AuthCacheKey:           authCacheKey,
 		AuthCacheDuration:      authCacheDuration,
 		KeepaliveConnections:   keepaliveConnections,
+		KeepaliveShareVars:     keepaliveShareVars,
 		KeepaliveRequests:      keepaliveRequests,
 		KeepaliveTimeout:       keepaliveTimeout,
 		ProxySetHeaders:        proxySetHeaders,
@@ -479,7 +501,7 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 // It will always return at least one duration (the default duration)
 func ParseStringToCacheDurations(input string) ([]string, error) {
 	authCacheDuration := []string{}
-	if len(input) != 0 {
+	if input != "" {
 		arr := strings.Split(input, ",")
 		for _, duration := range arr {
 			duration = strings.TrimSpace(duration)

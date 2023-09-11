@@ -50,6 +50,7 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-sync-events", func() {
 		assert.NotEmpty(ginkgo.GinkgoT(), events.Items, "got events")
 	})
 
+	//nolint:dupl // Ignore dupl errors for similar test case
 	ginkgo.It("should create sync events", func() {
 		host := "disable-sync-events-false"
 		f.NewEchoDeployment(framework.WithDeploymentReplicas(1))
@@ -77,6 +78,7 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-sync-events", func() {
 		assert.NotEmpty(ginkgo.GinkgoT(), events.Items, "got events")
 	})
 
+	//nolint:dupl // Ignore dupl errors for similar test case
 	ginkgo.It("should not create sync events", func() {
 		host := "disable-sync-events-true"
 		f.NewEchoDeployment(framework.WithDeploymentReplicas(1))
@@ -103,5 +105,4 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-sync-events", func() {
 
 		assert.Empty(ginkgo.GinkgoT(), events.Items, "got events")
 	})
-
 })

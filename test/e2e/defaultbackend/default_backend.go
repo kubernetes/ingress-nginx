@@ -49,15 +49,15 @@ var _ = framework.IngressNginxDescribe("[Default Backend]", func() {
 			{"basic HTTPS POST request without host to path / should return 404", "", framework.HTTPS, "POST", "/", http.StatusNotFound},
 			{"basic HTTPS POST request without host to path /demo should return 404", "", framework.HTTPS, "POST", "/demo", http.StatusNotFound},
 
-			{"basic HTTP GET request to host foo.bar.com and path / should return 404", " foo.bar.com", framework.HTTP, "GET", "/", http.StatusNotFound},
-			{"basic HTTP GET request to host foo.bar.com and path /demo should return 404", " foo.bar.com", framework.HTTP, "GET", "/demo", http.StatusNotFound},
-			{"basic HTTPS GET request to host foo.bar.com and path / should return 404", " foo.bar.com", framework.HTTPS, "GET", "/", http.StatusNotFound},
-			{"basic HTTPS GET request to host foo.bar.com and path /demo should return 404", " foo.bar.com", framework.HTTPS, "GET", "/demo", http.StatusNotFound},
+			{"basic HTTP GET request to host foo.bar.com and path / should return 404", "foo.bar.com", framework.HTTP, "GET", "/", http.StatusNotFound},
+			{"basic HTTP GET request to host foo.bar.com and path /demo should return 404", "foo.bar.com", framework.HTTP, "GET", "/demo", http.StatusNotFound},
+			{"basic HTTPS GET request to host foo.bar.com and path / should return 404", "foo.bar.com", framework.HTTPS, "GET", "/", http.StatusNotFound},
+			{"basic HTTPS GET request to host foo.bar.com and path /demo should return 404", "foo.bar.com", framework.HTTPS, "GET", "/demo", http.StatusNotFound},
 
-			{"basic HTTP POST request to host foo.bar.com and path / should return 404", " foo.bar.com", framework.HTTP, "POST", "/", http.StatusNotFound},
-			{"basic HTTP POST request to host foo.bar.com and path /demo should return 404", " foo.bar.com", framework.HTTP, "POST", "/demo", http.StatusNotFound},
-			{"basic HTTPS POST request to host foo.bar.com and path / should return 404", " foo.bar.com", framework.HTTPS, "POST", "/", http.StatusNotFound},
-			{"basic HTTPS POST request to host foo.bar.com and path /demo should return 404", " foo.bar.com", framework.HTTPS, "POST", "/demo", http.StatusNotFound},
+			{"basic HTTP POST request to host foo.bar.com and path / should return 404", "foo.bar.com", framework.HTTP, "POST", "/", http.StatusNotFound},
+			{"basic HTTP POST request to host foo.bar.com and path /demo should return 404", "foo.bar.com", framework.HTTP, "POST", "/demo", http.StatusNotFound},
+			{"basic HTTPS POST request to host foo.bar.com and path / should return 404", "foo.bar.com", framework.HTTPS, "POST", "/", http.StatusNotFound},
+			{"basic HTTPS POST request to host foo.bar.com and path /demo should return 404", "foo.bar.com", framework.HTTPS, "POST", "/demo", http.StatusNotFound},
 		}
 
 		framework.Sleep()

@@ -31,7 +31,7 @@ var xForwardedForAnnotations = parser.Annotation{
 	Group: "backend",
 	Annotations: parser.AnnotationFields{
 		xForwardedForPrefixAnnotation: {
-			Validator:     parser.ValidateRegex(*parser.BasicCharsRegex, true),
+			Validator:     parser.ValidateRegex(parser.BasicCharsRegex, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskLow, // Low, as it allows regexes but on a very limited set
 			Documentation: `This annotation can be used to add the non-standard X-Forwarded-Prefix header to the upstream request with a string value`,
@@ -54,15 +54,15 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 
 // Parse parses the annotations contained in the ingress rule
 // used to add an x-forwarded-prefix header to the request
-func (cbbs xforwardedprefix) Parse(ing *networking.Ingress) (interface{}, error) {
-	return parser.GetStringAnnotation(xForwardedForPrefixAnnotation, ing, cbbs.annotationConfig.Annotations)
+func (x xforwardedprefix) Parse(ing *networking.Ingress) (interface{}, error) {
+	return parser.GetStringAnnotation(xForwardedForPrefixAnnotation, ing, x.annotationConfig.Annotations)
 }
 
-func (cbbs xforwardedprefix) GetDocumentation() parser.AnnotationFields {
-	return cbbs.annotationConfig.Annotations
+func (x xforwardedprefix) GetDocumentation() parser.AnnotationFields {
+	return x.annotationConfig.Annotations
 }
 
-func (a xforwardedprefix) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+func (x xforwardedprefix) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(x.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, xForwardedForAnnotations.Annotations)
 }

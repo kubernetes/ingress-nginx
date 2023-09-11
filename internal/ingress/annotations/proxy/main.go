@@ -42,12 +42,10 @@ const (
 	proxyRedirectToAnnotation          = "proxy-redirect-to"
 	proxyBufferingAnnotation           = "proxy-buffering"
 	proxyHTTPVersionAnnotation         = "proxy-http-version"
-	proxyMaxTempFileSizeAnnotation     = "proxy-max-temp-file-size"
+	proxyMaxTempFileSizeAnnotation     = "proxy-max-temp-file-size" //#nosec G101
 )
 
-var (
-	validUpstreamAnnotation = regexp.MustCompile(`^((error|timeout|invalid_header|http_500|http_502|http_503|http_504|http_403|http_404|http_429|non_idempotent|off)\s?)+$`)
-)
+var validUpstreamAnnotation = regexp.MustCompile(`^((error|timeout|invalid_header|http_500|http_502|http_503|http_504|http_403|http_404|http_429|non_idempotent|off)\s?)+$`)
 
 var proxyAnnotations = parser.Annotation{
 	Group: "backend",
@@ -78,32 +76,32 @@ var proxyAnnotations = parser.Annotation{
 			By default proxy buffers number is set as 4`,
 		},
 		proxyBufferSizeAnnotation: {
-			Validator: parser.ValidateRegex(*parser.SizeRegex, true),
+			Validator: parser.ValidateRegex(parser.SizeRegex, true),
 			Scope:     parser.AnnotationScopeLocation,
 			Risk:      parser.AnnotationRiskLow,
 			Documentation: `This annotation sets the size of the buffer proxy_buffer_size used for reading the first part of the response received from the proxied server. 
 			By default proxy buffer size is set as "4k".`,
 		},
 		proxyCookiePathAnnotation: {
-			Validator:     parser.ValidateRegex(*parser.URLIsValidRegex, true),
+			Validator:     parser.ValidateRegex(parser.URLIsValidRegex, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskMedium,
 			Documentation: `This annotation sets a text that should be changed in the path attribute of the "Set-Cookie" header fields of a proxied server response.`,
 		},
 		proxyCookieDomainAnnotation: {
-			Validator:     parser.ValidateRegex(*parser.BasicCharsRegex, true),
+			Validator:     parser.ValidateRegex(parser.BasicCharsRegex, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskMedium,
 			Documentation: `This annotation ets a text that should be changed in the domain attribute of the "Set-Cookie" header fields of a proxied server response.`,
 		},
 		proxyBodySizeAnnotation: {
-			Validator:     parser.ValidateRegex(*parser.SizeRegex, true),
+			Validator:     parser.ValidateRegex(parser.SizeRegex, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskMedium,
 			Documentation: `This annotation allows setting the maximum allowed size of a client request body.`,
 		},
 		proxyNextUpstreamAnnotation: {
-			Validator: parser.ValidateRegex(*validUpstreamAnnotation, false),
+			Validator: parser.ValidateRegex(validUpstreamAnnotation, false),
 			Scope:     parser.AnnotationScopeLocation,
 			Risk:      parser.AnnotationRiskMedium,
 			Documentation: `This annotation defines when the next upstream should be used. 
@@ -129,13 +127,13 @@ var proxyAnnotations = parser.Annotation{
 			Documentation: `This annotation enables or disables buffering of a client request body.`,
 		},
 		proxyRedirectFromAnnotation: {
-			Validator:     parser.ValidateRegex(*parser.URLIsValidRegex, true),
+			Validator:     parser.ValidateRegex(parser.URLIsValidRegex, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskMedium,
 			Documentation: `The annotations proxy-redirect-from and proxy-redirect-to will set the first and second parameters of NGINX's proxy_redirect directive respectively`,
 		},
 		proxyRedirectToAnnotation: {
-			Validator:     parser.ValidateRegex(*parser.URLIsValidRegex, true),
+			Validator:     parser.ValidateRegex(parser.URLIsValidRegex, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskMedium,
 			Documentation: `The annotations proxy-redirect-from and proxy-redirect-to will set the first and second parameters of NGINX's proxy_redirect directive respectively`,
@@ -153,7 +151,7 @@ var proxyAnnotations = parser.Annotation{
 			Documentation: `This annotations sets the HTTP protocol version for proxying. Can be "1.0" or "1.1".`,
 		},
 		proxyMaxTempFileSizeAnnotation: {
-			Validator:     parser.ValidateRegex(*parser.SizeRegex, true),
+			Validator:     parser.ValidateRegex(parser.SizeRegex, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskLow,
 			Documentation: `This annotation defines the maximum size of a temporary file when buffering responses.`,
@@ -253,7 +251,8 @@ type proxy struct {
 
 // NewParser creates a new reverse proxy configuration annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return proxy{r: r,
+	return proxy{
+		r:                r,
 		annotationConfig: proxyAnnotations,
 	}
 }
