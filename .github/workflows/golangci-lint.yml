@@ -23,7 +23,7 @@ jobs:
       
       - name: Set up Go
         id: go
-        uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
+        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
           go-version: '1.21.1'
           check-latest: true
