@@ -383,10 +383,6 @@ Do not try to edit it manually.
 
 - [should return 200 when service has topology hints](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/endpointslices/topology.go#L42)
 
-### [[Setting] ](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/framework/framework.go#L214)
-
-- [](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/framework/framework.go#L)
-
 ### [[Shutdown] ingress controller](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/gracefulshutdown/shutdown.go#L30)
 
 - [should shutdown in less than 60 secons without pending connections](https://github.com/kubernetes/ingress-nginx/tree/main/test/e2e/gracefulshutdown/shutdown.go#L40)
