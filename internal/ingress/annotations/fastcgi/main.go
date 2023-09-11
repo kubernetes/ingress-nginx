@@ -32,7 +32,7 @@ import (
 
 const (
 	fastCGIIndexAnnotation  = "fastcgi-index"
-	fastCGIParamsAnnotation = "fastcgi-params-configmap"
+	fastCGIParamsAnnotation = "fastcgi-params-configmap" //#nosec G101
 )
 
 // fast-cgi valid parameters is just a single file name (like index.php)

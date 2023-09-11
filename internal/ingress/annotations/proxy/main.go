@@ -42,7 +42,7 @@ const (
 	proxyRedirectToAnnotation          = "proxy-redirect-to"
 	proxyBufferingAnnotation           = "proxy-buffering"
 	proxyHTTPVersionAnnotation         = "proxy-http-version"
-	proxyMaxTempFileSizeAnnotation     = "proxy-max-temp-file-size"
+	proxyMaxTempFileSizeAnnotation     = "proxy-max-temp-file-size" //#nosec G101
 )
 
 var validUpstreamAnnotation = regexp.MustCompile(`^((error|timeout|invalid_header|http_500|http_502|http_503|http_504|http_403|http_404|http_429|non_idempotent|off)\s?)+$`)
