@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/local/bin/bash
 
 # Copyright 2020 The Kubernetes Authors.
 #

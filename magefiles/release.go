@@ -111,6 +111,14 @@ func (Release) PromoteImage(version, sha string) {
 
 // Release Create a new release of ingress nginx controller
 func (Release) NewRelease(version string) {
+	newRelease(version, "")
+}
+
+func (Release) NewReleaseFromOld(version, oldversion string) {
+	newRelease(version, oldversion)
+}
+
+func newRelease(version, oldversion string) {
 	// newRelease := Release{}
 
 	// update ingress-nginx version
@@ -132,7 +140,7 @@ func (Release) NewRelease(version string) {
 	mg.Deps(mg.F(Tag.NewControllerTag, version))
 
 	// make release notes
-	releaseNotes, err := makeReleaseNotes(version)
+	releaseNotes, err := makeReleaseNotes(version, oldversion)
 	CheckIfError(err, "RELEASE Creating Release Notes for version %s", version)
 	Info("RELEASE Release Notes %s completed", releaseNotes.Version)
 
@@ -248,16 +256,26 @@ func githubClient() *github.Client {
 
 // LatestCommitLogs Retrieves the commit log between the latest two controller versions.
 func (Release) LatestCommitLogs() {
-	commitLog := commitsBetweenTags()
+	commitLog := commitsBetweenTags("", "")
 	for i, s := range commitLog {
 		Info("#%v Version %v", i, s)
 	}
 }
 
-func commitsBetweenTags() []string {
+func commitsBetweenTags(newversion, oldversion string) []string {
+
+	var newTag, oldTag string
 	tags := getAllControllerTags()
-	Info("Getting Commits between %v and %v", tags[0], tags[1])
-	commitLog, err := git("log", "--full-history", "--pretty", "--oneline", fmt.Sprintf("%v..%v", tags[1], tags[0]))
+	newTag, oldTag = tags[0], tags[1]
+	if newversion != "" {
+		newTag = newversion
+	}
+	if oldversion != "" {
+		oldTag = oldversion
+	}
+
+	Info("Getting Commits between %v and %v", newTag, oldTag)
+	commitLog, err := git("log", "--full-history", "--pretty", "--oneline", fmt.Sprintf("%v..%v", oldTag, newTag))
 
 	if commitLog == "" {
 		Warning("All Controller Tags is empty")
@@ -268,13 +286,13 @@ func commitsBetweenTags() []string {
 
 // Generate Release Notes
 func (Release) ReleaseNotes(newVersion string) error {
-	notes, err := makeReleaseNotes(newVersion)
+	notes, err := makeReleaseNotes(newVersion, "")
 	CheckIfError(err, "Creating Release Notes for version %s", newVersion)
 	Info("Release Notes %s completed", notes.Version)
 	return nil
 }
 
-func makeReleaseNotes(newVersion string) (*ReleaseNote, error) {
+func makeReleaseNotes(newVersion, oldVersion string) (*ReleaseNote, error) {
 	newReleaseNotes := ReleaseNote{}
 
 	newReleaseNotes.Version = newVersion
@@ -290,10 +308,13 @@ func makeReleaseNotes(newVersion string) (*ReleaseNote, error) {
 	}
 	// previous version
 	newReleaseNotes.PreviousControllerVersion = allControllerTags[1]
+	if oldVersion != "" {
+		newReleaseNotes.PreviousControllerVersion = oldVersion
+	}
 
 	Info("New Version: %s Old Version: %s", newReleaseNotes.NewControllerVersion, newReleaseNotes.PreviousControllerVersion)
 
-	commits := commitsBetweenTags()
+	commits := commitsBetweenTags(newReleaseNotes.NewControllerVersion, newReleaseNotes.PreviousControllerVersion)
 
 	// dependency_updates
 	// all_updates
