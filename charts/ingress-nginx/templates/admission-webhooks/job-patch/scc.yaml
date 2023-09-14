@@ -1,4 +1,4 @@
-{{- if and .Values.controller.admissionWebhooks.enabled .Values.controller.admissionWebhooks.patch.enabled .Values.securityContextConstraints.enabled (empty .Values.controller.admissionWebhooks.existingScc) -}}
+{{- if and .Values.controller.admissionWebhooks.enabled .Values.controller.admissionWebhooks.patch.enabled (.Capabilities.APIVersions.Has "security.openshift.io/v1") -}}
 apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
 metadata:
