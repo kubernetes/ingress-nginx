@@ -1,5 +1,3 @@
-//go:build mage
-
 /*
 Copyright 2023 The Kubernetes Authors.
 
@@ -16,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package steps
 
 import (
 	"context"
@@ -36,6 +34,9 @@ import (
 	"github.com/magefile/mage/sh"
 	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v3"
+
+	//mage:import
+	common "k8s.io/ingress-nginx/magefiles/common"
 )
 
 type Release mg.Namespace
@@ -127,12 +128,12 @@ func newRelease(version, oldversion string) {
 	// mg.Deps(mg.F(Tag.BumpNginx, version))
 
 	tag, err := getIngressNGINXVersion()
-	CheckIfError(err, "RELEASE Retrieving the current Ingress Nginx Version")
+	common.CheckIfError(err, "RELEASE Retrieving the current Ingress Nginx Version")
 
-	Info("RELEASE Checking Current Version %s to New Version %s", tag, version)
+	common.Info("RELEASE Checking Current Version %s to New Version %s", tag, version)
 	// if the version were upgrading does not match the TAG file, lets update the TAG file
 	if tag[1:] != version {
-		Warning("RELEASE Ingress Nginx TAG %s and new version %s do not match", tag, version)
+		common.Warning("RELEASE Ingress Nginx TAG %s and new version %s do not match", tag, version)
 		mg.Deps(mg.F(Tag.BumpNginx, fmt.Sprintf("v%s", version)))
 	}
 
@@ -141,24 +142,24 @@ func newRelease(version, oldversion string) {
 
 	// make release notes
 	releaseNotes, err := makeReleaseNotes(version, oldversion)
-	CheckIfError(err, "RELEASE Creating Release Notes for version %s", version)
-	Info("RELEASE Release Notes %s completed", releaseNotes.Version)
+	common.CheckIfError(err, "RELEASE Creating Release Notes for version %s", version)
+	common.Info("RELEASE Release Notes %s completed", releaseNotes.Version)
 
 	// update chart values.yaml new controller tag and image digest
 	releaseNotes.PreviousHelmChartVersion = currentChartVersion()
 
 	// controller tag
 	updateChartValue("controller.image.tag", fmt.Sprintf("v%s", releaseNotes.Version))
-	Debug("releaseNotes.ControllerImages[0].Name %s", releaseNotes.ControllerImages[0].Name)
-	Debug("releaseNotes.ControllerImages[1].Name %s", releaseNotes.ControllerImages[1].Name)
+	common.Debug("releaseNotes.ControllerImages[0].Name %s", releaseNotes.ControllerImages[0].Name)
+	common.Debug("releaseNotes.ControllerImages[1].Name %s", releaseNotes.ControllerImages[1].Name)
 	// controller digest
 	if releaseNotes.ControllerImages[0].Name == "ingress-nginx/controller" {
-		Debug("Updating Chart Value %s with %s", "controller.image.digest", releaseNotes.ControllerImages[0].Digest)
+		common.Debug("Updating Chart Value %s with %s", "controller.image.digest", releaseNotes.ControllerImages[0].Digest)
 		updateChartValue("controller.image.digest", releaseNotes.ControllerImages[0].Digest)
 	}
 	// controller chroot digest
 	if releaseNotes.ControllerImages[1].Name == "ingress-nginx/controller-chroot" {
-		Debug("Updating Chart Value %s with %s", "controller.image.digestChroot", releaseNotes.ControllerImages[1].Digest)
+		common.Debug("Updating Chart Value %s with %s", "controller.image.digestChroot", releaseNotes.ControllerImages[1].Digest)
 		updateChartValue("controller.image.digestChroot", releaseNotes.ControllerImages[1].Digest)
 	}
 
@@ -171,18 +172,18 @@ func newRelease(version, oldversion string) {
 	updateChartReleaseNotes(releaseNotes.HelmUpdates)
 
 	// Run helm docs update
-	CheckIfError(runHelmDocs(), "Error Updating Helm Docs ")
+	common.CheckIfError(runHelmDocs(), "Error Updating Helm Docs ")
 
 	releaseNotes.helmTemplate()
 
 	// update static manifest
-	CheckIfError(updateStaticManifest(), "Error Updating Static manifests")
+	common.CheckIfError(updateStaticManifest(), "Error Updating Static manifests")
 
 	////update e2e docs
 	updateE2EDocs()
 
 	// update documentation with ingress-nginx version
-	CheckIfError(updateIndexMD(releaseNotes.PreviousControllerVersion, releaseNotes.NewControllerVersion), "Error Updating %s", INDEX_DOCS)
+	common.CheckIfError(updateIndexMD(releaseNotes.PreviousControllerVersion, releaseNotes.NewControllerVersion), "Error Updating %s", INDEX_DOCS)
 
 	// keeping these manual for now
 	// git commit TODO
@@ -193,14 +194,14 @@ func newRelease(version, oldversion string) {
 
 // the index.md doc needs the controller version updated
 func updateIndexMD(old, new string) error {
-	Info("Updating Deploy docs with new version")
+	common.Info("Updating Deploy docs with new version")
 	data, err := os.ReadFile(INDEX_DOCS)
-	CheckIfError(err, "Could not read INDEX_DOCS file %s", INDEX_DOCS)
+	common.CheckIfError(err, "Could not read INDEX_DOCS file %s", INDEX_DOCS)
 	datString := string(data)
 	datString = strings.Replace(datString, old, new, -1)
 	err = os.WriteFile(INDEX_DOCS, []byte(datString), 644)
 	if err != nil {
-		ErrorF("Could not write new %s %s", INDEX_DOCS, err)
+		common.ErrorF("Could not write new %s %s", INDEX_DOCS, err)
 		return err
 	}
 	return nil
@@ -209,14 +210,14 @@ func updateIndexMD(old, new string) error {
 // runs the hack/generate-deploy-scripts.sh
 func updateE2EDocs() {
 	updates, err := sh.Output("./hack/generate-e2e-suite-doc.sh")
-	CheckIfError(err, "Could not run update hack script")
+	common.CheckIfError(err, "Could not run update hack script")
 	err = os.WriteFile("docs/e2e-tests.md", []byte(updates), 644)
-	CheckIfError(err, "Could not write new e2e test file ")
+	common.CheckIfError(err, "Could not write new e2e test file ")
 }
 
 // The static deploy scripts use kustomize to generate them, this function ensures kustomize is installed
 func installKustomize() error {
-	Info("Install Kustomize")
+	common.Info("Install Kustomize")
 	g0 := sh.RunCmd("go")
 	// somewhere in your main code
 	err := g0("install", KUSTOMIZE_INSTALL_VERSION)
@@ -227,7 +228,7 @@ func installKustomize() error {
 }
 
 func updateStaticManifest() error {
-	CheckIfError(installKustomize(), "error installing kustomize")
+	common.CheckIfError(installKustomize(), "error installing kustomize")
 	// hack/generate-deploy-scripts.sh
 	err := sh.RunV("./hack/generate-deploy-scripts.sh")
 	if err != nil {
@@ -239,10 +240,10 @@ func updateStaticManifest() error {
 //// CreateRelease Creates a new GitHub Release
 //func (Release) CreateRelease(name string) {
 //	releaser, err := gh_release.NewReleaser(INGRESS_ORG, INGRESS_REPO, GITHUB_TOKEN)
-//	CheckIfError(err, "GitHub Release Client error")
+//	common.CheckIfError(err, "GitHub Release Client error")
 //	newRelease, err := releaser.Create(fmt.Sprintf("controller-%s", name))
-//	CheckIfError(err, "Create release error")
-//	Info("New Release: Tag %v, ID: %v", newRelease.TagName, newRelease.ID)
+//	common.CheckIfError(err, "Create release error")
+//	common.Info("New Release: Tag %v, ID: %v", newRelease.TagName, newRelease.ID)
 //}
 
 // Returns a GitHub client ready for use
@@ -258,7 +259,7 @@ func githubClient() *github.Client {
 func (Release) LatestCommitLogs() {
 	commitLog := commitsBetweenTags("", "")
 	for i, s := range commitLog {
-		Info("#%v Version %v", i, s)
+		common.Info("#%v Version %v", i, s)
 	}
 }
 
@@ -274,21 +275,21 @@ func commitsBetweenTags(newversion, oldversion string) []string {
 		oldTag = oldversion
 	}
 
-	Info("Getting Commits between %v and %v", newTag, oldTag)
+	common.Info("Getting Commits between %v and %v", newTag, oldTag)
 	commitLog, err := git("log", "--full-history", "--pretty", "--oneline", fmt.Sprintf("%v..%v", oldTag, newTag))
 
 	if commitLog == "" {
-		Warning("All Controller Tags is empty")
+		common.Warning("All Controller Tags is empty")
 	}
-	CheckIfError(err, "Retrieving Commit log")
+	common.CheckIfError(err, "Retrieving Commit log")
 	return strings.Split(commitLog, "\n")
 }
 
 // Generate Release Notes
 func (Release) ReleaseNotes(newVersion string) error {
 	notes, err := makeReleaseNotes(newVersion, "")
-	CheckIfError(err, "Creating Release Notes for version %s", newVersion)
-	Info("Release Notes %s completed", notes.Version)
+	common.CheckIfError(err, "Creating Release Notes for version %s", newVersion)
+	common.Info("Release Notes %s completed", notes.Version)
 	return nil
 }
 
@@ -312,7 +313,7 @@ func makeReleaseNotes(newVersion, oldVersion string) (*ReleaseNote, error) {
 		newReleaseNotes.PreviousControllerVersion = oldVersion
 	}
 
-	Info("New Version: %s Old Version: %s", newReleaseNotes.NewControllerVersion, newReleaseNotes.PreviousControllerVersion)
+	common.Info("New Version: %s Old Version: %s", newReleaseNotes.NewControllerVersion, newReleaseNotes.PreviousControllerVersion)
 
 	commits := commitsBetweenTags(newReleaseNotes.NewControllerVersion, newReleaseNotes.PreviousControllerVersion)
 
@@ -329,11 +330,11 @@ func makeReleaseNotes(newVersion, oldVersion string) (*ReleaseNote, error) {
 		if prRegex.Match([]byte(s)) {
 			// matches a dependant bot update
 			if depBot.Match([]byte(s)) { //
-				Debug("#%v DEPENDABOT %v", i, s)
+				common.Debug("#%v DEPENDABOT %v", i, s)
 				u := strings.SplitN(s, " ", 2)
 				depUpdates = append(depUpdates, u[1])
 			} else { // add it to the all updates slice
-				Debug("#%v ALL UPDATES %v", i, s)
+				common.Debug("#%v ALL UPDATES %v", i, s)
 				u := strings.SplitN(s, " ", 2)
 				allUpdates = append(allUpdates, u[1])
 
@@ -354,34 +355,34 @@ func makeReleaseNotes(newVersion, oldVersion string) (*ReleaseNote, error) {
 	// controller_image_digests
 	imagesYaml, err := downloadFile(IMAGES_YAML)
 	if err != nil {
-		ErrorF("Could not download file %s : %s", IMAGES_YAML, err)
+		common.ErrorF("Could not download file %s : %s", IMAGES_YAML, err)
 		return nil, err
 	}
-	Debug("%s", imagesYaml)
+	common.Debug("%s", imagesYaml)
 
 	data := ImageYamls{}
 
 	err = yaml.Unmarshal([]byte(imagesYaml), &data)
 	if err != nil {
-		ErrorF("Could not unmarshal images yaml %s", err)
+		common.ErrorF("Could not unmarshal images yaml %s", err)
 		return nil, err
 	}
 
 	// controller
 	controllerDigest := findImageDigest(data, "controller", newVersion)
 	if len(controllerDigest) == 0 {
-		ErrorF("Controller Digest could not be found")
+		common.ErrorF("Controller Digest could not be found")
 		return nil, errors.New("Controller digest could not be found")
 	}
 
 	controllerChrootDigest := findImageDigest(data, "controller-chroot", newVersion)
 	if len(controllerChrootDigest) == 0 {
-		ErrorF("Controller Chroot Digest could not be found")
+		common.ErrorF("Controller Chroot Digest could not be found")
 		return nil, errors.New("Controller Chroot digest could not be found")
 	}
 
-	Debug("Latest Controller Digest %v", controllerDigest)
-	Debug("Latest Controller Chroot Digest %v", controllerChrootDigest)
+	common.Debug("Latest Controller Digest %v", controllerDigest)
+	common.Debug("Latest Controller Chroot Digest %v", controllerChrootDigest)
 	c1 := ControllerImage{
 		Digest:   controllerDigest,
 		Registry: INGRESS_REGISTRY,
@@ -398,9 +399,9 @@ func makeReleaseNotes(newVersion, oldVersion string) (*ReleaseNote, error) {
 
 	newReleaseNotes.ControllerImages = append(newReleaseNotes.ControllerImages, c1)
 	newReleaseNotes.ControllerImages = append(newReleaseNotes.ControllerImages, c2)
-	Debug("New Release Controller Images %s %s", newReleaseNotes.ControllerImages[0].Digest, newReleaseNotes.ControllerImages[1].Digest)
+	common.Debug("New Release Controller Images %s %s", newReleaseNotes.ControllerImages[0].Digest, newReleaseNotes.ControllerImages[1].Digest)
 
-	if DEBUG {
+	if common.DEBUG {
 		newReleaseNotes.printRelease()
 	}
 
@@ -418,20 +419,20 @@ func (r ReleaseNote) template() {
 	// Files are provided as a slice of strings.
 	changelogTemplate, err := os.ReadFile("Changelog.md.gotmpl")
 	if err != nil {
-		ErrorF("Could not read changelog template file %s", err)
+		common.ErrorF("Could not read changelog template file %s", err)
 	}
-	Debug("ChangeLog Templates %s", string(changelogTemplate))
+	common.Debug("ChangeLog Templates %s", string(changelogTemplate))
 	t := template.Must(template.New("changelog").Parse(string(changelogTemplate)))
 	// create a new file
 	file, err := os.Create(fmt.Sprintf("changelog/Changelog-%s.md", r.Version))
 	if err != nil {
-		ErrorF("Could not create changelog file %s", err)
+		common.ErrorF("Could not create changelog file %s", err)
 	}
 	defer file.Close()
 
 	err = t.Execute(file, r)
 	if err != nil {
-		ErrorF("executing template:", err)
+		common.ErrorF("executing template:", err)
 	}
 }
 
@@ -439,39 +440,39 @@ func (r ReleaseNote) helmTemplate() {
 	// Files are provided as a slice of strings.
 	changelogTemplate, err := os.ReadFile("charts/ingress-nginx/changelog.md.gotmpl")
 	if err != nil {
-		ErrorF("Could not read changelog template file %s", err)
+		common.ErrorF("Could not read changelog template file %s", err)
 	}
-	Debug("ChangeLog Templates %s", string(changelogTemplate))
+	common.Debug("ChangeLog Templates %s", string(changelogTemplate))
 	t := template.Must(template.New("changelog").Parse(string(changelogTemplate)))
 	// create a new file
 	file, err := os.Create(fmt.Sprintf("charts/ingress-nginx/changelog/Changelog-%s.md", r.NewHelmChartVersion))
 	if err != nil {
-		ErrorF("Could not create changelog file %s", err)
+		common.ErrorF("Could not create changelog file %s", err)
 	}
 	defer file.Close()
 
 	err = t.Execute(file, r)
 	if err != nil {
-		ErrorF("executing template:", err)
+		common.ErrorF("executing template:", err)
 	}
 }
 
 func (r ReleaseNote) printRelease() {
-	Info("Release Version: %v", r.NewControllerVersion)
-	Info("Previous Version: %v", r.PreviousControllerVersion)
-	Info("Controller Image: %v", r.ControllerImages[0].print())
-	Info("Controller Chroot Image: %v", r.ControllerImages[1].print())
+	common.Info("Release Version: %v", r.NewControllerVersion)
+	common.Info("Previous Version: %v", r.PreviousControllerVersion)
+	common.Info("Controller Image: %v", r.ControllerImages[0].print())
+	common.Info("Controller Chroot Image: %v", r.ControllerImages[1].print())
 	for i := range r.Updates {
-		Info("Update #%v - %v", i, r.Updates[i])
+		common.Info("Update #%v - %v", i, r.Updates[i])
 	}
 	for j := range r.DepUpdates {
-		Info("Dependabot Update #%v - %v", j, r.DepUpdates[j])
+		common.Info("Dependabot Update #%v - %v", j, r.DepUpdates[j])
 	}
 }
 
 func findImageDigest(yaml ImageYamls, image, version string) string {
 	version = fmt.Sprintf("v%s", version)
-	Info("Searching Digest for %s:%s", image, version)
+	common.Info("Searching Digest for %s:%s", image, version)
 	for i := range yaml {
 		if yaml[i].Name == image {
 			for k, v := range yaml[i].Dmap {
@@ -518,21 +519,21 @@ func downloadFile(url string) (string, error) {
 func (Release) Latest() error {
 	r, _, err := latestRelease()
 	if err != nil {
-		ErrorF("Latest Release error %s", err)
+		common.ErrorF("Latest Release error %s", err)
 		return err
 	}
-	Info("Latest Release %v", r.String())
+	common.Info("Latest Release %v", r.String())
 	return nil
 }
 
 func (Release) ReleaseByTag(tag string) error {
 	r, _, err := releaseByTag(tag)
 	if err != nil {
-		ErrorF("Release retrieve tag error %s", tag, err)
+		common.ErrorF("Release retrieve tag error %s", tag, err)
 		return err
 	}
 
-	Info("Latest Release %v", r.String())
+	common.Info("Latest Release %v", r.String())
 
 	return nil
 }
@@ -552,7 +553,7 @@ func (Release) Copy() error {
 	ghClient := githubClient()
 	kRelease, _, err := ghClient.Repositories.GetLatestRelease(ctx, "kubernetes", "ingress-nginx")
 	if err != nil {
-		ErrorF("Get Release from kubernetes %s", err)
+		common.ErrorF("Get Release from kubernetes %s", err)
 		return err
 	}
 
@@ -568,9 +569,9 @@ func (Release) Copy() error {
 
 	sRelease, _, err = ghClient.Repositories.CreateRelease(ctx, "strongjz", "ingress-nginx", sRelease)
 	if err != nil {
-		ErrorF("Creating Strongjz release %s", err)
+		common.ErrorF("Creating Strongjz release %s", err)
 		return err
 	}
-	Info("Copied over Kubernetes Release %v to Strongjz %v", &kRelease.Name, &sRelease.Name)
+	common.Info("Copied over Kubernetes Release %v to Strongjz %v", &kRelease.Name, &sRelease.Name)
 	return nil
 }

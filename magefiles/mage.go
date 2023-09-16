@@ -1,5 +1,4 @@
-//go:build ignore
-// +build ignore
+//go:build mage
 
 /*
 Copyright 2021 The Kubernetes Authors.
@@ -20,11 +19,6 @@ limitations under the License.
 package main
 
 import (
-	"os"
-
-	"github.com/magefile/mage/mage"
+	//mage:import
+	_ "k8s.io/ingress-nginx/magefiles/steps"
 )
-
-func main() {
-	os.Exit(mage.Main())
-}

@@ -1,5 +1,3 @@
-//go:build mage
-
 /*
 Copyright 2023 The Kubernetes Authors.
 
@@ -16,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package steps
 
 import (
 	"bytes"
@@ -30,6 +28,9 @@ import (
 	"github.com/magefile/mage/sh"
 	yamlpath "github.com/vmware-labs/yaml-jsonpath/pkg/yamlpath"
 	"gopkg.in/yaml.v3"
+
+	//mage:import
+	common "k8s.io/ingress-nginx/magefiles/common"
 )
 
 const (
@@ -54,63 +55,63 @@ func (Helm) UpdateVersion(version string) {
 
 func currentChartVersion() string {
 	chart, err := chartutil.LoadChartfile(HelmChartPath)
-	CheckIfError(err, "HELM Could not Load Chart")
+	common.CheckIfError(err, "HELM Could not Load Chart")
 	return chart.Version
 }
 
 func currentChartAppVersion() string {
 	chart, err := chartutil.LoadChartfile(HelmChartPath)
-	CheckIfError(err, "HELM Could not Load Chart")
+	common.CheckIfError(err, "HELM Could not Load Chart")
 	return chart.AppVersion
 }
 
 func updateVersion(version string) {
-	Info("HELM Reading File %v", HelmChartPath)
+	common.Info("HELM Reading File %v", HelmChartPath)
 
 	chart, err := chartutil.LoadChartfile(HelmChartPath)
-	CheckIfError(err, "HELM Could not Load Chart")
+	common.CheckIfError(err, "HELM Could not Load Chart")
 
 	// Get the current tag
 	// appVersionV, err := getIngressNGINXVersion()
-	// CheckIfError(err, "HELM Issue Retrieving the Current Ingress Nginx Version")
+	// common.CheckIfError(err, "HELM Issue Retrieving the Current Ingress Nginx Version")
 
 	// remove the v from TAG
 	appVersion := version
 
-	Info("HELM Ingress-Nginx App Version: %s Chart AppVersion: %s", appVersion, chart.AppVersion)
+	common.Info("HELM Ingress-Nginx App Version: %s Chart AppVersion: %s", appVersion, chart.AppVersion)
 	if appVersion == chart.AppVersion {
-		Warning("HELM Ingress NGINX Version didnt change Ingress-Nginx App Version: %s Chart AppVersion: %s", appVersion, chart.AppVersion)
+		common.Warning("HELM Ingress NGINX Version didnt change Ingress-Nginx App Version: %s Chart AppVersion: %s", appVersion, chart.AppVersion)
 		return
 	}
 
 	// Update the helm chart
 	chart.AppVersion = appVersion
 	cTag, err := semver.Make(chart.Version)
-	CheckIfError(err, "HELM Creating Chart Version: %v", err)
+	common.CheckIfError(err, "HELM Creating Chart Version: %v", err)
 
 	if err = cTag.IncrementPatch(); err != nil {
-		ErrorF("HELM Incrementing Chart Version: %v", err)
+		common.ErrorF("HELM Incrementing Chart Version: %v", err)
 		os.Exit(1)
 	}
 	chart.Version = cTag.String()
-	Debug("HELM Updated Chart Version: %v", chart.Version)
+	common.Debug("HELM Updated Chart Version: %v", chart.Version)
 
 	err = chartutil.SaveChartfile(HelmChartPath, chart)
-	CheckIfError(err, "HELM Saving new Chart")
+	common.CheckIfError(err, "HELM Saving new Chart")
 }
 
 func updateChartReleaseNotes(releasesNotes []string) {
-	Info("HELM Updating the Chart Release notes")
+	common.Info("HELM Updating the Chart Release notes")
 	chart, err := chartutil.LoadChartfile(HelmChartPath)
-	CheckIfError(err, "HELM Could not Load Chart to update release notes %s", HelmChartPath)
+	common.CheckIfError(err, "HELM Could not Load Chart to update release notes %s", HelmChartPath)
 	var releaseNoteString string
 	for i := range releasesNotes {
 		releaseNoteString = fmt.Sprintf("%s - \"%s\"\n", releaseNoteString, releasesNotes[i])
 	}
-	Info("HELM Release note string %s", releaseNoteString)
+	common.Info("HELM Release note string %s", releaseNoteString)
 	chart.Annotations["artifacthub.io/changes"] = releaseNoteString
 	err = chartutil.SaveChartfile(HelmChartPath, chart)
-	CheckIfError(err, "HELM Saving updated release notes for Chart")
+	common.CheckIfError(err, "HELM Saving updated release notes for Chart")
 }
 
 func UpdateChartChangelog() {
@@ -122,28 +123,28 @@ func (Helm) UpdateChartValue(key, value string) {
 }
 
 func updateChartValue(key, value string) {
-	Info("HELM Updating Chart %s %s:%s", HelmChartValues, key, value)
+	common.Info("HELM Updating Chart %s %s:%s", HelmChartValues, key, value)
 
 	// read current values.yaml
 	data, err := os.ReadFile(HelmChartValues)
-	CheckIfError(err, "HELM Could not Load Helm Chart Values files %s", HelmChartValues)
+	common.CheckIfError(err, "HELM Could not Load Helm Chart Values files %s", HelmChartValues)
 
 	// var valuesStruct IngressChartValue
 	var n yaml.Node
-	CheckIfError(yaml.Unmarshal(data, &n), "HELM Could not Unmarshal %s", HelmChartValues)
+	common.CheckIfError(yaml.Unmarshal(data, &n), "HELM Could not Unmarshal %s", HelmChartValues)
 
 	// update value
 	// keyParse := parsePath(key)
 	p, err := yamlpath.NewPath(key)
-	CheckIfError(err, "HELM cannot create path")
+	common.CheckIfError(err, "HELM cannot create path")
 
 	q, err := p.Find(&n)
-	CheckIfError(err, "HELM unexpected error finding path")
+	common.CheckIfError(err, "HELM unexpected error finding path")
 
 	for _, i := range q {
-		Info("HELM Found %s at %s", i.Value, key)
+		common.Info("HELM Found %s at %s", i.Value, key)
 		i.Value = value
-		Info("HELM Updated %s at %s", i.Value, key)
+		common.Info("HELM Updated %s at %s", i.Value, key)
 	}
 
 	//// write to file
@@ -151,11 +152,11 @@ func updateChartValue(key, value string) {
 	yamlEncoder := yaml.NewEncoder(&b)
 	yamlEncoder.SetIndent(2)
 	err = yamlEncoder.Encode(&n)
-	CheckIfError(err, "HELM Could not Marshal new Values file")
+	common.CheckIfError(err, "HELM Could not Marshal new Values file")
 	err = os.WriteFile(HelmChartValues, b.Bytes(), 0o644)
-	CheckIfError(err, "HELM Could not write new Values file to %s", HelmChartValues)
+	common.CheckIfError(err, "HELM Could not write new Values file to %s", HelmChartValues)
 
-	Info("HELM Ingress Nginx Helm Chart update %s %s", key, value)
+	common.Info("HELM Ingress Nginx Helm Chart update %s %s", key, value)
 }
 
 func (Helm) Helmdocs() error {
@@ -175,7 +176,7 @@ func runHelmDocs() error {
 }
 
 func installHelmDocs() error {
-	Info("HELM Install HelmDocs")
+	common.Info("HELM Install HelmDocs")
 	g0 := sh.RunCmd("go")
 
 	err := g0("install", "github.com/norwoodj/helm-docs/cmd/helm-docs@v1.11.0")

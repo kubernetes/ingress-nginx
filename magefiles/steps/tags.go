@@ -1,5 +1,3 @@
-//go:build mage
-
 /*
 Copyright 2023 The Kubernetes Authors.
 
@@ -16,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package steps
 
 import (
 	"fmt"
@@ -26,6 +24,8 @@ import (
 	semver "github.com/blang/semver/v4"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
+
+	common "k8s.io/ingress-nginx/magefiles/common"
 )
 
 type Tag mg.Namespace
@@ -35,13 +35,13 @@ var git = sh.OutCmd("git")
 // Nginx returns the ingress-nginx current version
 func (Tag) Nginx() {
 	tag, err := getIngressNGINXVersion()
-	CheckIfError(err, "")
+	common.CheckIfError(err, "")
 	fmt.Printf("%v", tag)
 }
 
 func getIngressNGINXVersion() (string, error) {
 	dat, err := os.ReadFile("TAG")
-	CheckIfError(err, "Could not read TAG file")
+	common.CheckIfError(err, "Could not read TAG file")
 	datString := string(dat)
 	// remove newline
 	datString = strings.Replace(datString, "\n", "", -1)
@@ -49,21 +49,21 @@ func getIngressNGINXVersion() (string, error) {
 }
 
 func checkSemVer(currentVersion, newVersion string) bool {
-	Info("Checking Sem Ver between current %s and new %s", currentVersion, newVersion)
+	common.Info("Checking Sem Ver between current %s and new %s", currentVersion, newVersion)
 	cVersion, err := semver.Make(currentVersion[1:])
 	if err != nil {
-		ErrorF("TAG Error Current Tag %v Making Semver : %v", currentVersion[1:], err)
+		common.ErrorF("TAG Error Current Tag %v Making Semver : %v", currentVersion[1:], err)
 		return false
 	}
 	nVersion, err := semver.Make(newVersion)
 	if err != nil {
-		ErrorF("TAG %v Error Making Semver %v \n", newVersion, err)
+		common.ErrorF("TAG %v Error Making Semver %v \n", newVersion, err)
 		return false
 	}
 
 	err = nVersion.Validate()
 	if err != nil {
-		ErrorF("TAG %v not a valid Semver %v \n", newVersion, err)
+		common.ErrorF("TAG %v not a valid Semver %v \n", newVersion, err)
 		return false
 	}
 
@@ -71,10 +71,10 @@ func checkSemVer(currentVersion, newVersion string) bool {
 	//0 if newVersion == currentVersion
 	//-1 if newVersion < currentVersion
 	//+1 if newVersion > currentVersion.
-	Info("TAG Comparing Old %s to New %s", cVersion.String(), nVersion.String())
+	common.Info("TAG Comparing Old %s to New %s", cVersion.String(), nVersion.String())
 	comp := nVersion.Compare(cVersion)
 	if comp <= 0 {
-		Warning("SemVer:%v is not an update\n", newVersion)
+		common.Warning("SemVer:%v is not an update\n", newVersion)
 		return false
 	}
 	return true
@@ -82,29 +82,29 @@ func checkSemVer(currentVersion, newVersion string) bool {
 
 // BumpNginx will update the nginx TAG
 func (Tag) BumpNginx(newTag string) {
-	Info("TAG BumpNginx version %v", newTag)
+	common.Info("TAG BumpNginx version %v", newTag)
 	currentTag, err := getIngressNGINXVersion()
-	CheckIfError(err, "Getting Ingress-nginx Version")
+	common.CheckIfError(err, "Getting Ingress-nginx Version")
 	bump(currentTag, newTag)
 }
 
 func bump(currentTag, newTag string) {
 	// check if semver is valid
 	if !checkSemVer(currentTag, newTag) {
-		ErrorF("ERROR: Semver is not valid %v", newTag)
+		common.ErrorF("ERROR: Semver is not valid %v", newTag)
 		os.Exit(1)
 	}
 
-	Info("Updating Tag %v to %v", currentTag, newTag)
+	common.Info("Updating Tag %v to %v", currentTag, newTag)
 	err := os.WriteFile("TAG", []byte(newTag), 0o666)
-	CheckIfError(err, "Error Writing New Tag File")
+	common.CheckIfError(err, "Error Writing New Tag File")
 }
 
 // Git Returns the latest git tag
 func (Tag) Git() {
 	tag, err := getGitTag()
-	CheckIfError(err, "Retrieving Git Tag")
-	Info("Git tag: %v", tag)
+	common.CheckIfError(err, "Retrieving Git Tag")
+	common.Info("Git tag: %v", tag)
 }
 
 func getGitTag() (string, error) {
@@ -113,10 +113,10 @@ func getGitTag() (string, error) {
 
 // ControllerTag Creates a new Git Tag for the ingress controller
 func (Tag) NewControllerTag(version string) {
-	Info("Create Ingress Nginx Controller Tag v%s", version)
+	common.Info("Create Ingress Nginx Controller Tag v%s", version)
 	tag, err := controllerTag(version)
-	CheckIfError(err, "Creating git tag")
-	Debug("Git Tag: %s", tag)
+	common.CheckIfError(err, "Creating git tag")
+	common.Debug("Git Tag: %s", tag)
 }
 
 func controllerTag(version string) (string, error) {
@@ -126,22 +126,22 @@ func controllerTag(version string) (string, error) {
 func (Tag) AllControllerTags() {
 	tags := getAllControllerTags()
 	for i, s := range tags {
-		Info("#%v Version %v", i, s)
+		common.Info("#%v Version %v", i, s)
 	}
 }
 
 func getAllControllerTags() []string {
 	allControllerTags, err := git("tag", "-l", "--sort=-v:refname", "controller-v*")
-	CheckIfError(err, "Retrieving git tags")
+	common.CheckIfError(err, "Retrieving git tags")
 	if !sh.CmdRan(err) {
-		Warning("Issue Running Command")
+		common.Warning("Issue Running Command")
 	}
 	if allControllerTags == "" {
-		Warning("All Controller Tags is empty")
+		common.Warning("All Controller Tags is empty")
 	}
-	Debug("Controller Tags: %v", allControllerTags)
+	common.Debug("Controller Tags: %v", allControllerTags)
 
 	temp := strings.Split(allControllerTags, "\n")
-	Debug("There are %v controller tags", len(temp))
+	common.Debug("There are %v controller tags", len(temp))
 	return temp
 }
