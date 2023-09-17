@@ -1,4 +1,4 @@
-//go:build mage
+//go:build ignore
 
 /*
 Copyright 2023 The Kubernetes Authors.
@@ -18,14 +18,10 @@ limitations under the License.
 
 package main
 
-//import (
-//	"github.com/magefile/mage/mg"
-//	"github.com/mysteriumnetwork/go-ci/commands"
-//)
-//
-//type Go mg.Namespace
-//
-//// Checks for issues with go imports
-//func (Go) CheckGoImports() error {
-//	return commands.GoImports("./...")
-//}
+import (
+	"os"
+
+	"github.com/magefile/mage/mage"
+)
+
+func main() { os.Exit(mage.Main()) }

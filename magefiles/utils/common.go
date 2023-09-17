@@ -1,5 +1,3 @@
-//go:build mage
-
 /*
 Copyright 2023 The Kubernetes Authors.
 
@@ -16,10 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package utils
 
 import (
+	"errors"
 	"fmt"
+	"io"
+	"net"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -79,4 +81,33 @@ func Debug(format string, args ...interface{}) {
 // Info should be used to describe the example commands that are about to run.
 func ErrorF(format string, args ...interface{}) {
 	fmt.Printf("\x1b[31;1m%s ERROR: %s\x1b[0m\n", timeStamp(), fmt.Sprintf(format, args...))
+}
+
+func DownloadFile(url string) (string, error) {
+	client := &http.Client{
+		Transport: &http.Transport{
+			DialContext: (&net.Dialer{
+				Timeout:   5 * time.Second,
+				KeepAlive: 5 * time.Second,
+			}).DialContext,
+			TLSHandshakeTimeout:   5 * time.Second,
+			ResponseHeaderTimeout: 5 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+			MaxIdleConnsPerHost:   -1,
+		},
+	}
+	resp, err := client.Get(url)
+	if err != nil {
+		return "", nil
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", errors.New(fmt.Sprintf("could not retrieve file, response from server %d for file %s", resp.StatusCode, url))
+	}
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", nil
+	}
+	return string(bodyBytes), nil
 }
