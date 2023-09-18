@@ -255,7 +255,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	if val, ok := conf[globalAllowedResponseHeaders]; ok {
 		delete(conf, globalAllowedResponseHeaders)
 
-		if len(val) != 0 {
+		if val != "" {
 			harr := splitAndTrimSpace(val, ",")
 			for _, header := range harr {
 				if !customheaders.ValidHeader(header) {

@@ -26,6 +26,10 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
+const (
+	customHeaderHost = "custom-headers"
+)
+
 var _ = framework.DescribeAnnotation("custom-headers-*", func() {
 	f := framework.NewDefaultFramework("custom-headers")
 
@@ -34,49 +38,44 @@ var _ = framework.DescribeAnnotation("custom-headers-*", func() {
 	})
 
 	ginkgo.It("should return status code 200 when no custom-headers is configured", func() {
-		host := "custom-headers"
-
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
+		ing := framework.NewSingleIngress(customHeaderHost, "/", customHeaderHost, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
-		f.WaitForNginxServer(host,
+		f.WaitForNginxServer(customHeaderHost,
 			func(server string) bool {
 				return strings.Contains(server, "server_name custom-headers")
 			})
 
 		f.HTTPTestClient().
 			GET("/").
-			WithHeader("Host", host).
+			WithHeader("Host", customHeaderHost).
 			Expect().
 			Status(http.StatusOK).
-			Body().Contains(fmt.Sprintf("host=%v", host))
+			Body().Contains(fmt.Sprintf("host=%v", customHeaderHost))
 	})
 
 	ginkgo.It("should return status code 503 when custom-headers is configured with an invalid secret", func() {
-		host := "custom-headers"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/custom-headers": f.Namespace + "/custom-headers",
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		ing := framework.NewSingleIngress(customHeaderHost, "/", customHeaderHost, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
-		f.WaitForNginxServer(host,
+		f.WaitForNginxServer(customHeaderHost,
 			func(server string) bool {
 				return strings.Contains(server, "server_name custom-headers")
 			})
 
 		f.HTTPTestClient().
 			GET("/").
-			WithHeader("Host", host).
+			WithHeader("Host", customHeaderHost).
 			Expect().
 			Status(http.StatusServiceUnavailable).
 			Body().Contains("503 Service Temporarily Unavailable")
 	})
 
 	ginkgo.It(`should set "more_set_headers 'My-Custom-Header' '42';" when custom-headers are set`, func() {
-		host := "custom-headers"
-
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/custom-headers": f.Namespace + "/custom-headers",
 		}
@@ -87,23 +86,23 @@ var _ = framework.DescribeAnnotation("custom-headers-*", func() {
 		})
 		f.UpdateNginxConfigMapData("global-allowed-response-headers", "My-Custom-Header,My-Custom-Header-Dollar")
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		ing := framework.NewSingleIngress(customHeaderHost, "/", customHeaderHost, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
-		f.WaitForNginxServer(host,
+		f.WaitForNginxServer(customHeaderHost,
 			func(server string) bool {
 				return strings.Contains(server, `more_set_headers "My-Custom-Header: 42";`)
 			})
 
 		f.HTTPTestClient().
 			GET("/").
-			WithHeader("Host", host).
+			WithHeader("Host", customHeaderHost).
 			Expect().
 			Status(http.StatusOK).
 			Header("My-Custom-Header").Contains("42")
 		f.HTTPTestClient().
 			GET("/").
-			WithHeader("Host", host).
+			WithHeader("Host", customHeaderHost).
 			Expect().
 			Status(http.StatusOK).
 			Header("My-Custom-Header-Dollar").Contains("$remote_addr")
