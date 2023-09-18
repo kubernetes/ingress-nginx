@@ -2,6 +2,36 @@ apiVersion: v1
 entries:
   ingress-nginx:
   - annotations:
+      artifacthub.io/changes: |2
+         - "ci(helm): fix Helm Chart release action 422 error (#10237)"
+         - "helm: Use .Release.Namespace as default for ServiceMonitor namespace (#10249)"
+         - "[helm] configure allow to configure hostAliases (#10180)"
+         - "[helm] pass service annotations through helm tpl engine (#10084)"
+         - "Update Ingress-Nginx version controller-v1.9.0-beta.0"
+      artifacthub.io/prerelease: "true"
+    apiVersion: v2
+    appVersion: 1.9.0-beta.0
+    created: "2023-09-18T11:53:40.723473224Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
+    digest: 1145aeb307a702ce6a781b2f9d0e903df1945556c32913634230bc0ab6662ec1
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.20.0-0'
+    maintainers:
+    - name: rikatz
+    - name: strongjz
+    - name: tao12345666333
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-4.8.0-beta.0/ingress-nginx-4.8.0-beta.0.tgz
+    version: 4.8.0-beta.0
+  - annotations:
       artifacthub.io/changes: |
         - "Update Ingress-Nginx version controller-v1.8.2"
       artifacthub.io/prerelease: "false"
@@ -2956,4 +2986,4 @@ entries:
     urls:
     - https://github.com/kubernetes/ingress-nginx/releases/download/ingress-nginx-2.0.0/ingress-nginx-2.0.0.tgz
     version: 2.0.0
-generated: "2023-09-09T15:45:27.075389043Z"
+generated: "2023-09-18T11:53:40.724080534Z"
