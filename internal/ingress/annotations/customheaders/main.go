@@ -58,7 +58,7 @@ var customHeadersAnnotation = parser.Annotation{
 	Group: "backend",
 	Annotations: parser.AnnotationFields{
 		customHeadersConfigMapAnnotation: {
-			Validator: parser.ValidateRegex(*parser.BasicCharsRegex, true),
+			Validator: parser.ValidateRegex(parser.BasicCharsRegex, true),
 			Scope:     parser.AnnotationScopeLocation,
 			Risk:      parser.AnnotationRiskMedium,
 			Documentation: `This annotation sets the name of a ConfigMap that specifies headers to pass to the client.

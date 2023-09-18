@@ -101,11 +101,11 @@ func TestCustomHeadersParseAnnotations(t *testing.T) {
 		t.Errorf("expected a *Config type")
 	}
 
-	expected_response_headers := map[string]string{}
-	expected_response_headers["Content-Type"] = "application/json"
-	expected_response_headers["Access-Control-Max-Age"] = "600"
+	expectedResponseHeaders := map[string]string{}
+	expectedResponseHeaders["Content-Type"] = "application/json"
+	expectedResponseHeaders["Access-Control-Max-Age"] = "600"
 
-	c := &Config{expected_response_headers}
+	c := &Config{expectedResponseHeaders}
 
 	if !reflect.DeepEqual(c, val) {
 		t.Errorf("expected %v but got %v", c, val)
