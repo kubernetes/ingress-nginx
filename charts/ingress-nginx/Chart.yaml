@@ -1,14 +1,13 @@
 annotations:
-  artifacthub.io/changes: |2
+  artifacthub.io/changes: |
      - "ci(helm): fix Helm Chart release action 422 error (#10237)"
      - "helm: Use .Release.Namespace as default for ServiceMonitor namespace (#10249)"
      - "[helm] configure allow to configure hostAliases (#10180)"
      - "[helm] pass service annotations through helm tpl engine (#10084)"
-     - "Update Ingress-Nginx version controller-v1.9.0-beta.0"
-  artifacthub.io/license: Apache-2.0
-  artifacthub.io/prerelease: "true"
+     - "Update Ingress-Nginx version controller-v1.9.0"
+  artifacthub.io/prerelease: "false"
 apiVersion: v2
-appVersion: 1.9.0-beta.0
+appVersion: 1.9.0
 description: Ingress controller for Kubernetes using NGINX as a reverse proxy and
   load balancer
 home: https://github.com/kubernetes/ingress-nginx
@@ -24,5 +23,4 @@ maintainers:
 name: ingress-nginx
 sources:
 - https://github.com/kubernetes/ingress-nginx
-type: application
-version: 4.8.0-beta.0
+version: 4.8.0
