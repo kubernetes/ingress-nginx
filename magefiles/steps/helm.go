@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"strings"
 
 	semver "github.com/blang/semver/v4"
 	"github.com/helm/helm/pkg/chartutil"
@@ -107,10 +108,10 @@ func updateChartReleaseNotes(releasesNotes []string) {
 	utils.Info("HELM Updating the Chart Release notes")
 	chart, err := chartutil.LoadChartfile(HelmChartPath)
 	utils.CheckIfError(err, "HELM Could not Load Chart to update release notes %s", HelmChartPath)
-	var releaseNoteString string
 	for i := range releasesNotes {
-		releaseNoteString = fmt.Sprintf("%s - \"%s\"\n", releaseNoteString, releasesNotes[i])
+		releasesNotes[i] = fmt.Sprintf("- %q", releasesNotes[i])
 	}
+	releaseNoteString := strings.Join(releasesNotes, "\n")
 	utils.Info("HELM Release note string %s", releaseNoteString)
 	chart.Annotations["artifacthub.io/changes"] = releaseNoteString
 	err = chartutil.SaveChartfile(HelmChartPath, chart)
