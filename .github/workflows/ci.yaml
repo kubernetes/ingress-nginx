@@ -363,7 +363,7 @@ jobs:
           name: e2e-test-reports-chroot-${{ matrix.k8s }}
           path: 'test/junitreports/report*.xml'
 
-kind:
+  kind:
     name: Kind Static Deployment
     runs-on: ubuntu-latest
     needs:
@@ -420,7 +420,6 @@ kind:
         with:
           name: e2e-test-reports-${{ matrix.k8s }}
           path: 'test/junitreports/report*.xml'
-
 
   test-image-build:
     permissions:
