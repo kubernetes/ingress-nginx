@@ -408,7 +408,7 @@ kind:
       - name: Run e2e tests
         env:
           KIND_CLUSTER_NAME: kind
-          SKIP_CLUSTER_CREATION: true
+          SKIP_CLUSTER_CREATION: false
           SKIP_IMAGE_CREATION: true
         run: |
           kind get kubeconfig > $HOME/.kube/kind-config-kind
