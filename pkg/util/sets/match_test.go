@@ -20,23 +20,20 @@ import (
 	"testing"
 )
 
-var (
-	testCasesElementMatch = []struct {
-		listA    []string
-		listB    []string
-		expected bool
-	}{
-		{nil, nil, true},
-		{[]string{"1"}, nil, false},
-		{[]string{"1"}, []string{"1"}, true},
-		{[]string{"1", "2", "1"}, []string{"1", "1", "2"}, true},
-		{[]string{"1", "3", "1"}, []string{"1", "1", "2"}, false},
-		{[]string{"1", "1"}, []string{"1", "2"}, false},
-	}
-)
+var testCasesElementMatch = []struct {
+	listA    []string
+	listB    []string
+	expected bool
+}{
+	{nil, nil, true},
+	{[]string{"1"}, nil, false},
+	{[]string{"1"}, []string{"1"}, true},
+	{[]string{"1", "2", "1"}, []string{"1", "1", "2"}, true},
+	{[]string{"1", "3", "1"}, []string{"1", "1", "2"}, false},
+	{[]string{"1", "1"}, []string{"1", "2"}, false},
+}
 
 func TestElementsMatch(t *testing.T) {
-
 	for _, testCase := range testCasesElementMatch {
 		result := StringElementsMatch(testCase.listA, testCase.listB)
 		if result != testCase.expected {

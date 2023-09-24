@@ -226,7 +226,7 @@ func (cm *Controller) IncCheckErrorCount(namespace, name string) {
 }
 
 // IncOrphanIngress sets the the orphaned ingress gauge to one
-func (cm *Controller) IncOrphanIngress(namespace string, name string, orphanityType string) {
+func (cm *Controller) IncOrphanIngress(namespace, name, orphanityType string) {
 	labels := prometheus.Labels{
 		"namespace": namespace,
 		"ingress":   name,
@@ -236,7 +236,7 @@ func (cm *Controller) IncOrphanIngress(namespace string, name string, orphanityT
 }
 
 // DecOrphanIngress sets the the orphaned ingress gauge to zero (all services has their endpoints)
-func (cm *Controller) DecOrphanIngress(namespace string, name string, orphanityType string) {
+func (cm *Controller) DecOrphanIngress(namespace, name, orphanityType string) {
 	labels := prometheus.Labels{
 		"namespace": namespace,
 		"ingress":   name,
@@ -261,7 +261,7 @@ func (cm *Controller) ConfigSuccess(hash uint64, success bool) {
 }
 
 // Describe implements prometheus.Collector
-func (cm Controller) Describe(ch chan<- *prometheus.Desc) {
+func (cm *Controller) Describe(ch chan<- *prometheus.Desc) {
 	cm.configHash.Describe(ch)
 	cm.configSuccess.Describe(ch)
 	cm.configSuccessTime.Describe(ch)
@@ -277,7 +277,7 @@ func (cm Controller) Describe(ch chan<- *prometheus.Desc) {
 }
 
 // Collect implements the prometheus.Collector interface.
-func (cm Controller) Collect(ch chan<- prometheus.Metric) {
+func (cm *Controller) Collect(ch chan<- prometheus.Metric) {
 	cm.configHash.Collect(ch)
 	cm.configSuccess.Collect(ch)
 	cm.configSuccessTime.Collect(ch)
@@ -295,41 +295,45 @@ func (cm Controller) Collect(ch chan<- prometheus.Metric) {
 // SetSSLExpireTime sets the expiration time of SSL Certificates
 func (cm *Controller) SetSSLExpireTime(servers []*ingress.Server) {
 	for _, s := range servers {
-		if s.Hostname != "" && s.SSLCert != nil && s.SSLCert.ExpireTime.Unix() > 0 {
-			labels := make(prometheus.Labels, len(cm.labels)+1)
-			for k, v := range cm.labels {
-				labels[k] = v
-			}
-			labels["host"] = s.Hostname
-			labels["secret_name"] = s.SSLCert.Name
-
-			cm.sslExpireTime.With(labels).Set(float64(s.SSLCert.ExpireTime.Unix()))
+		if !(s.Hostname != "" && s.SSLCert != nil && s.SSLCert.ExpireTime.Unix() > 0) {
+			continue
 		}
+
+		labels := make(prometheus.Labels, len(cm.labels)+1)
+		for k, v := range cm.labels {
+			labels[k] = v
+		}
+		labels["host"] = s.Hostname
+		labels["secret_name"] = s.SSLCert.Name
+
+		cm.sslExpireTime.With(labels).Set(float64(s.SSLCert.ExpireTime.Unix()))
 	}
 }
 
 // SetSSLInfo creates a metric with all certificates informations
 func (cm *Controller) SetSSLInfo(servers []*ingress.Server) {
 	for _, s := range servers {
-		if s.SSLCert != nil && s.SSLCert.Certificate != nil && s.SSLCert.Certificate.SerialNumber != nil {
-			labels := make(prometheus.Labels, len(cm.labels)+1)
-			for k, v := range cm.labels {
-				labels[k] = v
-			}
-			labels["identifier"] = s.SSLCert.Identifier()
-			labels["host"] = s.Hostname
-			labels["secret_name"] = s.SSLCert.Name
-			labels["namespace"] = s.SSLCert.Namespace
-			labels["issuer_common_name"] = s.SSLCert.Certificate.Issuer.CommonName
-			labels["issuer_organization"] = ""
-			if len(s.SSLCert.Certificate.Issuer.Organization) > 0 {
-				labels["issuer_organization"] = s.SSLCert.Certificate.Issuer.Organization[0]
-			}
-			labels["serial_number"] = s.SSLCert.Certificate.SerialNumber.String()
-			labels["public_key_algorithm"] = s.SSLCert.Certificate.PublicKeyAlgorithm.String()
-
-			cm.sslInfo.With(labels).Set(1)
+		if s.SSLCert == nil || s.SSLCert.Certificate == nil || s.SSLCert.Certificate.SerialNumber == nil {
+			continue
 		}
+
+		labels := make(prometheus.Labels, len(cm.labels)+1)
+		for k, v := range cm.labels {
+			labels[k] = v
+		}
+		labels["identifier"] = s.SSLCert.Identifier()
+		labels["host"] = s.Hostname
+		labels["secret_name"] = s.SSLCert.Name
+		labels["namespace"] = s.SSLCert.Namespace
+		labels["issuer_common_name"] = s.SSLCert.Certificate.Issuer.CommonName
+		labels["issuer_organization"] = ""
+		if len(s.SSLCert.Certificate.Issuer.Organization) > 0 {
+			labels["issuer_organization"] = s.SSLCert.Certificate.Issuer.Organization[0]
+		}
+		labels["serial_number"] = s.SSLCert.Certificate.SerialNumber.String()
+		labels["public_key_algorithm"] = s.SSLCert.Certificate.PublicKeyAlgorithm.String()
+
+		cm.sslInfo.With(labels).Set(1)
 	}
 }
 

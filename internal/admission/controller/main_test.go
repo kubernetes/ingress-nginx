@@ -33,12 +33,12 @@ type failTestChecker struct {
 	t *testing.T
 }
 
-func (ftc failTestChecker) CheckIngress(ing *networking.Ingress) error {
+func (ftc failTestChecker) CheckIngress(_ *networking.Ingress) error {
 	ftc.t.Error("checker should not be called")
 	return nil
 }
 
-func (ftc failTestChecker) CheckWarning(ing *networking.Ingress) ([]string, error) {
+func (ftc failTestChecker) CheckWarning(_ *networking.Ingress) ([]string, error) {
 	ftc.t.Error("checker should not be called")
 	return nil, nil
 }

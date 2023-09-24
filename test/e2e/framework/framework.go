@@ -49,10 +49,8 @@ const (
 	HTTPS RequestScheme = "https"
 )
 
-var (
-	// KubectlPath defines the full path of the kubectl binary
-	KubectlPath = "/usr/local/bin/kubectl"
-)
+// KubectlPath defines the full path of the kubectl binary
+var KubectlPath = "/usr/local/bin/kubectl"
 
 // Framework supports common operations used by e2e tests; it will keep a client & a namespace for you.
 type Framework struct {
@@ -131,7 +129,6 @@ func (f *Framework) CreateEnvironment() {
 
 		f.KubeClientSet, err = kubernetes.NewForConfig(f.KubeConfig)
 		assert.Nil(ginkgo.GinkgoT(), err, "creating a kubernetes client")
-
 	}
 
 	f.Namespace, err = CreateKubeNamespace(f.BaseName, f.KubeClientSet)
@@ -250,9 +247,9 @@ func (f *Framework) GetNginxPodIP() string {
 }
 
 // GetURL returns the URL should be used to make a request to NGINX
-func (f *Framework) GetURL(scheme RequestScheme) string {
+func (f *Framework) GetURL(requestScheme RequestScheme) string {
 	ip := f.GetNginxIP()
-	return fmt.Sprintf("%v://%v", scheme, ip)
+	return fmt.Sprintf("%v://%v", requestScheme, ip)
 }
 
 // GetIngressNGINXPod returns the ingress controller running pod
@@ -270,6 +267,7 @@ func (f *Framework) updateIngressNGINXPod() error {
 // WaitForNginxServer waits until the nginx configuration contains a particular server section.
 // `cfg` passed to matcher is normalized by replacing all tabs and spaces with single space.
 func (f *Framework) WaitForNginxServer(name string, matcher func(cfg string) bool) {
+	//nolint:staticcheck // TODO: will replace it since wait.Poll is deprecated
 	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxConditions(name, matcher))
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
 	Sleep(1 * time.Second)
@@ -278,13 +276,15 @@ func (f *Framework) WaitForNginxServer(name string, matcher func(cfg string) boo
 // WaitForNginxConfiguration waits until the nginx configuration contains a particular configuration
 // `cfg` passed to matcher is normalized by replacing all tabs and spaces with single space.
 func (f *Framework) WaitForNginxConfiguration(matcher func(cfg string) bool) {
+	//nolint:staticcheck // TODO: will replace it since wait.Poll is deprecated
 	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxConditions("", matcher))
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
 	Sleep(1 * time.Second)
 }
 
 // WaitForNginxCustomConfiguration waits until the nginx configuration given part (from, to) contains a particular configuration
-func (f *Framework) WaitForNginxCustomConfiguration(from string, to string, matcher func(cfg string) bool) {
+func (f *Framework) WaitForNginxCustomConfiguration(from, to string, matcher func(cfg string) bool) {
+	//nolint:staticcheck // TODO: will replace it since wait.Poll is deprecated
 	err := wait.Poll(Poll, DefaultTimeout, f.matchNginxCustomConditions(from, to, matcher))
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx server condition/s")
 }
@@ -325,7 +325,7 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 	}
 }
 
-func (f *Framework) matchNginxCustomConditions(from string, to string, matcher func(cfg string) bool) wait.ConditionFunc {
+func (f *Framework) matchNginxCustomConditions(from, to string, matcher func(cfg string) bool) wait.ConditionFunc {
 	return func() (bool, error) {
 		cmd := fmt.Sprintf("cat /etc/nginx/nginx.conf| awk '/%v/,/%v/'", from, to)
 
@@ -395,7 +395,7 @@ func (f *Framework) CreateConfigMap(name string, data map[string]string) {
 }
 
 // UpdateNginxConfigMapData updates single field in ingress-nginx's nginx-ingress-controller map data
-func (f *Framework) UpdateNginxConfigMapData(key string, value string) {
+func (f *Framework) UpdateNginxConfigMapData(key, value string) {
 	config, err := f.getConfigMap("nginx-ingress-controller")
 	assert.Nil(ginkgo.GinkgoT(), err)
 	assert.NotNil(ginkgo.GinkgoT(), config, "expected a configmap but none returned")
@@ -421,6 +421,7 @@ func (f *Framework) WaitForReload(fn func()) {
 	fn()
 
 	count := 0
+	//nolint:staticcheck // TODO: will replace it since wait.Poll is deprecated
 	err := wait.Poll(1*time.Second, DefaultTimeout, func() (bool, error) {
 		reloads := getReloadCount(f.pod, f.Namespace, f.KubeClientSet)
 		// most of the cases reload the ingress controller
@@ -441,8 +442,8 @@ func getReloadCount(pod *v1.Pod, namespace string, client kubernetes.Interface) 
 	assert.Nil(ginkgo.GinkgoT(), err, "obtaining NGINX Pod")
 
 	reloadCount := 0
-	for _, e := range events.Items {
-		if e.Reason == "RELOAD" && e.Type == v1.EventTypeNormal {
+	for i := range events.Items {
+		if events.Items[i].Reason == "RELOAD" && events.Items[i].Type == v1.EventTypeNormal {
 			reloadCount++
 		}
 	}
@@ -457,7 +458,7 @@ func (f *Framework) DeleteNGINXPod(grace int64) {
 
 	err := f.KubeClientSet.CoreV1().Pods(ns).Delete(context.TODO(), f.pod.GetName(), *metav1.NewDeleteOptions(grace))
 	assert.Nil(ginkgo.GinkgoT(), err, "deleting ingress nginx pod")
-
+	//nolint:staticcheck // TODO: will replace it since wait.Poll is deprecated
 	err = wait.Poll(Poll, DefaultTimeout, func() (bool, error) {
 		err := f.updateIngressNGINXPod()
 		if err != nil || f.pod == nil {
@@ -487,7 +488,7 @@ func (f *Framework) HTTPTestClientWithTLSConfig(config *tls.Config) *httpexpect.
 func (f *Framework) newHTTPTestClient(config *tls.Config, setIngressURL bool) *httpexpect.HTTPRequest {
 	if config == nil {
 		config = &tls.Config{
-			InsecureSkipVerify: true,
+			InsecureSkipVerify: true, //nolint:gosec // Ignore the gosec error in testing
 		}
 	}
 	var baseURL string
@@ -507,12 +508,13 @@ func (f *Framework) newHTTPTestClient(config *tls.Config, setIngressURL bool) *h
 
 // WaitForNginxListening waits until NGINX starts accepting connections on a port
 func (f *Framework) WaitForNginxListening(port int) {
-	err := waitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.Namespace, metav1.ListOptions{
+	err := waitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.Namespace, &metav1.ListOptions{
 		LabelSelector: "app.kubernetes.io/name=ingress-nginx",
 	})
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for ingress pods to be ready")
 
 	podIP := f.GetNginxIP()
+	//nolint:staticcheck // TODO: will replace it since wait.Poll is deprecated
 	err = wait.Poll(500*time.Millisecond, DefaultTimeout, func() (bool, error) {
 		hostPort := net.JoinHostPort(podIP, fmt.Sprintf("%v", port))
 		conn, err := net.Dial("tcp", hostPort)
@@ -529,7 +531,7 @@ func (f *Framework) WaitForNginxListening(port int) {
 
 // WaitForPod waits for a specific Pod to be ready, using a label selector
 func (f *Framework) WaitForPod(selector string, timeout time.Duration, shouldFail bool) {
-	err := waitForPodsReady(f.KubeClientSet, timeout, 1, f.Namespace, metav1.ListOptions{
+	err := waitForPodsReady(f.KubeClientSet, timeout, 1, f.Namespace, &metav1.ListOptions{
 		LabelSelector: selector,
 	})
 
@@ -541,7 +543,7 @@ func (f *Framework) WaitForPod(selector string, timeout time.Duration, shouldFai
 }
 
 // UpdateDeployment runs the given updateFunc on the deployment and waits for it to be updated
-func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name string, replicas int, updateFunc func(d *appsv1.Deployment) error) error {
+func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace, name string, replicas int, updateFunc func(d *appsv1.Deployment) error) error {
 	deployment, err := kubeClientSet.AppsV1().Deployments(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		return err
@@ -571,7 +573,7 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 		}
 	}
 
-	err = waitForPodsReady(kubeClientSet, DefaultTimeout, replicas, namespace, metav1.ListOptions{
+	err = waitForPodsReady(kubeClientSet, DefaultTimeout, replicas, namespace, &metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(deployment.Spec.Template.ObjectMeta.Labels)).String(),
 	})
 	if err != nil {
@@ -582,6 +584,7 @@ func UpdateDeployment(kubeClientSet kubernetes.Interface, namespace string, name
 }
 
 func waitForDeploymentRollout(kubeClientSet kubernetes.Interface, resource *appsv1.Deployment) error {
+	//nolint:staticcheck // TODO: will replace it since wait.Poll is deprecated
 	return wait.Poll(Poll, 5*time.Minute, func() (bool, error) {
 		d, err := kubeClientSet.AppsV1().Deployments(resource.Namespace).Get(context.TODO(), resource.Name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
@@ -605,7 +608,7 @@ func waitForDeploymentRollout(kubeClientSet kubernetes.Interface, resource *apps
 }
 
 // UpdateIngress runs the given updateFunc on the ingress
-func UpdateIngress(kubeClientSet kubernetes.Interface, namespace string, name string, updateFunc func(d *networking.Ingress) error) error {
+func UpdateIngress(kubeClientSet kubernetes.Interface, namespace, name string, updateFunc func(d *networking.Ingress) error) error {
 	ingress, err := kubeClientSet.NetworkingV1().Ingresses(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		return err

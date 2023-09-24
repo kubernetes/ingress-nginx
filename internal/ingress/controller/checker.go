@@ -29,7 +29,7 @@ import (
 )
 
 // Name returns the healthcheck name
-func (n NGINXController) Name() string {
+func (n *NGINXController) Name() string {
 	return "nginx-ingress-controller"
 }
 

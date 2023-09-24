@@ -65,7 +65,6 @@ RUN apk update && apk upgrade && apk add --no-cache \
   unzip \
   openssl \
   cfssl@testing \
-  curl \
   tzdata \
   libc6-compat
 

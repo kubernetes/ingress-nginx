@@ -17,7 +17,6 @@ limitations under the License.
 package portinredirect
 
 import (
-	"fmt"
 	"testing"
 
 	api "k8s.io/api/core/v1"
@@ -84,23 +83,24 @@ func (m mockBackend) GetDefaultBackend() defaults.Backend {
 func TestPortInRedirect(t *testing.T) {
 	tests := []struct {
 		title   string
-		usePort *bool
+		usePort string
 		def     bool
 		exp     bool
 	}{
-		{"false - default false", newFalse(), false, false},
-		{"false - default true", newFalse(), true, false},
-		{"no annotation - default false", nil, false, false},
-		{"no annotation - default true", nil, true, true},
-		{"true - default true", newTrue(), true, true},
+		{"false - default false", "false", false, false},
+		{"false - default true", "false", true, false},
+		{"no annotation - default false", "", false, false},
+		{"no annotation - default false", "not-a-bool", false, false},
+		{"no annotation - default true", "", true, true},
+		{"true - default true", "true", true, true},
 	}
 
 	for _, test := range tests {
 		ing := buildIngress()
 
 		data := map[string]string{}
-		if test.usePort != nil {
-			data[parser.GetAnnotationWithPrefix("use-port-in-redirects")] = fmt.Sprintf("%v", *test.usePort)
+		if test.usePort != "" {
+			data[parser.GetAnnotationWithPrefix(portsInRedirectAnnotation)] = test.usePort
 		}
 		ing.SetAnnotations(data)
 
@@ -117,14 +117,4 @@ func TestPortInRedirect(t *testing.T) {
 			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.exp, p)
 		}
 	}
-}
-
-func newTrue() *bool {
-	b := true
-	return &b
-}
-
-func newFalse() *bool {
-	b := false
-	return &b
 }

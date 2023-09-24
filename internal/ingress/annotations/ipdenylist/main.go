@@ -30,6 +30,22 @@ import (
 	"k8s.io/ingress-nginx/pkg/util/sets"
 )
 
+const (
+	ipDenylistAnnotation = "denylist-source-range"
+)
+
+var denylistAnnotations = parser.Annotation{
+	Group: "acl",
+	Annotations: parser.AnnotationFields{
+		ipDenylistAnnotation: {
+			Validator:     parser.ValidateCIDRs,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskMedium, // Failure on parsing this may cause undesired access
+			Documentation: `This annotation allows setting a list of IPs and networks that should be blocked to access this Location`,
+		},
+	},
+}
+
 // SourceRange returns the CIDR
 type SourceRange struct {
 	CIDR []string `json:"cidr,omitempty"`
@@ -48,12 +64,16 @@ func (sr1 *SourceRange) Equal(sr2 *SourceRange) bool {
 }
 
 type ipdenylist struct {
-	r resolver.Resolver
+	r                resolver.Resolver
+	annotationConfig parser.Annotation
 }
 
 // NewParser creates a new denylist annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return ipdenylist{r}
+	return ipdenylist{
+		r:                r,
+		annotationConfig: denylistAnnotations,
+	}
 }
 
 // ParseAnnotations parses the annotations contained in the ingress
@@ -67,16 +87,21 @@ func (a ipdenylist) Parse(ing *networking.Ingress) (interface{}, error) {
 	copy(defaultDenylistSourceRange, defBackend.DenylistSourceRange)
 	sort.Strings(defaultDenylistSourceRange)
 
-	val, err := parser.GetStringAnnotation("denylist-source-range", ing)
-	// A missing annotation is not a problem, just use the default
-	if err == ing_errors.ErrMissingAnnotations {
-		return &SourceRange{CIDR: defaultDenylistSourceRange}, nil
+	val, err := parser.GetStringAnnotation(ipDenylistAnnotation, ing, a.annotationConfig.Annotations)
+	if err != nil {
+		if err == ing_errors.ErrMissingAnnotations {
+			return &SourceRange{CIDR: defaultDenylistSourceRange}, nil
+		}
+
+		return &SourceRange{CIDR: defaultDenylistSourceRange}, ing_errors.LocationDeniedError{
+			Reason: err,
+		}
 	}
 
 	values := strings.Split(val, ",")
 	ipnets, ips, err := net.ParseIPNets(values...)
 	if err != nil && len(ips) == 0 {
-		return &SourceRange{CIDR: defaultDenylistSourceRange}, ing_errors.LocationDenied{
+		return &SourceRange{CIDR: defaultDenylistSourceRange}, ing_errors.LocationDeniedError{
 			Reason: fmt.Errorf("the annotation does not contain a valid IP address or network: %w", err),
 		}
 	}
@@ -92,4 +117,13 @@ func (a ipdenylist) Parse(ing *networking.Ingress) (interface{}, error) {
 	sort.Strings(cidrs)
 
 	return &SourceRange{cidrs}, nil
+}
+
+func (a ipdenylist) GetDocumentation() parser.AnnotationFields {
+	return a.annotationConfig.Annotations
+}
+
+func (a ipdenylist) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+	return parser.CheckAnnotationRisk(anns, maxrisk, denylistAnnotations.Annotations)
 }

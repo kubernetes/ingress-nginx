@@ -23,7 +23,7 @@ type Match struct {
 	names      map[string]int
 }
 
-func makeMatch(chain chain, submatches []string, names []string) *Match {
+func makeMatch(chain chain, submatches, names []string) *Match {
 	if submatches == nil {
 		submatches = []string{}
 	}

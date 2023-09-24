@@ -33,6 +33,16 @@ var _ = framework.DescribeAnnotation("configuration-snippet", func() {
 
 	ginkgo.It("set snippet more_set_headers in all locations", func() {
 		host := "configurationsnippet.foo.com"
+
+		f.SetNginxConfigMapData(map[string]string{
+			"allow-snippet-annotations": "true",
+		})
+		defer func() {
+			f.SetNginxConfigMapData(map[string]string{
+				"allow-snippet-annotations": "false",
+			})
+		}()
+
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/configuration-snippet": `more_set_headers "Foo1: Bar1";`,
 		}
@@ -76,10 +86,6 @@ var _ = framework.DescribeAnnotation("configuration-snippet", func() {
 			annotations)
 
 		f.UpdateNginxConfigMapData("allow-snippet-annotations", "false")
-		defer func() {
-			// Return to the original value
-			f.UpdateNginxConfigMapData("allow-snippet-annotations", "true")
-		}()
 
 		// Sleep a while just to guarantee that the configmap is applied
 		framework.Sleep()

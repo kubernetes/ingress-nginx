@@ -30,6 +30,9 @@ Rewriting can be controlled using the following annotations:
 !!! note
     [Captured groups](https://www.regular-expressions.info/refcapture.html) are saved in numbered placeholders, chronologically, in the form `$1`, `$2` ... `$n`. These placeholders can be used as parameters in the `rewrite-target` annotation.
 
+!!! note
+    Please see the [FAQ](../../faq.md#validation-of-path) for Validation Of __`path`__
+
 Create an Ingress rule with a rewrite annotation:
 
 ```console
@@ -49,7 +52,7 @@ spec:
     http:
       paths:
       - path: /something(/|$)(.*)
-        pathType: Prefix
+        pathType: ImplementationSpecific
         backend:
           service:
             name: http-svc

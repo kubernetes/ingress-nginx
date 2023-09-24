@@ -36,6 +36,15 @@ var _ = framework.IngressNginxDescribe("single ingress - multiple hosts", func()
 	})
 
 	ginkgo.It("should set the correct $service_name NGINX variable", func() {
+		f.SetNginxConfigMapData(map[string]string{
+			"allow-snippet-annotations": "true",
+		})
+		defer func() {
+			f.SetNginxConfigMapData(map[string]string{
+				"allow-snippet-annotations": "false",
+			})
+		}()
+
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/configuration-snippet": `more_set_input_headers "service-name: $service_name";`,
 		}

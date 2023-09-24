@@ -33,8 +33,10 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
+const proxyProtocol = "proxy-protocol"
+
 var _ = framework.DescribeSetting("use-proxy-protocol", func() {
-	f := framework.NewDefaultFramework("proxy-protocol")
+	f := framework.NewDefaultFramework(proxyProtocol)
 
 	setting := "use-proxy-protocol"
 
@@ -42,9 +44,9 @@ var _ = framework.DescribeSetting("use-proxy-protocol", func() {
 		f.NewEchoDeployment()
 		f.UpdateNginxConfigMapData(setting, "false")
 	})
-
+	//nolint:dupl // Ignore dupl errors for similar test case
 	ginkgo.It("should respect port passed by the PROXY Protocol", func() {
-		host := "proxy-protocol"
+		host := proxyProtocol
 
 		f.UpdateNginxConfigMapData(setting, "true")
 
@@ -73,14 +75,15 @@ var _ = framework.DescribeSetting("use-proxy-protocol", func() {
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error reading connection data")
 
 		body := string(data)
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=%v", "proxy-protocol"))
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=%v", proxyProtocol))
 		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-port=1234")
 		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-proto=http")
 		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-for=192.168.0.1")
 	})
 
+	//nolint:dupl // Ignore dupl errors for similar test case
 	ginkgo.It("should respect proto passed by the PROXY Protocol server port", func() {
-		host := "proxy-protocol"
+		host := proxyProtocol
 
 		f.UpdateNginxConfigMapData(setting, "true")
 
@@ -109,14 +112,14 @@ var _ = framework.DescribeSetting("use-proxy-protocol", func() {
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error reading connection data")
 
 		body := string(data)
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=%v", "proxy-protocol"))
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=%v", proxyProtocol))
 		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-port=443")
 		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-proto=https")
 		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-for=192.168.0.1")
 	})
 
 	ginkgo.It("should enable PROXY Protocol for HTTPS", func() {
-		host := "proxy-protocol"
+		host := proxyProtocol
 
 		f.UpdateNginxConfigMapData(setting, "true")
 
@@ -151,7 +154,7 @@ var _ = framework.DescribeSetting("use-proxy-protocol", func() {
 		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error reading connection data")
 
 		body := string(data)
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=%v", "proxy-protocol"))
+		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=%v", proxyProtocol))
 		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-port=1234")
 		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-proto=https")
 		assert.Contains(ginkgo.GinkgoT(), body, "x-scheme=https")

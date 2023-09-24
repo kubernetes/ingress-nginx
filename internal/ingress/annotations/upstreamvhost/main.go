@@ -23,18 +23,48 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
+const (
+	upstreamVhostAnnotation = "upstream-vhost"
+)
+
+var upstreamVhostAnnotations = parser.Annotation{
+	Group: "backend",
+	Annotations: parser.AnnotationFields{
+		upstreamVhostAnnotation: {
+			Validator: parser.ValidateServerName,
+			Scope:     parser.AnnotationScopeLocation,
+			Risk:      parser.AnnotationRiskLow, // Low, as it allows regexes but on a very limited set
+			Documentation: `This configuration setting allows you to control the value for host in the following statement: proxy_set_header Host $host, which forms part of the location block. 
+			This is useful if you need to call the upstream server by something other than $host`,
+		},
+	},
+}
+
 type upstreamVhost struct {
-	r resolver.Resolver
+	r                resolver.Resolver
+	annotationConfig parser.Annotation
 }
 
 // NewParser creates a new upstream VHost annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return upstreamVhost{r}
+	return upstreamVhost{
+		r:                r,
+		annotationConfig: upstreamVhostAnnotations,
+	}
 }
 
 // Parse parses the annotations contained in the ingress rule
 // used to indicate if the location/s contains a fragment of
 // configuration to be included inside the paths of the rules
 func (a upstreamVhost) Parse(ing *networking.Ingress) (interface{}, error) {
-	return parser.GetStringAnnotation("upstream-vhost", ing)
+	return parser.GetStringAnnotation(upstreamVhostAnnotation, ing, a.annotationConfig.Annotations)
+}
+
+func (a upstreamVhost) GetDocumentation() parser.AnnotationFields {
+	return a.annotationConfig.Annotations
+}
+
+func (a upstreamVhost) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+	return parser.CheckAnnotationRisk(anns, maxrisk, upstreamVhostAnnotations.Annotations)
 }

@@ -23,8 +23,33 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
+const (
+	enableOpentracingAnnotation    = "enable-opentracing"
+	opentracingTrustSpanAnnotation = "opentracing-trust-incoming-span"
+)
+
+var opentracingAnnotations = parser.Annotation{
+	Group: "opentracing",
+	Annotations: parser.AnnotationFields{
+		enableOpentracingAnnotation: {
+			Validator: parser.ValidateBool,
+			Scope:     parser.AnnotationScopeLocation,
+			Risk:      parser.AnnotationRiskLow,
+			Documentation: `This annotation defines if Opentracing collector should be enable for this location. Opentracing should 
+			already be configured by Ingress administrator`,
+		},
+		opentracingTrustSpanAnnotation: {
+			Validator:     parser.ValidateBool,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `This annotation enables or disables using spans from incoming requests as parent for created ones`,
+		},
+	},
+}
+
 type opentracing struct {
-	r resolver.Resolver
+	r                resolver.Resolver
+	annotationConfig parser.Annotation
 }
 
 // Config contains the configuration to be used in the Ingress
@@ -58,19 +83,31 @@ func (bd1 *Config) Equal(bd2 *Config) bool {
 
 // NewParser creates a new serviceUpstream annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return opentracing{r}
+	return opentracing{
+		r:                r,
+		annotationConfig: opentracingAnnotations,
+	}
 }
 
-func (s opentracing) Parse(ing *networking.Ingress) (interface{}, error) {
-	enabled, err := parser.GetBoolAnnotation("enable-opentracing", ing)
+func (o opentracing) Parse(ing *networking.Ingress) (interface{}, error) {
+	enabled, err := parser.GetBoolAnnotation(enableOpentracingAnnotation, ing, o.annotationConfig.Annotations)
 	if err != nil {
 		return &Config{}, nil
 	}
 
-	trustSpan, err := parser.GetBoolAnnotation("opentracing-trust-incoming-span", ing)
+	trustSpan, err := parser.GetBoolAnnotation(opentracingTrustSpanAnnotation, ing, o.annotationConfig.Annotations)
 	if err != nil {
 		return &Config{Set: true, Enabled: enabled}, nil
 	}
 
 	return &Config{Set: true, Enabled: enabled, TrustSet: true, TrustEnabled: trustSpan}, nil
+}
+
+func (o opentracing) GetDocumentation() parser.AnnotationFields {
+	return o.annotationConfig.Annotations
+}
+
+func (o opentracing) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(o.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+	return parser.CheckAnnotationRisk(anns, maxrisk, opentracingAnnotations.Annotations)
 }

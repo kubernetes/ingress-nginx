@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package ipwhitelist
+package ipallowlist
 
 import (
 	"testing"
@@ -86,12 +86,12 @@ func TestParseAnnotations(t *testing.T) {
 		"test parse a invalid net": {
 			net:       "ww",
 			expectErr: true,
-			errOut:    "the annotation does not contain a valid IP address or network: invalid CIDR address: ww",
+			errOut:    "annotation nginx.ingress.kubernetes.io/allowlist-source-range contains invalid value",
 		},
 		"test parse a empty net": {
 			net:       "",
 			expectErr: true,
-			errOut:    "the annotation does not contain a valid IP address or network: invalid CIDR address: ",
+			errOut:    "the annotation nginx.ingress.kubernetes.io/allowlist-source-range does not contain a valid value ()",
 		},
 		"test parse multiple valid cidr": {
 			net:        "2.2.2.2/32,1.1.1.1/32,3.3.3.0/24",
@@ -102,16 +102,16 @@ func TestParseAnnotations(t *testing.T) {
 
 	for testName, test := range tests {
 		data := map[string]string{}
-		data[parser.GetAnnotationWithPrefix("whitelist-source-range")] = test.net
+		data[parser.GetAnnotationWithPrefix(ipAllowlistAnnotation)] = test.net
 		ing.SetAnnotations(data)
 		p := NewParser(&resolver.Mock{})
 		i, err := p.Parse(ing)
-		if err != nil && !test.expectErr {
-			t.Errorf("%v:unexpected error: %v", testName, err)
+		if (err != nil) != test.expectErr {
+			t.Errorf("%s expected error: %t got error: %t err value: %s. %+v", testName, test.expectErr, err != nil, err, i)
 		}
-		if test.expectErr {
+		if test.expectErr && err != nil {
 			if err.Error() != test.errOut {
-				t.Errorf("%v:expected error: %v but %v return", testName, test.errOut, err.Error())
+				t.Errorf("expected error %s but got %s", test.errOut, err)
 			}
 		}
 		if !test.expectErr {
@@ -137,7 +137,7 @@ func (m mockBackend) GetDefaultBackend() defaults.Backend {
 	}
 }
 
-// Test that when we have a whitelist set on the Backend that is used when we
+// Test that when we have a allowlist set on the Backend that is used when we
 // don't have the annotation
 func TestParseAnnotationsWithDefaultConfig(t *testing.T) {
 	ing := buildIngress()
@@ -158,12 +158,12 @@ func TestParseAnnotationsWithDefaultConfig(t *testing.T) {
 		"test parse a invalid net": {
 			net:       "ww",
 			expectErr: true,
-			errOut:    "the annotation does not contain a valid IP address or network: invalid CIDR address: ww",
+			errOut:    "annotation nginx.ingress.kubernetes.io/allowlist-source-range contains invalid value",
 		},
 		"test parse a empty net": {
 			net:       "",
 			expectErr: true,
-			errOut:    "the annotation does not contain a valid IP address or network: invalid CIDR address: ",
+			errOut:    "the annotation nginx.ingress.kubernetes.io/allowlist-source-range does not contain a valid value ()",
 		},
 		"test parse multiple valid cidr": {
 			net:        "2.2.2.2/32,1.1.1.1/32,3.3.3.0/24",
@@ -174,16 +174,67 @@ func TestParseAnnotationsWithDefaultConfig(t *testing.T) {
 
 	for testName, test := range tests {
 		data := map[string]string{}
-		data[parser.GetAnnotationWithPrefix("whitelist-source-range")] = test.net
+		data[parser.GetAnnotationWithPrefix(ipAllowlistAnnotation)] = test.net
 		ing.SetAnnotations(data)
 		p := NewParser(mockBackend)
 		i, err := p.Parse(ing)
-		if err != nil && !test.expectErr {
-			t.Errorf("%v:unexpected error: %v", testName, err)
+		if (err != nil) != test.expectErr {
+			t.Errorf("expected error: %t got error: %t err value: %s. %+v", test.expectErr, err != nil, err, i)
 		}
-		if test.expectErr {
+		if test.expectErr && err != nil {
 			if err.Error() != test.errOut {
-				t.Errorf("%v:expected error: %v but %v return", testName, test.errOut, err.Error())
+				t.Errorf("expected error %s but got %s", test.errOut, err)
+			}
+		}
+		if !test.expectErr {
+			sr, ok := i.(*SourceRange)
+			if !ok {
+				t.Errorf("%v:expected a SourceRange type", testName)
+			}
+			if !strsEquals(sr.CIDR, test.expectCidr) {
+				t.Errorf("%v:expected %v CIDR but %v returned", testName, test.expectCidr, sr.CIDR)
+			}
+		}
+	}
+}
+
+// Test that when we have a whitelist set on the Backend that is used when we
+// don't have the annotation
+func TestLegacyAnnotation(t *testing.T) {
+	ing := buildIngress()
+
+	mockBackend := mockBackend{}
+
+	tests := map[string]struct {
+		net        string
+		expectCidr []string
+		expectErr  bool
+		errOut     string
+	}{
+		"test parse a valid net": {
+			net:        "10.0.0.0/24",
+			expectCidr: []string{"10.0.0.0/24"},
+			expectErr:  false,
+		},
+		"test parse multiple valid cidr": {
+			net:        "2.2.2.2/32,1.1.1.1/32,3.3.3.0/24",
+			expectCidr: []string{"1.1.1.1/32", "2.2.2.2/32", "3.3.3.0/24"},
+			expectErr:  false,
+		},
+	}
+
+	for testName, test := range tests {
+		data := map[string]string{}
+		data[parser.GetAnnotationWithPrefix(ipWhitelistAnnotation)] = test.net
+		ing.SetAnnotations(data)
+		p := NewParser(mockBackend)
+		i, err := p.Parse(ing)
+		if (err != nil) != test.expectErr {
+			t.Errorf("expected error: %t got error: %t err value: %s. %+v", test.expectErr, err != nil, err, i)
+		}
+		if test.expectErr && err != nil {
+			if err.Error() != test.errOut {
+				t.Errorf("expected error %s but got %s", test.errOut, err)
 			}
 		}
 		if !test.expectErr {

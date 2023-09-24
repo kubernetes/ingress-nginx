@@ -32,7 +32,7 @@ import (
 )
 
 func TestNginxCheck(t *testing.T) {
-	var tests = []struct {
+	tests := []struct {
 		healthzPath string
 	}{
 		{"/healthz"},
@@ -42,7 +42,6 @@ func TestNginxCheck(t *testing.T) {
 	for _, tt := range tests {
 		testName := fmt.Sprintf("health path: %s", tt.healthzPath)
 		t.Run(testName, func(t *testing.T) {
-
 			mux := http.NewServeMux()
 
 			listener, err := tryListen("tcp", fmt.Sprintf(":%v", nginx.StatusPort))
@@ -50,7 +49,7 @@ func TestNginxCheck(t *testing.T) {
 				t.Fatalf("creating tcp listener: %s", err)
 			}
 			defer listener.Close()
-
+			//nolint:gosec // Ignore not configured ReadHeaderTimeout in testing
 			server := &httptest.Server{
 				Listener: listener,
 				Config: &http.Server{
@@ -103,10 +102,10 @@ func TestNginxCheck(t *testing.T) {
 				}
 			}()
 			go func() {
-				cmd.Wait() //nolint:errcheck
+				cmd.Wait() //nolint:errcheck // Ignore the error
 			}()
 
-			if _, err := pidFile.Write([]byte(fmt.Sprintf("%v", pid))); err != nil {
+			if _, err := fmt.Fprintf(pidFile, "%v", pid); err != nil {
 				t.Errorf("unexpected error writing the pid file: %v", err)
 			}
 
@@ -121,7 +120,7 @@ func TestNginxCheck(t *testing.T) {
 			})
 
 			// pollute pid file
-			pidFile.Write([]byte("999999")) //nolint:errcheck
+			pidFile.WriteString("999999") //nolint:errcheck // Ignore the error
 			pidFile.Close()
 
 			t.Run("bad pid", func(t *testing.T) {
@@ -134,7 +133,7 @@ func TestNginxCheck(t *testing.T) {
 }
 
 func callHealthz(expErr bool, healthzPath string, mux *http.ServeMux) error {
-	req, err := http.NewRequest(http.MethodGet, healthzPath, nil)
+	req, err := http.NewRequest(http.MethodGet, healthzPath, http.NoBody)
 	if err != nil {
 		return fmt.Errorf("healthz error: %v", err)
 	}

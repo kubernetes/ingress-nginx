@@ -26,6 +26,9 @@ type Resolver interface {
 	// GetDefaultBackend returns the backend that must be used as default
 	GetDefaultBackend() defaults.Backend
 
+	// GetSecurityConfiguration returns the configuration options from Ingress
+	GetSecurityConfiguration() defaults.SecurityConfiguration
+
 	// GetConfigMap searches for configmap containing the namespace and name usting the character /
 	GetConfigMap(string) (*apiv1.ConfigMap, error)
 

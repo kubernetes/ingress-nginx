@@ -114,7 +114,7 @@ func GetRemovedIngresses(rucfg, newcfg *ingress.Configuration) []string {
 
 // IsDynamicConfigurationEnough returns whether a Configuration can be
 // dynamically applied, without reloading the backend.
-func IsDynamicConfigurationEnough(newcfg *ingress.Configuration, oldcfg *ingress.Configuration) bool {
+func IsDynamicConfigurationEnough(newcfg, oldcfg *ingress.Configuration) bool {
 	copyOfRunningConfig := *oldcfg
 	copyOfPcfg := *newcfg
 
@@ -133,21 +133,21 @@ func IsDynamicConfigurationEnough(newcfg *ingress.Configuration, oldcfg *ingress
 // clearL4serviceEndpoints is a helper function to clear endpoints from the ingress configuration since they should be ignored when
 // checking if the new configuration changes can be applied dynamically.
 func clearL4serviceEndpoints(config *ingress.Configuration) {
-	var clearedTCPL4Services []ingress.L4Service
-	var clearedUDPL4Services []ingress.L4Service
-	for _, service := range config.TCPEndpoints {
+	clearedTCPL4Services := make([]ingress.L4Service, 0, len(config.TCPEndpoints))
+	clearedUDPL4Services := make([]ingress.L4Service, 0, len(config.UDPEndpoints))
+	for i := range config.TCPEndpoints {
 		copyofService := ingress.L4Service{
-			Port:      service.Port,
-			Backend:   service.Backend,
+			Port:      config.TCPEndpoints[i].Port,
+			Backend:   config.TCPEndpoints[i].Backend,
 			Endpoints: []ingress.Endpoint{},
 			Service:   nil,
 		}
 		clearedTCPL4Services = append(clearedTCPL4Services, copyofService)
 	}
-	for _, service := range config.UDPEndpoints {
+	for i := range config.UDPEndpoints {
 		copyofService := ingress.L4Service{
-			Port:      service.Port,
-			Backend:   service.Backend,
+			Port:      config.UDPEndpoints[i].Port,
+			Backend:   config.UDPEndpoints[i].Backend,
 			Endpoints: []ingress.Endpoint{},
 			Service:   nil,
 		}
@@ -160,7 +160,7 @@ func clearL4serviceEndpoints(config *ingress.Configuration) {
 // clearCertificates is a helper function to clear Certificates from the ingress configuration since they should be ignored when
 // checking if the new configuration changes can be applied dynamically if dynamic certificates is on
 func clearCertificates(config *ingress.Configuration) {
-	var clearedServers []*ingress.Server
+	clearedServers := make([]*ingress.Server, 0, len(config.Servers))
 	for _, server := range config.Servers {
 		copyOfServer := *server
 		copyOfServer.SSLCert = nil
@@ -169,16 +169,16 @@ func clearCertificates(config *ingress.Configuration) {
 	config.Servers = clearedServers
 }
 
-type redirect struct {
+type Redirect struct {
 	From    string
 	To      string
 	SSLCert *ingress.SSLCert
 }
 
 // BuildRedirects build the redirects of servers based on configurations and certificates
-func BuildRedirects(servers []*ingress.Server) []*redirect {
+func BuildRedirects(servers []*ingress.Server) []*Redirect {
 	names := sets.Set[string]{}
-	redirectServers := make([]*redirect, 0)
+	redirectServers := make([]*Redirect, 0)
 
 	for _, srv := range servers {
 		if !srv.RedirectFromToWWW {
@@ -212,7 +212,7 @@ func BuildRedirects(servers []*ingress.Server) []*redirect {
 			continue
 		}
 
-		r := &redirect{
+		r := &Redirect{
 			From: from,
 			To:   to,
 		}

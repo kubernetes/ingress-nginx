@@ -95,7 +95,7 @@ func (o *logsFlags) toStrings() []string {
 	return r
 }
 
-func logs(flags *genericclioptions.ConfigFlags, podName string, deployment string, selector string, container string, opts logsFlags) error {
+func logs(flags *genericclioptions.ConfigFlags, podName, deployment, selector, container string, opts logsFlags) error {
 	pod, err := request.ChoosePod(flags, podName, deployment, selector)
 	if err != nil {
 		return err

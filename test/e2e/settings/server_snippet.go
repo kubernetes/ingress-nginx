@@ -37,10 +37,16 @@ var _ = framework.DescribeSetting("configmap server-snippet", func() {
 		hostAnnots := "serverannotssnippet1.foo.com"
 
 		f.SetNginxConfigMapData(map[string]string{
+			"allow-snippet-annotations": "true",
 			"server-snippet": `
 			more_set_headers "Globalfoo: Foooo";`,
 		})
 
+		defer func() {
+			f.SetNginxConfigMapData(map[string]string{
+				"allow-snippet-annotations": "false",
+			})
+		}()
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/server-snippet": `
 				more_set_headers "Foo: Bar";
@@ -99,6 +105,11 @@ var _ = framework.DescribeSetting("configmap server-snippet", func() {
 			more_set_headers "Globalfoo: Foooo";`,
 		})
 
+		defer func() {
+			f.SetNginxConfigMapData(map[string]string{
+				"allow-snippet-annotations": "false",
+			})
+		}()
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/server-snippet": `
 				more_set_headers "Foo: Bar";

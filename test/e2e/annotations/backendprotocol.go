@@ -24,6 +24,8 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
+const backendProtocolHost = "backendprotocol.foo.com"
+
 var _ = framework.DescribeAnnotation("backend-protocol", func() {
 	f := framework.NewDefaultFramework("backendprotocol")
 
@@ -32,7 +34,7 @@ var _ = framework.DescribeAnnotation("backend-protocol", func() {
 	})
 
 	ginkgo.It("should set backend protocol to https:// and use proxy_pass", func() {
-		host := "backendprotocol.foo.com"
+		host := backendProtocolHost
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/backend-protocol": "HTTPS",
 		}
@@ -47,7 +49,7 @@ var _ = framework.DescribeAnnotation("backend-protocol", func() {
 	})
 
 	ginkgo.It("should set backend protocol to $scheme:// and use proxy_pass", func() {
-		host := "backendprotocol.foo.com"
+		host := backendProtocolHost
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/backend-protocol": "AUTO_HTTP",
 		}
@@ -62,7 +64,7 @@ var _ = framework.DescribeAnnotation("backend-protocol", func() {
 	})
 
 	ginkgo.It("should set backend protocol to grpc:// and use grpc_pass", func() {
-		host := "backendprotocol.foo.com"
+		host := backendProtocolHost
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
 		}
@@ -77,7 +79,7 @@ var _ = framework.DescribeAnnotation("backend-protocol", func() {
 	})
 
 	ginkgo.It("should set backend protocol to grpcs:// and use grpc_pass", func() {
-		host := "backendprotocol.foo.com"
+		host := backendProtocolHost
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/backend-protocol": "GRPCS",
 		}
@@ -92,7 +94,7 @@ var _ = framework.DescribeAnnotation("backend-protocol", func() {
 	})
 
 	ginkgo.It("should set backend protocol to '' and use fastcgi_pass", func() {
-		host := "backendprotocol.foo.com"
+		host := backendProtocolHost
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/backend-protocol": "FCGI",
 		}

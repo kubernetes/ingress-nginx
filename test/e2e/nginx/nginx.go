@@ -100,7 +100,6 @@ var _ = framework.DescribeSetting("nginx-configuration", func() {
 	f := framework.NewSimpleFramework("nginxconfiguration")
 
 	ginkgo.It("start nginx with default configuration", func() {
-
 		f.NGINXWithConfigDeployment("default-nginx", cfgOK)
 		f.WaitForPod("app=default-nginx", 60*time.Second, false)
 		framework.Sleep(5 * time.Second)
@@ -113,20 +112,16 @@ var _ = framework.DescribeSetting("nginx-configuration", func() {
 	})
 
 	ginkgo.It("fails when using alias directive", func() {
-
 		f.NGINXDeployment("alias-nginx", cfgAlias, false)
 		// This should fail with a crashloopback because our NGINX does not have
 		// alias directive!
 		f.WaitForPod("app=alias-nginx", 60*time.Second, true)
-
 	})
 
 	ginkgo.It("fails when using root directive", func() {
-
 		f.NGINXDeployment("root-nginx", cfgRoot, false)
 		// This should fail with a crashloopback because our NGINX does not have
 		// root directive!
 		f.WaitForPod("app=root-nginx", 60*time.Second, true)
-
 	})
 })

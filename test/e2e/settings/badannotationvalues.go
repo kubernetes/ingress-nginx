@@ -34,6 +34,14 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 	})
 
 	ginkgo.It("[BAD_ANNOTATIONS] should drop an ingress if there is an invalid character in some annotation", func() {
+		f.SetNginxConfigMapData(map[string]string{
+			"allow-snippet-annotations": "true",
+		})
+		defer func() {
+			f.SetNginxConfigMapData(map[string]string{
+				"allow-snippet-annotations": "false",
+			})
+		}()
 		host := "invalid-value-test"
 
 		annotations := map[string]string{
@@ -65,6 +73,15 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 	})
 
 	ginkgo.It("[BAD_ANNOTATIONS] should drop an ingress if there is a forbidden word in some annotation", func() {
+		f.SetNginxConfigMapData(map[string]string{
+			"allow-snippet-annotations": "true",
+		})
+		defer func() {
+			f.SetNginxConfigMapData(map[string]string{
+				"allow-snippet-annotations": "false",
+			})
+		}()
+
 		host := "forbidden-value-test"
 
 		annotations := map[string]string{
@@ -100,7 +117,14 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 	})
 
 	ginkgo.It("[BAD_ANNOTATIONS] should allow an ingress if there is a default blocklist config in place", func() {
-
+		f.SetNginxConfigMapData(map[string]string{
+			"allow-snippet-annotations": "true",
+		})
+		defer func() {
+			f.SetNginxConfigMapData(map[string]string{
+				"allow-snippet-annotations": "false",
+			})
+		}()
 		hostValid := "custom-allowed-value-test"
 		annotationsValid := map[string]string{
 			"nginx.ingress.kubernetes.io/configuration-snippet": `
@@ -131,6 +155,14 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 	})
 
 	ginkgo.It("[BAD_ANNOTATIONS] should drop an ingress if there is a custom blocklist config in place and allow others to pass", func() {
+		f.SetNginxConfigMapData(map[string]string{
+			"allow-snippet-annotations": "true",
+		})
+		defer func() {
+			f.SetNginxConfigMapData(map[string]string{
+				"allow-snippet-annotations": "false",
+			})
+		}()
 		host := "custom-forbidden-value-test"
 
 		annotations := map[string]string{
@@ -159,6 +191,5 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusNotFound)
-
 	})
 })

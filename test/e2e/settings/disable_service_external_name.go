@@ -95,6 +95,5 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-service-external-name", f
 			WithHeader("Host", externalhost).
 			Expect().
 			StatusRange(httpexpect.Status5xx)
-
 	})
 })

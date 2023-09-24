@@ -86,17 +86,17 @@ func TestParseAnnotations(t *testing.T) {
 		"test parse a invalid net": {
 			net:       "ww",
 			expectErr: true,
-			errOut:    "the annotation does not contain a valid IP address or network: invalid CIDR address: ww",
+			errOut:    "annotation nginx.ingress.kubernetes.io/denylist-source-range contains invalid value",
 		},
 		"test parse a empty net": {
 			net:       "",
 			expectErr: true,
-			errOut:    "the annotation does not contain a valid IP address or network: invalid CIDR address: ",
+			errOut:    "the annotation nginx.ingress.kubernetes.io/denylist-source-range does not contain a valid value ()",
 		},
 		"test parse a malicious escaped string": {
 			net:       `10.0.0.0/8"rm /tmp",11.0.0.0/8`,
 			expectErr: true,
-			errOut:    `the annotation does not contain a valid IP address or network: invalid CIDR address: 10.0.0.0/8"rm /tmp"`,
+			errOut:    `annotation nginx.ingress.kubernetes.io/denylist-source-range contains invalid value`,
 		},
 		"test parse multiple valid cidr": {
 			net:        "2.2.2.2/32,1.1.1.1/32,3.3.3.0/24",
@@ -107,16 +107,16 @@ func TestParseAnnotations(t *testing.T) {
 
 	for testName, test := range tests {
 		data := map[string]string{}
-		data[parser.GetAnnotationWithPrefix("denylist-source-range")] = test.net
+		data[parser.GetAnnotationWithPrefix(ipDenylistAnnotation)] = test.net
 		ing.SetAnnotations(data)
 		p := NewParser(&resolver.Mock{})
 		i, err := p.Parse(ing)
-		if err != nil && !test.expectErr {
-			t.Errorf("%v:unexpected error: %v", testName, err)
+		if (err != nil) != test.expectErr {
+			t.Errorf("expected error: %t got error: %t err value: %s. %+v", test.expectErr, err != nil, err, i)
 		}
-		if test.expectErr {
+		if test.expectErr && err != nil {
 			if err.Error() != test.errOut {
-				t.Errorf("%v:expected error: %v but %v return", testName, test.errOut, err.Error())
+				t.Errorf("expected error %s but got %s", test.errOut, err)
 			}
 		}
 		if !test.expectErr {
@@ -163,12 +163,12 @@ func TestParseAnnotationsWithDefaultConfig(t *testing.T) {
 		"test parse a invalid net": {
 			net:       "ww",
 			expectErr: true,
-			errOut:    "the annotation does not contain a valid IP address or network: invalid CIDR address: ww",
+			errOut:    "annotation nginx.ingress.kubernetes.io/denylist-source-range contains invalid value",
 		},
 		"test parse a empty net": {
 			net:       "",
 			expectErr: true,
-			errOut:    "the annotation does not contain a valid IP address or network: invalid CIDR address: ",
+			errOut:    "the annotation nginx.ingress.kubernetes.io/denylist-source-range does not contain a valid value ()",
 		},
 		"test parse multiple valid cidr": {
 			net:        "2.2.2.2/32,1.1.1.1/32,3.3.3.0/24",
@@ -179,16 +179,16 @@ func TestParseAnnotationsWithDefaultConfig(t *testing.T) {
 
 	for testName, test := range tests {
 		data := map[string]string{}
-		data[parser.GetAnnotationWithPrefix("denylist-source-range")] = test.net
+		data[parser.GetAnnotationWithPrefix(ipDenylistAnnotation)] = test.net
 		ing.SetAnnotations(data)
 		p := NewParser(mockBackend)
 		i, err := p.Parse(ing)
-		if err != nil && !test.expectErr {
-			t.Errorf("%v:unexpected error: %v", testName, err)
+		if (err != nil) != test.expectErr {
+			t.Errorf("expected error: %t got error: %t err value: %s. %+v", test.expectErr, err != nil, err, i)
 		}
-		if test.expectErr {
+		if test.expectErr && err != nil {
 			if err.Error() != test.errOut {
-				t.Errorf("%v:expected error: %v but %v return", testName, test.errOut, err.Error())
+				t.Errorf("expected error %s but got %s", test.errOut, err)
 			}
 		}
 		if !test.expectErr {

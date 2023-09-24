@@ -29,20 +29,79 @@ import (
 )
 
 // DefaultAnnotationsPrefix defines the common prefix used in the nginx ingress controller
-const DefaultAnnotationsPrefix = "nginx.ingress.kubernetes.io"
+const (
+	DefaultAnnotationsPrefix          = "nginx.ingress.kubernetes.io"
+	DefaultEnableAnnotationValidation = true
+)
 
 var (
 	// AnnotationsPrefix is the mutable attribute that the controller explicitly refers to
 	AnnotationsPrefix = DefaultAnnotationsPrefix
+	// Enable is the mutable attribute for enabling or disabling the validation functions
+	EnableAnnotationValidation = DefaultEnableAnnotationValidation
 )
+
+// AnnotationGroup defines the group that this annotation may belong
+// eg.: Security, Snippets, Rewrite, etc
+type AnnotationGroup string
+
+// AnnotationScope defines which scope this annotation applies. May be to the whole
+// ingress, per location, etc
+type AnnotationScope string
+
+var (
+	AnnotationScopeLocation AnnotationScope = "location"
+	AnnotationScopeIngress  AnnotationScope = "ingress"
+)
+
+// AnnotationRisk is a subset of risk that an annotation may represent.
+// Based on the Risk, the admin will be able to allow or disallow users to set it
+// on their ingress objects
+type AnnotationRisk int
+
+type AnnotationFields map[string]AnnotationConfig
+
+// AnnotationConfig defines the configuration that a single annotation field
+// has, with the Validator and the documentation of this field.
+type AnnotationConfig struct {
+	// Validator defines a function to validate the annotation value
+	Validator AnnotationValidator
+	// Documentation defines a user facing documentation for this annotation. This
+	// field will be used to auto generate documentations
+	Documentation string
+	// Risk defines a risk of this annotation being exposed to the user. Annotations
+	// with bool fields, or to set timeout are usually low risk. Annotations that allows
+	// string input without a limited set of options may represent a high risk
+	Risk AnnotationRisk
+
+	// Scope defines which scope this annotation applies, may be to location, to an Ingress object, etc
+	Scope AnnotationScope
+
+	// AnnotationAliases defines other names this annotation may have.
+	AnnotationAliases []string
+}
+
+// Annotation defines an annotation feature an Ingress may have.
+// It should contain the internal resolver, and all the annotations
+// with configs and Validators that should be used for each Annotation
+type Annotation struct {
+	// Annotations contains all the annotations that belong to this feature
+	Annotations AnnotationFields
+	// Group defines which annotation group this feature belongs to
+	Group AnnotationGroup
+}
 
 // IngressAnnotation has a method to parse annotations located in Ingress
 type IngressAnnotation interface {
 	Parse(ing *networking.Ingress) (interface{}, error)
+	GetDocumentation() AnnotationFields
+	Validate(anns map[string]string) error
 }
 
 type ingAnnotations map[string]string
 
+// TODO: We already parse all of this on checkAnnotation and can just do a parse over the
+// value
 func (a ingAnnotations) parseBool(name string) (bool, error) {
 	val, ok := a[name]
 	if ok {
@@ -59,7 +118,7 @@ func (a ingAnnotations) parseString(name string) (string, error) {
 	val, ok := a[name]
 	if ok {
 		s := normalizeString(val)
-		if len(s) == 0 {
+		if s == "" {
 			return "", errors.NewInvalidAnnotationContent(name, val)
 		}
 
@@ -92,21 +151,9 @@ func (a ingAnnotations) parseFloat32(name string) (float32, error) {
 	return 0, errors.ErrMissingAnnotations
 }
 
-func checkAnnotation(name string, ing *networking.Ingress) error {
-	if ing == nil || len(ing.GetAnnotations()) == 0 {
-		return errors.ErrMissingAnnotations
-	}
-	if name == "" {
-		return errors.ErrInvalidAnnotationName
-	}
-
-	return nil
-}
-
 // GetBoolAnnotation extracts a boolean from an Ingress annotation
-func GetBoolAnnotation(name string, ing *networking.Ingress) (bool, error) {
-	v := GetAnnotationWithPrefix(name)
-	err := checkAnnotation(v, ing)
+func GetBoolAnnotation(name string, ing *networking.Ingress, fields AnnotationFields) (bool, error) {
+	v, err := checkAnnotation(name, ing, fields)
 	if err != nil {
 		return false, err
 	}
@@ -114,9 +161,8 @@ func GetBoolAnnotation(name string, ing *networking.Ingress) (bool, error) {
 }
 
 // GetStringAnnotation extracts a string from an Ingress annotation
-func GetStringAnnotation(name string, ing *networking.Ingress) (string, error) {
-	v := GetAnnotationWithPrefix(name)
-	err := checkAnnotation(v, ing)
+func GetStringAnnotation(name string, ing *networking.Ingress, fields AnnotationFields) (string, error) {
+	v, err := checkAnnotation(name, ing, fields)
 	if err != nil {
 		return "", err
 	}
@@ -125,9 +171,8 @@ func GetStringAnnotation(name string, ing *networking.Ingress) (string, error) {
 }
 
 // GetIntAnnotation extracts an int from an Ingress annotation
-func GetIntAnnotation(name string, ing *networking.Ingress) (int, error) {
-	v := GetAnnotationWithPrefix(name)
-	err := checkAnnotation(v, ing)
+func GetIntAnnotation(name string, ing *networking.Ingress, fields AnnotationFields) (int, error) {
+	v, err := checkAnnotation(name, ing, fields)
 	if err != nil {
 		return 0, err
 	}
@@ -135,9 +180,8 @@ func GetIntAnnotation(name string, ing *networking.Ingress) (int, error) {
 }
 
 // GetFloatAnnotation extracts a float32 from an Ingress annotation
-func GetFloatAnnotation(name string, ing *networking.Ingress) (float32, error) {
-	v := GetAnnotationWithPrefix(name)
-	err := checkAnnotation(v, ing)
+func GetFloatAnnotation(name string, ing *networking.Ingress, fields AnnotationFields) (float32, error) {
+	v, err := checkAnnotation(name, ing, fields)
 	if err != nil {
 		return 0, err
 	}
@@ -147,6 +191,23 @@ func GetFloatAnnotation(name string, ing *networking.Ingress) (float32, error) {
 // GetAnnotationWithPrefix returns the prefix of ingress annotations
 func GetAnnotationWithPrefix(suffix string) string {
 	return fmt.Sprintf("%v/%v", AnnotationsPrefix, suffix)
+}
+
+func TrimAnnotationPrefix(annotation string) string {
+	return strings.TrimPrefix(annotation, AnnotationsPrefix+"/")
+}
+
+func StringRiskToRisk(risk string) AnnotationRisk {
+	switch strings.ToLower(risk) {
+	case "critical":
+		return AnnotationRiskCritical
+	case "high":
+		return AnnotationRiskHigh
+	case "medium":
+		return AnnotationRiskMedium
+	default:
+		return AnnotationRiskLow
+	}
 }
 
 func normalizeString(input string) string {
@@ -187,13 +248,14 @@ func StringToURL(input string) (*url.URL, error) {
 		return nil, fmt.Errorf("%v is not a valid URL: %v", input, err)
 	}
 
-	if parsedURL.Scheme == "" {
+	switch {
+	case parsedURL.Scheme == "":
 		return nil, fmt.Errorf("url scheme is empty")
-	} else if parsedURL.Host == "" {
+	case parsedURL.Host == "":
 		return nil, fmt.Errorf("url host is empty")
-	} else if strings.Contains(parsedURL.Host, "..") {
+	case strings.Contains(parsedURL.Host, ".."):
 		return nil, fmt.Errorf("invalid url host")
+	default:
+		return parsedURL, nil
 	}
-
-	return parsedURL, nil
 }

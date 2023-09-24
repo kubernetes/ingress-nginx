@@ -27,6 +27,8 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
+const proxySSLHost = "proxyssl.foo.com"
+
 var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 	f := framework.NewDefaultFramework("proxyssl")
 
@@ -35,7 +37,7 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 	})
 
 	ginkgo.It("should set valid proxy-ssl-secret", func() {
-		host := "proxyssl.foo.com"
+		host := proxySSLHost
 		annotations := make(map[string]string)
 		annotations["nginx.ingress.kubernetes.io/proxy-ssl-secret"] = f.Namespace + "/" + host
 
@@ -62,7 +64,7 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 	})
 
 	ginkgo.It("should set valid proxy-ssl-secret, proxy-ssl-verify to on, proxy-ssl-verify-depth to 2, and proxy-ssl-server-name to on", func() {
-		host := "proxyssl.foo.com"
+		host := proxySSLHost
 		annotations := make(map[string]string)
 		annotations["nginx.ingress.kubernetes.io/proxy-ssl-secret"] = f.Namespace + "/" + host
 		annotations["nginx.ingress.kubernetes.io/proxy-ssl-verify"] = "on"
@@ -90,9 +92,9 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 			Expect().
 			Status(http.StatusOK)
 	})
-
+	//nolint:dupl // Ignore dupl errors for similar test case
 	ginkgo.It("should set valid proxy-ssl-secret, proxy-ssl-ciphers to HIGH:!AES", func() {
-		host := "proxyssl.foo.com"
+		host := proxySSLHost
 		annotations := make(map[string]string)
 		annotations["nginx.ingress.kubernetes.io/proxy-ssl-secret"] = f.Namespace + "/" + host
 		annotations["nginx.ingress.kubernetes.io/proxy-ssl-ciphers"] = "HIGH:!AES"
@@ -118,9 +120,9 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 			Expect().
 			Status(http.StatusOK)
 	})
-
+	//nolint:dupl // Ignore dupl errors for similar test case
 	ginkgo.It("should set valid proxy-ssl-secret, proxy-ssl-protocols", func() {
-		host := "proxyssl.foo.com"
+		host := proxySSLHost
 		annotations := make(map[string]string)
 		annotations["nginx.ingress.kubernetes.io/proxy-ssl-secret"] = f.Namespace + "/" + host
 		annotations["nginx.ingress.kubernetes.io/proxy-ssl-protocols"] = "TLSv1.2 TLSv1.3"
@@ -195,7 +197,6 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 				strings.Contains(server, "proxy_ssl_certificate_key"))
 		})
 	})
-
 })
 
 func assertProxySSL(f *framework.Framework, host, sslName, ciphers, protocols, verify string, depth int, proxySSLServerName string) {

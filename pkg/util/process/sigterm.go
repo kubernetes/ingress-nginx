@@ -29,7 +29,7 @@ type exiter func(code int)
 
 // HandleSigterm receives a ProcessController interface and deals with
 // the graceful shutdown
-func HandleSigterm(ngx ProcessController, delay int, exit exiter) {
+func HandleSigterm(ngx Controller, delay int, exit exiter) {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGTERM)
 	<-signalChan

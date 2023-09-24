@@ -38,7 +38,6 @@ var _ = framework.IngressNginxDescribe("[Security] Pod Security Policies with vo
 	f := framework.NewDefaultFramework("pod-security-policies-volumes")
 
 	ginkgo.It("should be running with a Pod Security Policy", func() {
-
 		k8sversion, err := f.KubeClientSet.Discovery().ServerVersion()
 		if err != nil {
 			assert.Nil(ginkgo.GinkgoT(), err, "getting version")

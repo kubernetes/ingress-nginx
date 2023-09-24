@@ -17,7 +17,6 @@ limitations under the License.
 package authreq
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -113,7 +112,7 @@ func TestAnnotations(t *testing.T) {
 		data[parser.GetAnnotationWithPrefix("auth-url")] = test.url
 		data[parser.GetAnnotationWithPrefix("auth-signin")] = test.signinURL
 		data[parser.GetAnnotationWithPrefix("auth-signin-redirect-param")] = test.signinURLRedirectParam
-		data[parser.GetAnnotationWithPrefix("auth-method")] = fmt.Sprintf("%v", test.method)
+		data[parser.GetAnnotationWithPrefix("auth-method")] = test.method
 		data[parser.GetAnnotationWithPrefix("auth-request-redirect")] = test.requestRedirect
 		data[parser.GetAnnotationWithPrefix("auth-snippet")] = test.authSnippet
 		data[parser.GetAnnotationWithPrefix("auth-cache-key")] = test.authCacheKey
@@ -192,11 +191,13 @@ func TestHeaderAnnotations(t *testing.T) {
 		i, err := NewParser(&resolver.Mock{}).Parse(ing)
 		if test.expErr {
 			if err == nil {
-				t.Error("expected error but retuned nil")
+				t.Errorf("%v expected error but retuned nil", test.title)
 			}
 			continue
 		}
-
+		if err != nil {
+			t.Errorf("no error was expected but %v happened in %s", err, test.title)
+		}
 		u, ok := i.(*Config)
 		if !ok {
 			t.Errorf("%v: expected an External type", test.title)
@@ -266,28 +267,31 @@ func TestKeepaliveAnnotations(t *testing.T) {
 		title                string
 		url                  string
 		keepaliveConnections string
+		keepaliveShareVars   string
 		keepaliveRequests    string
 		keepaliveTimeout     string
 		expectedConnections  int
+		expectedShareVars    bool
 		expectedRequests     int
 		expectedTimeout      int
 	}{
-		{"all set", "http://goog.url", "5", "500", "50", 5, 500, 50},
-		{"no annotation", "http://goog.url", "", "", "", defaultKeepaliveConnections, defaultKeepaliveRequests, defaultKeepaliveTimeout},
-		{"default for connections", "http://goog.url", "x", "500", "50", defaultKeepaliveConnections, 500, 50},
-		{"default for requests", "http://goog.url", "5", "x", "50", 5, defaultKeepaliveRequests, 50},
-		{"default for invalid timeout", "http://goog.url", "5", "500", "x", 5, 500, defaultKeepaliveTimeout},
-		{"variable in host", "http://$host:5000/a/b", "5", "", "", 0, defaultKeepaliveRequests, defaultKeepaliveTimeout},
-		{"variable in path", "http://goog.url:5000/$path", "5", "", "", 5, defaultKeepaliveRequests, defaultKeepaliveTimeout},
-		{"negative connections", "http://goog.url", "-2", "", "", 0, defaultKeepaliveRequests, defaultKeepaliveTimeout},
-		{"negative requests", "http://goog.url", "5", "-1", "", 0, -1, defaultKeepaliveTimeout},
-		{"negative timeout", "http://goog.url", "5", "", "-1", 0, defaultKeepaliveRequests, -1},
-		{"negative request and timeout", "http://goog.url", "5", "-2", "-3", 0, -2, -3},
+		{"all set", "http://goog.url", "5", "false", "500", "50", 5, false, 500, 50},
+		{"no annotation", "http://goog.url", "", "", "", "", defaultKeepaliveConnections, defaultKeepaliveShareVars, defaultKeepaliveRequests, defaultKeepaliveTimeout},
+		{"default for connections", "http://goog.url", "x", "true", "500", "50", defaultKeepaliveConnections, true, 500, 50},
+		{"default for requests", "http://goog.url", "5", "x", "dummy", "50", 5, defaultKeepaliveShareVars, defaultKeepaliveRequests, 50},
+		{"default for invalid timeout", "http://goog.url", "5", "t", "500", "x", 5, true, 500, defaultKeepaliveTimeout},
+		{"variable in host", "http://$host:5000/a/b", "5", "1", "", "", 0, true, defaultKeepaliveRequests, defaultKeepaliveTimeout},
+		{"variable in path", "http://goog.url:5000/$path", "5", "t", "", "", 5, true, defaultKeepaliveRequests, defaultKeepaliveTimeout},
+		{"negative connections", "http://goog.url", "-2", "f", "", "", 0, false, defaultKeepaliveRequests, defaultKeepaliveTimeout},
+		{"negative requests", "http://goog.url", "5", "True", "-1", "", 0, true, -1, defaultKeepaliveTimeout},
+		{"negative timeout", "http://goog.url", "5", "0", "", "-1", 0, false, defaultKeepaliveRequests, -1},
+		{"negative request and timeout", "http://goog.url", "5", "False", "-2", "-3", 0, false, -2, -3},
 	}
 
 	for _, test := range tests {
 		data[parser.GetAnnotationWithPrefix("auth-url")] = test.url
 		data[parser.GetAnnotationWithPrefix("auth-keepalive")] = test.keepaliveConnections
+		data[parser.GetAnnotationWithPrefix("auth-keepalive-share-vars")] = test.keepaliveShareVars
 		data[parser.GetAnnotationWithPrefix("auth-keepalive-timeout")] = test.keepaliveTimeout
 		data[parser.GetAnnotationWithPrefix("auth-keepalive-requests")] = test.keepaliveRequests
 
@@ -311,6 +315,10 @@ func TestKeepaliveAnnotations(t *testing.T) {
 			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.expectedConnections, u.KeepaliveConnections)
 		}
 
+		if u.KeepaliveShareVars != test.expectedShareVars {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.expectedShareVars, u.KeepaliveShareVars)
+		}
+
 		if u.KeepaliveRequests != test.expectedRequests {
 			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", test.title, test.expectedRequests, u.KeepaliveRequests)
 		}
@@ -322,7 +330,6 @@ func TestKeepaliveAnnotations(t *testing.T) {
 }
 
 func TestParseStringToCacheDurations(t *testing.T) {
-
 	tests := []struct {
 		title             string
 		duration          string
@@ -337,7 +344,6 @@ func TestParseStringToCacheDurations(t *testing.T) {
 	}
 
 	for _, test := range tests {
-
 		dur, err := ParseStringToCacheDurations(test.duration)
 		if test.expErr {
 			if err == nil {

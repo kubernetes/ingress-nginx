@@ -45,14 +45,16 @@ if ! command -v helm &> /dev/null; then
   exit 1
 fi
 
+function ver { printf "%d%03d%03d" $(echo "$1" | tr '.' ' '); }
+
 HELM_VERSION=$(helm version 2>&1 | cut -f1 -d"," | grep -oE '[0-9]+\.[0-9]+\.[0-9]+') || true
 echo $HELM_VERSION
-if [[ ${HELM_VERSION} -lt 3.10.0 ]]; then
+if [[ $(ver $HELM_VERSION) -lt $(ver "3.10.0") ]]; then
   echo "Please upgrade helm to v3.10.0 or higher"
   exit 1
 fi
 
-KUBE_CLIENT_VERSION=$(kubectl version --client --short 2>/dev/null | grep Client | awk '{print $3}' | cut -d. -f2) || true
+KUBE_CLIENT_VERSION=$(kubectl version --client -oyaml 2>/dev/null | grep "minor:" | awk '{print $2}' | tr -d '"') || true
 if [[ ${KUBE_CLIENT_VERSION} -lt 24 ]]; then
   echo "Please update kubectl to 1.24.2 or higher"
   exit 1

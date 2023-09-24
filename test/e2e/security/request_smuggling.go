@@ -50,9 +50,9 @@ server {
 
 		f.UpdateNginxConfigMapData("http-snippet", snippet)
 
-		//TODO: currently using a self hosted HTTPBun instance results in a 499, we
-		//should move away from using httpbun.com once we have the httpbun
-		//deployment as part of the framework
+		// TODO: currently using a self hosted HTTPBun instance results in a 499, we
+		// should move away from using httpbun.com once we have the httpbun
+		// deployment as part of the framework
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, map[string]string{
 			"nginx.ingress.kubernetes.io/auth-signin": "https://httpbun.com/bearer/d4bcba7a-0def-4a31-91a7-47e420adf44b",
 			"nginx.ingress.kubernetes.io/auth-url":    "https://httpbun.com/basic-auth/user/passwd",
@@ -91,7 +91,7 @@ func smugglingRequest(host, addr string, port int) (string, error) {
 	// wait for /_hidden/index.html response
 	framework.Sleep()
 
-	var buf = make([]byte, 1024)
+	buf := make([]byte, 1024)
 	r := bufio.NewReader(conn)
 	_, err = r.Read(buf)
 	if err != nil {

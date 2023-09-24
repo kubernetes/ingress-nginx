@@ -135,11 +135,13 @@ func (nc NginxCommand) ExecCommand(args ...string) *exec.Cmd {
 
 	cmdArgs = append(cmdArgs, "-c", cfgPath)
 	cmdArgs = append(cmdArgs, args...)
+	//nolint:gosec // Ignore G204 error
 	return exec.Command(nc.Binary, cmdArgs...)
 }
 
 // Test checks if config file is a syntax valid nginx configuration
 func (nc NginxCommand) Test(cfg string) ([]byte, error) {
+	//nolint:gosec // Ignore G204 error
 	return exec.Command(nc.Binary, "-c", cfg, "-t").CombinedOutput()
 }
 

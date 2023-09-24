@@ -18,7 +18,6 @@ package status
 
 import (
 	"context"
-	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -33,6 +32,8 @@ import (
 	"k8s.io/ingress-nginx/internal/task"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 )
+
+const localhost = "127.0.0.1"
 
 func buildLoadBalancerIngressByIP() []networking.IngressLoadBalancerIngress {
 	return []networking.IngressLoadBalancerIngress{
@@ -126,17 +127,6 @@ func buildSimpleClientSet() *testclient.Clientset {
 			// This is commented out as the ServiceStatus.LoadBalancer field expects a LoadBalancerStatus object
 			// which is incompatible with the current Ingress struct which expects a IngressLoadBalancerStatus object
 			// TODO: update this service when the ServiceStatus struct gets updated
-			//{
-			//	ObjectMeta: metav1.ObjectMeta{
-			//		Name:      "foo",
-			//		Namespace: apiv1.NamespaceDefault,
-			//	},
-			//	Status: apiv1.ServiceStatus{
-			//		LoadBalancer: apiv1.LoadBalancerStatus{
-			//			Ingress: buildLoadBalancerIngressByIP(),
-			//		},
-			//	},
-			//},
 			{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "foo_non_exist",
@@ -185,7 +175,8 @@ func buildSimpleClientSet() *testclient.Clientset {
 					Name:      "ingress-controller-leader",
 					Namespace: apiv1.NamespaceDefault,
 				},
-			}}},
+			},
+		}},
 		&networking.IngressList{Items: buildExtensionsIngresses()},
 	)
 }
@@ -245,30 +236,33 @@ func buildExtensionsIngresses() []networking.Ingress {
 	}
 }
 
-type testIngressLister struct {
-}
+type testIngressLister struct{}
 
 func (til *testIngressLister) ListIngresses() []*ingress.Ingress {
 	var ingresses []*ingress.Ingress
-	ingresses = append(ingresses, &ingress.Ingress{
-		Ingress: networking.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "foo_ingress_non_01",
-				Namespace: apiv1.NamespaceDefault,
-			}}})
-
-	ingresses = append(ingresses, &ingress.Ingress{
-		Ingress: networking.Ingress{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "foo_ingress_1",
-				Namespace: apiv1.NamespaceDefault,
-			},
-			Status: networking.IngressStatus{
-				LoadBalancer: networking.IngressLoadBalancerStatus{
-					Ingress: buildLoadBalancerIngressByIP(),
+	ingresses = append(ingresses,
+		&ingress.Ingress{
+			Ingress: networking.Ingress{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "foo_ingress_non_01",
+					Namespace: apiv1.NamespaceDefault,
 				},
 			},
-		}})
+		},
+		&ingress.Ingress{
+			Ingress: networking.Ingress{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "foo_ingress_1",
+					Namespace: apiv1.NamespaceDefault,
+				},
+				Status: networking.IngressStatus{
+					LoadBalancer: networking.IngressLoadBalancerStatus{
+						Ingress: buildLoadBalancerIngressByIP(),
+					},
+				},
+			},
+		},
+	)
 
 	return ingresses
 }
@@ -290,8 +284,8 @@ func buildStatusSync() statusSync {
 
 func TestStatusActions(t *testing.T) {
 	// make sure election can be created
-	os.Setenv("POD_NAME", "foo1")
-	os.Setenv("POD_NAMESPACE", apiv1.NamespaceDefault)
+	t.Setenv("POD_NAME", "foo1")
+	t.Setenv("POD_NAMESPACE", apiv1.NamespaceDefault)
 	c := Config{
 		Client:                 buildSimpleClientSet(),
 		PublishService:         "",
@@ -315,7 +309,10 @@ func TestStatusActions(t *testing.T) {
 		t.Fatalf("expected a valid Sync")
 	}
 
-	fk := fkSync.(statusSync)
+	fk, ok := fkSync.(*statusSync)
+	if !ok {
+		t.Errorf("unexpected type: %T", fkSync)
+	}
 
 	// start it and wait for the election and syn actions
 	stopCh := make(chan struct{})
@@ -366,7 +363,7 @@ func TestStatusActions(t *testing.T) {
 	}
 }
 
-func TestCallback(t *testing.T) {
+func TestCallback(_ *testing.T) {
 	buildStatusSync()
 }
 
@@ -375,7 +372,6 @@ func TestKeyfunc(t *testing.T) {
 
 	i := "foo_base_pod"
 	r, err := fk.keyfunc(i)
-
 	if err != nil {
 		t.Fatalf("unexpected error")
 	}
@@ -392,33 +388,35 @@ func TestRunningAddressesWithPublishService(t *testing.T) {
 	}{
 		"service type ClusterIP": {
 			testclient.NewSimpleClientset(
-				&apiv1.PodList{Items: []apiv1.Pod{
-					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      "foo",
-							Namespace: apiv1.NamespaceDefault,
-						},
-						Spec: apiv1.PodSpec{
-							NodeName: "foo_node",
-						},
-						Status: apiv1.PodStatus{
-							Phase: apiv1.PodRunning,
-						},
-					},
-				},
-				},
-				&apiv1.ServiceList{Items: []apiv1.Service{
-					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      "foo",
-							Namespace: apiv1.NamespaceDefault,
-						},
-						Spec: apiv1.ServiceSpec{
-							Type:      apiv1.ServiceTypeClusterIP,
-							ClusterIP: "1.1.1.1",
+				&apiv1.PodList{
+					Items: []apiv1.Pod{
+						{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "foo",
+								Namespace: apiv1.NamespaceDefault,
+							},
+							Spec: apiv1.PodSpec{
+								NodeName: "foo_node",
+							},
+							Status: apiv1.PodStatus{
+								Phase: apiv1.PodRunning,
+							},
 						},
 					},
 				},
+				&apiv1.ServiceList{
+					Items: []apiv1.Service{
+						{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "foo",
+								Namespace: apiv1.NamespaceDefault,
+							},
+							Spec: apiv1.ServiceSpec{
+								Type:      apiv1.ServiceTypeClusterIP,
+								ClusterIP: "1.1.1.1",
+							},
+						},
+					},
 				},
 			),
 			[]networking.IngressLoadBalancerIngress{
@@ -428,18 +426,19 @@ func TestRunningAddressesWithPublishService(t *testing.T) {
 		},
 		"service type NodePort": {
 			testclient.NewSimpleClientset(
-				&apiv1.ServiceList{Items: []apiv1.Service{
-					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      "foo",
-							Namespace: apiv1.NamespaceDefault,
-						},
-						Spec: apiv1.ServiceSpec{
-							Type:      apiv1.ServiceTypeNodePort,
-							ClusterIP: "1.1.1.1",
+				&apiv1.ServiceList{
+					Items: []apiv1.Service{
+						{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "foo",
+								Namespace: apiv1.NamespaceDefault,
+							},
+							Spec: apiv1.ServiceSpec{
+								Type:      apiv1.ServiceTypeNodePort,
+								ClusterIP: "1.1.1.1",
+							},
 						},
 					},
-				},
 				},
 			),
 			[]networking.IngressLoadBalancerIngress{
@@ -449,18 +448,19 @@ func TestRunningAddressesWithPublishService(t *testing.T) {
 		},
 		"service type ExternalName": {
 			testclient.NewSimpleClientset(
-				&apiv1.ServiceList{Items: []apiv1.Service{
-					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      "foo",
-							Namespace: apiv1.NamespaceDefault,
-						},
-						Spec: apiv1.ServiceSpec{
-							Type:         apiv1.ServiceTypeExternalName,
-							ExternalName: "foo.bar",
+				&apiv1.ServiceList{
+					Items: []apiv1.Service{
+						{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "foo",
+								Namespace: apiv1.NamespaceDefault,
+							},
+							Spec: apiv1.ServiceSpec{
+								Type:         apiv1.ServiceTypeExternalName,
+								ExternalName: "foo.bar",
+							},
 						},
 					},
-				},
 				},
 			),
 			[]networking.IngressLoadBalancerIngress{
@@ -470,34 +470,35 @@ func TestRunningAddressesWithPublishService(t *testing.T) {
 		},
 		"service type LoadBalancer": {
 			testclient.NewSimpleClientset(
-				&apiv1.ServiceList{Items: []apiv1.Service{
-					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      "foo",
-							Namespace: apiv1.NamespaceDefault,
-						},
-						Spec: apiv1.ServiceSpec{
-							Type: apiv1.ServiceTypeLoadBalancer,
-						},
-						Status: apiv1.ServiceStatus{
-							LoadBalancer: apiv1.LoadBalancerStatus{
-								Ingress: []apiv1.LoadBalancerIngress{
-									{
-										IP: "10.0.0.1",
-									},
-									{
-										IP:       "",
-										Hostname: "foo",
-									},
-									{
-										IP:       "10.0.0.2",
-										Hostname: "10-0-0-2.cloudprovider.example.net",
+				&apiv1.ServiceList{
+					Items: []apiv1.Service{
+						{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "foo",
+								Namespace: apiv1.NamespaceDefault,
+							},
+							Spec: apiv1.ServiceSpec{
+								Type: apiv1.ServiceTypeLoadBalancer,
+							},
+							Status: apiv1.ServiceStatus{
+								LoadBalancer: apiv1.LoadBalancerStatus{
+									Ingress: []apiv1.LoadBalancerIngress{
+										{
+											IP: "10.0.0.1",
+										},
+										{
+											IP:       "",
+											Hostname: "foo",
+										},
+										{
+											IP:       "10.0.0.2",
+											Hostname: "10-0-0-2.cloudprovider.example.net",
+										},
 									},
 								},
 							},
 						},
 					},
-				},
 				},
 			),
 			[]networking.IngressLoadBalancerIngress{
@@ -512,27 +513,28 @@ func TestRunningAddressesWithPublishService(t *testing.T) {
 		},
 		"service type LoadBalancer with same externalIP and ingress IP": {
 			testclient.NewSimpleClientset(
-				&apiv1.ServiceList{Items: []apiv1.Service{
-					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      "foo",
-							Namespace: apiv1.NamespaceDefault,
-						},
-						Spec: apiv1.ServiceSpec{
-							Type:        apiv1.ServiceTypeLoadBalancer,
-							ExternalIPs: []string{"10.0.0.1"},
-						},
-						Status: apiv1.ServiceStatus{
-							LoadBalancer: apiv1.LoadBalancerStatus{
-								Ingress: []apiv1.LoadBalancerIngress{
-									{
-										IP: "10.0.0.1",
+				&apiv1.ServiceList{
+					Items: []apiv1.Service{
+						{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "foo",
+								Namespace: apiv1.NamespaceDefault,
+							},
+							Spec: apiv1.ServiceSpec{
+								Type:        apiv1.ServiceTypeLoadBalancer,
+								ExternalIPs: []string{"10.0.0.1"},
+							},
+							Status: apiv1.ServiceStatus{
+								LoadBalancer: apiv1.LoadBalancerStatus{
+									Ingress: []apiv1.LoadBalancerIngress{
+										{
+											IP: "10.0.0.1",
+										},
 									},
 								},
 							},
 						},
 					},
-				},
 				},
 			),
 			[]networking.IngressLoadBalancerIngress{
@@ -542,14 +544,15 @@ func TestRunningAddressesWithPublishService(t *testing.T) {
 		},
 		"invalid service type": {
 			testclient.NewSimpleClientset(
-				&apiv1.ServiceList{Items: []apiv1.Service{
-					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      "foo",
-							Namespace: apiv1.NamespaceDefault,
+				&apiv1.ServiceList{
+					Items: []apiv1.Service{
+						{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "foo",
+								Namespace: apiv1.NamespaceDefault,
+							},
 						},
 					},
-				},
 				},
 			),
 			nil,
@@ -559,7 +562,6 @@ func TestRunningAddressesWithPublishService(t *testing.T) {
 
 	for title, tc := range testCases {
 		t.Run(title, func(t *testing.T) {
-
 			fk := buildStatusSync()
 			fk.Config.Client = tc.fakeClient
 
@@ -587,7 +589,11 @@ func TestRunningAddressesWithPods(t *testing.T) {
 	fk := buildStatusSync()
 	fk.PublishService = ""
 
-	r, _ := fk.runningAddresses()
+	r, err := fk.runningAddresses()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
 	if r == nil {
 		t.Fatalf("returned nil but expected valid []networking.IngressLoadBalancerIngress")
 	}
@@ -603,9 +609,12 @@ func TestRunningAddressesWithPods(t *testing.T) {
 
 func TestRunningAddressesWithPublishStatusAddress(t *testing.T) {
 	fk := buildStatusSync()
-	fk.PublishStatusAddress = "127.0.0.1"
+	fk.PublishStatusAddress = localhost
 
-	ra, _ := fk.runningAddresses()
+	ra, err := fk.runningAddresses()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	if ra == nil {
 		t.Fatalf("returned nil but expected valid []networking.IngressLoadBalancerIngress")
 	}
@@ -614,8 +623,8 @@ func TestRunningAddressesWithPublishStatusAddress(t *testing.T) {
 		t.Errorf("returned %v but expected %v", rl, 1)
 	}
 	rv := ra[0]
-	if rv.IP != "127.0.0.1" {
-		t.Errorf("returned %v but expected %v", rv, networking.IngressLoadBalancerIngress{IP: "127.0.0.1"})
+	if rv.IP != localhost {
+		t.Errorf("returned %v but expected %v", rv, networking.IngressLoadBalancerIngress{IP: localhost})
 	}
 }
 
@@ -623,7 +632,10 @@ func TestRunningAddressesWithPublishStatusAddresses(t *testing.T) {
 	fk := buildStatusSync()
 	fk.PublishStatusAddress = "127.0.0.1,1.1.1.1"
 
-	ra, _ := fk.runningAddresses()
+	ra, err := fk.runningAddresses()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	if ra == nil {
 		t.Fatalf("returned nil but expected valid []networking.IngressLoadBalancerIngress")
 	}
@@ -633,8 +645,8 @@ func TestRunningAddressesWithPublishStatusAddresses(t *testing.T) {
 	}
 	rv := ra[0]
 	rv2 := ra[1]
-	if rv.IP != "127.0.0.1" {
-		t.Errorf("returned %v but expected %v", rv, networking.IngressLoadBalancerIngress{IP: "127.0.0.1"})
+	if rv.IP != localhost {
+		t.Errorf("returned %v but expected %v", rv, networking.IngressLoadBalancerIngress{IP: localhost})
 	}
 	if rv2.IP != "1.1.1.1" {
 		t.Errorf("returned %v but expected %v", rv2, networking.IngressLoadBalancerIngress{IP: "1.1.1.1"})
@@ -645,7 +657,10 @@ func TestRunningAddressesWithPublishStatusAddressesAndSpaces(t *testing.T) {
 	fk := buildStatusSync()
 	fk.PublishStatusAddress = "127.0.0.1,  1.1.1.1"
 
-	ra, _ := fk.runningAddresses()
+	ra, err := fk.runningAddresses()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	if ra == nil {
 		t.Fatalf("returned nil but expected valid []networking.IngressLoadBalancerIngresst")
 	}
@@ -655,8 +670,8 @@ func TestRunningAddressesWithPublishStatusAddressesAndSpaces(t *testing.T) {
 	}
 	rv := ra[0]
 	rv2 := ra[1]
-	if rv.IP != "127.0.0.1" {
-		t.Errorf("returned %v but expected %v", rv, networking.IngressLoadBalancerIngress{IP: "127.0.0.1"})
+	if rv.IP != localhost {
+		t.Errorf("returned %v but expected %v", rv, networking.IngressLoadBalancerIngress{IP: localhost})
 	}
 	if rv2.IP != "1.1.1.1" {
 		t.Errorf("returned %v but expected %v", rv2, networking.IngressLoadBalancerIngress{IP: "1.1.1.1"})

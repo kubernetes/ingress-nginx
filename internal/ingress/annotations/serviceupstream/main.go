@@ -24,23 +24,52 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
+const (
+	serviceUpstreamAnnotation = "service-upstream"
+)
+
+var serviceUpstreamAnnotations = parser.Annotation{
+	Group: "backend",
+	Annotations: parser.AnnotationFields{
+		serviceUpstreamAnnotation: {
+			Validator:     parser.ValidateBool,
+			Scope:         parser.AnnotationScopeIngress,
+			Risk:          parser.AnnotationRiskLow, // Critical, this annotation is not validated at all and allows arbitrary configutations
+			Documentation: `This annotation makes NGINX use Service's Cluster IP and Port instead of Endpoints as the backend endpoints`,
+		},
+	},
+}
+
 type serviceUpstream struct {
-	r resolver.Resolver
+	r                resolver.Resolver
+	annotationConfig parser.Annotation
 }
 
 // NewParser creates a new serviceUpstream annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return serviceUpstream{r}
+	return serviceUpstream{
+		r:                r,
+		annotationConfig: serviceUpstreamAnnotations,
+	}
 }
 
 func (s serviceUpstream) Parse(ing *networking.Ingress) (interface{}, error) {
 	defBackend := s.r.GetDefaultBackend()
 
-	val, err := parser.GetBoolAnnotation("service-upstream", ing)
+	val, err := parser.GetBoolAnnotation(serviceUpstreamAnnotation, ing, s.annotationConfig.Annotations)
 	// A missing annotation is not a problem, just use the default
 	if err == errors.ErrMissingAnnotations {
 		return defBackend.ServiceUpstream, nil
 	}
 
 	return val, nil
+}
+
+func (s serviceUpstream) GetDocumentation() parser.AnnotationFields {
+	return s.annotationConfig.Annotations
+}
+
+func (s serviceUpstream) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(s.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+	return parser.CheckAnnotationRisk(anns, maxrisk, serviceUpstreamAnnotations.Annotations)
 }

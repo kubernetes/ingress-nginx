@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+//nolint:dupl // Ignore dupl errors for similar test case
 package settings
 
 import (
@@ -64,5 +65,4 @@ var _ = framework.DescribeSetting("proxy-connect-timeout", func() {
 				return !strings.Contains(server, fmt.Sprintf("proxy_connect_timeout %ss;", proxyConnectTimeout))
 			})
 	})
-
 })

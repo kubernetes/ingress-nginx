@@ -24,19 +24,19 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.DescribeAnnotation("whitelist-source-range", func() {
-	f := framework.NewDefaultFramework("ipwhitelist")
+var _ = framework.DescribeAnnotation("allowlist-source-range", func() {
+	f := framework.NewDefaultFramework("ipallowlist")
 
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
 	})
 
-	ginkgo.It("should set valid ip whitelist range", func() {
-		host := "ipwhitelist.foo.com"
+	ginkgo.It("should set valid ip allowlist range", func() {
+		host := "ipallowlist.foo.com"
 		nameSpace := f.Namespace
 
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/whitelist-source-range": "18.0.0.0/8, 56.0.0.0/8",
+			"nginx.ingress.kubernetes.io/allowlist-source-range": "18.0.0.0/8, 56.0.0.0/8",
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, nameSpace, framework.EchoService, 80, annotations)

@@ -83,7 +83,7 @@ func TestSatisfyParser(t *testing.T) {
 	annotations := map[string]string{}
 
 	for input, expected := range data {
-		annotations[parser.GetAnnotationWithPrefix("satisfy")] = input
+		annotations[parser.GetAnnotationWithPrefix(satisfyAnnotation)] = input
 		ing.SetAnnotations(annotations)
 
 		satisfyt, err := NewParser(&resolver.Mock{}).Parse(ing)

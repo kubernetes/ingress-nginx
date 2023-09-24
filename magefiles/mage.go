@@ -1,8 +1,7 @@
-//go:build ignore
-// +build ignore
+//go:build mage
 
 /*
-Copyright 2021 The Kubernetes Authors.
+Copyright 2023 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,10 +19,6 @@ limitations under the License.
 package main
 
 import (
-	"github.com/magefile/mage/mage"
-	"os"
+	//mage:import
+	_ "k8s.io/ingress-nginx/magefiles/steps"
 )
-
-func main() {
-	os.Exit(mage.Main())
-}

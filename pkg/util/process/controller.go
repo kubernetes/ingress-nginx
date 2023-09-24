@@ -16,9 +16,9 @@ limitations under the License.
 
 package process
 
-// ProcessController defines a common interface for a process to be controlled,
+// Controller defines a common interface for a process to be controlled,
 // like the configurer, the webhook or the proper ingress controller
-type ProcessController interface {
+type Controller interface {
 	Start()
 	Stop() error
 }

@@ -88,10 +88,11 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 	auth := secret.Data["auth"]
 
 	// namespace/secretName -> namespace-secretName
-	nsSecName := strings.Replace(secretName, "/", "-", -1)
+	nsSecName := strings.ReplaceAll(secretName, "/", "-")
 
 	var sslCert *ingress.SSLCert
-	if okcert && okkey {
+	switch {
+	case okcert && okkey:
 		if cert == nil {
 			return nil, fmt.Errorf("key 'tls.crt' missing from Secret %q", secretName)
 		}
@@ -144,7 +145,7 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 		}
 
 		klog.V(3).InfoS(msg)
-	} else if len(ca) > 0 {
+	case len(ca) > 0:
 		sslCert, err = ssl.CreateCACert(ca)
 		if err != nil {
 			return nil, fmt.Errorf("unexpected error creating SSL Cert: %v", err)
@@ -166,7 +167,7 @@ func (s *k8sStore) getPemCertificate(secretName string) (*ingress.SSLCert, error
 		// makes this secret in 'syncSecret' to be used for Certificate Authentication
 		// this does not enable Certificate Authentication
 		klog.V(3).InfoS("Configuring Secret for TLS authentication", "secret", secretName)
-	} else {
+	default:
 		if auth != nil {
 			return nil, ErrSecretForAuth
 		}

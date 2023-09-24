@@ -40,9 +40,7 @@ func DeepInspect(obj interface{}) error {
 	}
 }
 
-var (
-	implSpecific = networking.PathTypeImplementationSpecific
-)
+var implSpecific = networking.PathTypeImplementationSpecific
 
 func ValidatePathType(ing *networking.Ingress) error {
 	if ing == nil {

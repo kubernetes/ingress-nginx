@@ -23,17 +23,46 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
+const (
+	http2PushPreloadAnnotation = "http2-push-preload"
+)
+
+var http2PushPreloadAnnotations = parser.Annotation{
+	Group: "http2",
+	Annotations: parser.AnnotationFields{
+		http2PushPreloadAnnotation: {
+			Validator:     parser.ValidateBool,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `Enables automatic conversion of preload links specified in the “Link” response header fields into push requests`,
+		},
+	},
+}
+
 type http2PushPreload struct {
-	r resolver.Resolver
+	r                resolver.Resolver
+	annotationConfig parser.Annotation
 }
 
 // NewParser creates a new http2PushPreload annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return http2PushPreload{r}
+	return http2PushPreload{
+		r:                r,
+		annotationConfig: http2PushPreloadAnnotations,
+	}
 }
 
 // Parse parses the annotations contained in the ingress rule
 // used to add http2 push preload to the server
 func (h2pp http2PushPreload) Parse(ing *networking.Ingress) (interface{}, error) {
-	return parser.GetBoolAnnotation("http2-push-preload", ing)
+	return parser.GetBoolAnnotation(http2PushPreloadAnnotation, ing, h2pp.annotationConfig.Annotations)
+}
+
+func (h2pp http2PushPreload) GetDocumentation() parser.AnnotationFields {
+	return h2pp.annotationConfig.Annotations
+}
+
+func (h2pp http2PushPreload) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(h2pp.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+	return parser.CheckAnnotationRisk(anns, maxrisk, http2PushPreloadAnnotations.Annotations)
 }

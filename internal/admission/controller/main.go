@@ -42,19 +42,16 @@ type IngressAdmission struct {
 	Checker Checker
 }
 
-var (
-	ingressResource = metav1.GroupVersionKind{
-		Group:   networking.GroupName,
-		Version: "v1",
-		Kind:    "Ingress",
-	}
-)
+var ingressResource = metav1.GroupVersionKind{
+	Group:   networking.GroupName,
+	Version: "v1",
+	Kind:    "Ingress",
+}
 
 // HandleAdmission populates the admission Response
 // with Allowed=false if the Object is an ingress that would prevent nginx to reload the configuration
 // with Allowed=true otherwise
 func (ia *IngressAdmission) HandleAdmission(obj runtime.Object) (runtime.Object, error) {
-
 	review, isV1 := obj.(*admissionv1.AdmissionReview)
 	if !isV1 {
 		return nil, fmt.Errorf("request is not of type AdmissionReview v1 or v1beta1")

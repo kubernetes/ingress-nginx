@@ -36,7 +36,6 @@ var _ = framework.DescribeSetting("hash size", func() {
 	})
 
 	ginkgo.Context("Check server names hash size", func() {
-
 		ginkgo.It("should set server_names_hash_bucket_size", func() {
 			f.UpdateNginxConfigMapData("server-name-hash-bucket-size", "512")
 
@@ -52,11 +51,9 @@ var _ = framework.DescribeSetting("hash size", func() {
 				return strings.Contains(server, "server_names_hash_max_size 4096;")
 			})
 		})
-
 	})
 
 	ginkgo.Context("Check proxy header hash size", func() {
-
 		ginkgo.It("should set proxy-headers-hash-bucket-size", func() {
 			f.UpdateNginxConfigMapData("proxy-headers-hash-bucket-size", "512")
 
@@ -72,11 +69,9 @@ var _ = framework.DescribeSetting("hash size", func() {
 				return strings.Contains(server, "proxy_headers_hash_max_size 4096;")
 			})
 		})
-
 	})
 
 	ginkgo.Context("Check the variable hash size", func() {
-
 		ginkgo.It("should set variables-hash-bucket-size", func() {
 			f.UpdateNginxConfigMapData("variables-hash-bucket-size", "512")
 
@@ -92,11 +87,9 @@ var _ = framework.DescribeSetting("hash size", func() {
 				return strings.Contains(server, "variables_hash_max_size 512;")
 			})
 		})
-
 	})
 
 	ginkgo.Context("Check the map hash size", func() {
-
 		ginkgo.It("should set vmap-hash-bucket-size", func() {
 			f.UpdateNginxConfigMapData("map-hash-bucket-size", "512")
 
@@ -104,7 +97,5 @@ var _ = framework.DescribeSetting("hash size", func() {
 				return strings.Contains(server, "map_hash_bucket_size 512;")
 			})
 		})
-
 	})
-
 })

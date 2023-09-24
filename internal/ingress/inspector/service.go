@@ -21,6 +21,6 @@ import (
 )
 
 // InspectService will be used to inspect service objects for possible invalid configurations
-func InspectService(svc *corev1.Service) error {
+func InspectService(_ *corev1.Service) error {
 	return nil
 }

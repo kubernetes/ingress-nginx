@@ -41,8 +41,12 @@ const (
 
 	datadogCollectorHost = "datadog-collector-host"
 
-	opentracingOperationName         = "opentracing-operation-name"
+	opentracingOperationName  = "opentracing-operation-name"
+	opentracingOperationValue = "HTTP $request_method $uri"
+
 	opentracingLocationOperationName = "opentracing-location-operation-name"
+
+	localhost = "127.0.0.1"
 )
 
 var _ = framework.IngressNginxDescribe("Configure OpenTracing", func() {
@@ -57,7 +61,7 @@ var _ = framework.IngressNginxDescribe("Configure OpenTracing", func() {
 
 	ginkgo.It("should not exists opentracing directive", func() {
 		config := map[string]string{}
-		config[enableOpentracing] = "false"
+		config[enableOpentracing] = disable
 		f.SetNginxConfigMapData(config)
 
 		f.EnsureIngress(framework.NewSingleIngress(enableOpentracing, "/", enableOpentracing, f.Namespace, "http-svc", 80, nil))
@@ -70,8 +74,8 @@ var _ = framework.IngressNginxDescribe("Configure OpenTracing", func() {
 
 	ginkgo.It("should exists opentracing directive when is enabled", func() {
 		config := map[string]string{}
-		config[enableOpentracing] = "true"
-		config[zipkinCollectorHost] = "127.0.0.1"
+		config[enableOpentracing] = enable
+		config[zipkinCollectorHost] = localhost
 		f.SetNginxConfigMapData(config)
 
 		f.EnsureIngress(framework.NewSingleIngress(enableOpentracing, "/", enableOpentracing, f.Namespace, "http-svc", 80, nil))
@@ -84,9 +88,9 @@ var _ = framework.IngressNginxDescribe("Configure OpenTracing", func() {
 
 	ginkgo.It("should include opentracing_trust_incoming_span off directive when disabled", func() {
 		config := map[string]string{}
-		config[enableOpentracing] = "true"
-		config[opentracingTrustIncomingSpan] = "false"
-		config[zipkinCollectorHost] = "127.0.0.1"
+		config[enableOpentracing] = enable
+		config[opentracingTrustIncomingSpan] = disable
+		config[zipkinCollectorHost] = localhost
 		f.SetNginxConfigMapData(config)
 
 		f.EnsureIngress(framework.NewSingleIngress(enableOpentracing, "/", enableOpentracing, f.Namespace, "http-svc", 80, nil))
@@ -99,8 +103,8 @@ var _ = framework.IngressNginxDescribe("Configure OpenTracing", func() {
 
 	ginkgo.It("should not exists opentracing_operation_name directive when is empty", func() {
 		config := map[string]string{}
-		config[enableOpentracing] = "true"
-		config[zipkinCollectorHost] = "127.0.0.1"
+		config[enableOpentracing] = enable
+		config[zipkinCollectorHost] = localhost
 		config[opentracingOperationName] = ""
 		f.SetNginxConfigMapData(config)
 
@@ -114,9 +118,9 @@ var _ = framework.IngressNginxDescribe("Configure OpenTracing", func() {
 
 	ginkgo.It("should exists opentracing_operation_name directive when is configured", func() {
 		config := map[string]string{}
-		config[enableOpentracing] = "true"
-		config[zipkinCollectorHost] = "127.0.0.1"
-		config[opentracingOperationName] = "HTTP $request_method $uri"
+		config[enableOpentracing] = enable
+		config[zipkinCollectorHost] = localhost
+		config[opentracingOperationName] = opentracingOperationValue
 		f.SetNginxConfigMapData(config)
 
 		f.EnsureIngress(framework.NewSingleIngress(enableOpentracing, "/", enableOpentracing, f.Namespace, "http-svc", 80, nil))
@@ -129,8 +133,8 @@ var _ = framework.IngressNginxDescribe("Configure OpenTracing", func() {
 
 	ginkgo.It("should not exists opentracing_location_operation_name directive when is empty", func() {
 		config := map[string]string{}
-		config[enableOpentracing] = "true"
-		config[zipkinCollectorHost] = "127.0.0.1"
+		config[enableOpentracing] = enable
+		config[zipkinCollectorHost] = localhost
 		config[opentracingLocationOperationName] = ""
 		f.SetNginxConfigMapData(config)
 
@@ -144,9 +148,9 @@ var _ = framework.IngressNginxDescribe("Configure OpenTracing", func() {
 
 	ginkgo.It("should exists opentracing_location_operation_name directive when is configured", func() {
 		config := map[string]string{}
-		config[enableOpentracing] = "true"
-		config[zipkinCollectorHost] = "127.0.0.1"
-		config[opentracingLocationOperationName] = "HTTP $request_method $uri"
+		config[enableOpentracing] = enable
+		config[zipkinCollectorHost] = localhost
+		config[opentracingLocationOperationName] = opentracingOperationValue
 		f.SetNginxConfigMapData(config)
 
 		f.EnsureIngress(framework.NewSingleIngress(enableOpentracing, "/", enableOpentracing, f.Namespace, "http-svc", 80, nil))
@@ -159,8 +163,8 @@ var _ = framework.IngressNginxDescribe("Configure OpenTracing", func() {
 
 	ginkgo.It("should enable opentracing using zipkin", func() {
 		config := map[string]string{}
-		config[enableOpentracing] = "true"
-		config[zipkinCollectorHost] = "127.0.0.1"
+		config[enableOpentracing] = enable
+		config[zipkinCollectorHost] = localhost
 		f.SetNginxConfigMapData(config)
 
 		framework.Sleep(10 * time.Second)
@@ -171,8 +175,8 @@ var _ = framework.IngressNginxDescribe("Configure OpenTracing", func() {
 
 	ginkgo.It("should enable opentracing using jaeger", func() {
 		config := map[string]string{}
-		config[enableOpentracing] = "true"
-		config[jaegerCollectorHost] = "127.0.0.1"
+		config[enableOpentracing] = enable
+		config[jaegerCollectorHost] = localhost
 		f.SetNginxConfigMapData(config)
 
 		framework.Sleep(10 * time.Second)
@@ -183,9 +187,9 @@ var _ = framework.IngressNginxDescribe("Configure OpenTracing", func() {
 
 	ginkgo.It("should enable opentracing using jaeger with sampler host", func() {
 		config := map[string]string{}
-		config[enableOpentracing] = "true"
-		config[jaegerCollectorHost] = "127.0.0.1"
-		config[jaegerSamplerHost] = "127.0.0.1"
+		config[enableOpentracing] = enable
+		config[jaegerCollectorHost] = localhost
+		config[jaegerSamplerHost] = localhost
 		f.SetNginxConfigMapData(config)
 
 		framework.Sleep(10 * time.Second)
@@ -197,8 +201,8 @@ var _ = framework.IngressNginxDescribe("Configure OpenTracing", func() {
 	ginkgo.It("should propagate the w3c header when configured with jaeger", func() {
 		host := "jaeger-w3c"
 		config := map[string]string{}
-		config[enableOpentracing] = "true"
-		config[jaegerCollectorHost] = "127.0.0.1"
+		config[enableOpentracing] = enable
+		config[jaegerCollectorHost] = localhost
 		config[jaegerPropagationFormat] = "w3c"
 		f.SetNginxConfigMapData(config)
 
@@ -227,7 +231,7 @@ var _ = framework.IngressNginxDescribe("Configure OpenTracing", func() {
 	/*
 		ginkgo.It("should enable opentracing using jaeger with an HTTP endpoint", func() {
 			config := map[string]string{}
-			config[enableOpentracing] = "true"
+			config[enableOpentracing] = TRUE
 			config[jaegerEndpoint] = "http://127.0.0.1/api/traces"
 			f.SetNginxConfigMapData(config)
 
@@ -240,7 +244,7 @@ var _ = framework.IngressNginxDescribe("Configure OpenTracing", func() {
 
 	ginkgo.It("should enable opentracing using datadog", func() {
 		config := map[string]string{}
-		config[enableOpentracing] = "true"
+		config[enableOpentracing] = enable
 		config[datadogCollectorHost] = "http://127.0.0.1"
 		f.SetNginxConfigMapData(config)
 

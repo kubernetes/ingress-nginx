@@ -23,17 +23,49 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
+const (
+	clientBodyBufferSizeAnnotation = "client-body-buffer-size"
+)
+
+var clientBodyBufferSizeConfig = parser.Annotation{
+	Group: "backend",
+	Annotations: parser.AnnotationFields{
+		clientBodyBufferSizeAnnotation: {
+			Validator: parser.ValidateRegex(parser.SizeRegex, true),
+			Scope:     parser.AnnotationScopeLocation,
+			Risk:      parser.AnnotationRiskLow, // Low, as it allows just a set of options
+			Documentation: `Sets buffer size for reading client request body per location. 
+			In case the request body is larger than the buffer, the whole body or only its part is written to a temporary file. 
+			By default, buffer size is equal to two memory pages. This is 8K on x86, other 32-bit platforms, and x86-64. 
+			It is usually 16K on other 64-bit platforms. This annotation is applied to each location provided in the ingress rule.`,
+		},
+	},
+}
+
 type clientBodyBufferSize struct {
-	r resolver.Resolver
+	r                resolver.Resolver
+	annotationConfig parser.Annotation
 }
 
 // NewParser creates a new clientBodyBufferSize annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return clientBodyBufferSize{r}
+	return clientBodyBufferSize{
+		r:                r,
+		annotationConfig: clientBodyBufferSizeConfig,
+	}
+}
+
+func (cbbs clientBodyBufferSize) GetDocumentation() parser.AnnotationFields {
+	return cbbs.annotationConfig.Annotations
 }
 
 // Parse parses the annotations contained in the ingress rule
 // used to add an client-body-buffer-size to the provided locations
 func (cbbs clientBodyBufferSize) Parse(ing *networking.Ingress) (interface{}, error) {
-	return parser.GetStringAnnotation("client-body-buffer-size", ing)
+	return parser.GetStringAnnotation(clientBodyBufferSizeAnnotation, ing, cbbs.annotationConfig.Annotations)
+}
+
+func (cbbs clientBodyBufferSize) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(cbbs.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+	return parser.CheckAnnotationRisk(anns, maxrisk, clientBodyBufferSizeConfig.Annotations)
 }

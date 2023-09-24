@@ -23,6 +23,8 @@ import (
 	"github.com/yudai/gojsondiff/formatter"
 )
 
+const unavailableMsg = " (unavailable)"
+
 // Object provides methods to inspect attached map[string]interface{} object
 // (Go representation of JSON object).
 type Object struct {
@@ -81,20 +83,21 @@ func diffValues(expected, actual interface{}) string {
 
 	var diff gojsondiff.Diff
 
-	if ve, ok := expected.(map[string]interface{}); ok {
+	switch ve := expected.(type) {
+	case map[string]interface{}:
 		if va, ok := actual.(map[string]interface{}); ok {
 			diff = differ.CompareObjects(ve, va)
 		} else {
-			return " (unavailable)"
+			return unavailableMsg
 		}
-	} else if ve, ok := expected.([]interface{}); ok {
+	case []interface{}:
 		if va, ok := actual.([]interface{}); ok {
 			diff = differ.CompareArrays(ve, va)
 		} else {
-			return " (unavailable)"
+			return unavailableMsg
 		}
-	} else {
-		return " (unavailable)"
+	default:
+		return unavailableMsg
 	}
 
 	config := formatter.AsciiFormatterConfig{
@@ -104,7 +107,7 @@ func diffValues(expected, actual interface{}) string {
 
 	str, err := f.Format(diff)
 	if err != nil {
-		return " (unavailable)"
+		return unavailableMsg
 	}
 
 	return "--- expected\n+++ actual\n" + str

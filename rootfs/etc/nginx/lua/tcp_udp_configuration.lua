@@ -1,5 +1,6 @@
 local ngx = ngx
 local tostring = tostring
+local cjson = require("cjson.safe")
 -- this is the Lua representation of TCP/UDP Configuration
 local tcp_udp_configuration_data = ngx.shared.tcp_udp_configuration_data
 
@@ -36,6 +37,14 @@ function _M.call()
   if backends == nil or backends == "" then
     return
   end
+
+  local _, backends_err = cjson.decode(backends)
+
+  if backends_err then
+    ngx.log(ngx.ERR, "could not parse backends data: ", backends_err)
+    return
+  end
+
 
   local success, err_conf = tcp_udp_configuration_data:set("backends", backends)
   if not success then

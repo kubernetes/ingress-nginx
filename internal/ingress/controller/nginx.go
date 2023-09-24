@@ -113,7 +113,7 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 	if n.cfg.ValidationWebhook != "" {
 		n.validationWebhookServer = &http.Server{
 			Addr: config.ValidationWebhook,
-			//G112 (CWE-400): Potential Slowloris Attack
+			// G112 (CWE-400): Potential Slowloris Attack
 			ReadHeaderTimeout: 10 * time.Second,
 			Handler:           adm_controller.NewAdmissionControllerServer(&adm_controller.IngressAdmission{Checker: n}),
 			TLSConfig:         ssl.NewTLSListener(n.cfg.ValidationWebhookCertPath, n.cfg.ValidationWebhookKeyPath).TLSConfig(),
@@ -429,7 +429,7 @@ func (n *NGINXController) start(cmd *exec.Cmd) {
 }
 
 // DefaultEndpoint returns the default endpoint to be use as default server that returns 404.
-func (n NGINXController) DefaultEndpoint() ingress.Endpoint {
+func (n *NGINXController) DefaultEndpoint() ingress.Endpoint {
 	return ingress.Endpoint{
 		Address: "127.0.0.1",
 		Port:    fmt.Sprintf("%v", n.cfg.ListenPorts.Default),
@@ -438,8 +438,9 @@ func (n NGINXController) DefaultEndpoint() ingress.Endpoint {
 }
 
 // generateTemplate returns the nginx configuration file content
-func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressCfg ingress.Configuration) ([]byte, error) {
-
+//
+//nolint:gocritic // the cfg shouldn't be changed, and shouldn't be mutated by other processes while being rendered.
+func (n *NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressCfg ingress.Configuration) ([]byte, error) {
 	if n.cfg.EnableSSLPassthrough {
 		servers := []*tcpproxy.TCPServer{}
 		for _, pb := range ingressCfg.PassthroughBackends {
@@ -458,6 +459,7 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 				}
 			} else {
 				for _, sp := range svc.Spec.Ports {
+					//nolint:gosec // Ignore G109 error
 					if sp.Port == int32(port) {
 						port = int(sp.Port)
 						break
@@ -563,7 +565,7 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 		if err != nil {
 			klog.Warningf("Error reading Secret %q from local store: %v", secretName, err)
 		} else {
-			nsSecName := strings.Replace(secretName, "/", "-", -1)
+			nsSecName := strings.ReplaceAll(secretName, "/", "-")
 			dh, ok := secret.Data["dhparam.pem"]
 			if ok {
 				pemFileName, err := ssl.AddOrUpdateDHParam(nsSecName, dh)
@@ -589,7 +591,7 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 		}
 	}
 
-	tc := ngx_config.TemplateConfig{
+	tc := &ngx_config.TemplateConfig{
 		ProxySetHeaders:          setHeaders,
 		AddHeaders:               addHeaders,
 		BacklogSize:              sysctlSomaxconn(),
@@ -623,7 +625,7 @@ func (n NGINXController) generateTemplate(cfg ngx_config.Configuration, ingressC
 
 // testTemplate checks if the NGINX configuration inside the byte array is valid
 // running the command "nginx -t" using a temporal file.
-func (n NGINXController) testTemplate(cfg []byte) error {
+func (n *NGINXController) testTemplate(cfg []byte) error {
 	if len(cfg) == 0 {
 		return fmt.Errorf("invalid NGINX configuration (empty)")
 	}
@@ -658,6 +660,8 @@ Error: %v
 // changes were detected. The received backend Configuration is merged with the
 // configuration ConfigMap before generating the final configuration file.
 // Returns nil in case the backend was successfully reloaded.
+//
+//nolint:gocritic // the cfg shouldn't be changed, and shouldn't be mutated by other processes while being rendered.
 func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	cfg := n.store.GetBackendConfiguration()
 	cfg.Resolver = n.resolver
@@ -667,12 +671,12 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		return err
 	}
 
-	err = createOpentracingCfg(cfg)
+	err = createOpentracingCfg(&cfg)
 	if err != nil {
 		return err
 	}
 
-	err = createOpentelemetryCfg(cfg)
+	err = createOpentelemetryCfg(&cfg)
 	if err != nil {
 		return err
 	}
@@ -683,7 +687,10 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	}
 
 	if klog.V(2).Enabled() {
-		src, _ := os.ReadFile(cfgPath)
+		src, err := os.ReadFile(cfgPath)
+		if err != nil {
+			return err
+		}
 		if !bytes.Equal(src, content) {
 			tmpfile, err := os.CreateTemp("", "new-nginx-cfg")
 			if err != nil {
@@ -694,11 +701,14 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 			if err != nil {
 				return err
 			}
-
+			//nolint:gosec //Ignore G204 error
 			diffOutput, err := exec.Command("diff", "-I", "'# Configuration.*'", "-u", cfgPath, tmpfile.Name()).CombinedOutput()
 			if err != nil {
 				if exitError, ok := err.(*exec.ExitError); ok {
-					ws := exitError.Sys().(syscall.WaitStatus)
+					ws, ok := exitError.Sys().(syscall.WaitStatus)
+					if !ok {
+						klog.Errorf("unexpected type: %T", exitError.Sys())
+					}
 					if ws.ExitStatus() == 2 {
 						klog.Warningf("Failed to executing diff command: %v", err)
 					}
@@ -828,9 +838,10 @@ func (n *NGINXController) configureDynamically(pcfg *ingress.Configuration) erro
 	return nil
 }
 
-func updateStreamConfiguration(TCPEndpoints []ingress.L4Service, UDPEndpoints []ingress.L4Service) error {
+func updateStreamConfiguration(tcpEndpoints, udpEndpoints []ingress.L4Service) error {
 	streams := make([]ingress.Backend, 0)
-	for _, ep := range TCPEndpoints {
+	for i := range tcpEndpoints {
+		ep := &tcpEndpoints[i]
 		var service *apiv1.Service
 		if ep.Service != nil {
 			service = &apiv1.Service{Spec: ep.Service.Spec}
@@ -844,7 +855,8 @@ func updateStreamConfiguration(TCPEndpoints []ingress.L4Service, UDPEndpoints []
 			Service:   service,
 		})
 	}
-	for _, ep := range UDPEndpoints {
+	for i := range udpEndpoints {
+		ep := &udpEndpoints[i]
 		var service *apiv1.Service
 		if ep.Service != nil {
 			service = &apiv1.Service{Spec: ep.Service.Spec}
@@ -1034,7 +1046,7 @@ ratio = {{ .OtelSamplerRatio }}
 parent_based = {{ .OtelSamplerParentBased }}
 `
 
-func datadogOpentracingCfg(cfg ngx_config.Configuration) (string, error) {
+func datadogOpentracingCfg(cfg *ngx_config.Configuration) (string, error) {
 	m := map[string]interface{}{
 		"service":                 cfg.DatadogServiceName,
 		"agent_host":              cfg.DatadogCollectorHost,
@@ -1058,7 +1070,7 @@ func datadogOpentracingCfg(cfg ngx_config.Configuration) (string, error) {
 	return string(buf), nil
 }
 
-func opentracingCfgFromTemplate(cfg ngx_config.Configuration, tmplName string, tmplText string) (string, error) {
+func opentracingCfgFromTemplate(cfg *ngx_config.Configuration, tmplName, tmplText string) (string, error) {
 	tmpl, err := template.New(tmplName).Parse(tmplText)
 	if err != nil {
 		return "", err
@@ -1073,17 +1085,18 @@ func opentracingCfgFromTemplate(cfg ngx_config.Configuration, tmplName string, t
 	return tmplBuf.String(), nil
 }
 
-func createOpentracingCfg(cfg ngx_config.Configuration) error {
+func createOpentracingCfg(cfg *ngx_config.Configuration) error {
 	var configData string
 	var err error
 
-	if cfg.ZipkinCollectorHost != "" {
+	switch {
+	case cfg.ZipkinCollectorHost != "":
 		configData, err = opentracingCfgFromTemplate(cfg, "zipkin", zipkinTmpl)
-	} else if cfg.JaegerCollectorHost != "" || cfg.JaegerEndpoint != "" {
+	case cfg.JaegerCollectorHost != "" || cfg.JaegerEndpoint != "":
 		configData, err = opentracingCfgFromTemplate(cfg, "jaeger", jaegerTmpl)
-	} else if cfg.DatadogCollectorHost != "" {
+	case cfg.DatadogCollectorHost != "":
 		configData, err = datadogOpentracingCfg(cfg)
-	} else {
+	default:
 		configData = "{}"
 	}
 
@@ -1097,8 +1110,7 @@ func createOpentracingCfg(cfg ngx_config.Configuration) error {
 	return os.WriteFile("/etc/nginx/opentracing.json", []byte(expanded), file.ReadWriteByUser)
 }
 
-func createOpentelemetryCfg(cfg ngx_config.Configuration) error {
-
+func createOpentelemetryCfg(cfg *ngx_config.Configuration) error {
 	tmpl, err := template.New("otel").Parse(otelTmpl)
 	if err != nil {
 		return err
@@ -1123,7 +1135,10 @@ func cleanTempNginxCfg() error {
 			return filepath.SkipDir
 		}
 
-		dur, _ := time.ParseDuration("-5m")
+		dur, err := time.ParseDuration("-5m")
+		if err != nil {
+			return err
+		}
 		fiveMinutesAgo := time.Now().Add(dur)
 		if strings.HasPrefix(info.Name(), tempNginxPattern) && info.ModTime().Before(fiveMinutesAgo) {
 			files = append(files, path)

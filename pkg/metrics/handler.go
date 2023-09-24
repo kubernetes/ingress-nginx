@@ -29,7 +29,6 @@ import (
 )
 
 func RegisterHealthz(healthPath string, mux *http.ServeMux, checks ...healthz.HealthChecker) {
-
 	healthCheck := []healthz.HealthChecker{healthz.PingHealthz}
 	if len(checks) > 0 {
 		healthCheck = append(healthCheck, checks...)
@@ -67,7 +66,7 @@ func RegisterProfiler(host string, port int) {
 
 	server := &http.Server{
 		Addr: fmt.Sprintf("%s:%d", host, port),
-		//G112 (CWE-400): Potential Slowloris Attack
+		// G112 (CWE-400): Potential Slowloris Attack
 		ReadHeaderTimeout: 10 * time.Second,
 		Handler:           mux,
 	}

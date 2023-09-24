@@ -39,12 +39,13 @@ func startIngress(f *framework.Framework, annotations map[string]string) map[str
 			return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 		})
 
+	//nolint:staticcheck // TODO: will replace it since wait.Poll is deprecated
 	err := wait.Poll(framework.Poll, framework.DefaultTimeout, func() (bool, error) {
-
 		resp := f.HTTPTestClient().
 			GET("/").
 			WithHeader("Host", host).
 			Expect().Raw()
+		defer resp.Body.Close()
 
 		if resp.StatusCode == http.StatusOK {
 			return true, nil
@@ -55,7 +56,9 @@ func startIngress(f *framework.Framework, annotations map[string]string) map[str
 
 	assert.Nil(ginkgo.GinkgoT(), err)
 
-	re, _ := regexp.Compile(fmt.Sprintf(`Hostname: %v.*`, framework.EchoService))
+	re, err := regexp.Compile(fmt.Sprintf(`Hostname: %v.*`, framework.EchoService))
+	assert.Nil(ginkgo.GinkgoT(), err, "error compiling regex")
+
 	podMap := map[string]bool{}
 
 	for i := 0; i < 100; i++ {

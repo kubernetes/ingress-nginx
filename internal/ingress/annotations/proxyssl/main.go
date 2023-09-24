@@ -27,6 +27,7 @@ import (
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 	"k8s.io/ingress-nginx/internal/k8s"
+	"k8s.io/klog/v2"
 )
 
 const (
@@ -39,8 +40,72 @@ const (
 
 var (
 	proxySSLOnOffRegex    = regexp.MustCompile(`^(on|off)$`)
-	proxySSLProtocolRegex = regexp.MustCompile(`^(SSLv2|SSLv3|TLSv1|TLSv1\.1|TLSv1\.2|TLSv1\.3)$`)
+	proxySSLProtocolRegex = regexp.MustCompile(`^(SSLv2|SSLv3|TLSv1|TLSv1\.1|TLSv1\.2|TLSv1\.3| )*$`)
+	proxySSLCiphersRegex  = regexp.MustCompile(`^[A-Za-z0-9\+:\_\-!]*$`)
 )
+
+const (
+	proxySSLSecretAnnotation      = "proxy-ssl-secret"
+	proxySSLCiphersAnnotation     = "proxy-ssl-ciphers"
+	proxySSLProtocolsAnnotation   = "proxy-ssl-protocols"
+	proxySSLNameAnnotation        = "proxy-ssl-name"
+	proxySSLVerifyAnnotation      = "proxy-ssl-verify"
+	proxySSLVerifyDepthAnnotation = "proxy-ssl-verify-depth"
+	proxySSLServerNameAnnotation  = "proxy-ssl-server-name"
+)
+
+var proxySSLAnnotation = parser.Annotation{
+	Group: "proxy",
+	Annotations: parser.AnnotationFields{
+		proxySSLSecretAnnotation: {
+			Validator: parser.ValidateRegex(parser.BasicCharsRegex, true),
+			Scope:     parser.AnnotationScopeIngress,
+			Risk:      parser.AnnotationRiskMedium,
+			Documentation: `This annotation specifies a Secret with the certificate tls.crt, key tls.key in PEM format used for authentication to a proxied HTTPS server. 
+			It should also contain trusted CA certificates ca.crt in PEM format used to verify the certificate of the proxied HTTPS server. 
+			This annotation expects the Secret name in the form "namespace/secretName"
+			Just secrets on the same namespace of the ingress can be used.`,
+		},
+		proxySSLCiphersAnnotation: {
+			Validator: parser.ValidateRegex(proxySSLCiphersRegex, true),
+			Scope:     parser.AnnotationScopeIngress,
+			Risk:      parser.AnnotationRiskMedium,
+			Documentation: `This annotation Specifies the enabled ciphers for requests to a proxied HTTPS server. 
+			The ciphers are specified in the format understood by the OpenSSL library.`,
+		},
+		proxySSLProtocolsAnnotation: {
+			Validator:     parser.ValidateRegex(proxySSLProtocolRegex, true),
+			Scope:         parser.AnnotationScopeIngress,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `This annotation enables the specified protocols for requests to a proxied HTTPS server.`,
+		},
+		proxySSLNameAnnotation: {
+			Validator: parser.ValidateServerName,
+			Scope:     parser.AnnotationScopeIngress,
+			Risk:      parser.AnnotationRiskHigh,
+			Documentation: `This annotation allows to set proxy_ssl_name. This allows overriding the server name used to verify the certificate of the proxied HTTPS server. 
+			This value is also passed through SNI when a connection is established to the proxied HTTPS server.`,
+		},
+		proxySSLVerifyAnnotation: {
+			Validator:     parser.ValidateRegex(proxySSLOnOffRegex, true),
+			Scope:         parser.AnnotationScopeIngress,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `This annotation enables or disables verification of the proxied HTTPS server certificate. (default: off)`,
+		},
+		proxySSLVerifyDepthAnnotation: {
+			Validator:     parser.ValidateInt,
+			Scope:         parser.AnnotationScopeIngress,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `This annotation Sets the verification depth in the proxied HTTPS server certificates chain. (default: 1).`,
+		},
+		proxySSLServerNameAnnotation: {
+			Validator:     parser.ValidateRegex(proxySSLOnOffRegex, true),
+			Scope:         parser.AnnotationScopeIngress,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `This annotation enables passing of the server name through TLS Server Name Indication extension (SNI, RFC 6066) when establishing a connection with the proxied HTTPS server.`,
+		},
+	},
+}
 
 // Config contains the AuthSSLCert used for mutual authentication
 // and the configured VerifyDepth
@@ -84,12 +149,16 @@ func (pssl1 *Config) Equal(pssl2 *Config) bool {
 }
 
 // NewParser creates a new TLS authentication annotation parser
-func NewParser(resolver resolver.Resolver) parser.IngressAnnotation {
-	return proxySSL{resolver}
+func NewParser(r resolver.Resolver) parser.IngressAnnotation {
+	return proxySSL{
+		r:                r,
+		annotationConfig: proxySSLAnnotation,
+	}
 }
 
 type proxySSL struct {
-	r resolver.Resolver
+	r                resolver.Resolver
+	annotationConfig parser.Annotation
 }
 
 func sortProtocols(protocols string) string {
@@ -120,54 +189,78 @@ func (p proxySSL) Parse(ing *networking.Ingress) (interface{}, error) {
 	var err error
 	config := &Config{}
 
-	proxysslsecret, err := parser.GetStringAnnotation("proxy-ssl-secret", ing)
+	proxysslsecret, err := parser.GetStringAnnotation(proxySSLSecretAnnotation, ing, p.annotationConfig.Annotations)
 	if err != nil {
 		return &Config{}, err
 	}
 
-	_, _, err = k8s.ParseNameNS(proxysslsecret)
+	ns, _, err := k8s.ParseNameNS(proxysslsecret)
 	if err != nil {
 		return &Config{}, ing_errors.NewLocationDenied(err.Error())
+	}
+
+	secCfg := p.r.GetSecurityConfiguration()
+	// We don't accept different namespaces for secrets.
+	if !secCfg.AllowCrossNamespaceResources && ns != ing.Namespace {
+		return &Config{}, ing_errors.NewLocationDenied("cross namespace secrets are not supported")
 	}
 
 	proxyCert, err := p.r.GetAuthCertificate(proxysslsecret)
 	if err != nil {
 		e := fmt.Errorf("error obtaining certificate: %w", err)
-		return &Config{}, ing_errors.LocationDenied{Reason: e}
+		return &Config{}, ing_errors.LocationDeniedError{Reason: e}
 	}
 	config.AuthSSLCert = *proxyCert
 
-	config.Ciphers, err = parser.GetStringAnnotation("proxy-ssl-ciphers", ing)
+	config.Ciphers, err = parser.GetStringAnnotation(proxySSLCiphersAnnotation, ing, p.annotationConfig.Annotations)
 	if err != nil {
+		if ing_errors.IsValidationError(err) {
+			klog.Warningf("invalid value passed to proxy-ssl-ciphers, defaulting to %s", defaultProxySSLCiphers)
+		}
 		config.Ciphers = defaultProxySSLCiphers
 	}
 
-	config.Protocols, err = parser.GetStringAnnotation("proxy-ssl-protocols", ing)
+	config.Protocols, err = parser.GetStringAnnotation(proxySSLProtocolsAnnotation, ing, p.annotationConfig.Annotations)
 	if err != nil {
+		if ing_errors.IsValidationError(err) {
+			klog.Warningf("invalid value passed to proxy-ssl-protocols, defaulting to %s", defaultProxySSLProtocols)
+		}
 		config.Protocols = defaultProxySSLProtocols
 	} else {
 		config.Protocols = sortProtocols(config.Protocols)
 	}
 
-	config.ProxySSLName, err = parser.GetStringAnnotation("proxy-ssl-name", ing)
+	config.ProxySSLName, err = parser.GetStringAnnotation(proxySSLNameAnnotation, ing, p.annotationConfig.Annotations)
 	if err != nil {
+		if ing_errors.IsValidationError(err) {
+			klog.Warningf("invalid value passed to proxy-ssl-name, defaulting to empty")
+		}
 		config.ProxySSLName = ""
 	}
 
-	config.Verify, err = parser.GetStringAnnotation("proxy-ssl-verify", ing)
+	config.Verify, err = parser.GetStringAnnotation(proxySSLVerifyAnnotation, ing, p.annotationConfig.Annotations)
 	if err != nil || !proxySSLOnOffRegex.MatchString(config.Verify) {
 		config.Verify = defaultProxySSLVerify
 	}
 
-	config.VerifyDepth, err = parser.GetIntAnnotation("proxy-ssl-verify-depth", ing)
+	config.VerifyDepth, err = parser.GetIntAnnotation(proxySSLVerifyDepthAnnotation, ing, p.annotationConfig.Annotations)
 	if err != nil || config.VerifyDepth == 0 {
 		config.VerifyDepth = defaultProxySSLVerifyDepth
 	}
 
-	config.ProxySSLServerName, err = parser.GetStringAnnotation("proxy-ssl-server-name", ing)
+	config.ProxySSLServerName, err = parser.GetStringAnnotation(proxySSLServerNameAnnotation, ing, p.annotationConfig.Annotations)
 	if err != nil || !proxySSLOnOffRegex.MatchString(config.ProxySSLServerName) {
 		config.ProxySSLServerName = defaultProxySSLServerName
 	}
 
 	return config, nil
+}
+
+func (p proxySSL) GetDocumentation() parser.AnnotationFields {
+	return p.annotationConfig.Annotations
+}
+
+func (p proxySSL) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(p.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+	return parser.CheckAnnotationRisk(anns, maxrisk, proxySSLAnnotation.Annotations)
 }

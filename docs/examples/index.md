@@ -23,7 +23,7 @@ Customization | [External authentication with response header propagation](custo
 Customization | [Sysctl tuning](customization/sysctl/README.md) | TODO | TODO
 Features | [Rewrite](rewrite/README.md) | TODO | TODO
 Features | [Session stickiness](affinity/cookie/README.md) | route requests consistently to the same endpoint | Advanced
-Features | [Canary Deployments](canary/README.md) | weigthed canary routing to a seperate deployment | Intermediate
+Features | [Canary Deployments](canary/README.md) | weighted canary routing to a seperate deployment | Intermediate
 Scaling | [Static IP](static-ip/README.md) | a single ingress gets a single static IP |  Intermediate
 TLS | [Multi TLS certificate termination](multi-tls/README.md) | TODO | TODO
 TLS | [TLS termination](tls-termination/README.md) | TODO | TODO

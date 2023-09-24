@@ -43,7 +43,7 @@ func (f *FakeProcess) exiterFunc(code int) {
 }
 
 func sendDelayedSignal(delay time.Duration) error {
-	time.Sleep(delay * time.Second)
+	time.Sleep(delay)
 	return syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
 }
 
@@ -67,7 +67,7 @@ func TestHandleSigterm(t *testing.T) {
 		process := &FakeProcess{shouldError: tt.shouldError}
 		t.Run(tt.name, func(t *testing.T) {
 			go func() {
-				err := sendDelayedSignal(2) // Send a signal after 2 seconds
+				err := sendDelayedSignal(2 * time.Second) // Send a signal after 2 seconds
 				if err != nil {
 					t.Errorf("error sending delayed signal: %v", err)
 				}

@@ -31,6 +31,11 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
+const (
+	disable                = "false"
+	noAuthLocaltionSetting = "no-auth-locations"
+)
+
 var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 	f := framework.NewDefaultFramework(
 		"global-external-auth",
@@ -46,7 +51,7 @@ var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 	fooPath := "/foo"
 	barPath := "/bar"
 
-	noAuthSetting := "no-auth-locations"
+	noAuthSetting := noAuthLocaltionSetting
 	noAuthLocations := barPath
 
 	enableGlobalExternalAuthAnnotation := "nginx.ingress.kubernetes.io/enable-global-auth"
@@ -56,7 +61,6 @@ var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 	})
 
 	ginkgo.Context("when global external authentication is configured", func() {
-
 		ginkgo.BeforeEach(func() {
 			globalExternalAuthURL := fmt.Sprintf("http://%s.%s.svc.cluster.local:80/status/401", framework.HTTPBunService, f.Namespace)
 
@@ -85,7 +89,6 @@ var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 		})
 
 		ginkgo.It("should return status code 401 when request any protected service", func() {
-
 			ginkgo.By("Sending a request to protected service /foo")
 			f.HTTPTestClient().
 				GET(fooPath).
@@ -102,7 +105,6 @@ var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 		})
 
 		ginkgo.It("should return status code 200 when request whitelisted (via no-auth-locations) service and 401 when request protected service", func() {
-
 			ginkgo.By("Adding a no-auth-locations for /bar to configMap")
 			f.UpdateNginxConfigMapData(noAuthSetting, noAuthLocations)
 			f.WaitForNginxServer(host,
@@ -126,10 +128,9 @@ var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 		})
 
 		ginkgo.It("should return status code 200 when request whitelisted (via ingress annotation) service and 401 when request protected service", func() {
-
 			ginkgo.By("Adding an ingress rule for /bar with annotation enable-global-auth = false")
 			err := framework.UpdateIngress(f.KubeClientSet, f.Namespace, "bar-ingress", func(ingress *networking.Ingress) error {
-				ingress.ObjectMeta.Annotations[enableGlobalExternalAuthAnnotation] = "false"
+				ingress.ObjectMeta.Annotations[enableGlobalExternalAuthAnnotation] = disable
 				return nil
 			})
 			assert.Nil(ginkgo.GinkgoT(), err)
@@ -155,9 +156,8 @@ var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 		})
 
 		ginkgo.It("should still return status code 200 after auth backend is deleted using cache", func() {
-
 			globalExternalAuthCacheKeySetting := "global-auth-cache-key"
-			globalExternalAuthCacheKey := "foo"
+			globalExternalAuthCacheKey := fooHost
 			globalExternalAuthCacheDurationSetting := "global-auth-cache-duration"
 			globalExternalAuthCacheDuration := "200 201 401 30m"
 			globalExternalAuthURL := fmt.Sprintf("http://%s.%s.svc.cluster.local:80/status/200", framework.HTTPBunService, f.Namespace)
@@ -197,7 +197,6 @@ var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 		})
 
 		ginkgo.It(`should proxy_method method when global-auth-method is configured`, func() {
-
 			globalExternalAuthMethodSetting := "global-auth-method"
 			globalExternalAuthMethod := "GET"
 
@@ -210,7 +209,6 @@ var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 		})
 
 		ginkgo.It(`should add custom error page when global-auth-signin url is configured`, func() {
-
 			globalExternalAuthSigninSetting := "global-auth-signin"
 			globalExternalAuthSignin := "http://foo.com/global-error-page"
 
@@ -223,7 +221,6 @@ var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 		})
 
 		ginkgo.It(`should add auth headers when global-auth-response-headers is configured`, func() {
-
 			globalExternalAuthResponseHeadersSetting := "global-auth-response-headers"
 			globalExternalAuthResponseHeaders := "Foo, Bar"
 
@@ -237,7 +234,6 @@ var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 		})
 
 		ginkgo.It(`should set request-redirect when global-auth-request-redirect is configured`, func() {
-
 			globalExternalAuthRequestRedirectSetting := "global-auth-request-redirect"
 			globalExternalAuthRequestRedirect := "Foo-Redirect"
 
@@ -260,7 +256,6 @@ var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 					return strings.Contains(server, globalExternalAuthSnippet)
 				})
 		})
-
 	})
 
 	ginkgo.Context("cookie set by external authentication server", func() {
@@ -322,7 +317,6 @@ http {
 			f.WaitForNginxServer(host, func(server string) bool {
 				return strings.Contains(server, "server_name "+host)
 			})
-
 		})
 
 		ginkgo.It("user retains cookie by default", func() {

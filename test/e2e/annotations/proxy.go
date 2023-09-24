@@ -25,6 +25,8 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
+const proxyRedirectToHost = "goodbye.com"
+
 var _ = framework.DescribeAnnotation("proxy-*", func() {
 	f := framework.NewDefaultFramework("proxy")
 	host := "proxy.foo.com"
@@ -38,7 +40,7 @@ var _ = framework.DescribeAnnotation("proxy-*", func() {
 
 		annotations := make(map[string]string)
 		annotations["nginx.ingress.kubernetes.io/proxy-redirect-from"] = proxyRedirectFrom
-		annotations["nginx.ingress.kubernetes.io/proxy-redirect-to"] = "goodbye.com"
+		annotations["nginx.ingress.kubernetes.io/proxy-redirect-to"] = proxyRedirectToHost
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
@@ -54,7 +56,7 @@ var _ = framework.DescribeAnnotation("proxy-*", func() {
 
 		annotations := make(map[string]string)
 		annotations["nginx.ingress.kubernetes.io/proxy-redirect-from"] = proxyRedirectFrom
-		annotations["nginx.ingress.kubernetes.io/proxy-redirect-to"] = "goodbye.com"
+		annotations["nginx.ingress.kubernetes.io/proxy-redirect-to"] = proxyRedirectToHost
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
@@ -67,7 +69,7 @@ var _ = framework.DescribeAnnotation("proxy-*", func() {
 
 	ginkgo.It("should set proxy_redirect to hello.com goodbye.com", func() {
 		proxyRedirectFrom := "hello.com"
-		proxyRedirectTo := "goodbye.com"
+		proxyRedirectTo := proxyRedirectToHost
 
 		annotations := make(map[string]string)
 		annotations["nginx.ingress.kubernetes.io/proxy-redirect-from"] = proxyRedirectFrom
@@ -244,5 +246,4 @@ var _ = framework.DescribeAnnotation("proxy-*", func() {
 				return strings.Contains(server, fmt.Sprintf("proxy_http_version %s;", proxyHTTPVersion))
 			})
 	})
-
 })

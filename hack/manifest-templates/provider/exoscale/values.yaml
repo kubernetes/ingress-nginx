@@ -1,6 +1,10 @@
 # Exoscale
 controller:
   kind: DaemonSet
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
   service:
     type: LoadBalancer
     externalTrafficPolicy: Local

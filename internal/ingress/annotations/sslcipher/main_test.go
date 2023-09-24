@@ -33,22 +33,27 @@ func TestParse(t *testing.T) {
 		t.Fatalf("expected a parser.IngressAnnotation but returned nil")
 	}
 
-	annotationSSLCiphers := parser.GetAnnotationWithPrefix("ssl-ciphers")
-	annotationSSLPreferServerCiphers := parser.GetAnnotationWithPrefix("ssl-prefer-server-ciphers")
+	annotationSSLCiphers := parser.GetAnnotationWithPrefix(sslCipherAnnotation)
+	annotationSSLPreferServerCiphers := parser.GetAnnotationWithPrefix(sslPreferServerCipherAnnotation)
 
 	testCases := []struct {
 		annotations map[string]string
 		expected    Config
+		expectErr   bool
 	}{
-		{map[string]string{annotationSSLCiphers: "ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP"}, Config{"ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP", ""}},
-		{map[string]string{annotationSSLCiphers: "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256"},
-			Config{"ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256", ""}},
-		{map[string]string{annotationSSLCiphers: ""}, Config{"", ""}},
-		{map[string]string{annotationSSLPreferServerCiphers: "true"}, Config{"", "on"}},
-		{map[string]string{annotationSSLPreferServerCiphers: "false"}, Config{"", "off"}},
-		{map[string]string{annotationSSLCiphers: "ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP", annotationSSLPreferServerCiphers: "true"}, Config{"ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP", "on"}},
-		{map[string]string{}, Config{"", ""}},
-		{nil, Config{"", ""}},
+		{map[string]string{annotationSSLCiphers: "ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP"}, Config{"ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP", ""}, false},
+		{
+			map[string]string{annotationSSLCiphers: "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256"},
+			Config{"ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256", ""},
+			false,
+		},
+		{map[string]string{annotationSSLCiphers: ""}, Config{"", ""}, false},
+		{map[string]string{annotationSSLPreferServerCiphers: "true"}, Config{"", "on"}, false},
+		{map[string]string{annotationSSLPreferServerCiphers: "false"}, Config{"", "off"}, false},
+		{map[string]string{annotationSSLCiphers: "ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP", annotationSSLPreferServerCiphers: "true"}, Config{"ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP", "on"}, false},
+		{map[string]string{annotationSSLCiphers: "ALL:SOMETHING:;locationXPTO"}, Config{"", ""}, true},
+		{map[string]string{}, Config{"", ""}, false},
+		{nil, Config{"", ""}, false},
 	}
 
 	ing := &networking.Ingress{
@@ -59,10 +64,13 @@ func TestParse(t *testing.T) {
 		Spec: networking.IngressSpec{},
 	}
 
-	for _, testCase := range testCases {
+	for i, testCase := range testCases {
 		ing.SetAnnotations(testCase.annotations)
-		result, _ := ap.Parse(ing)
-		if !reflect.DeepEqual(result, &testCase.expected) {
+		result, err := ap.Parse(ing)
+		if (err != nil) != testCase.expectErr {
+			t.Fatalf("expected error: %t got error: %t err value: %s. %+v", testCase.expectErr, err != nil, err, testCase.annotations)
+		}
+		if !reflect.DeepEqual(result, &testCases[i].expected) {
 			t.Errorf("expected %v but returned %v, annotations: %s", testCase.expected, result, testCase.annotations)
 		}
 	}

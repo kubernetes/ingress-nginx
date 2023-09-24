@@ -43,7 +43,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 	ginkgo.Context("when canary is created", func() {
 		ginkgo.It("should response with a 200 status from the mainline upstream when requests are made to the mainline ingress", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
 			f.EnsureIngress(framework.NewSingleIngress(
@@ -87,7 +87,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 		})
 
 		ginkgo.It("should return 404 status for requests to the canary if no matching ingress is found", func() {
-			host := "foo"
+			host := fooHost
 
 			canaryAnnotations := map[string]string{
 				"nginx.ingress.kubernetes.io/canary":           "true",
@@ -118,7 +118,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 			TODO: This test needs improvements made to the e2e framework so that deployment updates work in order to successfully run
 
 			It("should return the correct status codes when endpoints are unavailable", func() {
-				host := "foo"
+				host := fooHost
 				annotations := map[string]string{}
 
 				ing := framework.NewSingleIngress(host, "/info", host, f.Namespace, framework.HTTPBunService, 80, annotations)
@@ -172,7 +172,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 		*/
 
 		ginkgo.It("should route requests to the correct upstream if mainline ingress is created before the canary ingress", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
 			f.EnsureIngress(framework.NewSingleIngress(
@@ -230,7 +230,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 		})
 
 		ginkgo.It("should route requests to the correct upstream if mainline ingress is created after the canary ingress", func() {
-			host := "foo"
+			host := fooHost
 
 			canaryAnnotations := map[string]string{
 				"nginx.ingress.kubernetes.io/canary":           "true",
@@ -287,7 +287,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 		})
 
 		ginkgo.It("should route requests to the correct upstream if the mainline ingress is modified", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
 			f.EnsureIngress(framework.NewSingleIngress(
@@ -321,7 +321,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				canaryAnnotations))
 
 			modAnnotations := map[string]string{
-				"foo": "bar",
+				fooHost: "bar",
 			}
 
 			f.UpdateIngress(framework.NewSingleIngress(
@@ -361,7 +361,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 		})
 
 		ginkgo.It("should route requests to the correct upstream if the canary ingress is modified", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
 			f.EnsureIngress(framework.NewSingleIngress(
@@ -443,7 +443,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 	ginkgo.Context("when canaried by header with no value", func() {
 		ginkgo.It("should route requests to the correct upstream", func() {
-			host := "foo"
+			host := fooHost
 
 			f.EnsureIngress(framework.NewSingleIngress(
 				host,
@@ -511,7 +511,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 	ginkgo.Context("when canaried by header with value", func() {
 		ginkgo.It("should route requests to the correct upstream", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
 			f.EnsureIngress(framework.NewSingleIngress(
@@ -592,7 +592,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 	ginkgo.Context("when canaried by header with value and pattern", func() {
 		ginkgo.It("should route requests to the correct upstream", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
 			f.EnsureIngress(framework.NewSingleIngress(
@@ -645,7 +645,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				Body().Contains(framework.HTTPBunService).NotContains(canaryService)
 		})
 		ginkgo.It("should route requests to the correct upstream", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
 			f.EnsureIngress(framework.NewSingleIngress(
@@ -690,7 +690,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				Body().Contains(framework.HTTPBunService).NotContains(canaryService)
 		})
 		ginkgo.It("should routes to mainline upstream when the given Regex causes error", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
 			f.EnsureIngress(framework.NewSingleIngress(
@@ -739,7 +739,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 	ginkgo.Context("when canaried by header with value and cookie", func() {
 		ginkgo.It("should route requests to the correct upstream", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
 			f.EnsureIngress(framework.NewSingleIngress(
@@ -788,7 +788,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 	ginkgo.Context("when canaried by cookie", func() {
 		ginkgo.It("respects always and never values", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
 			f.EnsureIngress(framework.NewSingleIngress(
@@ -860,7 +860,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 	ginkgo.Context("when canaried by weight", func() {
 		ginkgo.It("should route requests only to mainline if canary weight is 0", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
 			f.EnsureIngress(framework.NewSingleIngress(
@@ -908,7 +908,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 		})
 
 		ginkgo.It("should route requests only to canary if canary weight is 100", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
 			f.EnsureIngress(framework.NewSingleIngress(
@@ -950,7 +950,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 		})
 
 		ginkgo.It("should route requests only to canary if canary weight is equal to canary weight total", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
 			f.EnsureIngress(framework.NewSingleIngress(
@@ -993,7 +993,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 		})
 
 		ginkgo.It("should route requests split between mainline and canary if canary weight is 50", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
 			f.EnsureIngress(framework.NewSingleIngress(
@@ -1029,7 +1029,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 		})
 
 		ginkgo.It("should route requests split between mainline and canary if canary weight is 100 and weight total is 200", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
 			f.EnsureIngress(framework.NewSingleIngress(
@@ -1068,7 +1068,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 	ginkgo.Context("Single canary Ingress", func() {
 		ginkgo.It("should not use canary as a catch-all server", func() {
-			host := "foo"
+			host := fooHost
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 			annotations := map[string]string{
 				"nginx.ingress.kubernetes.io/canary":           "true",
@@ -1102,7 +1102,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 		})
 
 		ginkgo.It("should not use canary with domain as a server", func() {
-			host := "foo"
+			host := fooHost
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 			annotations := map[string]string{
 				"nginx.ingress.kubernetes.io/canary":           "true",
@@ -1136,7 +1136,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 	})
 
 	ginkgo.It("does not crash when canary ingress has multiple paths to the same non-matching backend", func() {
-		host := "foo"
+		host := fooHost
 		canaryIngName := fmt.Sprintf("%v-canary", host)
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/canary":           "true",
@@ -1168,7 +1168,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 	})
 
 	ginkgo.Context("canary affinity behavior", func() {
-		host := "foo"
+		host := fooHost
 		affinityCookieName := "aff"
 		canaryIngName := fmt.Sprintf("%v-canary", host)
 
@@ -1370,7 +1370,6 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 			TestMainlineCanaryDistribution(f, host)
 		})
 	})
-
 })
 
 // This method assumes canary weight being configured at 50%.
@@ -1407,12 +1406,12 @@ func TestMainlineCanaryDistribution(f *framework.Framework, host string) {
 
 	assert.GreaterOrEqual(
 		ginkgo.GinkgoT(),
-		int(replicaRequestCount[keys[0].String()]),
+		replicaRequestCount[keys[0].String()],
 		requestsNumberToTest,
 	)
 	assert.GreaterOrEqual(
 		ginkgo.GinkgoT(),
-		int(replicaRequestCount[keys[1].String()]),
+		replicaRequestCount[keys[1].String()],
 		requestsNumberToTest,
 	)
 }

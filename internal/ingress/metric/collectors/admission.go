@@ -104,7 +104,7 @@ func NewAdmissionCollector(pod, namespace, class string) *AdmissionCollector {
 }
 
 // Describe implements prometheus.Collector
-func (am AdmissionCollector) Describe(ch chan<- *prometheus.Desc) {
+func (am *AdmissionCollector) Describe(ch chan<- *prometheus.Desc) {
 	am.testedIngressLength.Describe(ch)
 	am.testedIngressTime.Describe(ch)
 	am.renderingIngressLength.Describe(ch)
@@ -114,7 +114,7 @@ func (am AdmissionCollector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 // Collect implements the prometheus.Collector interface.
-func (am AdmissionCollector) Collect(ch chan<- prometheus.Metric) {
+func (am *AdmissionCollector) Collect(ch chan<- prometheus.Metric) {
 	am.testedIngressLength.Collect(ch)
 	am.testedIngressTime.Collect(ch)
 	am.renderingIngressLength.Collect(ch)
@@ -139,7 +139,7 @@ func ByteFormat(bytes int64) string {
 }
 
 // SetAdmissionMetrics sets the values for AdmissionMetrics that can be called externally
-func (am *AdmissionCollector) SetAdmissionMetrics(testedIngressLength float64, testedIngressTime float64, renderingIngressLength float64, renderingIngressTime float64, testedConfigurationSize float64, admissionTime float64) {
+func (am *AdmissionCollector) SetAdmissionMetrics(testedIngressLength, testedIngressTime, renderingIngressLength, renderingIngressTime, testedConfigurationSize, admissionTime float64) {
 	am.testedIngressLength.Set(testedIngressLength)
 	am.testedIngressTime.Set(testedIngressTime)
 	am.renderingIngressLength.Set(renderingIngressLength)

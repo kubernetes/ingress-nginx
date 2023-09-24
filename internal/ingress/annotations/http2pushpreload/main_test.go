@@ -23,11 +23,12 @@ import (
 	networking "k8s.io/api/networking/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
+	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 func TestParse(t *testing.T) {
-	annotation := parser.GetAnnotationWithPrefix("http2-push-preload")
+	annotation := parser.GetAnnotationWithPrefix(http2PushPreloadAnnotation)
 	ap := NewParser(&resolver.Mock{})
 	if ap == nil {
 		t.Fatalf("expected a parser.IngressAnnotation but returned nil")
@@ -36,12 +37,14 @@ func TestParse(t *testing.T) {
 	testCases := []struct {
 		annotations map[string]string
 		expected    bool
+		expectErr   bool
 	}{
-		{map[string]string{annotation: "true"}, true},
-		{map[string]string{annotation: "1"}, true},
-		{map[string]string{annotation: ""}, false},
-		{map[string]string{}, false},
-		{nil, false},
+		{map[string]string{annotation: "true"}, true, false},
+		{map[string]string{annotation: "1"}, true, false},
+		{map[string]string{annotation: "xpto"}, false, true},
+		{map[string]string{annotation: ""}, false, false},
+		{map[string]string{}, false, false},
+		{nil, false, false},
 	}
 
 	ing := &networking.Ingress{
@@ -54,7 +57,10 @@ func TestParse(t *testing.T) {
 
 	for _, testCase := range testCases {
 		ing.SetAnnotations(testCase.annotations)
-		result, _ := ap.Parse(ing)
+		result, err := ap.Parse(ing)
+		if ((err != nil) != testCase.expectErr) && !errors.IsInvalidContent(err) && !errors.IsMissingAnnotations(err) {
+			t.Fatalf("expected error: %t got error: %t err value: %s. %+v", testCase.expectErr, err != nil, err, testCase.annotations)
+		}
 		if result != testCase.expected {
 			t.Errorf("expected %v but returned %v, annotations: %s", testCase.expected, result, testCase.annotations)
 		}

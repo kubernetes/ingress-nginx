@@ -23,23 +23,51 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
+const (
+	enableGlobalAuthAnnotation = "enable-global-auth"
+)
+
+var globalAuthAnnotations = parser.Annotation{
+	Group: "authentication",
+	Annotations: parser.AnnotationFields{
+		enableGlobalAuthAnnotation: {
+			Validator:     parser.ValidateBool,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `Defines if the global external authentication should be enabled.`,
+		},
+	},
+}
+
 type authReqGlobal struct {
-	r resolver.Resolver
+	r                resolver.Resolver
+	annotationConfig parser.Annotation
 }
 
 // NewParser creates a new authentication request annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return authReqGlobal{r}
+	return authReqGlobal{
+		r:                r,
+		annotationConfig: globalAuthAnnotations,
+	}
 }
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to enable or disable global external authentication
 func (a authReqGlobal) Parse(ing *networking.Ingress) (interface{}, error) {
-
-	enableGlobalAuth, err := parser.GetBoolAnnotation("enable-global-auth", ing)
+	enableGlobalAuth, err := parser.GetBoolAnnotation(enableGlobalAuthAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		enableGlobalAuth = true
 	}
 
 	return enableGlobalAuth, nil
+}
+
+func (a authReqGlobal) GetDocumentation() parser.AnnotationFields {
+	return a.annotationConfig.Annotations
+}
+
+func (a authReqGlobal) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+	return parser.CheckAnnotationRisk(anns, maxrisk, globalAuthAnnotations.Annotations)
 }

@@ -50,7 +50,7 @@ func setupLeaderElection(config *leaderElectionConfig) {
 
 	var cancelContext context.CancelFunc
 
-	var newLeaderCtx = func(ctx context.Context) context.CancelFunc {
+	newLeaderCtx := func(ctx context.Context) context.CancelFunc {
 		// allow to cancel the context in case we stop being the leader
 		leaderCtx, cancel := context.WithCancel(ctx)
 		go elector.Run(leaderCtx)
@@ -86,8 +86,10 @@ func setupLeaderElection(config *leaderElectionConfig) {
 	}
 
 	broadcaster := record.NewBroadcaster()
-	hostname, _ := os.Hostname()
-
+	hostname, err := os.Hostname()
+	if err != nil {
+		klog.Errorf("unexpected error getting hostname: %v", err)
+	}
 	recorder := broadcaster.NewRecorder(scheme.Scheme, apiv1.EventSource{
 		Component: "ingress-leader-elector",
 		Host:      hostname,
@@ -107,7 +109,7 @@ func setupLeaderElection(config *leaderElectionConfig) {
 
 	ttl := 30 * time.Second
 
-	elector, err := leaderelection.NewLeaderElector(leaderelection.LeaderElectionConfig{
+	elector, err = leaderelection.NewLeaderElector(leaderelection.LeaderElectionConfig{
 		Lock:          lock,
 		LeaseDuration: ttl,
 		RenewDeadline: ttl / 2,

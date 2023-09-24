@@ -29,48 +29,50 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var pathtype = networking.PathTypePrefix
-var _ = framework.IngressNginxDescribe("[Service] backend status code 503", func() {
-	f := framework.NewDefaultFramework("service-backend")
+var (
+	pathtype = networking.PathTypePrefix
+	_        = framework.IngressNginxDescribe("[Service] backend status code 503", func() {
+		f := framework.NewDefaultFramework("service-backend")
 
-	ginkgo.It("should return 503 when backend service does not exist", func() {
-		host := "nonexistent.svc.com"
+		ginkgo.It("should return 503 when backend service does not exist", func() {
+			host := "nonexistent.svc.com"
 
-		bi := buildIngressWithNonexistentService(host, f.Namespace, "/")
-		f.EnsureIngress(bi)
+			bi := buildIngressWithNonexistentService(host, f.Namespace, "/")
+			f.EnsureIngress(bi)
 
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, "proxy_pass http://upstream_balancer;")
-			})
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return strings.Contains(server, "proxy_pass http://upstream_balancer;")
+				})
 
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			Expect().
-			Status(http.StatusServiceUnavailable)
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", host).
+				Expect().
+				Status(http.StatusServiceUnavailable)
+		})
+
+		ginkgo.It("should return 503 when all backend service endpoints are unavailable", func() {
+			host := "unavailable.svc.com"
+
+			bi, bs := buildIngressWithUnavailableServiceEndpoints(host, f.Namespace, "/")
+
+			f.EnsureService(bs)
+			f.EnsureIngress(bi)
+
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return strings.Contains(server, "proxy_pass http://upstream_balancer;")
+				})
+
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", host).
+				Expect().
+				Status(http.StatusServiceUnavailable)
+		})
 	})
-
-	ginkgo.It("should return 503 when all backend service endpoints are unavailable", func() {
-		host := "unavailable.svc.com"
-
-		bi, bs := buildIngressWithUnavailableServiceEndpoints(host, f.Namespace, "/")
-
-		f.EnsureService(bs)
-		f.EnsureIngress(bi)
-
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, "proxy_pass http://upstream_balancer;")
-			})
-
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			Expect().
-			Status(http.StatusServiceUnavailable)
-	})
-})
+)
 
 func buildIngressWithNonexistentService(host, namespace, path string) *networking.Ingress {
 	backendService := "nonexistent-svc"
@@ -146,14 +148,15 @@ func buildIngressWithUnavailableServiceEndpoints(host, namespace, path string) (
 				Name:      backendService,
 				Namespace: namespace,
 			},
-			Spec: corev1.ServiceSpec{Ports: []corev1.ServicePort{
-				{
-					Name:       "tcp",
-					Port:       80,
-					TargetPort: intstr.FromInt(80),
-					Protocol:   "TCP",
+			Spec: corev1.ServiceSpec{
+				Ports: []corev1.ServicePort{
+					{
+						Name:       "tcp",
+						Port:       80,
+						TargetPort: intstr.FromInt(80),
+						Protocol:   "TCP",
+					},
 				},
-			},
 				Selector: map[string]string{
 					"app": backendService,
 				},

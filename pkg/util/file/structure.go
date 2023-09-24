@@ -33,12 +33,10 @@ const (
 	DefaultSSLDirectory = "/etc/ingress-controller/ssl"
 )
 
-var (
-	directories = []string{
-		DefaultSSLDirectory,
-		AuthDirectory,
-	}
-)
+var directories = []string{
+	DefaultSSLDirectory,
+	AuthDirectory,
+}
 
 // CreateRequiredDirectories verifies if the required directories to
 // start the ingress controller exist and creates the missing ones.

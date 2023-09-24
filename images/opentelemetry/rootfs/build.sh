@@ -21,6 +21,7 @@ set -o pipefail
 export GRPC_GIT_TAG=${GRPC_GIT_TAG:="v1.43.2"}
 # Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp/compare/v1.2.0...main
 export OPENTELEMETRY_CPP_VERSION=${OPENTELEMETRY_CPP_VERSION:="1.2.0"}
+export ABSL_CPP_VERSION=${ABSL_CPP_VERSION:="20230802.0"}
 export INSTAL_DIR=/opt/third_party/install
 # improve compilation times
 CORES=$(($(grep -c ^processor /proc/cpuinfo) - 1))
@@ -54,6 +55,8 @@ prepare()
 {
   apk add \
     linux-headers \
+    cmake \
+    ninja \
     openssl \
     curl-dev \
     openssl-dev \
@@ -71,14 +74,32 @@ install_grpc()
   cd ${BUILD_PATH}/grpc
   cmake -DCMAKE_INSTALL_PREFIX=${INSTAL_DIR} \
     -G Ninja \
-    -DGRPC_GIT_TAG=${GRPC_GIT_TAG} /opt/third_party \
-    -DgRPC_BUILD_GRPC_NODE_PLUGIN=OFF \
-    -DgRPC_BUILD_GRPC_OBJECTIVE_C_PLUGIN=OFF \
-    -DgRPC_BUILD_GRPC_PHP_PLUGIN=OFF \
-    -DgRPC_BUILD_GRPC_PHP_PLUGIN=OFF \
-    -DgRPC_BUILD_GRPC_PYTHON_PLUGIN=OFF \
-    -DgRPC_BUILD_GRPC_RUBY_PLUGIN=OFF
-  cmake --build . -j ${CORES} --target all install
+    -DGRPC_GIT_TAG=${GRPC_GIT_TAG} /opt/third_party
+
+  cmake --build . -j ${CORES} --target all install --verbose
+}
+
+install_absl()
+{
+  cd ${BUILD_PATH}
+  export LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+LD_LIBRARY_PATH:}${INSTAL_DIR}/lib:/usr/local"
+  export PATH="${PATH}:${INSTAL_DIR}/bin"
+  git clone --recurse-submodules -j ${CORES} --depth=1 -b \
+    ${ABSL_CPP_VERSION} https://github.com/abseil/abseil-cpp.git abseil-cpp-${ABSL_CPP_VERSION}
+  cd "abseil-cpp-${ABSL_CPP_VERSION}"
+  mkdir -p .build
+  cd .build
+
+  cmake -DCMAKE_BUILD_TYPE=Release \
+        -G Ninja \
+        -DCMAKE_CXX_STANDARD=17 \
+        -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+        -DBUILD_TESTING=OFF \
+        -DCMAKE_INSTALL_PREFIX=${INSTAL_DIR} \
+        -DABSL_PROPAGATE_CXX_STD=ON \
+        -DBUILD_SHARED_LIBS=OFF \
+        ..
+  cmake --build . -j ${CORES} --target install
 }
 
 install_otel()
@@ -94,17 +115,19 @@ install_otel()
 
   cmake -DCMAKE_BUILD_TYPE=Release \
         -G Ninja \
+        -DCMAKE_CXX_STANDARD=17 \
         -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE  \
         -DWITH_ZIPKIN=OFF \
-        -DWITH_JAEGER=OFF \
         -DCMAKE_INSTALL_PREFIX=${INSTAL_DIR} \
         -DBUILD_TESTING=OFF \
+        -DWITH_BENCHMARK=OFF \
+        -DWITH_FUNC_TESTS=OFF \
         -DBUILD_SHARED_LIBS=OFF \
-        -DWITH_OTLP=ON \
         -DWITH_OTLP_GRPC=ON \
         -DWITH_OTLP_HTTP=OFF \
-        -DWITH_ABSEIL=OFF \
+        -DWITH_ABSEIL=ON \
         -DWITH_EXAMPLES=OFF \
+        -DWITH_NO_DEPRECATED_CODE=ON \
         ..
   cmake --build . -j ${CORES} --target install
 }
@@ -128,7 +151,7 @@ install_nginx()
   export NGINX_VERSION=1.21.6
 
   # Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp-contrib/compare/2656a4...main
-  export OPENTELEMETRY_CONTRIB_COMMIT=1ec94c82095bab61f06c7393b6f3272469d285af
+  export OPENTELEMETRY_CONTRIB_COMMIT=aaa51e2297bcb34297f3c7aa44fa790497d2f7f3
 
   mkdir -p /etc/nginx
   cd "$BUILD_PATH"
@@ -145,20 +168,19 @@ install_nginx()
   mkdir -p build
   cd build
   cmake -DCMAKE_BUILD_TYPE=Release \
-    -G Ninja \
-    -DCMAKE_INSTALL_PREFIX=${INSTAL_DIR} \
-    -DBUILD_SHARED_LIBS=ON \
-    -DNGINX_VERSION=${NGINX_VERSION} \
-    ..
+        -G Ninja \
+        -DCMAKE_CXX_STANDARD=17 \
+        -DCMAKE_INSTALL_PREFIX=${INSTAL_DIR} \
+        -DBUILD_SHARED_LIBS=ON \
+        -DNGINX_VERSION=${NGINX_VERSION} \
+        ..
   cmake --build . -j ${CORES} --target install
 
   mkdir -p /etc/nginx/modules
   cp ${INSTAL_DIR}/otel_ngx_module.so /etc/nginx/modules/otel_ngx_module.so
-
-  mkdir -p ${INSTAL_DIR}/lib
 }
 
-while getopts ":hpng:o:" option; do
+while getopts ":pha:g:o:n" option; do
    case $option in
     h) # display Help
          Help
@@ -176,6 +198,10 @@ while getopts ":hpng:o:" option; do
         exit;;
     n) # install nginx
         install_nginx
+        exit;;
+    a) # install abseil
+        ABSL_CPP_VERSION=${OPTARG}
+        install_absl
         exit;;
     \?)
         Help

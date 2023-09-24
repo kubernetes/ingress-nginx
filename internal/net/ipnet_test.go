@@ -36,13 +36,17 @@ func TestNewIPSet(t *testing.T) {
 }
 
 func TestParseCIDRs(t *testing.T) {
-	cidr, _ := ParseCIDRs("invalid.com")
+	cidr, err := ParseCIDRs("invalid.com")
+	if err == nil {
+		t.Errorf("expected error but got nil")
+	}
+
 	if cidr != nil {
 		t.Errorf("expected %v but got %v", nil, cidr)
 	}
 
 	expected := []string{"192.0.0.1", "192.0.1.0/24"}
-	cidr, err := ParseCIDRs("192.0.0.1, 192.0.1.0/24")
+	cidr, err = ParseCIDRs("192.0.0.1, 192.0.1.0/24")
 	if err != nil {
 		t.Errorf("unexpected error %v", err)
 	}

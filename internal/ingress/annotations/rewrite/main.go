@@ -27,6 +27,59 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
+const (
+	rewriteTargetAnnotation         = "rewrite-target"
+	sslRedirectAnnotation           = "ssl-redirect"
+	preserveTrailingSlashAnnotation = "preserve-trailing-slash"
+	forceSSLRedirectAnnotation      = "force-ssl-redirect"
+	useRegexAnnotation              = "use-regex"
+	appRootAnnotation               = "app-root"
+)
+
+var rewriteAnnotations = parser.Annotation{
+	Group: "rewrite",
+	Annotations: parser.AnnotationFields{
+		rewriteTargetAnnotation: {
+			Validator: parser.ValidateRegex(parser.RegexPathWithCapture, false),
+			Scope:     parser.AnnotationScopeIngress,
+			Risk:      parser.AnnotationRiskMedium,
+			Documentation: `This annotation allows to specify the target URI where the traffic must be redirected. It can contain regular characters and captured 
+			groups specified as '$1', '$2', etc.`,
+		},
+		sslRedirectAnnotation: {
+			Validator:     parser.ValidateBool,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `This annotation defines if the location section is only accessible via SSL`,
+		},
+		preserveTrailingSlashAnnotation: {
+			Validator:     parser.ValidateBool,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskMedium,
+			Documentation: `This annotation defines if the trailing slash should be preserved in the URI with 'ssl-redirect'`,
+		},
+		forceSSLRedirectAnnotation: {
+			Validator:     parser.ValidateBool,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskMedium,
+			Documentation: `This annotation forces the redirection to HTTPS even if the Ingress is not TLS Enabled`,
+		},
+		useRegexAnnotation: {
+			Validator: parser.ValidateBool,
+			Scope:     parser.AnnotationScopeLocation,
+			Risk:      parser.AnnotationRiskLow,
+			Documentation: `This annotation defines if the paths defined on an Ingress use regular expressions. To use regex on path
+			the pathType should also be defined as 'ImplementationSpecific'.`,
+		},
+		appRootAnnotation: {
+			Validator:     parser.ValidateRegex(parser.RegexPathWithCapture, false),
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskMedium,
+			Documentation: `This annotation defines the Application Root that the Controller must redirect if it's in / context`,
+		},
+	},
+}
+
 // Config describes the per location redirect config
 type Config struct {
 	// Target URI where the traffic must be redirected
@@ -71,12 +124,16 @@ func (r1 *Config) Equal(r2 *Config) bool {
 }
 
 type rewrite struct {
-	r resolver.Resolver
+	r                resolver.Resolver
+	annotationConfig parser.Annotation
 }
 
 // NewParser creates a new rewrite annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return rewrite{r}
+	return rewrite{
+		r:                r,
+		annotationConfig: rewriteAnnotations,
+	}
 }
 
 // ParseAnnotations parses the annotations contained in the ingress
@@ -85,24 +142,45 @@ func (a rewrite) Parse(ing *networking.Ingress) (interface{}, error) {
 	var err error
 	config := &Config{}
 
-	config.Target, _ = parser.GetStringAnnotation("rewrite-target", ing)
-	config.SSLRedirect, err = parser.GetBoolAnnotation("ssl-redirect", ing)
+	config.Target, err = parser.GetStringAnnotation(rewriteTargetAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
+		if errors.IsValidationError(err) {
+			klog.Warningf("%sis invalid, defaulting to empty", rewriteTargetAnnotation)
+		}
+		config.Target = ""
+	}
+	config.SSLRedirect, err = parser.GetBoolAnnotation(sslRedirectAnnotation, ing, a.annotationConfig.Annotations)
+	if err != nil {
+		if errors.IsValidationError(err) {
+			klog.Warningf("%sis invalid, defaulting to '%s'", sslRedirectAnnotation, a.r.GetDefaultBackend().SSLRedirect)
+		}
 		config.SSLRedirect = a.r.GetDefaultBackend().SSLRedirect
 	}
-	config.PreserveTrailingSlash, err = parser.GetBoolAnnotation("preserve-trailing-slash", ing)
+	config.PreserveTrailingSlash, err = parser.GetBoolAnnotation(preserveTrailingSlashAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
+		if errors.IsValidationError(err) {
+			klog.Warningf("%sis invalid, defaulting to '%s'", preserveTrailingSlashAnnotation, a.r.GetDefaultBackend().PreserveTrailingSlash)
+		}
 		config.PreserveTrailingSlash = a.r.GetDefaultBackend().PreserveTrailingSlash
 	}
 
-	config.ForceSSLRedirect, err = parser.GetBoolAnnotation("force-ssl-redirect", ing)
+	config.ForceSSLRedirect, err = parser.GetBoolAnnotation(forceSSLRedirectAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
+		if errors.IsValidationError(err) {
+			klog.Warningf("%sis invalid, defaulting to '%s'", forceSSLRedirectAnnotation, a.r.GetDefaultBackend().ForceSSLRedirect)
+		}
 		config.ForceSSLRedirect = a.r.GetDefaultBackend().ForceSSLRedirect
 	}
 
-	config.UseRegex, _ = parser.GetBoolAnnotation("use-regex", ing)
+	config.UseRegex, err = parser.GetBoolAnnotation(useRegexAnnotation, ing, a.annotationConfig.Annotations)
+	if err != nil {
+		if errors.IsValidationError(err) {
+			klog.Warningf("%sis invalid, defaulting to 'false'", useRegexAnnotation)
+		}
+		config.UseRegex = false
+	}
 
-	config.AppRoot, err = parser.GetStringAnnotation("app-root", ing)
+	config.AppRoot, err = parser.GetStringAnnotation(appRootAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		if !errors.IsMissingAnnotations(err) && !errors.IsInvalidContent(err) {
 			klog.Warningf("Annotation app-root contains an invalid value: %v", err)
@@ -125,4 +203,13 @@ func (a rewrite) Parse(ing *networking.Ingress) (interface{}, error) {
 	}
 
 	return config, nil
+}
+
+func (a rewrite) GetDocumentation() parser.AnnotationFields {
+	return a.annotationConfig.Annotations
+}
+
+func (a rewrite) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+	return parser.CheckAnnotationRisk(anns, maxrisk, rewriteAnnotations.Annotations)
 }
