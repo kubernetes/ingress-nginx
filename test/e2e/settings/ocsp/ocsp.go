@@ -47,6 +47,7 @@ var _ = framework.DescribeSetting("OCSP", func() {
 	})
 
 	ginkgo.It("should enable OCSP and contain stapling information in the connection", func() {
+		ginkgo.Skip("Skipped due to a bug with cfssl and Alpine")
 		host := "www.example.com"
 
 		f.UpdateNginxConfigMapData("enable-ocsp", "true")

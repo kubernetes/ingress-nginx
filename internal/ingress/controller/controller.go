@@ -1057,7 +1057,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 				continue
 			}
 
-			for _, path := range rule.HTTP.Paths {
+			for i, path := range rule.HTTP.Paths {
 				if path.Backend.Service == nil {
 					// skip non-service backends
 					klog.V(3).Infof("Ingress %q and path %q does not contain a service backend, using default backend", ingKey, path.Path)
@@ -1087,7 +1087,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 
 				// add the service ClusterIP as a single Endpoint instead of individual Endpoints
 				if anns.ServiceUpstream {
-					endpoint, err := n.getServiceClusterEndpoint(svcKey, &path.Backend)
+					endpoint, err := n.getServiceClusterEndpoint(svcKey, &rule.HTTP.Paths[i].Backend)
 					if err != nil {
 						klog.Errorf("Failed to determine a suitable ClusterIP Endpoint for Service %q: %v", svcKey, err)
 					} else {
@@ -1845,7 +1845,7 @@ func ingressForHostPath(hostname, path string, servers []*ingress.Server) []*net
 			continue
 		}
 
-		for _, location := range server.Locations {
+		for i, location := range server.Locations {
 			if location.Path != path {
 				continue
 			}
@@ -1854,7 +1854,7 @@ func ingressForHostPath(hostname, path string, servers []*ingress.Server) []*net
 				continue
 			}
 
-			ingresses = append(ingresses, &location.Ingress.Ingress)
+			ingresses = append(ingresses, &server.Locations[i].Ingress.Ingress)
 		}
 	}
 
