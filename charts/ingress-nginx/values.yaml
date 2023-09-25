@@ -24,9 +24,9 @@ controller:
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
-    tag: "v1.8.1"
-    digest: sha256:e5c4824e7375fcf2a393e1c03c293b69759af37a9ca6abdb91b13d78a93da8bd
-    digestChroot: sha256:e0d4121e3c5e39de9122e55e331a32d5ebf8d4d257227cb93ab54a1b912a7627
+    tag: "v1.9.0"
+    digest: sha256:c15d1a617858d90fb8f8a2dd60b0676f2bb85c54e3ed11511794b86ec30c8c60
+    digestChroot: sha256:d9fa7a136de2104fb2ecfcf1666978bfab927f4a125b75c0fb471e6104366ab5
     pullPolicy: IfNotPresent
     # www-data -> uid 101
     runAsUser: 101
@@ -50,7 +50,15 @@ controller:
   # -- Optionally customize the pod dnsConfig.
   dnsConfig: {}
   # -- Optionally customize the pod hostAliases.
-  hostAliases: {}
+  hostAliases: []
+  # - ip: 127.0.0.1
+  #   hostnames:
+  #   - foo.local
+  #   - bar.local
+  # - ip: 10.1.2.3
+  #   hostnames:
+  #   - foo.remote
+  #   - bar.remote
   # -- Optionally customize the pod hostname.
   hostname: {}
   # -- Optionally change this to ClusterFirstWithHostNet in case you have 'hostNetwork: true'.
@@ -66,14 +74,14 @@ controller:
   watchIngressWithoutClass: false
   # -- Process IngressClass per name (additionally as per spec.controller).
   ingressClassByName: false
-  # -- This configuration enables Topology Aware Routing feature, used together with service annotation service.kubernetes.io/topology-aware-hints="auto"
+  # -- This configuration enables Topology Aware Routing feature, used together with service annotation service.kubernetes.io/topology-mode="auto"
   # Defaults to false
   enableTopologyAwareRouting: false
   # -- This configuration defines if Ingress Controller should allow users to set
   # their own *-snippet annotations, otherwise this is forbidden / dropped
   # when users add those annotations.
   # Global snippets in ConfigMap are still respected
-  allowSnippetAnnotations: true
+  allowSnippetAnnotations: false
   # -- Required for use with CNI based kubernetes installations (such as ones set up by kubeadm),
   # since CNI and hostport don't mix yet. Can be deprecated once https://github.com/kubernetes/kubernetes/issues/23920
   # is merged
@@ -88,6 +96,10 @@ controller:
       http: 80
       # -- 'hostPort' https port
       https: 443
+  # NetworkPolicy for controller component.
+  networkPolicy:
+    # -- Enable 'networkPolicy' or not
+    enabled: false
   # -- Election ID to use for status update, by default it uses the controller name combined with a suffix of 'leader'
   electionID: ""
   ## This section refers to the creation of the IngressClass resource
@@ -248,12 +260,22 @@ controller:
   ## Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
   ##
   topologySpreadConstraints: []
-  # - maxSkew: 1
-  #   topologyKey: topology.kubernetes.io/zone
-  #   whenUnsatisfiable: DoNotSchedule
-  #   labelSelector:
+  # - labelSelector:
   #     matchLabels:
-  #       app.kubernetes.io/instance: ingress-nginx-internal
+  #       app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
+  #       app.kubernetes.io/instance: '{{ .Release.Name }}'
+  #       app.kubernetes.io/component: controller
+  #   topologyKey: topology.kubernetes.io/zone
+  #   maxSkew: 1
+  #   whenUnsatisfiable: ScheduleAnyway
+  # - labelSelector:
+  #     matchLabels:
+  #       app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
+  #       app.kubernetes.io/instance: '{{ .Release.Name }}'
+  #       app.kubernetes.io/component: controller
+  #   topologyKey: kubernetes.io/hostname
+  #   maxSkew: 1
+  #   whenUnsatisfiable: ScheduleAnyway
 
   # -- `terminationGracePeriodSeconds` to avoid killing pods before we are ready
   ## wait up to five minutes for the drain of connections
@@ -556,9 +578,10 @@ controller:
 
   opentelemetry:
     enabled: false
-    image: registry.k8s.io/ingress-nginx/opentelemetry:v20230527@sha256:fd7ec835f31b7b37187238eb4fdad4438806e69f413a203796263131f4f02ed0
+    image: registry.k8s.io/ingress-nginx/opentelemetry:v20230721-3e2062ee5@sha256:13bee3f5223883d3ca62fee7309ad02d22ec00ff0d7033e3e9aca7a9f60fd472
     containerSecurityContext:
       allowPrivilegeEscalation: false
+    resources: {}
   admissionWebhooks:
     annotations: {}
     # ignore-check.kube-linter.io/no-read-only-rootfs: "This deployment needs write access to root filesystem".
@@ -587,7 +610,6 @@ controller:
     labels: {}
     # -- Use an existing PSP instead of creating one
     existingPsp: ""
-    networkPolicyEnabled: false
     service:
       annotations: {}
       # clusterIP: ""
@@ -853,6 +875,12 @@ defaultBackend:
     maxReplicas: 2
     targetCPUUtilizationPercentage: 50
     targetMemoryUtilizationPercentage: 50
+
+  # NetworkPolicy for default backend component.
+  networkPolicy:
+    # -- Enable 'networkPolicy' or not
+    enabled: false
+
   service:
     annotations: {}
     # clusterIP: ""

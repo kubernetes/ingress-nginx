@@ -1,0 +1,34 @@
+name: golangci-lint
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'docs/**'
+      - 'deploy/**'
+      - '**.md'
+
+permissions:
+  contents: read
+
+jobs:
+  golangci:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+      
+      - name: Set up Go
+        id: go
+        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+        with:
+          go-version: '1.21.1'
+          check-latest: true
+      
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@3a919529898de77ec3da873e3063ca4b10e7f5cc # v3.7.0
+        with:
+          version: v1.53

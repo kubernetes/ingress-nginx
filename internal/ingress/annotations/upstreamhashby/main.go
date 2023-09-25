@@ -41,7 +41,7 @@ var upstreamHashByAnnotations = parser.Annotation{
 	Group: "backend",
 	Annotations: parser.AnnotationFields{
 		upstreamHashByAnnotation: {
-			Validator: parser.ValidateRegex(*hashByRegex, true),
+			Validator: parser.ValidateRegex(hashByRegex, true),
 			Scope:     parser.AnnotationScopeLocation,
 			Risk:      parser.AnnotationRiskHigh, // High, this annotation allows accessing NGINX variables
 			Documentation: `This annotation defines the nginx variable, text value or any combination thereof to use for consistent hashing. 

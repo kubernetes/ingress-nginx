@@ -63,13 +63,15 @@ const (
 
 	// This is used to control the cookie change after request failure
 	annotationAffinityCookieChangeOnFailure = "session-cookie-change-on-failure"
+
+	cookieAffinity = "cookie"
 )
 
 var sessionAffinityAnnotations = parser.Annotation{
 	Group: "affinity",
 	Annotations: parser.AnnotationFields{
 		annotationAffinityType: {
-			Validator:     parser.ValidateOptions([]string{"cookie"}, true, true),
+			Validator:     parser.ValidateOptions([]string{cookieAffinity}, true, true),
 			Scope:         parser.AnnotationScopeIngress,
 			Risk:          parser.AnnotationRiskLow,
 			Documentation: `This annotation enables and sets the affinity type in all Upstreams of an Ingress. This way, a request will always be directed to the same upstream server. The only affinity type available for NGINX is cookie`,
@@ -91,7 +93,7 @@ var sessionAffinityAnnotations = parser.Annotation{
 			Setting this to legacy will restore original canary behavior, when session affinity was ignored.`,
 		},
 		annotationAffinityCookieName: {
-			Validator:     parser.ValidateRegex(*parser.BasicCharsRegex, true),
+			Validator:     parser.ValidateRegex(parser.BasicCharsRegex, true),
 			Scope:         parser.AnnotationScopeIngress,
 			Risk:          parser.AnnotationRiskMedium,
 			Documentation: `This annotation allows to specify the name of the cookie that will be used to route the requests`,
@@ -103,25 +105,25 @@ var sessionAffinityAnnotations = parser.Annotation{
 			Documentation: `This annotation set the cookie as secure regardless the protocol of the incoming request`,
 		},
 		annotationAffinityCookieExpires: {
-			Validator:     parser.ValidateRegex(*affinityCookieExpiresRegex, true),
+			Validator:     parser.ValidateRegex(affinityCookieExpiresRegex, true),
 			Scope:         parser.AnnotationScopeIngress,
 			Risk:          parser.AnnotationRiskMedium,
 			Documentation: `This annotation is a legacy version of "session-cookie-max-age" for compatibility with older browsers, generates an "Expires" cookie directive by adding the seconds to the current date`,
 		},
 		annotationAffinityCookieMaxAge: {
-			Validator:     parser.ValidateRegex(*affinityCookieExpiresRegex, false),
+			Validator:     parser.ValidateRegex(affinityCookieExpiresRegex, false),
 			Scope:         parser.AnnotationScopeIngress,
 			Risk:          parser.AnnotationRiskMedium,
 			Documentation: `This annotation sets the time until the cookie expires`,
 		},
 		annotationAffinityCookiePath: {
-			Validator:     parser.ValidateRegex(*parser.URLIsValidRegex, true),
+			Validator:     parser.ValidateRegex(parser.URLIsValidRegex, true),
 			Scope:         parser.AnnotationScopeIngress,
 			Risk:          parser.AnnotationRiskMedium,
 			Documentation: `This annotation defines the Path that will be set on the cookie (required if your Ingress paths use regular expressions)`,
 		},
 		annotationAffinityCookieDomain: {
-			Validator:     parser.ValidateRegex(*parser.BasicCharsRegex, true),
+			Validator:     parser.ValidateRegex(parser.BasicCharsRegex, true),
 			Scope:         parser.AnnotationScopeIngress,
 			Risk:          parser.AnnotationRiskMedium,
 			Documentation: `This annotation defines the Domain attribute of the sticky cookie.`,
@@ -149,9 +151,7 @@ var sessionAffinityAnnotations = parser.Annotation{
 	},
 }
 
-var (
-	affinityCookieExpiresRegex = regexp.MustCompile(`(^0|-?[1-9]\d*$)`)
-)
+var affinityCookieExpiresRegex = regexp.MustCompile(`(^0|-?[1-9]\d*$)`)
 
 // Config describes the per ingress session affinity config
 type Config struct {
@@ -184,6 +184,11 @@ type Cookie struct {
 	SameSite string `json:"samesite"`
 	// Flag that conditionally applies SameSite=None attribute on cookie if user agent accepts it.
 	ConditionalSameSiteNone bool `json:"conditional-samesite-none"`
+}
+
+type affinity struct {
+	r                resolver.Resolver
+	annotationConfig parser.Annotation
 }
 
 // cookieAffinityParse gets the annotation values related to Cookie Affinity
@@ -252,11 +257,6 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 	}
 }
 
-type affinity struct {
-	r                resolver.Resolver
-	annotationConfig parser.Annotation
-}
-
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to configure the affinity directives
 func (a affinity) Parse(ing *networking.Ingress) (interface{}, error) {
@@ -279,11 +279,10 @@ func (a affinity) Parse(ing *networking.Ingress) (interface{}, error) {
 	}
 
 	switch at {
-	case "cookie":
+	case cookieAffinity:
 		cookie = a.cookieAffinityParse(ing)
 	default:
 		klog.V(3).InfoS("No default affinity found", "ingress", ing.Name)
-
 	}
 
 	return &Config{

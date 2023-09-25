@@ -93,16 +93,15 @@ func (a ipdenylist) Parse(ing *networking.Ingress) (interface{}, error) {
 			return &SourceRange{CIDR: defaultDenylistSourceRange}, nil
 		}
 
-		return &SourceRange{CIDR: defaultDenylistSourceRange}, ing_errors.LocationDenied{
+		return &SourceRange{CIDR: defaultDenylistSourceRange}, ing_errors.LocationDeniedError{
 			Reason: err,
 		}
-
 	}
 
 	values := strings.Split(val, ",")
 	ipnets, ips, err := net.ParseIPNets(values...)
 	if err != nil && len(ips) == 0 {
-		return &SourceRange{CIDR: defaultDenylistSourceRange}, ing_errors.LocationDenied{
+		return &SourceRange{CIDR: defaultDenylistSourceRange}, ing_errors.LocationDeniedError{
 			Reason: fmt.Errorf("the annotation does not contain a valid IP address or network: %w", err),
 		}
 	}

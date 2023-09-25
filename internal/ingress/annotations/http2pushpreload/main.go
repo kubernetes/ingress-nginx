@@ -62,7 +62,7 @@ func (h2pp http2PushPreload) GetDocumentation() parser.AnnotationFields {
 	return h2pp.annotationConfig.Annotations
 }
 
-func (a http2PushPreload) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+func (h2pp http2PushPreload) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(h2pp.r.GetSecurityConfiguration().AnnotationsRiskLevel)
 	return parser.CheckAnnotationRisk(anns, maxrisk, http2PushPreloadAnnotations.Annotations)
 }

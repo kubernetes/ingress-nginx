@@ -17,11 +17,10 @@ limitations under the License.
 package annotations
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"strings"
-
-	"context"
 
 	pb "github.com/moul/pb/grpcbin/go-grpc"
 	"github.com/onsi/ginkgo/v2"
@@ -35,6 +34,8 @@ import (
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
+
+const echoHost = "echo"
 
 var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 	f := framework.NewDefaultFramework("grpc", framework.WithHTTPBunEnabled())
@@ -67,7 +68,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 	ginkgo.It("should return OK for service with backend protocol GRPC", func() {
 		f.NewGRPCBinDeployment()
 
-		host := "echo"
+		host := echoHost
 
 		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
@@ -102,14 +103,15 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 				return strings.Contains(server, "grpc_pass grpc://upstream_balancer;")
 			})
 
-		conn, _ := grpc.Dial(f.GetNginxIP()+":443",
+		conn, err := grpc.Dial(f.GetNginxIP()+":443",
 			grpc.WithTransportCredentials(
 				credentials.NewTLS(&tls.Config{
-					ServerName:         "echo",
-					InsecureSkipVerify: true,
+					ServerName:         echoHost,
+					InsecureSkipVerify: true, //nolint:gosec // Ignore certificate validation in testing
 				}),
 			),
 		)
+		assert.Nil(ginkgo.GinkgoT(), err, "error creating a connection")
 		defer conn.Close()
 
 		client := pb.NewGRPCBinClient(conn)
@@ -125,7 +127,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 
 	ginkgo.It("authorization metadata should be overwritten by external auth response headers", func() {
 		f.NewGRPCBinDeployment()
-		host := "echo"
+		host := echoHost
 
 		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
@@ -162,14 +164,15 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 				return strings.Contains(server, "grpc_pass grpc://upstream_balancer;")
 			})
 
-		conn, _ := grpc.Dial(f.GetNginxIP()+":443",
+		conn, err := grpc.Dial(f.GetNginxIP()+":443",
 			grpc.WithTransportCredentials(
 				credentials.NewTLS(&tls.Config{
-					ServerName:         "echo",
-					InsecureSkipVerify: true,
+					ServerName:         echoHost,
+					InsecureSkipVerify: true, //nolint:gosec // Ignore certificate validation in testing
 				}),
 			),
 		)
+		assert.Nil(ginkgo.GinkgoT(), err)
 		defer conn.Close()
 
 		client := pb.NewGRPCBinClient(conn)
@@ -180,13 +183,22 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 		assert.Nil(ginkgo.GinkgoT(), err)
 
 		metadata := res.GetMetadata()
-		assert.Equal(ginkgo.GinkgoT(), "foo", metadata["authorization"].Values[0])
+		assert.Equal(ginkgo.GinkgoT(), fooHost, metadata["authorization"].Values[0])
 	})
 
 	ginkgo.It("should return OK for service with backend protocol GRPCS", func() {
 		f.NewGRPCBinDeployment()
 
-		host := "echo"
+		f.SetNginxConfigMapData(map[string]string{
+			"allow-snippet-annotations": "true",
+		})
+		defer func() {
+			f.SetNginxConfigMapData(map[string]string{
+				"allow-snippet-annotations": "false",
+			})
+		}()
+
+		host := echoHost
 
 		svc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
@@ -226,14 +238,15 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 				return strings.Contains(server, "grpc_pass grpcs://upstream_balancer;")
 			})
 
-		conn, _ := grpc.Dial(f.GetNginxIP()+":443",
+		conn, err := grpc.Dial(f.GetNginxIP()+":443",
 			grpc.WithTransportCredentials(
 				credentials.NewTLS(&tls.Config{
-					ServerName:         "echo",
-					InsecureSkipVerify: true,
+					ServerName:         echoHost,
+					InsecureSkipVerify: true, //nolint:gosec // Ignore the gosec error in testing
 				}),
 			),
 		)
+		assert.Nil(ginkgo.GinkgoT(), err)
 		defer conn.Close()
 
 		client := pb.NewGRPCBinClient(conn)

@@ -140,7 +140,7 @@ http {
 
     {{/* Enable the real_ip module only if we use either X-Forwarded headers or Proxy Protocol. */}}
     {{/* we use the value of the real IP for the geo_ip module */}}
-    {{ if or (or $cfg.UseForwardedHeaders $cfg.UseProxyProtocol) $cfg.EnableRealIp }}
+    {{ if or (or $cfg.UseForwardedHeaders $cfg.UseProxyProtocol) $cfg.EnableRealIP }}
     {{ if $cfg.UseProxyProtocol }}
     real_ip_header      proxy_protocol;
     {{ else }}
@@ -296,7 +296,10 @@ http {
     {{ end }}
 
     aio                 threads;
+
+    {{ if $cfg.EnableAioWrite }}
     aio_write           on;
+    {{ end }}
 
     tcp_nopush          on;
     tcp_nodelay         on;
@@ -406,7 +409,7 @@ http {
     {{ if $cfg.EnableSyslog }}
     access_log syslog:server={{ $cfg.SyslogHost }}:{{ $cfg.SyslogPort }} upstreaminfo if=$loggable;
     {{ else }}
-    access_log {{ or $cfg.HttpAccessLogPath $cfg.AccessLogPath }} upstreaminfo {{ $cfg.AccessLogParams }} if=$loggable;
+    access_log {{ or $cfg.HTTPAccessLogPath $cfg.AccessLogPath }} upstreaminfo {{ $cfg.AccessLogParams }} if=$loggable;
     {{ end }}
     {{ end }}
 
@@ -709,6 +712,11 @@ http {
 
     # default server, used for NGINX healthcheck and access to nginx stats
     server {
+        # Ensure that modsecurity will not run on an internal location as this is not accessible from outside
+        {{ if $all.Cfg.EnableModsecurity }}
+        modsecurity off;
+        {{ end }}
+
         listen 127.0.0.1:{{ .StatusPort }};
         set $proxy_upstream_name "internal";
 
@@ -817,7 +825,7 @@ stream {
 
 
     error_log  {{ $cfg.ErrorLogPath }} {{ $cfg.ErrorLogLevel }};
-    {{ if $cfg.EnableRealIp }}
+    {{ if $cfg.EnableRealIP }}
     {{ range $trusted_ip := $cfg.ProxyRealIPCIDR }}
     set_real_ip_from    {{ $trusted_ip }};
     {{ end }}
@@ -1097,7 +1105,9 @@ stream {
             opentelemetry_propagate;
             {{ end }}
 
+            {{ if not $all.Cfg.EnableAuthAccessLog }}
             access_log off;
+            {{ end }}
 
             # Ensure that modsecurity will not run on an internal location as this is not accessible from outside
             {{ if $all.Cfg.EnableModsecurity }}
@@ -1334,7 +1344,7 @@ stream {
             # `auth_request` module does not support HTTP keepalives in upstream block:
             # https://trac.nginx.org/nginx/ticket/1579
             access_by_lua_block {
-                local res = ngx.location.capture('{{ $authPath }}', { method = ngx.HTTP_GET, body = '' })
+                local res = ngx.location.capture('{{ $authPath }}', { method = ngx.HTTP_GET, body = '', share_all_vars = {{ $externalAuth.KeepaliveShareVars }} })
                 if res.status == ngx.HTTP_OK then
                     ngx.var.auth_cookie = res.header['Set-Cookie']
                     {{- range $line := buildAuthUpstreamLuaHeaders $externalAuth.ResponseHeaders }}

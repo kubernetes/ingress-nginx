@@ -55,7 +55,6 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to enable or disable global external authentication
 func (a authReqGlobal) Parse(ing *networking.Ingress) (interface{}, error) {
-
 	enableGlobalAuth, err := parser.GetBoolAnnotation(enableGlobalAuthAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		enableGlobalAuth = true

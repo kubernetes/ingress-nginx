@@ -33,57 +33,57 @@ var (
 
 // NewInvalidAnnotationConfiguration returns a new InvalidConfiguration error for use when
 // annotations are not correctly configured
-func NewInvalidAnnotationConfiguration(name string, reason string) error {
-	return InvalidConfiguration{
+func NewInvalidAnnotationConfiguration(name, reason string) error {
+	return InvalidConfigurationError{
 		Name: fmt.Sprintf("the annotation %v does not contain a valid configuration: %v", name, reason),
 	}
 }
 
 // NewInvalidAnnotationContent returns a new InvalidContent error
 func NewInvalidAnnotationContent(name string, val interface{}) error {
-	return InvalidContent{
+	return InvalidContentError{
 		Name: fmt.Sprintf("the annotation %v does not contain a valid value (%v)", name, val),
 	}
 }
 
 // NewLocationDenied returns a new LocationDenied error
 func NewLocationDenied(reason string) error {
-	return LocationDenied{
-		Reason: fmt.Errorf("Location denied, reason: %v", reason),
+	return LocationDeniedError{
+		Reason: fmt.Errorf("location denied, reason: %v", reason),
 	}
 }
 
-// InvalidConfiguration Error
-type InvalidConfiguration struct {
+// InvalidConfigurationError
+type InvalidConfigurationError struct {
 	Name string
 }
 
-func (e InvalidConfiguration) Error() string {
+func (e InvalidConfigurationError) Error() string {
 	return e.Name
 }
 
-// InvalidContent error
-type InvalidContent struct {
+// InvalidContentError
+type InvalidContentError struct {
 	Name string
 }
 
-func (e InvalidContent) Error() string {
+func (e InvalidContentError) Error() string {
 	return e.Name
 }
 
-// LocationDenied error
-type LocationDenied struct {
+// LocationDeniedError
+type LocationDeniedError struct {
 	Reason error
 }
 
-func (e LocationDenied) Error() string {
+func (e LocationDeniedError) Error() string {
 	return e.Reason.Error()
 }
 
 // IsLocationDenied checks if the err is an error which
 // indicates a location should return HTTP code 503
 func IsLocationDenied(e error) bool {
-	_, ok := e.(LocationDenied)
+	_, ok := e.(LocationDeniedError)
 	return ok
 }
 
@@ -96,7 +96,7 @@ func IsMissingAnnotations(e error) bool {
 // IsInvalidContent checks if the err is an error which
 // indicates an annotations value is not valid
 func IsInvalidContent(e error) bool {
-	_, ok := e.(InvalidContent)
+	_, ok := e.(InvalidContentError)
 	return ok
 }
 
