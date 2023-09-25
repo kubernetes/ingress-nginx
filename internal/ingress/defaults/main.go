@@ -34,7 +34,7 @@ type Backend struct {
 	// toggles whether or not to remove trailing slashes during TLS redirects
 	PreserveTrailingSlash bool `json:"preserve-trailing-slash"`
 
-	// allows usage of CustomHTTPErrors without intecepting service errors
+	// allows usage of CustomHTTPErrors without intercepting service errors
 	// e.g. custom 404 and 503 when service-a does not exist or is not available
 	// but service-a can return 404 and 503 error codes without intercept
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors
