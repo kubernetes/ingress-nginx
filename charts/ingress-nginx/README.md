@@ -249,7 +249,6 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.admissionWebhooks.key | string | `"/usr/local/certificates/key"` |  |
 | controller.admissionWebhooks.labels | object | `{}` | Labels to be added to admission webhooks |
 | controller.admissionWebhooks.namespaceSelector | object | `{}` |  |
-| controller.admissionWebhooks.networkPolicyEnabled | bool | `false` |  |
 | controller.admissionWebhooks.objectSelector | object | `{}` |  |
 | controller.admissionWebhooks.patch.enabled | bool | `true` |  |
 | controller.admissionWebhooks.patch.image.digest | string | `"sha256:543c40fd093964bc9ab509d3e791f9989963021f1e9e4c9c7b6700b02bfb227b"` |  |
@@ -374,6 +373,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.minAvailable | int | `1` | Minimum available pods set in PodDisruptionBudget. Define either 'minAvailable' or 'maxUnavailable', never both. |
 | controller.minReadySeconds | int | `0` | `minReadySeconds` to avoid killing pods before we are ready # |
 | controller.name | string | `"controller"` |  |
+| controller.networkPolicy.enabled | bool | `false` | Enable 'networkPolicy' or not |
 | controller.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node labels for controller pod assignment # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ # |
 | controller.opentelemetry.containerSecurityContext.allowPrivilegeEscalation | bool | `false` |  |
 | controller.opentelemetry.enabled | bool | `false` |  |
@@ -471,6 +471,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | defaultBackend.minAvailable | int | `1` |  |
 | defaultBackend.minReadySeconds | int | `0` | `minReadySeconds` to avoid killing pods before we are ready # |
 | defaultBackend.name | string | `"defaultbackend"` |  |
+| defaultBackend.networkPolicy.enabled | bool | `false` | Enable 'networkPolicy' or not |
 | defaultBackend.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node labels for default backend pod assignment # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ # |
 | defaultBackend.podAnnotations | object | `{}` | Annotations to be added to default backend pods # |
 | defaultBackend.podLabels | object | `{}` | Labels to add to the pod container metadata |
