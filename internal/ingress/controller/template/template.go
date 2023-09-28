@@ -728,7 +728,7 @@ func buildProxyPass(_ string, b, loc interface{}) string {
 
 	proxyPass := "proxy_pass"
 
-	switch location.BackendProtocol {
+	switch strings.ToUpper(location.BackendProtocol) {
 	case autoHTTPProtocol:
 		proto = "$scheme://"
 	case httpsProtocol:
