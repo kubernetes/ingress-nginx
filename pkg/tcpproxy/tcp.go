@@ -62,7 +62,15 @@ func (p *TCPProxy) Handle(conn net.Conn) {
 	// See: https://www.ibm.com/docs/en/ztpf/1.1.0.15?topic=sessions-ssl-record-format
 	data := make([]byte, 16384)
 
-	length, err := conn.Read(data)
+	// read the tls header first
+	_, err := io.ReadFull(conn, data[:parser.TLSHeaderLength])
+	if err != nil {
+		klog.V(4).ErrorS(err, "Error reading TLS header from the connection")
+		return
+	}
+	// get the total data length then read the rest
+	length := int(data[3])<<8 + int(data[4]) + parser.TLSHeaderLength
+	_, err = io.ReadFull(conn, data[parser.TLSHeaderLength:length])
 	if err != nil {
 		klog.V(4).ErrorS(err, "Error reading data from the connection")
 		return
@@ -115,7 +123,7 @@ func (p *TCPProxy) Handle(conn net.Conn) {
 	} else {
 		_, err = clientConn.Write(data[:length])
 		if err != nil {
-			klog.Errorf("Error writing the first 4k of proxy data: %v", err)
+			klog.Errorf("Error writing the first %d bytes of proxy data: %v", length, err)
 			clientConn.Close()
 		}
 	}
