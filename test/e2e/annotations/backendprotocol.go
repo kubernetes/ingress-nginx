@@ -48,6 +48,21 @@ var _ = framework.DescribeAnnotation("backend-protocol", func() {
 			})
 	})
 
+	ginkgo.It("should set backend protocol to https:// and use proxy_pass with lowercase annotation", func() {
+		host := backendProtocolHost
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/backend-protocol": "https",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "proxy_pass https://upstream_balancer;")
+			})
+	})
+
 	ginkgo.It("should set backend protocol to $scheme:// and use proxy_pass", func() {
 		host := backendProtocolHost
 		annotations := map[string]string{
