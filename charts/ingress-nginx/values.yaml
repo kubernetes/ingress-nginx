@@ -153,6 +153,8 @@ controller:
   # -- Allows customization of the configmap / nginx-configmap namespace; defaults to $(POD_NAMESPACE)
   configMapNamespace: ""
   tcp:
+    # -- Route TCP traffic on port 22 to port 2222 on a service in the cluster
+    # 22: some-namespace/some-service:2222
     # -- Allows customization of the tcp-services-configmap; defaults to $(POD_NAMESPACE)
     configMapNamespace: ""
     # -- Annotations to be added to the tcp config configmap
