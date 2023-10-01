@@ -23,7 +23,7 @@ RUN apk update \
   && apk upgrade \
   && /chroot.sh
 
-FROM alpine:3.18.2
+FROM alpine:3.18.4
 
 ARG TARGETARCH
 ARG VERSION
