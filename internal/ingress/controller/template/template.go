@@ -1230,11 +1230,11 @@ func buildOpentracing(c, s interface{}) string {
 
 	//nolint:gocritic // rewriting if-else to switch statement is not more readable
 	if cfg.DatadogCollectorHost != "" {
-		buf.WriteString("opentracing_load_tracer /usr/local/lib/libdd_opentracing.so /etc/nginx/opentracing.json;")
+		buf.WriteString("opentracing_load_tracer /usr/local/lib/libdd_opentracing.so /etc/ingress-controller/telemetry/opentracing.json;")
 	} else if cfg.ZipkinCollectorHost != "" {
-		buf.WriteString("opentracing_load_tracer /usr/local/lib/libzipkin_opentracing_plugin.so /etc/nginx/opentracing.json;")
+		buf.WriteString("opentracing_load_tracer /usr/local/lib/libzipkin_opentracing_plugin.so /etc/ingress-controller/telemetry/opentracing.json;")
 	} else if cfg.JaegerCollectorHost != "" || cfg.JaegerEndpoint != "" {
-		buf.WriteString("opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /etc/nginx/opentracing.json;")
+		buf.WriteString("opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /etc/ingress-controller/telemetry/opentracing.json;")
 	}
 
 	buf.WriteString("\r\n")

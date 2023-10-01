@@ -61,15 +61,15 @@ the target container
 *  "/etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/?.lua;;"; - Lua scripts
 * "/var/log/nginx" - NGINX logs
 * "/tmp/nginx (nginx.pid)" - NGINX pid directory / file, fcgi socket, etc
-* " /etc/nginx/geoip" - GeoIP database directory
+* " /etc/nginx/geoip" - GeoIP database directory - OK - /etc/ingress-controller/geoip
 * /etc/nginx/mime.types - Mime types
 * /etc/ingress-controller/ssl - SSL directory (fake cert, auth cert)
 * /etc/ingress-controller/auth - Authentication files
 * /etc/nginx/modsecurity - Modsecurity configuration
 * /etc/nginx/owasp-modsecurity-crs - Modsecurity rules
-* /etc/nginx/tickets.key - SSL tickets
-* /etc/nginx/opentelemetry.toml - OTEL config
-* /etc/nginx/opentracing.json - Opentracing config
+* /etc/nginx/tickets.key - SSL tickets - OK - /etc/ingress-controller/tickets.key
+* /etc/nginx/opentelemetry.toml - OTEL config - OK - /etc/ingress-controller/telemetry
+* /etc/nginx/opentracing.json - Opentracing config - OK - /etc/ingress-controller/telemetry
 * /etc/nginx/modules - NGINX modules
 * /etc/nginx/fastcgi_params (maybe) - fcgi params
 * /etc/nginx/template - Template, may be used by controller only
