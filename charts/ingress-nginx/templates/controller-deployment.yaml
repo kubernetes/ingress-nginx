@@ -63,16 +63,16 @@ spec:
     {{- end }}
     {{- if or .Values.controller.podSecurityContext .Values.controller.sysctls }}
       securityContext:
-    {{- end }}
-    {{- if .Values.controller.podSecurityContext }}
+      {{- if .Values.controller.podSecurityContext }}
         {{- toYaml .Values.controller.podSecurityContext | nindent 8 }}
-    {{- end }}
-    {{- if .Values.controller.sysctls }}
+      {{- end }}
+      {{- if .Values.controller.sysctls }}
         sysctls:
-    {{- range $sysctl, $value := .Values.controller.sysctls }}
-        - name: {{ $sysctl | quote }}
-          value: {{ $value | quote }}
-    {{- end }}
+        {{- range $sysctl, $value := .Values.controller.sysctls }}
+          - name: {{ $sysctl | quote }}
+            value: {{ $value | quote }}
+        {{- end }}
+      {{- end }}
     {{- end }}
     {{- if .Values.controller.shareProcessNamespace }}
       shareProcessNamespace: {{ .Values.controller.shareProcessNamespace }}
