@@ -584,8 +584,10 @@ controller:
   extraModules: []
   # - name: mytestmodule
   #   image: registry.k8s.io/ingress-nginx/mytestmodule
+  #   distroless: false
   #   containerSecurityContext:
   #     allowPrivilegeEscalation: false
+  #   resources: {}
   #
   # The image must contain a `/usr/local/bin/init_module.sh` executable, which
   # will be executed as initContainers, to move its config files within the
@@ -593,7 +595,9 @@ controller:
 
   opentelemetry:
     enabled: false
+    name: opentelemetry
     image: registry.k8s.io/ingress-nginx/opentelemetry:v20230721-3e2062ee5@sha256:13bee3f5223883d3ca62fee7309ad02d22ec00ff0d7033e3e9aca7a9f60fd472
+    distroless: true
     containerSecurityContext:
       allowPrivilegeEscalation: false
     resources: {}
