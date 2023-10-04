@@ -7,6 +7,7 @@ metadata:
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: "*"
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: admission-webhook
@@ -14,6 +15,10 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
+  privileged: false
+  hostPID: false
+  hostIPC: false
+  hostNetwork: false
   volumes:
     - configMap
     - downwardAPI
@@ -25,8 +30,14 @@ spec:
     ranges:
       - min: 1
         max: 65535
+  readOnlyRootFilesystem: true
   runAsUser:
     rule: MustRunAsNonRoot
+  runAsGroup:
+    rule: MustRunAs
+    ranges:
+      - min: 1
+        max: 65535
   supplementalGroups:
     rule: MustRunAs
     ranges:

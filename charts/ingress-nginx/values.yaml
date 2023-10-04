@@ -661,8 +661,17 @@ controller:
       type: ClusterIP
     createSecretJob:
       name: create
+      # -- Security context for secret creation containers
       securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
         allowPrivilegeEscalation: false
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+          - ALL
+        readOnlyRootFilesystem: true
       resources: {}
       # limits:
       #   cpu: 10m
@@ -672,8 +681,17 @@ controller:
       #   memory: 20Mi
     patchWebhookJob:
       name: patch
+      # -- Security context for webhook patch containers
       securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
         allowPrivilegeEscalation: false
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+          - ALL
+        readOnlyRootFilesystem: true
       resources: {}
     patch:
       enabled: true
@@ -695,10 +713,8 @@ controller:
       tolerations: []
       # -- Labels to be added to patch job resources
       labels: {}
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 2000
-        fsGroup: 2000
+      # -- Security context for secret creation & webhook patch pods
+      securityContext: {}
     # Use certmanager to generate webhook certs
     certManager:
       enabled: false
