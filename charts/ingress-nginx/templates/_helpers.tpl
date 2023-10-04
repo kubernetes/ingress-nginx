@@ -195,6 +195,23 @@ Create the name of the backend service account to use - only used when podsecuri
 {{- end -}}
 
 {{/*
+Default backend container security context.
+*/}}
+{{- define "ingress-nginx.defaultBackend.containerSecurityContext" -}}
+{{- if .Values.defaultBackend.containerSecurityContext -}}
+{{- toYaml .Values.defaultBackend.containerSecurityContext -}}
+{{- else -}}
+runAsNonRoot: {{ .Values.defaultBackend.image.runAsNonRoot }}
+runAsUser: {{ .Values.defaultBackend.image.runAsUser }}
+allowPrivilegeEscalation: {{ .Values.defaultBackend.image.allowPrivilegeEscalation }}
+capabilities:
+  drop:
+  - ALL
+readOnlyRootFilesystem: {{ .Values.defaultBackend.image.readOnlyRootFilesystem}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Return the appropriate apiGroup for PodSecurityPolicy.
 */}}
 {{- define "podSecurityPolicy.apiGroup" -}}

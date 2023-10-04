@@ -65,14 +65,7 @@ spec:
             {{- end }}
           {{- end }}
         {{- end }}
-          securityContext:
-            capabilities:
-              drop:
-              - ALL
-            runAsUser: {{ .Values.defaultBackend.image.runAsUser }}
-            runAsNonRoot: {{ .Values.defaultBackend.image.runAsNonRoot }}
-            allowPrivilegeEscalation: {{ .Values.defaultBackend.image.allowPrivilegeEscalation }}
-            readOnlyRootFilesystem: {{ .Values.defaultBackend.image.readOnlyRootFilesystem}}
+          securityContext: {{ include "ingress-nginx.defaultBackend.containerSecurityContext" . | nindent 12 }}
         {{- if .Values.defaultBackend.extraEnvs }}
           env: {{ toYaml .Values.defaultBackend.extraEnvs | nindent 12 }}
         {{- end }}

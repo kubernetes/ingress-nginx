@@ -799,11 +799,11 @@ defaultBackend:
     ## repository:
     tag: "1.5"
     pullPolicy: IfNotPresent
+    runAsNonRoot: true
     # nobody user -> uid 65534
     runAsUser: 65534
-    runAsNonRoot: true
-    readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
   # -- Use an existing PSP instead of creating one
   existingPsp: ""
   extraArgs: {}
