@@ -384,7 +384,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.opentelemetry.resources | object | `{}` |  |
 | controller.podAnnotations | object | `{}` | Annotations to be added to controller pods # |
 | controller.podLabels | object | `{}` | Labels to add to the pod container metadata |
-| controller.podSecurityContext | object | `{}` | Security Context policies for controller pods |
+| controller.podSecurityContext | object | `{}` | Security context for controller pods |
 | controller.priorityClassName | string | `""` |  |
 | controller.proxySetHeaders | object | `{}` | Will add custom headers before sending traffic to backends according to https://github.com/kubernetes/ingress-nginx/tree/main/docs/examples/customization/custom-headers |
 | controller.publishService | object | `{"enabled":true,"pathOverride":""}` | Allows customization of the source of the IP address or FQDN to report in the ingress status field. By default, it reads the information provided by the service. If disable, the status field reports the IP address of the node or nodes where an ingress controller pod is running. |
@@ -434,7 +434,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.service.targetPorts.https | string | `"https"` |  |
 | controller.service.type | string | `"LoadBalancer"` |  |
 | controller.shareProcessNamespace | bool | `false` |  |
-| controller.sysctls | object | `{}` | See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for notes on enabling and using sysctls |
+| controller.sysctls | object | `{}` | sysctls for controller pods # Ref: https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ |
 | controller.tcp.annotations | object | `{}` | Annotations to be added to the tcp config configmap |
 | controller.tcp.configMapNamespace | string | `""` | Allows customization of the tcp-services-configmap; defaults to $(POD_NAMESPACE) |
 | controller.terminationGracePeriodSeconds | int | `300` | `terminationGracePeriodSeconds` to avoid killing pods before we are ready # wait up to five minutes for the drain of connections # |

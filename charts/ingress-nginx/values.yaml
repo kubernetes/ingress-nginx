@@ -127,9 +127,10 @@ controller:
   podLabels: {}
   #  key: value
 
-  # -- Security Context policies for controller pods
+  # -- Security context for controller pods
   podSecurityContext: {}
-  # -- See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for notes on enabling and using sysctls
+  # -- sysctls for controller pods
+  ## Ref: https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/
   sysctls: {}
   # sysctls:
   #   "net.core.somaxconn": "8192"
