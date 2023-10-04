@@ -230,18 +230,21 @@ Extra modules.
 {{- define "extraModules" -}}
 - name: {{ .name }}
   image: {{ .image }}
-  {{- if .distroless | default false }}
-  command: ['/init_module']
+  command:
+  {{- if .distroless }}
+    - /init_module
   {{- else }}
-  command: ['sh', '-c', '/usr/local/bin/init_module.sh']
+    - sh
+    - -c
+    - /usr/local/bin/init_module.sh
   {{- end }}
   {{- if .containerSecurityContext }}
-  securityContext: {{ .containerSecurityContext | toYaml | nindent 4 }}
+  securityContext: {{ toYaml .containerSecurityContext | nindent 4 }}
   {{- end }}
   {{- if .resources }}
-  resources: {{ .resources | toYaml | nindent 4 }}
+  resources: {{ toYaml .resources | nindent 4 }}
   {{- end }}
   volumeMounts:
-    - name: {{ toYaml "modules"}}
-      mountPath: {{ toYaml "/modules_mount"}}
+    - name: modules
+      mountPath: /modules_mount
 {{- end -}}
