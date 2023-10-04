@@ -4,6 +4,8 @@ apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
   name: {{ include "ingress-nginx.fullname" . }}
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: "*"
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: controller
@@ -14,9 +16,7 @@ spec:
   privileged: false
   hostPID: false
   hostIPC: false
-{{- if .Values.controller.hostNetwork }}
   hostNetwork: {{ .Values.controller.hostNetwork }}
-{{- end }}
 {{- if or .Values.controller.hostNetwork .Values.controller.hostPort.enabled }}
   hostPorts:
   {{- if .Values.controller.hostNetwork }}
@@ -67,15 +67,25 @@ spec:
   readOnlyRootFilesystem: false
   runAsUser:
     rule: MustRunAsNonRoot
+  runAsGroup:
+    rule: MustRunAs
+    ranges:
+      - min: 1
+        max: 65535
   supplementalGroups:
     rule: MustRunAs
     ranges:
       - min: 1
         max: 65535
-  allowPrivilegeEscalation: true
+  allowPrivilegeEscalation: {{ or .Values.controller.image.allowPrivilegeEscalation .Values.controller.image.chroot }}
+  requiredDropCapabilities:
+    - ALL
   allowedCapabilities:
     - NET_BIND_SERVICE
   {{- if .Values.controller.image.chroot }}
+  {{- if .Values.controller.image.seccompProfile }}
+    - SYS_ADMIN
+  {{- end }}
     - SYS_CHROOT
   {{- end }}
   seLinux:

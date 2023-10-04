@@ -31,9 +31,13 @@ controller:
     digest: sha256:5b161f051d017e55d358435f295f5e9a297e66158f136321d9b04520ec6c48a3
     digestChroot: sha256:5976b1067cfbca8a21d0ba53d71f83543a73316a61ea7f7e436d6cf84ddf9b26
     pullPolicy: IfNotPresent
+    runAsNonRoot: true
     # www-data -> uid 101
     runAsUser: 101
-    allowPrivilegeEscalation: true
+    allowPrivilegeEscalation: false
+    seccompProfile:
+      type: RuntimeDefault
+    readOnlyRootFilesystem: false
   # -- Use an existing PSP instead of creating one
   existingPsp: ""
   # -- Configures the controller container name

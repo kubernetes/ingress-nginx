@@ -316,14 +316,17 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.hostPort.ports.http | int | `80` | 'hostPort' http port |
 | controller.hostPort.ports.https | int | `443` | 'hostPort' https port |
 | controller.hostname | object | `{}` | Optionally customize the pod hostname. |
-| controller.image.allowPrivilegeEscalation | bool | `true` |  |
+| controller.image.allowPrivilegeEscalation | bool | `false` |  |
 | controller.image.chroot | bool | `false` |  |
 | controller.image.digest | string | `"sha256:5b161f051d017e55d358435f295f5e9a297e66158f136321d9b04520ec6c48a3"` |  |
 | controller.image.digestChroot | string | `"sha256:5976b1067cfbca8a21d0ba53d71f83543a73316a61ea7f7e436d6cf84ddf9b26"` |  |
 | controller.image.image | string | `"ingress-nginx/controller"` |  |
 | controller.image.pullPolicy | string | `"IfNotPresent"` |  |
+| controller.image.readOnlyRootFilesystem | bool | `false` |  |
 | controller.image.registry | string | `"registry.k8s.io"` |  |
+| controller.image.runAsNonRoot | bool | `true` |  |
 | controller.image.runAsUser | int | `101` |  |
+| controller.image.seccompProfile.type | string | `"RuntimeDefault"` |  |
 | controller.image.tag | string | `"v1.9.4"` |  |
 | controller.ingressClass | string | `"nginx"` | For backwards compatibility with ingress.class annotation, use ingressClass. Algorithm is as follows, first ingressClassName is considered, if not present, controller looks for ingress.class annotation |
 | controller.ingressClassByName | bool | `false` | Process IngressClass per name (additionally as per spec.controller). |
