@@ -24,9 +24,9 @@ controller:
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
-    tag: "v1.9.0"
-    digest: sha256:c15d1a617858d90fb8f8a2dd60b0676f2bb85c54e3ed11511794b86ec30c8c60
-    digestChroot: sha256:d9fa7a136de2104fb2ecfcf1666978bfab927f4a125b75c0fb471e6104366ab5
+    tag: "v1.9.1"
+    digest: sha256:605a737877de78969493a4b1213b21de4ee425d2926906857b98050f57a95b25
+    digestChroot: sha256:2ac744ef08850ee86ad7162451a6879f47c1a41c6a757f6b6f913c52103b8836
     pullPolicy: IfNotPresent
     # www-data -> uid 101
     runAsUser: 101
@@ -875,12 +875,10 @@ defaultBackend:
     maxReplicas: 2
     targetCPUUtilizationPercentage: 50
     targetMemoryUtilizationPercentage: 50
-
   # NetworkPolicy for default backend component.
   networkPolicy:
     # -- Enable 'networkPolicy' or not
     enabled: false
-
   service:
     annotations: {}
     # clusterIP: ""
