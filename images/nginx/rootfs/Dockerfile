@@ -65,7 +65,10 @@ RUN apk update \
   for dir in "${writeDirs[@]}"; do \
   mkdir -p ${dir}; \
   chown -R www-data.www-data ${dir}; \
-  done'
+  done' \
+  # Why we do this? Because apk package of the library requests curl and we dont want curl
+  && mv /usr/lib/libmaxminddb.so.* /usr/local/lib/ \
+  && apk del --purge libmaxminddb curl
 
 EXPOSE 80 443
 
