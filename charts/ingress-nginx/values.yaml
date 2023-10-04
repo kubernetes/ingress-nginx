@@ -590,7 +590,15 @@ controller:
   #   image: registry.k8s.io/ingress-nginx/mytestmodule
   #   distroless: false
   #   containerSecurityContext:
+  #     runAsNonRoot: true
+  #     runAsUser: <user-id>
   #     allowPrivilegeEscalation: false
+  #     seccompProfile:
+  #       type: RuntimeDefault
+  #     capabilities:
+  #       drop:
+  #       - ALL
+  #     readOnlyRootFilesystem: true
   #   resources: {}
   #
   # The image must contain a `/usr/local/bin/init_module.sh` executable, which
