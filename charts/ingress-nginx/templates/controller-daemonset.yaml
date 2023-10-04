@@ -83,9 +83,8 @@ spec:
         {{- if .Values.controller.lifecycle }}
           lifecycle: {{ toYaml .Values.controller.lifecycle | nindent 12 }}
         {{- end }}
-          args:
-            {{- include "ingress-nginx.params" . | nindent 12 }}
-          securityContext: {{ include "controller.containerSecurityContext" . | nindent 12 }}
+          args: {{ include "ingress-nginx.params" . | nindent 12 }}
+          securityContext: {{ include "ingress-nginx.controller.containerSecurityContext" . | nindent 12 }}
           env:
             - name: POD_NAME
               valueFrom:
