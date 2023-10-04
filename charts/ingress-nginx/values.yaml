@@ -134,6 +134,8 @@ controller:
   sysctls: {}
   # sysctls:
   #   "net.core.somaxconn": "8192"
+  # -- Security context for controller containers
+  containerSecurityContext: {}
 
   # -- Allows customization of the source of the IP address or FQDN to report
   # in the ingress status field. By default, it reads the information provided
