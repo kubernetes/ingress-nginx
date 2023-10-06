@@ -26,11 +26,11 @@ spec:
   allowPrivilegeEscalation: true
   # Allow core volume types.
   volumes:
-    - 'configMap'
-    - 'emptyDir'
-    - 'projected'
-    - 'secret'
-    - 'downwardAPI'
+    - configMap
+    - emptyDir
+    - projected
+    - secret
+    - downwardAPI
 {{- if .Values.controller.hostNetwork }}
   hostNetwork: {{ .Values.controller.hostNetwork }}
 {{- end }}
@@ -74,21 +74,21 @@ spec:
   hostPID: false
   runAsUser:
     # Require the container to run without root privileges.
-    rule: 'MustRunAsNonRoot'
+    rule: MustRunAsNonRoot
   supplementalGroups:
-    rule: 'MustRunAs'
+    rule: MustRunAs
     ranges:
       # Forbid adding the root group.
       - min: 1
         max: 65535
   fsGroup:
-    rule: 'MustRunAs'
+    rule: MustRunAs
     ranges:
       # Forbid adding the root group.
       - min: 1
         max: 65535
   readOnlyRootFilesystem: false
   seLinux:
-    rule: 'RunAsAny'
+    rule: RunAsAny
 {{- end }}
 {{- end }}
