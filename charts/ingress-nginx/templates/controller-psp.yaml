@@ -19,7 +19,7 @@ spec:
 {{- if .Values.controller.sysctls }}
   allowedUnsafeSysctls:
   {{- range $sysctl, $value := .Values.controller.sysctls }}
-  - {{ $sysctl }}
+    - {{ $sysctl }}
   {{- end }}
 {{- end }}
   privileged: false
@@ -36,39 +36,39 @@ spec:
 {{- end }}
 {{- if or .Values.controller.hostNetwork .Values.controller.hostPort.enabled }}
   hostPorts:
-{{- if .Values.controller.hostNetwork }}
-{{- range $key, $value := .Values.controller.containerPort }}
-  # {{ $key }}
-  - min: {{ $value }}
-    max: {{ $value }}
-{{- end }}
-{{- else if .Values.controller.hostPort.enabled }}
-{{- range $key, $value := .Values.controller.hostPort.ports }}
-  # {{ $key }}
-  - min: {{ $value }}
-    max: {{ $value }}
-{{- end }}
-{{- end }}
-{{- if .Values.controller.metrics.enabled }}
-  # metrics
-  - min: {{ .Values.controller.metrics.port }}
-    max: {{ .Values.controller.metrics.port }}
-{{- end }}
-{{- if .Values.controller.admissionWebhooks.enabled }}
-  # admission webhooks
-  - min: {{ .Values.controller.admissionWebhooks.port }}
-    max: {{ .Values.controller.admissionWebhooks.port }}
-{{- end }}
-{{- range $key, $value := .Values.tcp }}
-  # {{ $key }}-tcp
-  - min: {{ $key }}
-    max: {{ $key }}
-{{- end }}
-{{- range $key, $value := .Values.udp }}
-  # {{ $key }}-udp
-  - min: {{ $key }}
-    max: {{ $key }}
-{{- end }}
+  {{- if .Values.controller.hostNetwork }}
+  {{- range $key, $value := .Values.controller.containerPort }}
+    # {{ $key }}
+    - min: {{ $value }}
+      max: {{ $value }}
+  {{- end }}
+  {{- else if .Values.controller.hostPort.enabled }}
+  {{- range $key, $value := .Values.controller.hostPort.ports }}
+    # {{ $key }}
+    - min: {{ $value }}
+      max: {{ $value }}
+  {{- end }}
+  {{- end }}
+  {{- if .Values.controller.metrics.enabled }}
+    # metrics
+    - min: {{ .Values.controller.metrics.port }}
+      max: {{ .Values.controller.metrics.port }}
+  {{- end }}
+  {{- if .Values.controller.admissionWebhooks.enabled }}
+    # admission webhooks
+    - min: {{ .Values.controller.admissionWebhooks.port }}
+      max: {{ .Values.controller.admissionWebhooks.port }}
+  {{- end }}
+  {{- range $key, $value := .Values.tcp }}
+    # {{ $key }}-tcp
+    - min: {{ $key }}
+      max: {{ $key }}
+  {{- end }}
+  {{- range $key, $value := .Values.udp }}
+    # {{ $key }}-udp
+    - min: {{ $key }}
+      max: {{ $key }}
+  {{- end }}
 {{- end }}
   hostIPC: false
   hostPID: false
