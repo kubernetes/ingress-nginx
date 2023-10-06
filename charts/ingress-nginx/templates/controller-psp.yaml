@@ -11,25 +11,9 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
-  allowedCapabilities:
-    - NET_BIND_SERVICE
-  {{- if .Values.controller.image.chroot }}
-    - SYS_CHROOT
-  {{- end }}
-{{- if .Values.controller.sysctls }}
-  allowedUnsafeSysctls:
-  {{- range $sysctl, $value := .Values.controller.sysctls }}
-    - {{ $sysctl }}
-  {{- end }}
-{{- end }}
   privileged: false
-  allowPrivilegeEscalation: true
-  volumes:
-    - configMap
-    - emptyDir
-    - projected
-    - secret
-    - downwardAPI
+  hostPID: false
+  hostIPC: false
 {{- if .Values.controller.hostNetwork }}
   hostNetwork: {{ .Values.controller.hostNetwork }}
 {{- end }}
@@ -69,8 +53,18 @@ spec:
       max: {{ $key }}
   {{- end }}
 {{- end }}
-  hostIPC: false
-  hostPID: false
+  volumes:
+    - configMap
+    - downwardAPI
+    - emptyDir
+    - secret
+    - projected
+  fsGroup:
+    rule: MustRunAs
+    ranges:
+      - min: 1
+        max: 65535
+  readOnlyRootFilesystem: false
   runAsUser:
     rule: MustRunAsNonRoot
   supplementalGroups:
@@ -78,13 +72,19 @@ spec:
     ranges:
       - min: 1
         max: 65535
-  fsGroup:
-    rule: MustRunAs
-    ranges:
-      - min: 1
-        max: 65535
-  readOnlyRootFilesystem: false
+  allowPrivilegeEscalation: true
+  allowedCapabilities:
+    - NET_BIND_SERVICE
+  {{- if .Values.controller.image.chroot }}
+    - SYS_CHROOT
+  {{- end }}
   seLinux:
     rule: RunAsAny
+{{- if .Values.controller.sysctls }}
+  allowedUnsafeSysctls:
+  {{- range $sysctl, $value := .Values.controller.sysctls }}
+    - {{ $sysctl }}
+  {{- end }}
+{{- end }}
 {{- end }}
 {{- end }}
