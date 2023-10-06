@@ -24,7 +24,6 @@ spec:
 {{- end }}
   privileged: false
   allowPrivilegeEscalation: true
-  # Allow core volume types.
   volumes:
     - configMap
     - emptyDir
@@ -38,34 +37,34 @@ spec:
   hostPorts:
   {{- if .Values.controller.hostNetwork }}
   {{- range $key, $value := .Values.controller.containerPort }}
-    # {{ $key }}
+    # controller.containerPort.{{ $key }}
     - min: {{ $value }}
       max: {{ $value }}
   {{- end }}
   {{- else if .Values.controller.hostPort.enabled }}
   {{- range $key, $value := .Values.controller.hostPort.ports }}
-    # {{ $key }}
+    # controller.hostPort.ports.{{ $key }}
     - min: {{ $value }}
       max: {{ $value }}
   {{- end }}
   {{- end }}
   {{- if .Values.controller.metrics.enabled }}
-    # metrics
+    # controller.metrics.port
     - min: {{ .Values.controller.metrics.port }}
       max: {{ .Values.controller.metrics.port }}
   {{- end }}
   {{- if .Values.controller.admissionWebhooks.enabled }}
-    # admission webhooks
+    # controller.admissionWebhooks.port
     - min: {{ .Values.controller.admissionWebhooks.port }}
       max: {{ .Values.controller.admissionWebhooks.port }}
   {{- end }}
   {{- range $key, $value := .Values.tcp }}
-    # {{ $key }}-tcp
+    # tcp.{{ $key }}
     - min: {{ $key }}
       max: {{ $key }}
   {{- end }}
   {{- range $key, $value := .Values.udp }}
-    # {{ $key }}-udp
+    # udp.{{ $key }}
     - min: {{ $key }}
       max: {{ $key }}
   {{- end }}
@@ -73,18 +72,15 @@ spec:
   hostIPC: false
   hostPID: false
   runAsUser:
-    # Require the container to run without root privileges.
     rule: MustRunAsNonRoot
   supplementalGroups:
     rule: MustRunAs
     ranges:
-      # Forbid adding the root group.
       - min: 1
         max: 65535
   fsGroup:
     rule: MustRunAs
     ranges:
-      # Forbid adding the root group.
       - min: 1
         max: 65535
   readOnlyRootFilesystem: false
