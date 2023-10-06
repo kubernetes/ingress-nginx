@@ -454,7 +454,9 @@ controller:
     loadBalancerSourceRanges: []
     # -- Used by cloud providers to select a load balancer implementation other than the cloud provider default. https://kubernetes.io/docs/concepts/services-networking/service/#load-balancer-class
     loadBalancerClass: ""
+    # -- If enabled the http port is enabled
     enableHttp: true
+    # -- If enabled the https port is enabled
     enableHttps: true
     ## Set external traffic policy to: "Local" to preserve source IP on providers supporting it.
     ## Ref: https://kubernetes.io/docs/tutorials/services/source-ip/#source-ip-for-services-with-typeloadbalancer
@@ -513,15 +515,35 @@ controller:
       ## Ref: https://kubernetes.io/docs/tutorials/services/source-ip/#source-ip-for-services-with-typeloadbalancer
       # externalTrafficPolicy: ""
 
+      # -- If enabled the http port is enabled
+      enableHttp: true
+
+      # -- If enabled the https port is enabled
+      enableHttps: true
+
       # -- Custom port mapping for internal service
-      ports: {}
-      #  http: 80
-      #  https: 443
+      ports:
+        http: 80
+        https: 443
 
       # -- Custom target port mapping for internal service
-      targetPorts: {}
-      #  http: http
-      #  https: https
+      targetPorts:
+        http: http
+        https: https
+
+      # -- Custom type for internal service
+      type: LoadBalancer
+      ## type: NodePort
+      ## nodePorts:
+      ##   http: 32080
+      ##   https: 32443
+      ##   tcp:
+      ##     8080: 32808
+      nodePorts:
+        http: ""
+        https: ""
+        tcp: {}
+        udp: {}
   # shareProcessNamespace enables process namespace sharing within the pod.
   # This can be used for example to signal log rotation using `kill -USR1` from a sidecar.
   shareProcessNamespace: false

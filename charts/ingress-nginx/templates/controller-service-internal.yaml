@@ -15,7 +15,7 @@ metadata:
   name: {{ include "ingress-nginx.controller.fullname" . }}-internal
   namespace: {{ .Release.Namespace }}
 spec:
-  type: "{{ .Values.controller.service.type }}"
+  type: "{{ .Values.controller.service.internal.type }}"
 {{- if .Values.controller.service.internal.loadBalancerIP }}
   loadBalancerIP: {{ .Values.controller.service.internal.loadBalancerIP }}
 {{- end }}
@@ -26,29 +26,29 @@ spec:
   externalTrafficPolicy: {{ .Values.controller.service.internal.externalTrafficPolicy }}
 {{- end }}
   ports:
-  {{- $setNodePorts := (or (eq .Values.controller.service.type "NodePort") (eq .Values.controller.service.type "LoadBalancer")) }}
-  {{- if .Values.controller.service.enableHttp }}
+  {{- $setNodePorts := (or (eq .Values.controller.service.internal.type "NodePort") (eq .Values.controller.service.internal.type "LoadBalancer")) }}
+  {{- if .Values.controller.service.internal.enableHttp }}
     - name: http
-      port: {{ .Values.controller.service.internal.ports.http | default .Values.controller.service.ports.http }}
+      port: {{ .Values.controller.service.internal.ports.http | default .Values.controller.service.internal.ports.http }}
       protocol: TCP
-      targetPort: {{ .Values.controller.service.internal.targetPorts.http | default .Values.controller.service.targetPorts.http }}
+      targetPort: {{ .Values.controller.service.internal.targetPorts.http | default .Values.controller.service.internal.targetPorts.http }}
     {{- if semverCompare ">=1.20" .Capabilities.KubeVersion.Version }}
       appProtocol: http
     {{- end }}
-    {{- if (and $setNodePorts (not (empty .Values.controller.service.nodePorts.http))) }}
-      nodePort: {{ .Values.controller.service.nodePorts.http }}
+    {{- if (and $setNodePorts (not (empty .Values.controller.service.internal.nodePorts.http))) }}
+      nodePort: {{ .Values.controller.service.internal.nodePorts.http }}
     {{- end }}
   {{- end }}
-  {{- if .Values.controller.service.enableHttps }}
+  {{- if .Values.controller.service.internal.enableHttps }}
     - name: https
-      port: {{ .Values.controller.service.internal.ports.https | default .Values.controller.service.ports.https }}
+      port: {{ .Values.controller.service.internal.ports.https | default .Values.controller.service.internal.ports.https }}
       protocol: TCP
-      targetPort: {{ .Values.controller.service.internal.targetPorts.https | default .Values.controller.service.targetPorts.https }}
+      targetPort: {{ .Values.controller.service.internal.targetPorts.https | default .Values.controller.service.internal.targetPorts.https }}
     {{- if semverCompare ">=1.20" .Capabilities.KubeVersion.Version }}
       appProtocol: https
     {{- end }}
-    {{- if (and $setNodePorts (not (empty .Values.controller.service.nodePorts.https))) }}
-      nodePort: {{ .Values.controller.service.nodePorts.https }}
+    {{- if (and $setNodePorts (not (empty .Values.controller.service.internal.nodePorts.https))) }}
+      nodePort: {{ .Values.controller.service.internal.nodePorts.https }}
     {{- end }}
   {{- end }}
   {{- range $key, $value := .Values.tcp }}
@@ -56,9 +56,9 @@ spec:
       port: {{ $key }}
       protocol: TCP
       targetPort: {{ if $.Values.portNamePrefix }}{{ $.Values.portNamePrefix }}-{{ end }}{{ $key }}-tcp
-    {{- if $.Values.controller.service.nodePorts.tcp }}
-    {{- if index $.Values.controller.service.nodePorts.tcp $key }}
-      nodePort: {{ index $.Values.controller.service.nodePorts.tcp $key }}
+    {{- if $.Values.controller.service.internal.nodePorts.tcp }}
+    {{- if index $.Values.controller.service.internal.nodePorts.tcp $key }}
+      nodePort: {{ index $.Values.controller.service.internal.nodePorts.tcp $key }}
     {{- end }}
     {{- end }}
   {{- end }}
@@ -67,9 +67,9 @@ spec:
       port: {{ $key }}
       protocol: UDP
       targetPort: {{ if $.Values.portNamePrefix }}{{ $.Values.portNamePrefix }}-{{ end }}{{ $key }}-udp
-    {{- if $.Values.controller.service.nodePorts.udp }}
-    {{- if index $.Values.controller.service.nodePorts.udp $key }}
-      nodePort: {{ index $.Values.controller.service.nodePorts.udp $key }}
+    {{- if $.Values.controller.service.internal.nodePorts.udp }}
+    {{- if index $.Values.controller.service.internal.nodePorts.udp $key }}
+      nodePort: {{ index $.Values.controller.service.internal.nodePorts.udp $key }}
     {{- end }}
     {{- end }}
   {{- end }}

@@ -404,17 +404,24 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.scope.namespaceSelector | string | `""` | When scope.enabled == false, instead of watching all namespaces, we watching namespaces whose labels only match with namespaceSelector. Format like foo=bar. Defaults to empty, means watching all namespaces. |
 | controller.service.annotations | object | `{}` | Annotations are mandatory for the load balancer to come up. Varies with the cloud service. Values passed through helm tpl engine. |
 | controller.service.appProtocol | bool | `true` | If enabled is adding an appProtocol option for Kubernetes service. An appProtocol field replacing annotations that were using for setting a backend protocol. Here is an example for AWS: service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http It allows choosing the protocol for each backend specified in the Kubernetes service. See the following GitHub issue for more details about the purpose: https://github.com/kubernetes/kubernetes/issues/40244 Will be ignored for Kubernetes versions older than 1.20 # |
-| controller.service.enableHttp | bool | `true` |  |
-| controller.service.enableHttps | bool | `true` |  |
+| controller.service.enableHttp | bool | `true` | If enabled the http port is enabled |
+| controller.service.enableHttps | bool | `true` | If enabled the https port is enabled |
 | controller.service.enabled | bool | `true` |  |
 | controller.service.external.enabled | bool | `true` |  |
 | controller.service.externalIPs | list | `[]` | List of IP addresses at which the controller services are available # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips # |
 | controller.service.internal.annotations | object | `{}` | Annotations are mandatory for the load balancer to come up. Varies with the cloud service. Values passed through helm tpl engine. |
+| controller.service.internal.enableHttp | bool | `true` | If enabled the http port is enabled |
+| controller.service.internal.enableHttps | bool | `true` | If enabled the https port is enabled |
 | controller.service.internal.enabled | bool | `false` | Enables an additional internal load balancer (besides the external one). |
 | controller.service.internal.loadBalancerIP | string | `""` | Used by cloud providers to connect the resulting internal LoadBalancer to a pre-existing static IP. Make sure to add to the service the needed annotation to specify the subnet which the static IP belongs to. For instance, `networking.gke.io/internal-load-balancer-subnet` for GCP and `service.beta.kubernetes.io/aws-load-balancer-subnets` for AWS. |
 | controller.service.internal.loadBalancerSourceRanges | list | `[]` | Restrict access For LoadBalancer service. Defaults to 0.0.0.0/0. |
-| controller.service.internal.ports | object | `{}` | Custom port mapping for internal service |
-| controller.service.internal.targetPorts | object | `{}` | Custom target port mapping for internal service |
+| controller.service.internal.nodePorts.http | string | `""` |  |
+| controller.service.internal.nodePorts.https | string | `""` |  |
+| controller.service.internal.nodePorts.tcp | object | `{}` |  |
+| controller.service.internal.nodePorts.udp | object | `{}` |  |
+| controller.service.internal.ports | object | `{"http":80,"https":443}` | Custom port mapping for internal service |
+| controller.service.internal.targetPorts | object | `{"http":"http","https":"https"}` | Custom target port mapping for internal service |
+| controller.service.internal.type | string | `"LoadBalancer"` | Custom type for internal service |
 | controller.service.ipFamilies | list | `["IPv4"]` | List of IP families (e.g. IPv4, IPv6) assigned to the service. This field is usually assigned automatically based on cluster configuration and the ipFamilyPolicy field. # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/ |
 | controller.service.ipFamilyPolicy | string | `"SingleStack"` | Represents the dual-stack-ness requested or required by this Service. Possible values are SingleStack, PreferDualStack or RequireDualStack. The ipFamilies and clusterIPs fields depend on the value of this field. # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/ |
 | controller.service.labels | object | `{}` |  |
