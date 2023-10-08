@@ -39,7 +39,6 @@ RUN apk update \
   openssl \
   pcre \
   zlib \
-  geoip \
   ca-certificates \
   patch \
   yajl \

@@ -99,7 +99,6 @@ The following table shows a configuration option's name, type, and the default v
 |[proxy-protocol-header-timeout](#proxy-protocol-header-timeout)|string|"5s"||
 |[enable-aio-write](#enable-aio-write)|bool|"true"||
 |[use-gzip](#use-gzip)|bool|"false"||
-|[use-geoip](#use-geoip)|bool|"true"||
 |[use-geoip2](#use-geoip2)|bool|"false"||
 |[enable-brotli](#enable-brotli)|bool|"false"||
 |[brotli-level](#brotli-level)|int|4||
@@ -717,13 +716,6 @@ Enables or disables the directive [aio_write](https://nginx.org/en/docs/http/ngx
 ## use-gzip
 
 Enables or disables compression of HTTP responses using the ["gzip" module](https://nginx.org/en/docs/http/ngx_http_gzip_module.html). MIME types to compress are controlled by [gzip-types](#gzip-types). _**default:**_ false
-
-## use-geoip
-
-Enables or disables ["geoip" module](https://nginx.org/en/docs/http/ngx_http_geoip_module.html) that creates variables with values depending on the client IP address, using the precompiled MaxMind databases.
-_**default:**_ true
-
-> __Note:__ MaxMind legacy databases are discontinued and will not receive updates after 2019-01-02, cf. [discontinuation notice](https://support.maxmind.com/geolite-legacy-discontinuation-notice/). Consider [use-geoip2](#use-geoip2) below.
 
 ## use-geoip2
 

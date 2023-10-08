@@ -396,6 +396,8 @@ jobs:
               - 'images/kube-webhook-certgen/**'
             ext-auth-example-authsvc:
               - 'images/ext-auth-example-authsvc/**'
+            nginx:
+              - 'images/nginx/**'
 
       - name: custom-error-pages image build
         if: ${{ steps.filter-images.outputs.custom-error-pages == 'true' }}
@@ -429,6 +431,10 @@ jobs:
         if: ${{ steps.filter-images.outputs.ext-auth-example-authsvc == 'true' }}
         run: |
           cd images/ext-auth-example-authsvc && make build
+      - name: nginx-image
+        if: ${{ steps.filter-images.outputs.nginx == 'true' }}
+        run: |
+          cd images/nginx/rootfs && docker build -t test-nginx .
 
   test-image:
     permissions:
