@@ -14,25 +14,25 @@ spec:
   allowPrivilegeEscalation: false
   fsGroup:
     ranges:
-    - max: 65535
-      min: 1
+      - max: 65535
+        min: 1
     rule: MustRunAs
   requiredDropCapabilities:
-  - ALL
+    - ALL
   runAsUser:
     rule: MustRunAsNonRoot
   seLinux:
     rule: RunAsAny
   supplementalGroups:
     ranges:
-    - max: 65535
-      min: 1
+      - max: 65535
+        min: 1
     rule: MustRunAs
   volumes:
-  - configMap
-  - emptyDir
-  - projected
-  - secret
-  - downwardAPI
+    - configMap
+    - emptyDir
+    - projected
+    - secret
+    - downwardAPI
 {{- end }}
 {{- end }}
