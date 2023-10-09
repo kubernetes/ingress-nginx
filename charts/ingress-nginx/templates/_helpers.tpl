@@ -193,3 +193,20 @@ IngressClass parameters.
 {{ toYaml .Values.controller.ingressClassResource.parameters | indent 4}}
   {{ end }}
 {{- end -}}
+
+{{/*
+Extra modules.
+*/}}
+{{- define "extraModules" -}}
+
+- name: {{ .name }}
+  image: {{ .image }}
+  command: ['sh', '-c', '/usr/local/bin/init_module.sh']
+  {{- if (.containerSecurityContext) }}
+  securityContext: {{ .containerSecurityContext | toYaml | nindent 4 }}
+  {{- end }}
+  volumeMounts:
+    - name: {{ toYaml "modules"}}
+      mountPath: {{ toYaml "/modules_mount"}}
+
+{{- end -}}

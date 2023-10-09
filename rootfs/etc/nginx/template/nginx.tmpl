@@ -1268,6 +1268,10 @@ stream {
             deny all;
             {{ end }}
 
+            {{ if $location.CorsConfig.CorsEnabled }}
+            {{ template "CORS" $location }}
+            {{ end }}
+
             {{ if not (isLocationInLocationList $location $all.Cfg.NoAuthLocations) }}
             {{ if $authPath }}
             # this location requires authentication
@@ -1328,10 +1332,6 @@ stream {
             {{ $limits := buildRateLimit $location }}
             {{ range $limit := $limits }}
             {{ $limit }}{{ end }}
-
-            {{ if $location.CorsConfig.CorsEnabled }}
-            {{ template "CORS" $location }}
-            {{ end }}
 
             {{ buildInfluxDB $location.InfluxDB }}
 

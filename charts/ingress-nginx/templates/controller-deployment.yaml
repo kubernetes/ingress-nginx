@@ -147,9 +147,9 @@ spec:
               hostPort: {{ $key }}
               {{- end }}
           {{- end }}
-        {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraModules) }}
+        {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
           volumeMounts:
-          {{- if .Values.controller.extraModules }}
+          {{- if (or .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
             - name: modules
             {{ if .Values.controller.image.chroot }}
               mountPath: /chroot/modules_mount
@@ -177,24 +177,21 @@ spec:
       {{- if .Values.controller.extraContainers }}
         {{ toYaml .Values.controller.extraContainers | nindent 8 }}
       {{- end }}
-    {{- if (or .Values.controller.extraInitContainers .Values.controller.extraModules) }}
+    {{- if (or .Values.controller.extraInitContainers .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
       initContainers:
       {{- if .Values.controller.extraInitContainers }}
         {{ toYaml .Values.controller.extraInitContainers | nindent 8 }}
       {{- end }}
       {{- if .Values.controller.extraModules }}
         {{- range .Values.controller.extraModules }}
-          - name: {{ .name }}
-            image: {{ .image }}
-            command: ['sh', '-c', '/usr/local/bin/init_module.sh']
-            {{- if (or $.Values.controller.containerSecurityContext .containerSecurityContext) }}
-            securityContext: {{ .containerSecurityContext | default $.Values.controller.containerSecurityContext | toYaml | nindent 14 }}
-            {{- end }}
-            volumeMounts:
-              - name: modules
-                mountPath: /modules_mount
+          {{ $containerSecurityContext := .containerSecurityContext | default $.Values.controller.containerSecurityContext }}
+          {{- include "extraModules" (dict "name" .name "image" .image "containerSecurityContext" $containerSecurityContext | nindent 8) }}
         {{- end }}
       {{- end }}
+      {{- if .Values.controller.opentelemetry.enabled}}
+          {{ $otelContainerSecurityContext := $.Values.controller.opentelemetry.containerSecurityContext | default $.Values.controller.containerSecurityContext }}
+          {{- include "extraModules" (dict "name" "opentelemetry" "image" .Values.controller.opentelemetry.image "containerSecurityContext" $otelContainerSecurityContext) | nindent 8}}
+      {{- end}}
     {{- end }}
     {{- if .Values.controller.hostNetwork }}
       hostNetwork: {{ .Values.controller.hostNetwork }}
@@ -213,9 +210,9 @@ spec:
     {{- end }}
       serviceAccountName: {{ template "ingress-nginx.serviceAccountName" . }}
       terminationGracePeriodSeconds: {{ .Values.controller.terminationGracePeriodSeconds }}
-    {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraVolumes .Values.controller.extraModules) }}
+    {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraVolumes .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
       volumes:
-      {{- if .Values.controller.extraModules }}
+      {{- if (or .Values.controller.extraModules .Values.controller.opentelemetry.enabled)}}
         - name: modules
           emptyDir: {}
       {{- end }}
@@ -231,6 +228,13 @@ spec:
         - name: webhook-cert
           secret:
             secretName: {{ include "ingress-nginx.fullname" . }}-admission
+        {{- if .Values.controller.admissionWebhooks.certManager.enabled }}
+            items:
+              - key: tls.crt
+                path: cert
+              - key: tls.key
+                path: key
+        {{- end }}
       {{- end }}
       {{- if .Values.controller.extraVolumes }}
         {{ toYaml .Values.controller.extraVolumes | nindent 8 }}

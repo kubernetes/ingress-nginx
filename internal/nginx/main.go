@@ -36,6 +36,9 @@ import (
 // ProfilerPort port used by the ingress controller to expose the Go Profiler when it is enabled.
 var ProfilerPort = 10245
 
+// ProfilerAddress IP address used by the ingress controller to expose the Go Profiler when it is enabled.
+var ProfilerAddress = "127.0.0.1"
+
 // TemplatePath path of the NGINX template
 var TemplatePath = "/etc/nginx/template/nginx.tmpl"
 

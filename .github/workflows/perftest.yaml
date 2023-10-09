@@ -1,4 +1,5 @@
 name: Performance Test
+
 on:
   workflow_dispatch:
     inputs:
@@ -18,7 +19,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
 
       - name: Install K6
         run: |
@@ -33,7 +34,7 @@ jobs:
           mkdir $HOME/.kube
           make dev-env
           podName=`kubectl -n ingress-nginx get po | grep -i controller | awk '{print $1}'`
-          if [[ -z ${podName} ]] ; then 
+          if [[ -z ${podName} ]] ; then
             sleep 5
           fi
           kubectl wait pod -n ingress-nginx --for condition=Ready $podName
@@ -46,7 +47,7 @@ jobs:
             kubectl create ing k6 --class nginx \
             --rule test.ingress-nginx-controller.ga/*=k6:80
           podName=`kubectl get po | grep -i k6 | awk '{print $1}'`
-          if [[ -z ${podName} ]] ; then 
+          if [[ -z ${podName} ]] ; then
             sleep 5
           fi
           kubectl wait pod --for condition=Ready $podName

@@ -367,7 +367,9 @@ controller:
 
   # Mutually exclusive with keda autoscaling
   autoscaling:
+    apiVersion: autoscaling/v2
     enabled: false
+    annotations: {}
     minReplicas: 1
     maxReplicas: 11
     targetCPUUtilizationPercentage: 50
@@ -585,14 +587,18 @@ controller:
 
   # -- Modules, which are mounted into the core nginx image. See values.yaml for a sample to add opentelemetry module
   extraModules: []
-  # - name: opentelemetry
-  #   image: registry.k8s.io/ingress-nginx/opentelemetry:v20220906-g981ce38a7@sha256:aa079daa7efd93aa830e26483a49a6343354518360929494bad1d0ad3303142e
   #   containerSecurityContext:
   #     allowPrivilegeEscalation: false
   #
   # The image must contain a `/usr/local/bin/init_module.sh` executable, which
   # will be executed as initContainers, to move its config files within the
   # mounted volume.
+
+  opentelemetry:
+    enabled: false
+    image: registry.k8s.io/ingress-nginx/opentelemetry:v20230107-helm-chart-4.4.2-2-g96b3d2165@sha256:331b9bebd6acfcd2d3048abbdd86555f5be76b7e3d0b5af4300b04235c6056c9
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
 
   admissionWebhooks:
     annotations: {}
@@ -678,6 +684,17 @@ controller:
         runAsUser: 2000
         fsGroup: 2000
 
+    # Use certmanager to generate webhook certs
+    certManager:
+      enabled: false
+      # self-signed root certificate
+      rootCert:
+        duration: ""  # default to be 5y
+      admissionCert:
+        duration: ""  # default to be 1y
+      # issuerRef:
+      #   name: "issuer"
+      #   kind: "ClusterIssuer"
 
   metrics:
     port: 10254

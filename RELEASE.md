@@ -89,7 +89,7 @@ Promoting the images basically means that images, that were pushed to staging co
 
   - The sha is also visible here https://console.cloud.google.com/gcr/images/k8s-staging-ingress-nginx/global/controller
 
-  - The sha is also visible [here]((https://prow.k8s.io/?repo=kubernetes%2Fingress-nginx&job=post-*)), after cloud build is finished. Click on the respective job, go to `Artifacts` section in the UI, then again `artifacts` in the directory browser. In the `build.log` at the very bottom you see something like this:
+  - The sha is also visible [here](https://prow.k8s.io/?repo=kubernetes%2Fingress-nginx&job=post-*), after cloud build is finished. Click on the respective job, go to `Artifacts` section in the UI, then again `artifacts` in the directory browser. In the `build.log` at the very bottom you see something like this:
 
   ```
   ...
@@ -113,7 +113,7 @@ Promoting the images basically means that images, that were pushed to staging co
 
 - For making it easier, you can edit your branch directly in the browser. But be careful about making any mistake.
 
-- Insert the sha(s) & the tag(s), in a new line, in this file [Project kubernetes/k8s.io Ingress-Nginx-Controller Images](https://github.com/kubernetes/k8s.io/blob/main/registry.k8s.io/images/k8s-staging-ingress-nginx/images.yaml)  Look at this [example PR and the diff](https://github.com/kubernetes/k8s.io/pull/2536) to see how it was done before
+- Insert the sha(s) & the tag(s), in a new line, in this file [Project kubernetes/k8s.io Ingress-Nginx-Controller Images](https://github.com/kubernetes/k8s.io/blob/main/k8s.gcr.io/images/k8s-staging-ingress-nginx/images.yaml)  Look at this [example PR and the diff](https://github.com/kubernetes/k8s.io/pull/2536) to see how it was done before
 
 - Save and commit
 

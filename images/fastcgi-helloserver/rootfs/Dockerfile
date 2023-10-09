@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.14-alpine as builder
+FROM golang:1.19.4-alpine3.17 as builder
 
 WORKDIR /go/src/k8s.io/ingress-nginx/images/fastcgi
 

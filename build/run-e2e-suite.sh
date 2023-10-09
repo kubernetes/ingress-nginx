@@ -88,3 +88,39 @@ kubectl run --rm \
   --overrides='{ "apiVersion": "v1", "spec":{"serviceAccountName": "ingress-nginx-e2e"}}' \
   e2e --image=nginx-ingress-controller:e2e
 
+# Get the junit-reports stored in the configMaps created during e2etests
+echo "Getting the report files out now.."
+reportsDir="test/junitreports"
+reportFileName="report-e2e-test-suite"
+[ ! -e ${reportsDir} ] && mkdir $reportsDir
+cd $reportsDir
+
+# TODO: Seeking Rikatz help here to extract in a loop. Tried things like below without success
+#for cmName in `k get cm -l junitreport=true -o json | jq  '.items[].binaryData | keys[]' | tr '\"' ' '`
+#do
+#
+#
+# kubectl get cm -l junitreport=true -o json | jq -r  '[.items[].binaryData | to_entries[] | {"key": .key, "value": .value  }] | from_entries'
+#
+
+# Below lines successfully extract the report but they are one line per report.
+# We only have 3 ginkgo reports so its ok for now
+# But still, ideally this should be a loop as talked about in comments a few lines above
+kubectl get cm $reportFileName.xml.gz -o "jsonpath={.binaryData['report-e2e-test-suite\.xml\.gz']}" > $reportFileName.xml.gz.base64
+kubectl get cm $reportFileName-serial.xml.gz -o "jsonpath={.binaryData['report-e2e-test-suite-serial\.xml\.gz']}" > $reportFileName-serial.xml.gz.base64
+
+cat $reportFileName.xml.gz.base64 | base64 -d > $reportFileName.xml.gz
+cat $reportFileName-serial.xml.gz.base64 | base64 -d > $reportFileName-serial.xml.gz
+
+gzip -d $reportFileName.xml.gz
+gzip -d $reportFileName-serial.xml.gz
+
+rm *.base64
+cd ../..
+
+# TODO Temporary: if condition to check if the memleak cm exists and only then try the extract for the memleak report
+#
+#kubectl get cm $reportFileName-serial  -o "jsonpath={.data['report-e2e-test-suite-memleak\.xml\.gz']}" > $reportFileName-memleak.base64
+#cat $reportFileName-memleak.base64 | base64 -d > $reportFileName-memleak.xml.gz
+#gzip -d $reportFileName-memleak.xml.gz
+echo "done getting the reports files out.."

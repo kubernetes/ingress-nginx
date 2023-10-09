@@ -1221,7 +1221,7 @@ _**default:**_ ""
 ## global-auth-snippet
 
 Sets a custom snippet to use with external authentication. Applied to all the locations.
-Similar to the Ingress rule annotation `nginx.ingress.kubernetes.io/auth-request-redirect`.
+Similar to the Ingress rule annotation `nginx.ingress.kubernetes.io/auth-snippet`.
 _**default:**_ ""
 
 ## global-auth-cache-key

@@ -141,6 +141,7 @@ test:  ## Run go unit tests.
 		COMMIT_SHA=$(COMMIT_SHA) \
 		REPO_INFO=$(REPO_INFO) \
 		TAG=$(TAG) \
+		GOFLAGS="-buildvcs=false" \
 		test/test.sh
 
 .PHONY: lua-test

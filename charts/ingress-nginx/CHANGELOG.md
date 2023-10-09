@@ -129,7 +129,7 @@ This file documents all notable changes to [ingress-nginx](https://github.com/ku
 - [8118] https://github.com/kubernetes/ingress-nginx/pull/8118    Remove deprecated libraries, update other libs
 - [8117] https://github.com/kubernetes/ingress-nginx/pull/8117    Fix codegen errors
 - [8115] https://github.com/kubernetes/ingress-nginx/pull/8115    chart/ghaction: set the correct permission to have access to push a release
-- [8098] https://github.com/kubernetes/ingress-nginx/pull/8098    generating SHA for CA only certs in backend_ssl.go + comparision of P…
+- [8098] https://github.com/kubernetes/ingress-nginx/pull/8098    generating SHA for CA only certs in backend_ssl.go + comparison of P…
 - [8088] https://github.com/kubernetes/ingress-nginx/pull/8088    Fix Edit this page link to use main branch
 - [8072] https://github.com/kubernetes/ingress-nginx/pull/8072    Expose GeoIP2 Continent code as variable
 - [8061] https://github.com/kubernetes/ingress-nginx/pull/8061    docs(charts): using helm-docs for chart
@@ -139,7 +139,7 @@ This file documents all notable changes to [ingress-nginx](https://github.com/ku
 - [8046] https://github.com/kubernetes/ingress-nginx/pull/8046    Report expired certificates (#8045)
 - [8044] https://github.com/kubernetes/ingress-nginx/pull/8044    remove G109 check till gosec resolves issues
 - [8042] https://github.com/kubernetes/ingress-nginx/pull/8042    docs_multiple_instances_one_cluster_ticket_7543
-- [8041] https://github.com/kubernetes/ingress-nginx/pull/8041    docs: fix typo'd executible name
+- [8041] https://github.com/kubernetes/ingress-nginx/pull/8041    docs: fix typo'd executable name
 - [8035] https://github.com/kubernetes/ingress-nginx/pull/8035    Comment busy owners
 - [8029] https://github.com/kubernetes/ingress-nginx/pull/8029    Add stream-snippet as a ConfigMap and Annotation option
 - [8023] https://github.com/kubernetes/ingress-nginx/pull/8023    fix nginx compilation flags
@@ -156,7 +156,7 @@ This file documents all notable changes to [ingress-nginx](https://github.com/ku
 - [7996] https://github.com/kubernetes/ingress-nginx/pull/7996    doc: improvement
 - [7983] https://github.com/kubernetes/ingress-nginx/pull/7983    Fix a couple of misspellings in the annotations documentation.
 - [7979] https://github.com/kubernetes/ingress-nginx/pull/7979    allow set annotations for admission Jobs
-- [7977] https://github.com/kubernetes/ingress-nginx/pull/7977    Add ssl_reject_handshake to defaul server
+- [7977] https://github.com/kubernetes/ingress-nginx/pull/7977    Add ssl_reject_handshake to default server
 - [7975] https://github.com/kubernetes/ingress-nginx/pull/7975    add legacy version update v0.50.0 to main changelog
 - [7972] https://github.com/kubernetes/ingress-nginx/pull/7972    updated service upstream definition
 
