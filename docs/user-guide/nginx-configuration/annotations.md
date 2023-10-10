@@ -316,7 +316,8 @@ nginx.ingress.kubernetes.io/configuration-snippet: |
   more_set_headers "Request-Id: $req_id";
 ```
 
-Since version 1.9.0 this annotation is disabled by default and has to be explicitly enabled, see [allow-snippet-annotations](./configmap.md#allow-snippet-annotations). Enabling it can be dangerous in multi-tenant clusters, as it can lead to people with otherwise limited permissions being able to retrieve all secrets on the cluster. See CVE-2021-25742 and the [related issue on github](https://github.com/kubernetes/ingress-nginx/issues/7837) for more information.
+!!! attention
+Since version 1.9.0, `"configuration-snippet"` annotation is disabled by default and has to be explicitly enabled, see [allow-snippet-annotations](./configmap.md#allow-snippet-annotations). Enabling it can be dangerous in multi-tenant clusters, as it can lead to people with otherwise limited permissions being able to retrieve all secrets on the cluster. See CVE-2021-25742 and the [related issue on github](https://github.com/kubernetes/ingress-nginx/issues/7837) for more information.
 
 ### Custom HTTP Errors
 
@@ -429,6 +430,9 @@ metadata:
 ```
 
 !!! attention
+Since version 1.9.0, `"server-snippet"` annotation is disabled by default and has to be explicitly enabled, see [allow-snippet-annotations](./configmap.md#allow-snippet-annotations). Enabling it can be dangerous in multi-tenant clusters, as it can lead to people with otherwise limited permissions being able to retrieve all secrets on the cluster. See CVE-2021-25742 and the [related issue on github](https://github.com/kubernetes/ingress-nginx/issues/7837) for more information.
+
+!!! attention
     This annotation can be used only once per host.
 
 ### Client Body Buffer Size
@@ -504,6 +508,9 @@ nginx.ingress.kubernetes.io/auth-snippet: |
     proxy_set_header Foo-Header 42;
 ```
 > Note: `nginx.ingress.kubernetes.io/auth-snippet` is an optional annotation. However, it may only be used in conjunction with `nginx.ingress.kubernetes.io/auth-url` and will be ignored if `nginx.ingress.kubernetes.io/auth-url` is not set
+
+!!! attention
+Since version 1.9.0, `"auth-snippet"` annotation is disabled by default and has to be explicitly enabled, see [allow-snippet-annotations](./configmap.md#allow-snippet-annotations). Enabling it can be dangerous in multi-tenant clusters, as it can lead to people with otherwise limited permissions being able to retrieve all secrets on the cluster. See CVE-2021-25742 and the [related issue on github](https://github.com/kubernetes/ingress-nginx/issues/7837) for more information.
 
 !!! example
     Please check the [external-auth](../../examples/auth/external-auth/README.md) example.
@@ -895,6 +902,9 @@ nginx.ingress.kubernetes.io/modsecurity-snippet: |
 Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
 ```
 
+!!! attention
+Since version 1.9.0, `"modsecurity-snippet"` annotation is disabled by default and has to be explicitly enabled, see [allow-snippet-annotations](./configmap.md#allow-snippet-annotations). Enabling it can be dangerous in multi-tenant clusters, as it can lead to people with otherwise limited permissions being able to retrieve all secrets on the cluster. See CVE-2021-25742 and the [related issue on github](https://github.com/kubernetes/ingress-nginx/issues/7837) for more information.
+
 ### Backend Protocol
 
 Using `backend-protocol` annotations is possible to indicate how NGINX should communicate with the backend service. (Replaces `secure-backends` in older versions)
@@ -984,3 +994,6 @@ metadata:
         proxy_pass 127.0.0.1:80;
       }
 ```
+
+!!! attention
+Since version 1.9.0, `"stream-snippet"` annotation is disabled by default and has to be explicitly enabled, see [allow-snippet-annotations](./configmap.md#allow-snippet-annotations). Enabling it can be dangerous in multi-tenant clusters, as it can lead to people with otherwise limited permissions being able to retrieve all secrets on the cluster. See CVE-2021-25742 and the [related issue on github](https://github.com/kubernetes/ingress-nginx/issues/7837) for more information.
