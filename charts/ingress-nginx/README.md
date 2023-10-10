@@ -474,6 +474,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | defaultBackend.image.registry | string | `"registry.k8s.io"` |  |
 | defaultBackend.image.runAsNonRoot | bool | `true` |  |
 | defaultBackend.image.runAsUser | int | `65534` |  |
+| defaultBackend.image.seccompProfile.type | string | `"RuntimeDefault"` |  |
 | defaultBackend.image.tag | string | `"1.5"` |  |
 | defaultBackend.labels | object | `{}` | Labels to be added to the default backend resources |
 | defaultBackend.livenessProbe.failureThreshold | int | `3` |  |

@@ -844,6 +844,8 @@ defaultBackend:
     # nobody user -> uid 65534
     runAsUser: 65534
     allowPrivilegeEscalation: false
+    seccompProfile:
+      type: RuntimeDefault
     readOnlyRootFilesystem: true
   # -- Use an existing PSP instead of creating one
   existingPsp: ""

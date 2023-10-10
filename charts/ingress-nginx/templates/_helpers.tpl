@@ -212,10 +212,13 @@ Default backend container security context.
 runAsNonRoot: {{ .Values.defaultBackend.image.runAsNonRoot }}
 runAsUser: {{ .Values.defaultBackend.image.runAsUser }}
 allowPrivilegeEscalation: {{ .Values.defaultBackend.image.allowPrivilegeEscalation }}
+{{- if .Values.defaultBackend.image.seccompProfile }}
+seccompProfile: {{ toYaml .Values.defaultBackend.image.seccompProfile | nindent 2 }}
+{{- end }}
 capabilities:
   drop:
   - ALL
-readOnlyRootFilesystem: {{ .Values.defaultBackend.image.readOnlyRootFilesystem}}
+readOnlyRootFilesystem: {{ .Values.defaultBackend.image.readOnlyRootFilesystem }}
 {{- end -}}
 {{- end -}}
 
