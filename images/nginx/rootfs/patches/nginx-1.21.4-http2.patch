@@ -1,3 +1,7 @@
+#commit 6ceef192e7af1c507826ac38a2d43f08bf265fb9
+#repository: https://github.com/nginx/nginx
+#Author: Maxim Dounin <mdounin@mdounin.ru>
+#Date:   Tue Oct 10 15:13:39 2023 +0300
 diff --git a/src/http/v2/ngx_http_v2.c b/src/http/v2/ngx_http_v2.c
 index 7c05ff1e7..410a8be24 100644
 --- a/src/http/v2/ngx_http_v2.c
