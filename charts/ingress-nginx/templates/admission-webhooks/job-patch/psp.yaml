@@ -14,28 +14,28 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
-  allowPrivilegeEscalation: false
-  fsGroup:
-    ranges:
-      - max: 65535
-        min: 1
-    rule: MustRunAs
-  requiredDropCapabilities:
-    - ALL
-  runAsUser:
-    rule: MustRunAsNonRoot
-  seLinux:
-    rule: RunAsAny
-  supplementalGroups:
-    ranges:
-      - max: 65535
-        min: 1
-    rule: MustRunAs
   volumes:
     - configMap
-    - emptyDir
-    - projected
-    - secret
     - downwardAPI
+    - emptyDir
+    - secret
+    - projected
+  fsGroup:
+    rule: MustRunAs
+    ranges:
+      - min: 1
+        max: 65535
+  runAsUser:
+    rule: MustRunAsNonRoot
+  supplementalGroups:
+    rule: MustRunAs
+    ranges:
+      - min: 1
+        max: 65535
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  seLinux:
+    rule: RunAsAny
 {{- end }}
 {{- end }}
