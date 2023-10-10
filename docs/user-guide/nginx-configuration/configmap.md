@@ -720,6 +720,9 @@ Enables or disables compression of HTTP responses using the ["gzip" module](http
 
 ## use-geoip
 
+!!! attention
+   GeoIP is deprecated and removed on v1.10. Users willing to use GeoIP should use GeoIP2
+
 Enables or disables ["geoip" module](https://nginx.org/en/docs/http/ngx_http_geoip_module.html) that creates variables with values depending on the client IP address, using the precompiled MaxMind databases.
 _**default:**_ true
 
