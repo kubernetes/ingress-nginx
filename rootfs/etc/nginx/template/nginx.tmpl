@@ -12,6 +12,8 @@
 # setup custom paths that do not require root access
 pid {{ .PID }};
 
+load_module /etc/nginx/modules/ngx_http_ajp_module.so;
+
 {{ if $cfg.UseGeoIP2 }}
 load_module /etc/nginx/modules/ngx_http_geoip2_module.so;
 {{ end }}
