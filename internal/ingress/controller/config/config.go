@@ -432,10 +432,6 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_gzip_module.html
 	UseGzip bool `json:"use-gzip,omitempty"`
 
-	// Enables or disables the use of the nginx geoip module that creates variables with values depending on the client IP
-	// http://nginx.org/en/docs/http/ngx_http_geoip_module.html
-	UseGeoIP bool `json:"use-geoip,omitempty"`
-
 	// UseGeoIP2 enables the geoip2 module for NGINX
 	// By default this is disabled
 	UseGeoIP2 bool `json:"use-geoip2,omitempty"`
@@ -944,7 +940,6 @@ func NewDefault() Configuration {
 		EnableBrotli:                     false,
 		EnableAioWrite:                   true,
 		UseGzip:                          false,
-		UseGeoIP:                         true,
 		UseGeoIP2:                        false,
 		WorkerProcesses:                  strconv.Itoa(runtime.NumCPU()),
 		WorkerShutdownTimeout:            "240s",
