@@ -170,16 +170,6 @@ http {
 
     {{ end }}
 
-    {{ if $cfg.UseGeoIP }}
-    {{/* databases used to determine the country depending on the client IP address */}}
-    {{/* http://nginx.org/en/docs/http/ngx_http_geoip_module.html */}}
-    {{/* this is require to calculate traffic for individual country using GeoIP in the status page */}}
-    geoip_country       /etc/nginx/geoip/GeoIP.dat;
-    geoip_city          /etc/nginx/geoip/GeoLiteCity.dat;
-    geoip_org           /etc/nginx/geoip/GeoIPASNum.dat;
-    geoip_proxy_recursive on;
-    {{ end }}
-
     {{ if $cfg.UseGeoIP2 }}
     # https://github.com/leev/ngx_http_geoip2_module#example-usage
 
