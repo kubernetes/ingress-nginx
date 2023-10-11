@@ -75,7 +75,7 @@ jobs:
         id: go
         uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
-          go-version: '1.21.1'
+          go-version: '1.21.3'
           check-latest: true
 
       - name: Run test
@@ -96,7 +96,7 @@ jobs:
         id: go
         uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
-          go-version: '1.21.1'
+          go-version: '1.21.3'
           check-latest: true
 
       - name: Set up QEMU
@@ -160,7 +160,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
-          go-version: '1.21.1'
+          go-version: '1.21.3'
           check-latest: true
 
       - name: cache
@@ -467,7 +467,7 @@ jobs:
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
         uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
-          go-version: '1.21.1'
+          go-version: '1.21.3'
           check-latest: true
 
       - name: kube-webhook-certgen image build
