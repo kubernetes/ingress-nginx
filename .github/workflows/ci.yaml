@@ -363,6 +363,42 @@ jobs:
           name: e2e-test-reports-chroot-${{ matrix.k8s }}
           path: 'test/junitreports/report*.xml'
 
+  test-nginx-image-build:
+    permissions:
+      contents: read  # for dorny/paths-filter to fetch a list of changed files
+      pull-requests: read  # for dorny/paths-filter to read pull requests
+    runs-on: ubuntu-latest
+    env:
+      PLATFORMS: linux/amd64,linux/arm64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+
+      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
+        id: filter-images
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          filters: |
+            nginx-base:
+              - 'images/nginx/**'
+      - name: nginx-base-image
+        if: ${{ steps.filter-images.outputs.nginx-base == 'true' }}
+        run: |
+          cd images/nginx/rootfs && docker build -t docker.io/nginx-test-workflow/nginx:${{ github.sha }} .
+      - name: Run Trivy on NGINX Image
+        if: ${{ steps.filter-images.outputs.nginx-base == 'true' }}
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'docker.io/nginx-test-workflow/nginx:${{ github.sha }}'
+          format: 'sarif'
+          ignore-unfixed: true
+          output: 'trivy-results.sarif'
+      - name: Upload Trivy scan results to GitHub Security tab
+        if: ${{ steps.filter-images.outputs.nginx-base == 'true' && always() }}
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
 
   test-image-build:
     permissions:
@@ -396,7 +432,6 @@ jobs:
               - 'images/kube-webhook-certgen/**'
             ext-auth-example-authsvc:
               - 'images/ext-auth-example-authsvc/**'
-
       - name: custom-error-pages image build
         if: ${{ steps.filter-images.outputs.custom-error-pages == 'true' }}
         run: |
