@@ -594,6 +594,7 @@ controller:
     containerSecurityContext:
       allowPrivilegeEscalation: false
   admissionWebhooks:
+    name: admission
     annotations: {}
     # ignore-check.kube-linter.io/no-read-only-rootfs: "This deployment needs write access to root filesystem".
 
@@ -630,6 +631,7 @@ controller:
       servicePort: 443
       type: ClusterIP
     createSecretJob:
+      name: create
       securityContext:
         allowPrivilegeEscalation: false
       resources: {}
@@ -640,6 +642,7 @@ controller:
       #   cpu: 10m
       #   memory: 20Mi
     patchWebhookJob:
+      name: patch
       securityContext:
         allowPrivilegeEscalation: false
       resources: {}

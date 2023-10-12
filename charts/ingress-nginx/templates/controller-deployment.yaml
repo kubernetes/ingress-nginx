@@ -229,7 +229,7 @@ spec:
       {{- if .Values.controller.admissionWebhooks.enabled }}
         - name: webhook-cert
           secret:
-            secretName: {{ include "ingress-nginx.fullname" . }}-admission
+            secretName: {{ include "ingress-nginx.admissionWebhooks.fullname" . }}
         {{- if .Values.controller.admissionWebhooks.certManager.enabled }}
             items:
               - key: tls.crt
