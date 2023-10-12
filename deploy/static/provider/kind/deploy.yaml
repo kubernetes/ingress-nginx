@@ -15,7 +15,7 @@ metadata:
     app.kubernetes.io/instance: ingress-nginx
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
-    app.kubernetes.io/version: 1.9.1
+    app.kubernetes.io/version: 1.9.3
   name: ingress-nginx
   namespace: ingress-nginx
 ---
@@ -27,7 +27,7 @@ metadata:
     app.kubernetes.io/instance: ingress-nginx
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
-    app.kubernetes.io/version: 1.9.1
+    app.kubernetes.io/version: 1.9.3
   name: ingress-nginx-admission
   namespace: ingress-nginx
 ---
@@ -39,7 +39,7 @@ metadata:
     app.kubernetes.io/instance: ingress-nginx
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
-    app.kubernetes.io/version: 1.9.1
+    app.kubernetes.io/version: 1.9.3
   name: ingress-nginx
   namespace: ingress-nginx
 rules:
@@ -129,7 +129,7 @@ metadata:
     app.kubernetes.io/instance: ingress-nginx
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
-    app.kubernetes.io/version: 1.9.1
+    app.kubernetes.io/version: 1.9.3
   name: ingress-nginx-admission
   namespace: ingress-nginx
 rules:
@@ -148,7 +148,7 @@ metadata:
     app.kubernetes.io/instance: ingress-nginx
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
-    app.kubernetes.io/version: 1.9.1
+    app.kubernetes.io/version: 1.9.3
   name: ingress-nginx
 rules:
 - apiGroups:
@@ -230,7 +230,7 @@ metadata:
     app.kubernetes.io/instance: ingress-nginx
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
-    app.kubernetes.io/version: 1.9.1
+    app.kubernetes.io/version: 1.9.3
   name: ingress-nginx-admission
 rules:
 - apiGroups:
@@ -249,7 +249,7 @@ metadata:
     app.kubernetes.io/instance: ingress-nginx
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
-    app.kubernetes.io/version: 1.9.1
+    app.kubernetes.io/version: 1.9.3
   name: ingress-nginx
   namespace: ingress-nginx
 roleRef:
@@ -269,7 +269,7 @@ metadata:
     app.kubernetes.io/instance: ingress-nginx
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
-    app.kubernetes.io/version: 1.9.1
+    app.kubernetes.io/version: 1.9.3
   name: ingress-nginx-admission
   namespace: ingress-nginx
 roleRef:
@@ -288,7 +288,7 @@ metadata:
     app.kubernetes.io/instance: ingress-nginx
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
-    app.kubernetes.io/version: 1.9.1
+    app.kubernetes.io/version: 1.9.3
   name: ingress-nginx
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -307,7 +307,7 @@ metadata:
     app.kubernetes.io/instance: ingress-nginx
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
-    app.kubernetes.io/version: 1.9.1
+    app.kubernetes.io/version: 1.9.3
   name: ingress-nginx-admission
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -328,7 +328,7 @@ metadata:
     app.kubernetes.io/instance: ingress-nginx
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
-    app.kubernetes.io/version: 1.9.1
+    app.kubernetes.io/version: 1.9.3
   name: ingress-nginx-controller
   namespace: ingress-nginx
 ---
@@ -340,7 +340,7 @@ metadata:
     app.kubernetes.io/instance: ingress-nginx
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
-    app.kubernetes.io/version: 1.9.1
+    app.kubernetes.io/version: 1.9.3
   name: ingress-nginx-controller
   namespace: ingress-nginx
 spec:
@@ -372,7 +372,7 @@ metadata:
     app.kubernetes.io/instance: ingress-nginx
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
-    app.kubernetes.io/version: 1.9.1
+    app.kubernetes.io/version: 1.9.3
   name: ingress-nginx-controller-admission
   namespace: ingress-nginx
 spec:
@@ -395,7 +395,7 @@ metadata:
     app.kubernetes.io/instance: ingress-nginx
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
-    app.kubernetes.io/version: 1.9.1
+    app.kubernetes.io/version: 1.9.3
   name: ingress-nginx-controller
   namespace: ingress-nginx
 spec:
@@ -417,7 +417,7 @@ spec:
         app.kubernetes.io/instance: ingress-nginx
         app.kubernetes.io/name: ingress-nginx
         app.kubernetes.io/part-of: ingress-nginx
-        app.kubernetes.io/version: 1.9.1
+        app.kubernetes.io/version: 1.9.3
     spec:
       containers:
       - args:
@@ -442,7 +442,7 @@ spec:
               fieldPath: metadata.namespace
         - name: LD_PRELOAD
           value: /usr/local/lib/libmimalloc.so
-        image: registry.k8s.io/ingress-nginx/controller:v1.9.1@sha256:605a737877de78969493a4b1213b21de4ee425d2926906857b98050f57a95b25
+        image: registry.k8s.io/ingress-nginx/controller:v1.9.3@sha256:8fd21d59428507671ce0fb47f818b1d859c92d2ad07bb7c947268d433030ba98
         imagePullPolicy: IfNotPresent
         lifecycle:
           preStop:
@@ -524,7 +524,7 @@ metadata:
     app.kubernetes.io/instance: ingress-nginx
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
-    app.kubernetes.io/version: 1.9.1
+    app.kubernetes.io/version: 1.9.3
   name: ingress-nginx-admission-create
   namespace: ingress-nginx
 spec:
@@ -535,7 +535,7 @@ spec:
         app.kubernetes.io/instance: ingress-nginx
         app.kubernetes.io/name: ingress-nginx
         app.kubernetes.io/part-of: ingress-nginx
-        app.kubernetes.io/version: 1.9.1
+        app.kubernetes.io/version: 1.9.3
       name: ingress-nginx-admission-create
     spec:
       containers:
@@ -549,7 +549,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        image: registry.k8s.io/ingress-nginx/kube-webhook-certgen:v20230407@sha256:543c40fd093964bc9ab509d3e791f9989963021f1e9e4c9c7b6700b02bfb227b
+        image: registry.k8s.io/ingress-nginx/kube-webhook-certgen:v20231011-8b53cabe0@sha256:a7943503b45d552785aa3b5e457f169a5661fb94d82b8a3373bcd9ebaf9aac80
         imagePullPolicy: IfNotPresent
         name: create
         securityContext:
@@ -571,7 +571,7 @@ metadata:
     app.kubernetes.io/instance: ingress-nginx
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
-    app.kubernetes.io/version: 1.9.1
+    app.kubernetes.io/version: 1.9.3
   name: ingress-nginx-admission-patch
   namespace: ingress-nginx
 spec:
@@ -582,7 +582,7 @@ spec:
         app.kubernetes.io/instance: ingress-nginx
         app.kubernetes.io/name: ingress-nginx
         app.kubernetes.io/part-of: ingress-nginx
-        app.kubernetes.io/version: 1.9.1
+        app.kubernetes.io/version: 1.9.3
       name: ingress-nginx-admission-patch
     spec:
       containers:
@@ -598,7 +598,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        image: registry.k8s.io/ingress-nginx/kube-webhook-certgen:v20230407@sha256:543c40fd093964bc9ab509d3e791f9989963021f1e9e4c9c7b6700b02bfb227b
+        image: registry.k8s.io/ingress-nginx/kube-webhook-certgen:v20231011-8b53cabe0@sha256:a7943503b45d552785aa3b5e457f169a5661fb94d82b8a3373bcd9ebaf9aac80
         imagePullPolicy: IfNotPresent
         name: patch
         securityContext:
@@ -620,7 +620,7 @@ metadata:
     app.kubernetes.io/instance: ingress-nginx
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
-    app.kubernetes.io/version: 1.9.1
+    app.kubernetes.io/version: 1.9.3
   name: nginx
 spec:
   controller: k8s.io/ingress-nginx
@@ -633,7 +633,7 @@ metadata:
     app.kubernetes.io/instance: ingress-nginx
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
-    app.kubernetes.io/version: 1.9.1
+    app.kubernetes.io/version: 1.9.3
   name: ingress-nginx-admission
   namespace: ingress-nginx
 spec:
@@ -656,7 +656,7 @@ metadata:
     app.kubernetes.io/instance: ingress-nginx
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
-    app.kubernetes.io/version: 1.9.1
+    app.kubernetes.io/version: 1.9.3
   name: ingress-nginx-admission
 webhooks:
 - admissionReviewVersions:
