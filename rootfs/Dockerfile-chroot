@@ -100,7 +100,7 @@ RUN apk add --no-cache libcap \
   && setcap -v cap_sys_chroot,cap_net_bind_service=+ep /usr/bin/dumb-init \
   && apk del libcap
 
-COPY --from=ajp /ngx_http_ajp_module.so /etc/nginx/modules
+COPY --from=ajp /ngx_http_ajp_module.so /chroot/etc/nginx/modules
 
 RUN  ln -sf /chroot/etc/nginx /etc/nginx \
   && ln -sf /chroot/tmp/nginx /tmp/nginx \
