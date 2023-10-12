@@ -14,6 +14,9 @@
 
 ARG BASE_IMAGE
 
+# Source at https://github.com/rikatz/nginx-build-ajp
+FROM docker.io/rpkatz/nginx-ajp-module:latest@sha256:31df5e44018dabfc9477fb69acb2f08af3ae4fd4a9fe80d3415ccc05fcb197d2  as ajp
+
 FROM ${BASE_IMAGE}
 
 ARG TARGETARCH
@@ -75,6 +78,8 @@ RUN apk add --no-cache libcap \
   && setcap -v cap_net_bind_service=+ep /usr/bin/dumb-init \
   && apk del libcap \
   && ln -sf /usr/local/nginx/sbin/nginx /usr/bin/nginx
+
+COPY --from=ajp /ngx_http_ajp_module.so /etc/nginx/modules
 
 USER www-data
 
