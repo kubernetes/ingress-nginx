@@ -15,7 +15,7 @@
 ARG BASE_IMAGE
 
 # Source at https://github.com/rikatz/nginx-build-ajp
-FROM docker.io/rpkatz/nginx-ajp-module:latest@sha256:1511f4abc7e1d56219abb4140ff279a9622f820208eaa934b0ee5e7b0ae974de as ajp
+FROM docker.io/rpkatz/nginx-ajp-module:latest@sha256:31df5e44018dabfc9477fb69acb2f08af3ae4fd4a9fe80d3415ccc05fcb197d2  as ajp
 
 FROM ${BASE_IMAGE}
 
