@@ -1,5 +1,5 @@
 annotations:
-  artifacthub.io/changes: |2
+  artifacthub.io/changes: |
      - "Update Ingress-Nginx version controller-v1.8.4"
   artifacthub.io/prerelease: "false"
 apiVersion: v2
