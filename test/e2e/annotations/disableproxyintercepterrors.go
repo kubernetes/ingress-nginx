@@ -53,6 +53,5 @@ var _ = framework.DescribeAnnotation("disable-proxy-intercept-errors", func() {
 
 		ginkgo.By("turning off proxy_intercept_errors directive")
 		assert.NotContains(ginkgo.GinkgoT(), serverConfig, "proxy_intercept_errors on;")
-
 	})
 })
