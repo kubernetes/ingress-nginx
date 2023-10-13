@@ -65,7 +65,6 @@ plugins:
 
 extra_css: [extra.css]
 
-google_analytics: ["UA-118407822-1", "kubernetes.github.io"]
 
 nav:
   - Welcome:

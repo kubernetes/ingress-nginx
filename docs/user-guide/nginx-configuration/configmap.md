@@ -264,7 +264,7 @@ Enables Ingress to parse and add *-snippet annotations/directives created by the
 Warning: We recommend enabling this option only if you TRUST users with permission to create Ingress objects, as this
 may allow a user to add restricted configurations to the final nginx.conf file
 
-**This option will be defaulted to false in the next major release**
+**This option is defaulted to false since v1.9.0**
 
 ## annotations-risk-level
 

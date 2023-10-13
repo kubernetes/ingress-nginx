@@ -17,7 +17,8 @@ limitations under the License.
 package annotations
 
 import (
-	"github.com/imdario/mergo"
+	"dario.cat/mergo"
+
 	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/disableproxyintercepterrors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
