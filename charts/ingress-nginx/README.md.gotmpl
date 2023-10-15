@@ -134,6 +134,22 @@ If one of them is missing the internal load balancer will not be deployed. Examp
 
 Example for AWS:
 
+* using [AWS Load Balancer Controller](https://kubernetes-sigs.github.io/aws-load-balancer-controller/), which is recommanded by AWS, but you will have to install and configure this additional controller:
+
+```yaml
+controller:
+  service:
+    # Create internal NLB
+    loadBalancerClass: "service.k8s.aws/nlb"
+    internal:
+      enabled: true
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-scheme: "internal"
+        # Any other annotation can be declared here.
+```
+
+* using the default inside kubernetes controller-manager (not up to date and will be mark as deprecated in futur release of kubernetes):
+
 ```yaml
 controller:
   service:
@@ -141,9 +157,8 @@ controller:
       enabled: true
       annotations:
         # Create internal NLB
+        service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
         service.beta.kubernetes.io/aws-load-balancer-scheme: "internal"
-        # Create internal ELB(Deprecated)
-        # service.beta.kubernetes.io/aws-load-balancer-internal: "true"
         # Any other annotation can be declared here.
 ```
 
