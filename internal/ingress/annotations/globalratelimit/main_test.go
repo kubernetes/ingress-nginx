@@ -30,8 +30,10 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-const UID = "31285d47-b150-4dcf-bd6f-12c46d769f6e"
-const expectedUID = "31285d47b1504dcfbd6f12c46d769f6e"
+const (
+	UID         = "31285d47-b150-4dcf-bd6f-12c46d769f6e"
+	expectedUID = "31285d47b1504dcfbd6f12c46d769f6e"
+)
 
 func buildIngress() *networking.Ingress {
 	defaultBackend := networking.IngressBackend{
@@ -150,6 +152,22 @@ func TestGlobalRateLimiting(t *testing.T) {
 			nil,
 		},
 		{
+			"global-rate-limit-complex-key",
+			map[string]string{
+				annRateLimit:       "100",
+				annRateLimitWindow: "2m",
+				annRateLimitKey:    "${http_x_api_user}${otherinfo}",
+			},
+			&Config{
+				Namespace:    expectedUID,
+				Limit:        100,
+				WindowSize:   120,
+				Key:          "${http_x_api_user}${otherinfo}",
+				IgnoredCIDRs: make([]string, 0),
+			},
+			nil,
+		},
+		{
 			"incorrect duration for window",
 			map[string]string{
 				annRateLimit:       "100",
@@ -157,8 +175,8 @@ func TestGlobalRateLimiting(t *testing.T) {
 				annRateLimitKey:    "$http_x_api_user",
 			},
 			&Config{},
-			ing_errors.LocationDenied{
-				Reason: fmt.Errorf("failed to parse 'global-rate-limit-window' value: time: unknown unit \"mb\" in duration \"2mb\""),
+			ing_errors.ValidationError{
+				Reason: fmt.Errorf("failed to parse 'global-rate-limit-window' value: annotation nginx.ingress.kubernetes.io/global-rate-limit-window contains invalid value"),
 			},
 		},
 	}
@@ -168,16 +186,25 @@ func TestGlobalRateLimiting(t *testing.T) {
 
 		i, actualErr := NewParser(mockBackend{}).Parse(ing)
 		if (testCase.expectedErr == nil || actualErr == nil) && testCase.expectedErr != actualErr {
-			t.Errorf("expected error 'nil' but got '%v'", actualErr)
+			t.Errorf("%s expected error '%v' but got '%v'", testCase.title, testCase.expectedErr, actualErr)
 		} else if testCase.expectedErr != nil && actualErr != nil &&
 			testCase.expectedErr.Error() != actualErr.Error() {
 			t.Errorf("expected error '%v' but got '%v'", testCase.expectedErr, actualErr)
 		}
 
-		actualConfig := i.(*Config)
+		actualConfig, ok := i.(*Config)
+		if !ok {
+			t.Errorf("expected Config type but got %T", i)
+		}
 		if !testCase.expectedConfig.Equal(actualConfig) {
-			expectedJSON, _ := json.Marshal(testCase.expectedConfig)
-			actualJSON, _ := json.Marshal(actualConfig)
+			expectedJSON, err := json.Marshal(testCase.expectedConfig)
+			if err != nil {
+				t.Errorf("failed to marshal expected config: %v", err)
+			}
+			actualJSON, err := json.Marshal(actualConfig)
+			if err != nil {
+				t.Errorf("failed to marshal actual config: %v", err)
+			}
 			t.Errorf("%v: expected config '%s' but got '%s'", testCase.title, expectedJSON, actualJSON)
 		}
 	}

@@ -4,10 +4,8 @@ on:
   push:
     branches:
       - "main"
-    paths:
-      - "cmd/plugin/**"
     tags:
-      - "v*"
+      - 'v*.*.*\+plugin'
 
 permissions:
   contents: write # for goreleaser/goreleaser-action
@@ -17,24 +15,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.0.2
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
         with:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@d0a58c1c4d2b25278816e339b944508c875f3613 # v3.2.0
+        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
-          go-version: 1.19.2
+          go-version: '1.21.3'
+          check-latest: true
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@b508e2e3ef3b19d4e4146d4f8fb3ba9db644a757 # v3.0.0
+        uses: goreleaser/goreleaser-action@7ec5c2b0c6cdda6e8bbb49444bc797dd33d74dd8 # v5.0.0
         with:
           version: latest
-          args: release --rm-dist
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update new version in krew-index
-        uses: rajatjindal/krew-release-bot@92da038bbf995803124a8e50ebd438b2f37bbbb0 # v0.0.43
+        uses: rajatjindal/krew-release-bot@df3eb197549e3568be8b4767eec31c5e8e8e6ad8 # v0.0.46
         with:
           krew_template_file: cmd/plugin/krew.yaml

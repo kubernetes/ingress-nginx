@@ -20,7 +20,9 @@ SHELL=/bin/bash -o pipefail -o errexit
 DIR:=$(strip $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))
 INIT_BUILDX=$(DIR)/../../hack/init-buildx.sh
 
-TAG ?=v$(shell date +%m%d%Y)-$(shell git rev-parse --short HEAD)
+SHORT_SHA ?=$(shell git rev-parse --short HEAD)
+TAG ?=v$(shell date +%Y%m%d)-$(SHORT_SHA)
+
 REGISTRY ?= local
 
 IMAGE = $(REGISTRY)/nginx-errors
@@ -29,7 +31,7 @@ IMAGE = $(REGISTRY)/nginx-errors
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
 # build with buildx
-PLATFORMS?=linux/amd64
+PLATFORMS?=linux/amd64,linux/arm,linux/arm64,linux/s390x
 OUTPUT=
 PROGRESS=plain
 

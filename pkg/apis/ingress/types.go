@@ -29,11 +29,12 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/fastcgi"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/globalratelimit"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/influxdb"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/ipallowlist"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/ipdenylist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/mirror"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/opentelemetry"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/opentracing"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxyssl"
@@ -72,7 +73,7 @@ type Configuration struct {
 
 	DefaultSSLCertificate *SSLCert `json:"-"`
 
-	StreamSnippets []string
+	StreamSnippets []string `json:"StreamSnippets"`
 }
 
 // Backend describes one or more remote server/s (endpoints) associated with a service
@@ -128,7 +129,7 @@ type TrafficShapingPolicy struct {
 }
 
 // HashInclude defines if a field should be used or not to calculate the hash
-func (s Backend) HashInclude(field string, v interface{}) (bool, error) {
+func (b *Backend) HashInclude(field string, _ interface{}) (bool, error) {
 	switch field {
 	case "Endpoints":
 		return false, nil
@@ -222,7 +223,8 @@ type Server struct {
 // In some cases when more than one annotations is defined a particular order in the execution
 // is required.
 // The chain in the execution order of annotations should be:
-// - Whitelist
+// - Denylist
+// - Allowlist
 // - RateLimit
 // - BasicDigestAuth
 // - ExternalAuth
@@ -292,10 +294,14 @@ type Location struct {
 	// Rewrite describes the redirection this location.
 	// +optional
 	Rewrite rewrite.Config `json:"rewrite,omitempty"`
-	// Whitelist indicates only connections from certain client
+	// Denylist indicates only connections from certain client
 	// addresses or networks are allowed.
 	// +optional
-	Whitelist ipwhitelist.SourceRange `json:"whitelist,omitempty"`
+	Denylist ipdenylist.SourceRange `json:"denylist,omitempty"`
+	// Allowlist indicates only connections from certain client
+	// addresses or networks are allowed.
+	// +optional
+	Allowlist ipallowlist.SourceRange `json:"allowlist,omitempty"`
 	// Proxy contains information about timeouts and buffer sizes
 	// to be used in connections against endpoints
 	// +optional
@@ -331,9 +337,6 @@ type Location struct {
 	// Logs allows to enable or disable the nginx logs
 	// By default access logs are enabled and rewrite logs are disabled
 	Logs log.Config `json:"logs,omitempty"`
-	// InfluxDB allows to monitor the incoming request by sending them to an influxdb database
-	// +optional
-	InfluxDB influxdb.Config `json:"influxDB,omitempty"`
 	// BackendProtocol indicates which protocol should be used to communicate with the service
 	// By default this is HTTP
 	BackendProtocol string `json:"backend-protocol"`
@@ -354,6 +357,9 @@ type Location struct {
 	// Opentracing allows the global opentracing setting to be overridden for a location
 	// +optional
 	Opentracing opentracing.Config `json:"opentracing"`
+	// Opentelemetry allows the global opentelemetry setting to be overridden for a location
+	// +optional
+	Opentelemetry opentelemetry.Config `json:"opentelemetry"`
 }
 
 // SSLPassthroughBackend describes a SSL upstream server configured
@@ -404,5 +410,4 @@ type Ingress struct {
 }
 
 // GeneralConfig holds the definition of lua general configuration data
-type GeneralConfig struct {
-}
+type GeneralConfig struct{}

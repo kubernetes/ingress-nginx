@@ -33,6 +33,15 @@ var _ = framework.DescribeAnnotation("server-snippet", func() {
 	})
 
 	ginkgo.It(`add valid directives to server via server snippet`, func() {
+		f.SetNginxConfigMapData(map[string]string{
+			"allow-snippet-annotations": "true",
+		})
+		defer func() {
+			f.SetNginxConfigMapData(map[string]string{
+				"allow-snippet-annotations": "false",
+			})
+		}()
+
 		host := "serversnippet.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/server-snippet": `
@@ -59,6 +68,15 @@ var _ = framework.DescribeAnnotation("server-snippet", func() {
 	})
 
 	ginkgo.It(`drops server snippet if disabled by the administrator`, func() {
+		f.SetNginxConfigMapData(map[string]string{
+			"allow-snippet-annotations": "true",
+		})
+		defer func() {
+			f.SetNginxConfigMapData(map[string]string{
+				"allow-snippet-annotations": "false",
+			})
+		}()
+
 		host := "noserversnippet.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/server-snippet": `
@@ -89,6 +107,5 @@ var _ = framework.DescribeAnnotation("server-snippet", func() {
 			Status(http.StatusOK).Headers().
 			NotContainsKey("Foo").
 			NotContainsKey("Xpto")
-
 	})
 })

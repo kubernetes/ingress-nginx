@@ -26,8 +26,8 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-// FileWatcher is an interface we use to watch changes in files
-type FileWatcher interface {
+// Watcher is an interface we use to watch changes in files
+type Watcher interface {
 	Close() error
 }
 
@@ -40,7 +40,7 @@ type OSFileWatcher struct {
 }
 
 // NewFileWatcher creates a new FileWatcher
-func NewFileWatcher(file string, onEvent func()) (FileWatcher, error) {
+func NewFileWatcher(file string, onEvent func()) (Watcher, error) {
 	fw := OSFileWatcher{
 		file:    file,
 		onEvent: onEvent,
@@ -72,8 +72,8 @@ func (f *OSFileWatcher) watch() error {
 		for {
 			select {
 			case event := <-watcher.Events:
-				if event.Op&fsnotify.Create == fsnotify.Create ||
-					event.Op&fsnotify.Write == fsnotify.Write {
+				if event.Has(fsnotify.Create) ||
+					event.Has(fsnotify.Write) {
 					if finfo, err := os.Lstat(event.Name); err != nil {
 						log.Printf("can not lstat file: %v\n", err)
 					} else if finfo.Mode()&os.ModeSymlink != 0 {

@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#      http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,7 +18,9 @@ SHELL=/bin/bash -o pipefail -o errexit
 DIR:=$(strip $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))
 INIT_BUILDX=$(DIR)/../../hack/init-buildx.sh
 
-TAG ?=v1.0.0
+SHORT_SHA ?=$(shell git rev-parse --short HEAD)
+TAG ?=v$(shell date +%Y%m%d)-$(SHORT_SHA)
+
 REGISTRY ?= local
 
 IMAGE = $(REGISTRY)/e2e-test-echo

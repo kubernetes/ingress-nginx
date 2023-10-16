@@ -1,4 +1,4 @@
-{{- if or (eq .Values.controller.kind "Deployment") (eq .Values.controller.kind "Both") -}}
+{{- if eq .Values.controller.kind "Deployment" -}}
 {{- include  "isControllerTagValid" . -}}
 apiVersion: apps/v1
 kind: Deployment
@@ -19,13 +19,12 @@ spec:
     matchLabels:
       {{- include "ingress-nginx.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: controller
-  {{- if not .Values.controller.autoscaling.enabled }}
+  {{- if not (or .Values.controller.autoscaling.enabled .Values.controller.keda.enabled) }}
   replicas: {{ .Values.controller.replicaCount }}
   {{- end }}
   revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
   {{- if .Values.controller.updateStrategy }}
-  strategy:
-    {{ toYaml .Values.controller.updateStrategy | nindent 4 }}
+  strategy: {{ toYaml .Values.controller.updateStrategy | nindent 4 }}
   {{- end }}
   minReadySeconds: {{ .Values.controller.minReadySeconds }}
   template:
@@ -37,7 +36,7 @@ spec:
       {{- end }}
     {{- end }}
       labels:
-        {{- include "ingress-nginx.selectorLabels" . | nindent 8 }}
+        {{- include "ingress-nginx.labels" . | nindent 8 }}
         app.kubernetes.io/component: controller
         {{- with .Values.controller.labels }}
         {{- toYaml . | nindent 8 }}
@@ -48,6 +47,9 @@ spec:
     spec:
     {{- if .Values.controller.dnsConfig }}
       dnsConfig: {{ toYaml .Values.controller.dnsConfig | nindent 8 }}
+    {{- end }}
+    {{- if .Values.controller.hostAliases }}
+      hostAliases: {{ tpl (toYaml .Values.controller.hostAliases) $ | nindent 8 }}
     {{- end }}
     {{- if .Values.controller.hostname }}
       hostname: {{ toYaml .Values.controller.hostname | nindent 8 }}
@@ -184,13 +186,14 @@ spec:
       {{- end }}
       {{- if .Values.controller.extraModules }}
         {{- range .Values.controller.extraModules }}
-          {{ $containerSecurityContext := .containerSecurityContext | default $.Values.controller.containerSecurityContext }}
-          {{- include "extraModules" (dict "name" .name "image" .image "containerSecurityContext" $containerSecurityContext | nindent 8) }}
+          {{- $containerSecurityContext := .containerSecurityContext | default $.Values.controller.containerSecurityContext }}
+          {{- include "extraModules" (dict "name" .name "image" .image "containerSecurityContext" $containerSecurityContext) | nindent 8 }}
         {{- end }}
       {{- end }}
       {{- if .Values.controller.opentelemetry.enabled}}
-          {{ $otelContainerSecurityContext := $.Values.controller.opentelemetry.containerSecurityContext | default $.Values.controller.containerSecurityContext }}
-          {{- include "extraModules" (dict "name" "opentelemetry" "image" .Values.controller.opentelemetry.image "containerSecurityContext" $otelContainerSecurityContext) | nindent 8}}
+          {{- $otelContainerSecurityContext := $.Values.controller.opentelemetry.containerSecurityContext | default $.Values.controller.containerSecurityContext }}
+          {{ $otelResources := $.Values.controller.opentelemetry.resources | default dict }}
+          {{- include "extraModules" (dict "name" "opentelemetry" "image" .Values.controller.opentelemetry.image "containerSecurityContext" $otelContainerSecurityContext "distroless" true "resources" $otelResources) | nindent 8}}
       {{- end}}
     {{- end }}
     {{- if .Values.controller.hostNetwork }}
@@ -206,7 +209,7 @@ spec:
       affinity: {{ toYaml .Values.controller.affinity | nindent 8 }}
     {{- end }}
     {{- if .Values.controller.topologySpreadConstraints }}
-      topologySpreadConstraints: {{ toYaml .Values.controller.topologySpreadConstraints | nindent 8 }}
+      topologySpreadConstraints: {{ tpl (toYaml .Values.controller.topologySpreadConstraints) $ | nindent 8 }}
     {{- end }}
       serviceAccountName: {{ template "ingress-nginx.serviceAccountName" . }}
       terminationGracePeriodSeconds: {{ .Values.controller.terminationGracePeriodSeconds }}

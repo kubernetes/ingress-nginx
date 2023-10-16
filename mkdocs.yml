@@ -1,4 +1,4 @@
-site_name: NGINX Ingress Controller
+site_name: Ingress-Nginx Controller
 repo_name: "kubernetes/ingress-nginx"
 repo_url: https://github.com/kubernetes/ingress-nginx
 site_url: https://kubernetes.github.io/ingress-nginx
@@ -65,7 +65,6 @@ plugins:
 
 extra_css: [extra.css]
 
-google_analytics: ["UA-118407822-1", "kubernetes.github.io"]
 
 nav:
   - Welcome:
@@ -101,6 +100,7 @@ nav:
       - Third party addons:
           - ModSecurity Web Application Firewall: "user-guide/third-party-addons/modsecurity.md"
           - OpenTracing: "user-guide/third-party-addons/opentracing.md"
+          - OpenTelemetry: "user-guide/third-party-addons/opentelemetry.md"
   - Examples:
       - Introduction: "examples/index.md"
       - Prerequisites: "examples/PREREQUISITES.md"
@@ -125,6 +125,9 @@ nav:
       - Static IPs: "examples/static-ip/README.md"
       - TLS termination: "examples/tls-termination/README.md"
       - Pod Security Policy (PSP): "examples/psp/README.md"
+      - Open Policy Agent rules: "examples/openpolicyagent/README.md"
+      - Canary Deployments: "examples/canary/README.md"
   - Developer Guide:
       - Getting Started: "developer-guide/getting-started.md"
       - Code Overview: "developer-guide/code-overview.md"
+  - FAQ: "faq.md"

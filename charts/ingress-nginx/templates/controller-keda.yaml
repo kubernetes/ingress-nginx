@@ -1,4 +1,4 @@
-{{- if and .Values.controller.keda.enabled (or (eq .Values.controller.kind "Deployment") (eq .Values.controller.kind "Both")) -}}
+{{- if and .Values.controller.keda.enabled (eq .Values.controller.kind "Deployment") -}}
 # https://keda.sh/docs/
 
 apiVersion: {{ .Values.controller.keda.apiVersion }}
@@ -25,6 +25,11 @@ spec:
   cooldownPeriod: {{ .Values.controller.keda.cooldownPeriod }}
   minReplicaCount: {{ .Values.controller.keda.minReplicas }}
   maxReplicaCount: {{ .Values.controller.keda.maxReplicas }}
+{{- with .Values.controller.keda.fallback }}
+  fallback:
+    failureThreshold: {{ .failureThreshold | default 3 }}
+    replicas: {{ .replicas | default $.Values.controller.keda.maxReplicas }}
+{{- end }}
   triggers:
 {{- with .Values.controller.keda.triggers }}
 {{ toYaml . | indent 2 }}

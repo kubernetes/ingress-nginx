@@ -33,7 +33,7 @@ import (
 )
 
 // ParseNameNS parses a string searching a namespace and name
-func ParseNameNS(input string) (string, string, error) {
+func ParseNameNS(input string) (ns, name string, err error) {
 	nsName := strings.Split(input, "/")
 	if len(nsName) != 2 {
 		return "", "", fmt.Errorf("invalid format (namespace/name) found in '%v'", input)
@@ -78,11 +78,19 @@ func GetNodeIPOrName(kubeClient clientset.Interface, name string, useInternalIP 
 var (
 	// IngressPodDetails hold information about the ingress-nginx pod
 	IngressPodDetails *PodInfo
+	// IngressNodeDetails hold information about the node running ingress-nginx pod
+	IngressNodeDetails *NodeInfo
 )
 
 // PodInfo contains runtime information about the pod running the Ingres controller
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type PodInfo struct {
+	metav1.TypeMeta
+	metav1.ObjectMeta
+}
+
+// NodeInfo contains runtime information about the node pod running the Ingres controller, eg. zone where pod is running
+type NodeInfo struct {
 	metav1.TypeMeta
 	metav1.ObjectMeta
 }
@@ -108,6 +116,18 @@ func GetIngressPod(kubeClient clientset.Interface) error {
 	pod.ObjectMeta.DeepCopyInto(&IngressPodDetails.ObjectMeta)
 	IngressPodDetails.SetLabels(pod.GetLabels())
 
+	IngressNodeDetails = &NodeInfo{
+		TypeMeta: metav1.TypeMeta{APIVersion: "v1", Kind: "Node"},
+	}
+	// Try to get node info/labels to determine topology zone where pod is running
+	node, err := kubeClient.CoreV1().Nodes().Get(context.TODO(), pod.Spec.NodeName, metav1.GetOptions{})
+	if err != nil {
+		klog.Warningf("Unable to get NODE information: %v", err)
+	} else {
+		node.ObjectMeta.DeepCopyInto(&IngressNodeDetails.ObjectMeta)
+		IngressNodeDetails.SetLabels(node.GetLabels())
+	}
+
 	return nil
 }
 
@@ -128,7 +148,10 @@ const IngressNGINXController = "k8s.io/ingress-nginx"
 // NetworkingIngressAvailable checks if the package "k8s.io/api/networking/v1"
 // is available or not and if Ingress V1 is supported (k8s >= v1.19.0)
 func NetworkingIngressAvailable(client clientset.Interface) bool {
-	version119, _ := version.ParseGeneric("v1.19.0")
+	version119, err := version.ParseGeneric("v1.19.0")
+	if err != nil {
+		return false
+	}
 
 	serverVersion, err := client.Discovery().ServerVersion()
 	if err != nil {

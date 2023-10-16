@@ -30,28 +30,30 @@ import (
 )
 
 const (
-	canaryService = "echo-canary"
+	canaryService = "httpbun-canary"
 )
 
 var _ = framework.DescribeAnnotation("canary-*", func() {
-	f := framework.NewDefaultFramework("canary")
+	f := framework.NewDefaultFramework("canary", framework.WithHTTPBunEnabled())
 
 	ginkgo.BeforeEach(func() {
-		// Deployment for main backend
-		f.NewEchoDeployment()
-
 		// Deployment for canary backend
-		f.NewEchoDeployment(framework.WithDeploymentName(canaryService))
+		f.NewHttpbunDeployment(framework.WithDeploymentName(canaryService))
 	})
 
 	ginkgo.Context("when canary is created", func() {
 		ginkgo.It("should response with a 200 status from the mainline upstream when requests are made to the mainline ingress", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace,
-				framework.EchoService, 80, annotations)
-			f.EnsureIngress(ing)
+			f.EnsureIngress(framework.NewSingleIngress(
+				host,
+				"/info",
+				host,
+				f.Namespace,
+				framework.HTTPBunService,
+				80,
+				annotations))
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
@@ -65,20 +67,27 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
-				f.Namespace, canaryService, 80, canaryAnnotations)
-			f.EnsureIngress(canaryIng)
+			f.EnsureIngress(framework.NewSingleIngress(
+				canaryIngName,
+				"/info",
+				host,
+				f.Namespace,
+				canaryService,
+				80,
+				canaryAnnotations))
 
 			f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				Expect().
 				Status(http.StatusOK).
-				Body().Contains(framework.EchoService).NotContains(canaryService)
+				Body().
+				Contains(framework.HTTPBunService).
+				NotContains(canaryService)
 		})
 
 		ginkgo.It("should return 404 status for requests to the canary if no matching ingress is found", func() {
-			host := "foo"
+			host := fooHost
 
 			canaryAnnotations := map[string]string{
 				"nginx.ingress.kubernetes.io/canary":           "true",
@@ -87,13 +96,17 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
-				f.Namespace, canaryService, 80, canaryAnnotations)
-
-			f.EnsureIngress(canaryIng)
+			f.EnsureIngress(framework.NewSingleIngress(
+				canaryIngName,
+				"/info",
+				host,
+				f.Namespace,
+				canaryService,
+				80,
+				canaryAnnotations))
 
 			f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				WithHeader("CanaryByHeader", "always").
 				Expect().
@@ -105,10 +118,10 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 			TODO: This test needs improvements made to the e2e framework so that deployment updates work in order to successfully run
 
 			It("should return the correct status codes when endpoints are unavailable", func() {
-				host := "foo"
+				host := fooHost
 				annotations := map[string]string{}
 
-				ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+				ing := framework.NewSingleIngress(host, "/info", host, f.Namespace, framework.HTTPBunService, 80, annotations)
 				f.EnsureIngress(ing)
 
 				f.WaitForNginxServer(host,
@@ -123,7 +136,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 				canaryIngName := fmt.Sprintf("%v-canary", host)
 
-				canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
+				canaryIng := framework.NewSingleIngress(canaryIngName, "/info", host, f.Namespace, canaryService,
 					80, canaryAnnotations)
 				f.EnsureIngress(canaryIng)
 
@@ -159,12 +172,17 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 		*/
 
 		ginkgo.It("should route requests to the correct upstream if mainline ingress is created before the canary ingress", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace,
-				framework.EchoService, 80, annotations)
-			f.EnsureIngress(ing)
+			f.EnsureIngress(framework.NewSingleIngress(
+				host,
+				"/info",
+				host,
+				f.Namespace,
+				framework.HTTPBunService,
+				80,
+				annotations))
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
@@ -178,33 +196,41 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
-				f.Namespace, canaryService, 80, canaryAnnotations)
-			f.EnsureIngress(canaryIng)
+			f.EnsureIngress(framework.NewSingleIngress(
+				canaryIngName,
+				"/info",
+				host,
+				f.Namespace,
+				canaryService,
+				80,
+				canaryAnnotations))
 
 			ginkgo.By("routing requests destined for the mainline ingress to the maineline upstream")
 
 			f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				WithHeader("CanaryByHeader", "never").
 				Expect().
 				Status(http.StatusOK).
-				Body().Contains(framework.EchoService).NotContains(canaryService)
+				Body().
+				Contains(framework.HTTPBunService).
+				NotContains(canaryService)
 
 			ginkgo.By("routing requests destined for the canary ingress to the canary upstream")
 
 			f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				WithHeader("CanaryByHeader", "always").
 				Expect().
 				Status(http.StatusOK).
-				Body().Contains(canaryService)
+				Body().
+				Contains(canaryService)
 		})
 
 		ginkgo.It("should route requests to the correct upstream if mainline ingress is created after the canary ingress", func() {
-			host := "foo"
+			host := fooHost
 
 			canaryAnnotations := map[string]string{
 				"nginx.ingress.kubernetes.io/canary":           "true",
@@ -213,15 +239,25 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
-				f.Namespace, canaryService, 80, canaryAnnotations)
-			f.EnsureIngress(canaryIng)
+			f.EnsureIngress(framework.NewSingleIngress(
+				canaryIngName,
+				"/info",
+				host,
+				f.Namespace,
+				canaryService,
+				80,
+				canaryAnnotations))
 
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace,
-				framework.EchoService, 80, annotations)
-			f.EnsureIngress(ing)
+			f.EnsureIngress(framework.NewSingleIngress(
+				host,
+				"/info",
+				host,
+				f.Namespace,
+				framework.HTTPBunService,
+				80,
+				annotations))
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
@@ -230,30 +266,38 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			ginkgo.By("routing requests destined for the mainline ingress to the mainelin upstream")
 			f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				WithHeader("CanaryByHeader", "never").
 				Expect().
 				Status(http.StatusOK).
-				Body().Contains(framework.EchoService).NotContains(canaryService)
+				Body().
+				Contains(framework.HTTPBunService).
+				NotContains(canaryService)
 
 			ginkgo.By("routing requests destined for the canary ingress to the canary upstream")
 			f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				WithHeader("CanaryByHeader", "always").
 				Expect().
 				Status(http.StatusOK).
-				Body().Contains(canaryService)
+				Body().
+				Contains(canaryService)
 		})
 
 		ginkgo.It("should route requests to the correct upstream if the mainline ingress is modified", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace,
-				framework.EchoService, 80, annotations)
-			f.EnsureIngress(ing)
+			f.EnsureIngress(framework.NewSingleIngress(
+				host,
+				"/info",
+				host,
+				f.Namespace,
+				framework.HTTPBunService,
+				80,
+				annotations))
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
@@ -267,18 +311,27 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
-				f.Namespace, canaryService, 80, canaryAnnotations)
-			f.EnsureIngress(canaryIng)
+			f.EnsureIngress(framework.NewSingleIngress(
+				canaryIngName,
+				"/info",
+				host,
+				f.Namespace,
+				canaryService,
+				80,
+				canaryAnnotations))
 
 			modAnnotations := map[string]string{
-				"foo": "bar",
+				fooHost: "bar",
 			}
 
-			modIng := framework.NewSingleIngress(host, "/", host, f.Namespace,
-				framework.EchoService, 80, modAnnotations)
-
-			f.UpdateIngress(modIng)
+			f.UpdateIngress(framework.NewSingleIngress(
+				host,
+				"/info",
+				host,
+				f.Namespace,
+				framework.HTTPBunService,
+				80,
+				modAnnotations))
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
@@ -287,30 +340,38 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			ginkgo.By("routing requests destined fro the mainline ingress to the mainline upstream")
 			f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				WithHeader("CanaryByHeader", "never").
 				Expect().
 				Status(http.StatusOK).
-				Body().Contains(framework.EchoService).NotContains(canaryService)
+				Body().
+				Contains(framework.HTTPBunService).
+				NotContains(canaryService)
 
 			ginkgo.By("routing requests destined for the canary ingress to the canary upstream")
 			f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				WithHeader("CanaryByHeader", "always").
 				Expect().
 				Status(http.StatusOK).
-				Body().Contains(canaryService)
+				Body().
+				Contains(canaryService)
 		})
 
 		ginkgo.It("should route requests to the correct upstream if the canary ingress is modified", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace,
-				framework.EchoService, 80, annotations)
-			f.EnsureIngress(ing)
+			f.EnsureIngress(framework.NewSingleIngress(
+				host,
+				"/info",
+				host,
+				f.Namespace,
+				framework.HTTPBunService,
+				80,
+				annotations))
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
@@ -324,9 +385,14 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
-				f.Namespace, canaryService, 80, canaryAnnotations)
-			f.EnsureIngress(canaryIng)
+			f.EnsureIngress(framework.NewSingleIngress(
+				canaryIngName,
+				"/info",
+				host,
+				f.Namespace,
+				canaryService,
+				80,
+				canaryAnnotations))
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
@@ -338,10 +404,14 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				"nginx.ingress.kubernetes.io/canary-by-header": "CanaryByHeader2",
 			}
 
-			modIng := framework.NewSingleIngress(canaryIngName, "/", host,
-				f.Namespace, canaryService, 80, newAnnotations)
-
-			f.UpdateIngress(modIng)
+			f.UpdateIngress(framework.NewSingleIngress(
+				canaryIngName,
+				"/info",
+				host,
+				f.Namespace,
+				canaryService,
+				80,
+				newAnnotations))
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
@@ -350,31 +420,39 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			ginkgo.By("routing requests destined for the mainline ingress to the mainline upstream")
 			f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				WithHeader("CanaryByHeader2", "never").
 				Expect().
 				Status(http.StatusOK).
-				Body().Contains(framework.EchoService).NotContains(canaryService)
+				Body().
+				Contains(framework.HTTPBunService).
+				NotContains(canaryService)
 
 			ginkgo.By("routing requests destined for the canary ingress to the canary upstream")
 			f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				WithHeader("CanaryByHeader2", "always").
 				Expect().
 				Status(http.StatusOK).
-				Body().Contains(canaryService)
+				Body().
+				Contains(canaryService)
 		})
 	})
 
 	ginkgo.Context("when canaried by header with no value", func() {
 		ginkgo.It("should route requests to the correct upstream", func() {
-			host := "foo"
+			host := fooHost
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace,
-				framework.EchoService, 80, nil)
-			f.EnsureIngress(ing)
+			f.EnsureIngress(framework.NewSingleIngress(
+				host,
+				"/info",
+				host,
+				f.Namespace,
+				framework.HTTPBunService,
+				80,
+				nil))
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
@@ -388,48 +466,62 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
-				f.Namespace, canaryService, 80, canaryAnnotations)
-			f.EnsureIngress(canaryIng)
+			f.EnsureIngress(framework.NewSingleIngress(
+				canaryIngName,
+				"/info",
+				host,
+				f.Namespace,
+				canaryService,
+				80,
+				canaryAnnotations))
 
 			ginkgo.By("routing requests to the canary upstream when header is set to 'always'")
 			f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				WithHeader("CanaryByHeader", "always").
 				Expect().
 				Status(http.StatusOK).
-				Body().Contains(canaryService)
+				Body().
+				Contains(canaryService)
 
 			ginkgo.By("routing requests to the mainline upstream when header is set to 'never'")
 			f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				WithHeader("CanaryByHeader", "never").
 				Expect().
 				Status(http.StatusOK).
 				Body().
-				Contains(framework.EchoService).NotContains(canaryService)
+				Contains(framework.HTTPBunService).
+				NotContains(canaryService)
 
 			ginkgo.By("routing requests to the mainline upstream when header is set to anything else")
 			f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				WithHeader("CanaryByHeader", "badheadervalue").
 				Expect().
 				Status(http.StatusOK).
-				Body().Contains(framework.EchoService).NotContains(canaryService)
+				Body().
+				Contains(framework.HTTPBunService).
+				NotContains(canaryService)
 		})
 	})
 
 	ginkgo.Context("when canaried by header with value", func() {
 		ginkgo.It("should route requests to the correct upstream", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host,
-				f.Namespace, framework.EchoService, 80, annotations)
-			f.EnsureIngress(ing)
+			f.EnsureIngress(framework.NewSingleIngress(
+				host,
+				"/info",
+				host,
+				f.Namespace,
+				framework.HTTPBunService,
+				80,
+				annotations))
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
@@ -444,55 +536,73 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
-				f.Namespace, canaryService, 80, canaryAnnotations)
-			f.EnsureIngress(canaryIng)
+			f.EnsureIngress(framework.NewSingleIngress(
+				canaryIngName,
+				"/info",
+				host,
+				f.Namespace,
+				canaryService,
+				80,
+				canaryAnnotations))
 
 			ginkgo.By("routing requests to the canary upstream when header is set to 'DoCanary'")
 			f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				WithHeader("CanaryByHeader", "DoCanary").
 				Expect().
 				Status(http.StatusOK).
-				Body().Contains(canaryService)
+				Body().
+				Contains(canaryService)
 
 			ginkgo.By("routing requests to the mainline upstream when header is set to 'always'")
 			f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				WithHeader("CanaryByHeader", "always").
 				Expect().
 				Status(http.StatusOK).
-				Body().Contains(framework.EchoService).NotContains(canaryService)
+				Body().
+				Contains(framework.HTTPBunService).
+				NotContains(canaryService)
 
 			ginkgo.By("routing requests to the mainline upstream when header is set to 'never'")
 			f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				WithHeader("CanaryByHeader", "never").
 				Expect().
 				Status(http.StatusOK).
-				Body().Contains(framework.EchoService).NotContains(canaryService)
+				Body().
+				Contains(framework.HTTPBunService).
+				NotContains(canaryService)
 
 			ginkgo.By("routing requests to the mainline upstream when header is set to anything else")
 			f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				WithHeader("CanaryByHeader", "otherheadervalue").
 				Expect().
 				Status(http.StatusOK).
-				Body().Contains(framework.EchoService).NotContains(canaryService)
+				Body().
+				Contains(framework.HTTPBunService).
+				NotContains(canaryService)
 		})
 	})
 
 	ginkgo.Context("when canaried by header with value and pattern", func() {
 		ginkgo.It("should route requests to the correct upstream", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-			f.EnsureIngress(ing)
+			f.EnsureIngress(framework.NewSingleIngress(
+				host,
+				"/info",
+				host,
+				f.Namespace,
+				framework.HTTPBunService,
+				80,
+				annotations))
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
@@ -507,13 +617,18 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
-				80, canaryAnnotations)
-			f.EnsureIngress(canaryIng)
+			f.EnsureIngress(framework.NewSingleIngress(
+				canaryIngName,
+				"/info",
+				host,
+				f.Namespace,
+				canaryService,
+				80,
+				canaryAnnotations))
 
 			ginkgo.By("routing requests to the canary upstream when header pattern is matched")
 			f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				WithHeader("CanaryByHeader", "DoCanary").
 				Expect().
@@ -522,19 +637,25 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			ginkgo.By("routing requests to the mainline upstream when header failed to match header value")
 			f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				WithHeader("CanaryByHeader", "Docanary").
 				Expect().
 				Status(http.StatusOK).
-				Body().Contains(framework.EchoService).NotContains(canaryService)
+				Body().Contains(framework.HTTPBunService).NotContains(canaryService)
 		})
 		ginkgo.It("should route requests to the correct upstream", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-			f.EnsureIngress(ing)
+			f.EnsureIngress(framework.NewSingleIngress(
+				host,
+				"/info",
+				host,
+				f.Namespace,
+				framework.HTTPBunService,
+				80,
+				annotations))
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
@@ -550,25 +671,36 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
-				80, canaryAnnotations)
-			f.EnsureIngress(canaryIng)
+			f.EnsureIngress(framework.NewSingleIngress(
+				canaryIngName,
+				"/info",
+				host,
+				f.Namespace,
+				canaryService,
+				80,
+				canaryAnnotations))
 
 			ginkgo.By("routing requests to the mainline upstream when header is set to 'DoCananry' and header-value is 'DoCanary'")
 			f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				WithHeader("CanaryByHeader", "DoCananry").
 				Expect().
 				Status(http.StatusOK).
-				Body().Contains(framework.EchoService).NotContains(canaryService)
+				Body().Contains(framework.HTTPBunService).NotContains(canaryService)
 		})
 		ginkgo.It("should routes to mainline upstream when the given Regex causes error", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-			f.EnsureIngress(ing)
+			f.EnsureIngress(framework.NewSingleIngress(
+				host,
+				"/info",
+				host,
+				f.Namespace,
+				framework.HTTPBunService,
+				80,
+				annotations))
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
@@ -584,30 +716,40 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host, f.Namespace, canaryService,
-				80, canaryAnnotations)
-			f.EnsureIngress(canaryIng)
+			f.EnsureIngress(framework.NewSingleIngress(
+				canaryIngName,
+				"/info",
+				host,
+				f.Namespace,
+				canaryService,
+				80,
+				canaryAnnotations))
 
 			ginkgo.By("routing requests to the mainline upstream when the given Regex causes error")
 			f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				WithHeader("CanaryByHeader", "DoCanary").
 				WithCookie("CanaryByCookie", "always").
 				Expect().
 				Status(http.StatusOK).
-				Body().Contains(framework.EchoService).NotContains(canaryService)
+				Body().Contains(framework.HTTPBunService).NotContains(canaryService)
 		})
 	})
 
 	ginkgo.Context("when canaried by header with value and cookie", func() {
 		ginkgo.It("should route requests to the correct upstream", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host,
-				f.Namespace, framework.EchoService, 80, annotations)
-			f.EnsureIngress(ing)
+			f.EnsureIngress(framework.NewSingleIngress(
+				host,
+				"/info",
+				host,
+				f.Namespace,
+				framework.HTTPBunService,
+				80,
+				annotations))
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
@@ -623,13 +765,18 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
-				f.Namespace, canaryService, 80, canaryAnnotations)
-			f.EnsureIngress(canaryIng)
+			f.EnsureIngress(framework.NewSingleIngress(
+				canaryIngName,
+				"/info",
+				host,
+				f.Namespace,
+				canaryService,
+				80,
+				canaryAnnotations))
 
 			ginkgo.By("routing requests to the canary upstream when header value does not match and cookie is set to 'always'")
 			f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				WithHeader("CanaryByHeader", "otherheadervalue").
 				WithCookie("CanaryByCookie", "always").
@@ -641,12 +788,17 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 	ginkgo.Context("when canaried by cookie", func() {
 		ginkgo.It("respects always and never values", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host,
-				f.Namespace, framework.EchoService, 80, annotations)
-			f.EnsureIngress(ing)
+			f.EnsureIngress(framework.NewSingleIngress(
+				host,
+				"/info",
+				host,
+				f.Namespace,
+				framework.HTTPBunService,
+				80,
+				annotations))
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
@@ -660,14 +812,19 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
-				f.Namespace, canaryService, 80, canaryAnnotations)
-			f.EnsureIngress(canaryIng)
+			f.EnsureIngress(framework.NewSingleIngress(
+				canaryIngName,
+				"/info",
+				host,
+				f.Namespace,
+				canaryService,
+				80,
+				canaryAnnotations))
 
 			ginkgo.By("routing requests to the canary upstream when cookie is set to 'always'")
 			for i := 0; i < 50; i++ {
 				f.HTTPTestClient().
-					GET("/").
+					GET("/info").
 					WithHeader("Host", host).
 					WithCookie("Canary-By-Cookie", "always").
 					Expect().
@@ -678,12 +835,12 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 			ginkgo.By("routing requests to the mainline upstream when cookie is set to 'never'")
 			for i := 0; i < 50; i++ {
 				f.HTTPTestClient().
-					GET("/").
+					GET("/info").
 					WithHeader("Host", host).
 					WithCookie("Canary-By-Cookie", "never").
 					Expect().
 					Status(http.StatusOK).
-					Body().Contains(framework.EchoService).NotContains(canaryService)
+					Body().Contains(framework.HTTPBunService).NotContains(canaryService)
 			}
 
 			ginkgo.By("routing requests to the mainline upstream when cookie is set to anything else")
@@ -691,24 +848,29 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				// This test relies on canary cookie not parsing into the valid
 				// affinity data and canary weight not being specified at all.
 				f.HTTPTestClient().
-					GET("/").
+					GET("/info").
 					WithHeader("Host", host).
 					WithCookie("Canary-By-Cookie", "badcookievalue").
 					Expect().
 					Status(http.StatusOK).
-					Body().Contains(framework.EchoService).NotContains(canaryService)
+					Body().Contains(framework.HTTPBunService).NotContains(canaryService)
 			}
 		})
 	})
 
 	ginkgo.Context("when canaried by weight", func() {
 		ginkgo.It("should route requests only to mainline if canary weight is 0", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host,
-				f.Namespace, framework.EchoService, 80, annotations)
-			f.EnsureIngress(ing)
+			f.EnsureIngress(framework.NewSingleIngress(
+				host,
+				"/info",
+				host,
+				f.Namespace,
+				framework.HTTPBunService,
+				80,
+				annotations))
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
@@ -721,9 +883,14 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				"nginx.ingress.kubernetes.io/canary-weight": "0",
 			}
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
-				f.Namespace, canaryService, 80, canaryAnnotations)
-			f.EnsureIngress(canaryIng)
+			f.EnsureIngress(framework.NewSingleIngress(
+				canaryIngName,
+				"/info",
+				host,
+				f.Namespace,
+				canaryService,
+				80,
+				canaryAnnotations))
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
@@ -731,22 +898,27 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				})
 
 			f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				Expect().
 				Status(http.StatusOK).
 				Body().
-				Contains(framework.EchoService).
+				Contains(framework.HTTPBunService).
 				NotContains(canaryService)
 		})
 
 		ginkgo.It("should route requests only to canary if canary weight is 100", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host,
-				f.Namespace, framework.EchoService, 80, annotations)
-			f.EnsureIngress(ing)
+			f.EnsureIngress(framework.NewSingleIngress(
+				host,
+				"/info",
+				host,
+				f.Namespace,
+				framework.HTTPBunService,
+				80,
+				annotations))
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
@@ -759,12 +931,17 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				"nginx.ingress.kubernetes.io/canary-weight": "100",
 			}
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
-				f.Namespace, canaryService, 80, canaryAnnotations)
-			f.EnsureIngress(canaryIng)
+			f.EnsureIngress(framework.NewSingleIngress(
+				canaryIngName,
+				"/info",
+				host,
+				f.Namespace,
+				canaryService,
+				80,
+				canaryAnnotations))
 
 			f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				Expect().
 				Status(http.StatusOK).
@@ -773,12 +950,17 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 		})
 
 		ginkgo.It("should route requests only to canary if canary weight is equal to canary weight total", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host,
-				f.Namespace, framework.EchoService, 80, annotations)
-			f.EnsureIngress(ing)
+			f.EnsureIngress(framework.NewSingleIngress(
+				host,
+				"/info",
+				host,
+				f.Namespace,
+				framework.HTTPBunService,
+				80,
+				annotations))
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
@@ -792,12 +974,17 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				"nginx.ingress.kubernetes.io/canary-weight-total": "1000",
 			}
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
-				f.Namespace, canaryService, 80, canaryAnnotations)
-			f.EnsureIngress(canaryIng)
+			f.EnsureIngress(framework.NewSingleIngress(
+				canaryIngName,
+				"/info",
+				host,
+				f.Namespace,
+				canaryService,
+				80,
+				canaryAnnotations))
 
 			f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				Expect().
 				Status(http.StatusOK).
@@ -806,12 +993,17 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 		})
 
 		ginkgo.It("should route requests split between mainline and canary if canary weight is 50", func() {
-			host := "foo"
+			host := fooHost
 			annotations := map[string]string{}
 
-			ing := framework.NewSingleIngress(host, "/", host,
-				f.Namespace, framework.EchoService, 80, annotations)
-			f.EnsureIngress(ing)
+			f.EnsureIngress(framework.NewSingleIngress(
+				host,
+				"/info",
+				host,
+				f.Namespace,
+				framework.HTTPBunService,
+				80,
+				annotations))
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
@@ -824,9 +1016,51 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				"nginx.ingress.kubernetes.io/canary-weight": "50",
 			}
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
-				f.Namespace, canaryService, 80, canaryAnnotations)
-			f.EnsureIngress(canaryIng)
+			f.EnsureIngress(framework.NewSingleIngress(
+				canaryIngName,
+				"/info",
+				host,
+				f.Namespace,
+				canaryService,
+				80,
+				canaryAnnotations))
+
+			TestMainlineCanaryDistribution(f, host)
+		})
+
+		ginkgo.It("should route requests split between mainline and canary if canary weight is 100 and weight total is 200", func() {
+			host := fooHost
+			annotations := map[string]string{}
+
+			f.EnsureIngress(framework.NewSingleIngress(
+				host,
+				"/info",
+				host,
+				f.Namespace,
+				framework.HTTPBunService,
+				80,
+				annotations))
+
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return strings.Contains(server, "server_name foo")
+				})
+
+			canaryIngName := fmt.Sprintf("%v-canary", host)
+			canaryAnnotations := map[string]string{
+				"nginx.ingress.kubernetes.io/canary":              "true",
+				"nginx.ingress.kubernetes.io/canary-weight":       "100",
+				"nginx.ingress.kubernetes.io/canary-weight-total": "200",
+			}
+
+			f.EnsureIngress(framework.NewSingleIngress(
+				canaryIngName,
+				"/info",
+				host,
+				f.Namespace,
+				canaryService,
+				80,
+				canaryAnnotations))
 
 			TestMainlineCanaryDistribution(f, host)
 		})
@@ -834,24 +1068,30 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 	ginkgo.Context("Single canary Ingress", func() {
 		ginkgo.It("should not use canary as a catch-all server", func() {
-			host := "foo"
+			host := fooHost
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 			annotations := map[string]string{
 				"nginx.ingress.kubernetes.io/canary":           "true",
 				"nginx.ingress.kubernetes.io/canary-by-header": "CanaryByHeader",
 			}
 
-			ing := framework.NewSingleCatchAllIngress(canaryIngName,
-				f.Namespace, canaryService, 80, annotations)
-			f.EnsureIngress(ing)
+			f.EnsureIngress(framework.NewSingleCatchAllIngress(
+				canaryIngName,
+				f.Namespace,
+				canaryService,
+				80,
+				annotations))
 
-			ing = framework.NewSingleCatchAllIngress(host, f.Namespace,
-				framework.EchoService, 80, nil)
-			f.EnsureIngress(ing)
+			f.EnsureIngress(framework.NewSingleCatchAllIngress(
+				host,
+				f.Namespace,
+				framework.HTTPBunService,
+				80,
+				nil))
 
 			f.WaitForNginxServer("_",
 				func(server string) bool {
-					upstreamName := fmt.Sprintf(`set $proxy_upstream_name "%s-%s-%s";`, f.Namespace, framework.EchoService, "80")
+					upstreamName := fmt.Sprintf(`set $proxy_upstream_name "%s-%s-%s";`, f.Namespace, framework.HTTPBunService, "80")
 					canaryUpstreamName := fmt.Sprintf(`set $proxy_upstream_name "%s-%s-%s";`, f.Namespace, canaryService, "80")
 
 					return strings.Contains(server, fmt.Sprintf(`set $ingress_name "%v";`, host)) &&
@@ -862,21 +1102,31 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 		})
 
 		ginkgo.It("should not use canary with domain as a server", func() {
-			host := "foo"
+			host := fooHost
 			canaryIngName := fmt.Sprintf("%v-canary", host)
 			annotations := map[string]string{
 				"nginx.ingress.kubernetes.io/canary":           "true",
 				"nginx.ingress.kubernetes.io/canary-by-header": "CanaryByHeader",
 			}
 
-			ing := framework.NewSingleIngress(canaryIngName, "/", host,
-				f.Namespace, canaryService, 80, annotations)
-			f.EnsureIngress(ing)
+			f.EnsureIngress(framework.NewSingleIngress(
+				canaryIngName,
+				"/info",
+				host,
+				f.Namespace,
+				canaryService,
+				80,
+				annotations))
 
 			otherHost := "bar"
-			ing = framework.NewSingleIngress(otherHost, "/", otherHost,
-				f.Namespace, framework.EchoService, 80, nil)
-			f.EnsureIngress(ing)
+			f.EnsureIngress(framework.NewSingleIngress(
+				otherHost,
+				"/info",
+				otherHost,
+				f.Namespace,
+				framework.HTTPBunService,
+				80,
+				nil))
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
 				return strings.Contains(cfg, "server_name "+otherHost) &&
@@ -886,7 +1136,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 	})
 
 	ginkgo.It("does not crash when canary ingress has multiple paths to the same non-matching backend", func() {
-		host := "foo"
+		host := fooHost
 		canaryIngName := fmt.Sprintf("%v-canary", host)
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/canary":           "true",
@@ -894,13 +1144,22 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 		}
 
 		paths := []string{"/foo", "/bar"}
-		ing := framework.NewSingleIngressWithMultiplePaths(canaryIngName, paths, host,
-			f.Namespace, "httpy-svc-canary", 80, annotations)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngressWithMultiplePaths(
+			canaryIngName,
+			paths,
+			host,
+			f.Namespace,
+			"httpy-svc-canary",
+			80,
+			annotations))
 
-		ing = framework.NewSingleIngress(host, "/", host, f.Namespace,
-			framework.EchoService, 80, nil)
-		f.EnsureIngress(ing)
+		f.EnsureIngress(framework.NewSingleIngress(
+			host,
+			"/info",
+			host, f.Namespace,
+			framework.HTTPBunService,
+			80,
+			nil))
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
@@ -909,7 +1168,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 	})
 
 	ginkgo.Context("canary affinity behavior", func() {
-		host := "foo"
+		host := fooHost
 		affinityCookieName := "aff"
 		canaryIngName := fmt.Sprintf("%v-canary", host)
 
@@ -919,9 +1178,14 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				"nginx.ingress.kubernetes.io/session-cookie-name": affinityCookieName,
 			}
 
-			ing := framework.NewSingleIngress(host, "/", host,
-				f.Namespace, framework.EchoService, 80, annotations)
-			f.EnsureIngress(ing)
+			f.EnsureIngress(framework.NewSingleIngress(
+				host,
+				"/info",
+				host,
+				f.Namespace,
+				framework.HTTPBunService,
+				80,
+				annotations))
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
@@ -937,14 +1201,19 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				"nginx.ingress.kubernetes.io/canary-weight":          "1",
 			}
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
-				f.Namespace, canaryService, 80, canaryAnnotations)
-			f.EnsureIngress(canaryIng)
+			f.EnsureIngress(framework.NewSingleIngress(
+				canaryIngName,
+				"/info",
+				host,
+				f.Namespace,
+				canaryService,
+				80,
+				canaryAnnotations))
 
 			// This request will produce affinity cookie coming from the canary
 			// backend.
 			forcedRequestToCanary := f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				WithHeader("ForceCanary", "yes").
 				Expect().
@@ -961,7 +1230,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 			// routed to a specific backend.
 			for i := 0; i < 50; i++ {
 				f.HTTPTestClient().
-					GET("/").
+					GET("/info").
 					WithHeader("Host", host).
 					WithCookie(affinityCookieName, affinityCookie.Raw().Value).
 					Expect().
@@ -976,9 +1245,14 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				"nginx.ingress.kubernetes.io/session-cookie-name": affinityCookieName,
 			}
 
-			ing := framework.NewSingleIngress(host, "/", host,
-				f.Namespace, framework.EchoService, 80, annotations)
-			f.EnsureIngress(ing)
+			f.EnsureIngress(framework.NewSingleIngress(
+				host,
+				"/info",
+				host,
+				f.Namespace,
+				framework.HTTPBunService,
+				80,
+				annotations))
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
@@ -995,14 +1269,19 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				"nginx.ingress.kubernetes.io/affinity-canary-behavior": "sticky",
 			}
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
-				f.Namespace, canaryService, 80, canaryAnnotations)
-			f.EnsureIngress(canaryIng)
+			f.EnsureIngress(framework.NewSingleIngress(
+				canaryIngName,
+				"/info",
+				host,
+				f.Namespace,
+				canaryService,
+				80,
+				canaryAnnotations))
 
 			// This request will produce affinity cookie coming from the canary
 			// backend.
 			forcedRequestToCanary := f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				WithHeader("ForceCanary", "yes").
 				Expect().
@@ -1019,7 +1298,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 			// routed to a specific backend.
 			for i := 0; i < 50; i++ {
 				f.HTTPTestClient().
-					GET("/").
+					GET("/info").
 					WithHeader("Host", host).
 					WithCookie(affinityCookieName, affinityCookie.Raw().Value).
 					Expect().
@@ -1034,9 +1313,14 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				"nginx.ingress.kubernetes.io/session-cookie-name": affinityCookieName,
 			}
 
-			ing := framework.NewSingleIngress(host, "/", host,
-				f.Namespace, framework.EchoService, 80, annotations)
-			f.EnsureIngress(ing)
+			f.EnsureIngress(framework.NewSingleIngress(
+				host,
+				"/info",
+				host,
+				f.Namespace,
+				framework.HTTPBunService,
+				80,
+				annotations))
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
@@ -1053,14 +1337,19 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				"nginx.ingress.kubernetes.io/affinity-canary-behavior": "legacy",
 			}
 
-			canaryIng := framework.NewSingleIngress(canaryIngName, "/", host,
-				f.Namespace, canaryService, 80, canaryAnnotations)
-			f.EnsureIngress(canaryIng)
+			f.EnsureIngress(framework.NewSingleIngress(
+				canaryIngName,
+				"/info",
+				host,
+				f.Namespace,
+				canaryService,
+				80,
+				canaryAnnotations))
 
 			// This request will produce affinity cookie coming from the canary
 			// backend.
 			forcedRequestToCanary := f.HTTPTestClient().
-				GET("/").
+				GET("/info").
 				WithHeader("Host", host).
 				WithHeader("ForceCanary", "yes").
 				Expect().
@@ -1081,12 +1370,11 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 			TestMainlineCanaryDistribution(f, host)
 		})
 	})
-
 })
 
 // This method assumes canary weight being configured at 50%.
 func TestMainlineCanaryDistribution(f *framework.Framework, host string) {
-	re := regexp.MustCompile(fmt.Sprintf(`%s.*`, framework.EchoService))
+	re := regexp.MustCompile(fmt.Sprintf(`%s.*`, framework.HTTPBunService))
 	replicaRequestCount := map[string]int{}
 
 	// The implementation of choice by weight doesn't guarantee exact
@@ -1097,7 +1385,7 @@ func TestMainlineCanaryDistribution(f *framework.Framework, host string) {
 
 	for i := 0; i < requestsToGet; i++ {
 		body := f.HTTPTestClient().
-			GET("/").
+			GET("/info").
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusOK).Body().Raw()
@@ -1116,6 +1404,14 @@ func TestMainlineCanaryDistribution(f *framework.Framework, host string) {
 
 	assert.Equal(ginkgo.GinkgoT(), 2, len(keys))
 
-	assert.GreaterOrEqual(ginkgo.GinkgoT(), int(replicaRequestCount[keys[0].String()]), requestsNumberToTest)
-	assert.GreaterOrEqual(ginkgo.GinkgoT(), int(replicaRequestCount[keys[1].String()]), requestsNumberToTest)
+	assert.GreaterOrEqual(
+		ginkgo.GinkgoT(),
+		replicaRequestCount[keys[0].String()],
+		requestsNumberToTest,
+	)
+	assert.GreaterOrEqual(
+		ginkgo.GinkgoT(),
+		replicaRequestCount[keys[1].String()],
+		requestsNumberToTest,
+	)
 }

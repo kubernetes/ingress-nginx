@@ -4,17 +4,26 @@ on:
   pull_request:
     branches:
       - "*"
+    paths-ignore:
+      - 'docs/**'
+      - 'deploy/**'
+      - '**.md'
 
   push:
     branches:
       - main
+    paths-ignore:
+      - 'docs/**'
+      - 'deploy/**'
+      - '**.md'
 
   workflow_dispatch:
     inputs:
       run_e2e:
         description: 'Force e2e to run'
-        required: true
+        required: false
         type: boolean
+
 
 permissions:
   contents: read
@@ -33,9 +42,9 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.0.2
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
 
-      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.10.2
+      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
         id: filter
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -53,44 +62,49 @@ jobs:
               - 'charts/ingress-nginx/**/*'
               - 'NGINX_BASE'
 
-
-  security:
+  test-go:
     runs-on: ubuntu-latest
+    needs: changes
+    if: |
+      (needs.changes.outputs.go == 'true')
     steps:
-
       - name: Checkout
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.0.2
-
-      - name: Run Gosec Security Scanner
-        uses: securego/gosec@1af1d5bb49259b62e45c505db397dd2ada5d74f8 # master
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+      
+      - name: Set up Go
+        id: go
+        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
-          # G601 for zz_generated.deepcopy.go
-          # G306 TODO: Expect WriteFile permissions to be 0600 or less
-          # G307 TODO: Deferring unsafe method "Close"
-          args: -exclude=G109,G601,G104,G204,G304,G306,G307 -tests=false -exclude-dir=test -exclude-dir=images/  -exclude-dir=docs/ ./...
+          go-version: '1.21.3'
+          check-latest: true
+
+      - name: Run test
+        run: make test
 
   build:
     name: Build
     runs-on: ubuntu-latest
     needs: changes
+    if: |
+      (needs.changes.outputs.go == 'true') || (needs.changes.outputs.charts == 'true') || ${{ inputs.run_e2e }}
 
     steps:
-
       - name: Checkout
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.0.2
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
 
-      - name: Set up Go 1.19.2
+      - name: Set up Go
         id: go
-        uses: actions/setup-go@d0a58c1c4d2b25278816e339b944508c875f3613 # v3.2.0
+        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
-          go-version: '1.19.2'
+          go-version: '1.21.3'
+          check-latest: true
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@e81a89b1732b9c48d79cd809d8d81d79c4647a18 #v2.0.0
+        uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # v3.0.0
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@8c0edbc76e98fa90f69d9a2c020dcb50019dc325 # v2.0.0
+        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
         with:
           version: latest
 
@@ -99,9 +113,7 @@ jobs:
 
       - name: Prepare Host
         run: |
-          sudo apt-get -qq update || true
-          sudo apt-get install -y pigz
-          curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.17.0/bin/linux/amd64/kubectl
+          curl -LO https://dl.k8s.io/release/v1.27.3/bin/linux/amd64/kubectl
           chmod +x ./kubectl
           sudo mv ./kubectl /usr/local/bin/kubectl
 
@@ -120,14 +132,14 @@ jobs:
             nginx-ingress-controller:e2e \
             ingress-controller/controller:1.0.0-dev \
             ingress-controller/controller-chroot:1.0.0-dev \
-            | pigz > docker.tar.gz
+            | gzip > docker.tar.gz
 
       - name: cache
-        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         with:
           name: docker.tar.gz
           path: docker.tar.gz
-
+          retention-days: 5
   helm:
     name: Helm chart
     runs-on: ubuntu-latest
@@ -135,24 +147,24 @@ jobs:
       - changes
       - build
     if: |
-      (needs.changes.outputs.charts == 'true') || ${{ inputs.run_e2e }} 
+      (needs.changes.outputs.charts == 'true') || ${{ inputs.run_e2e }}
 
     strategy:
       matrix:
-        k8s: [v1.23.13, v1.24.7, v1.25.3]
+        k8s: [v1.25.11, v1.26.6, v1.27.3, v1.28.0]
 
     steps:
-
       - name: Checkout
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.0.2
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
 
       - name: Setup Go
-        uses: actions/setup-go@d0a58c1c4d2b25278816e339b944508c875f3613 # v3.2.0
+        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
-          go-version: '1.19.2'
+          go-version: '1.21.3'
+          check-latest: true
 
       - name: cache
-        uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7 # v3
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: docker.tar.gz
 
@@ -186,20 +198,13 @@ jobs:
 
       - name: Create Kubernetes ${{ matrix.k8s }} cluster
         id: kind
-        uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 #v0.5.0
-        with:
-          version: v0.15.0
-          image: kindest/node:${{ matrix.k8s }}
-
-      - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v1
-        with:
-          name: docker.tar.gz
-          failOnError: false
+        run: |
+          kind create cluster --image=kindest/node:${{ matrix.k8s }}
 
       - name: Load images from cache
         run: |
           echo "loading docker images..."
-          pigz -dc docker.tar.gz | docker load
+          gzip -dc docker.tar.gz | docker load
 
       - name: Test
         env:
@@ -210,7 +215,6 @@ jobs:
           kind get kubeconfig > $HOME/.kube/kind-config-kind
           make kind-e2e-chart-tests
 
-
   kubernetes:
     name: Kubernetes
     runs-on: ubuntu-latest
@@ -218,45 +222,30 @@ jobs:
       - changes
       - build
     if: |
-      (needs.changes.outputs.go == 'true') || ${{ inputs.run_e2e }} 
+      (needs.changes.outputs.go == 'true') || ${{ inputs.run_e2e }}
 
     strategy:
       matrix:
-        k8s: [v1.23.13, v1.24.7, v1.25.3]
+        k8s: [v1.25.11, v1.26.6, v1.27.3, v1.28.0]
 
     steps:
-
       - name: Checkout
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.0.2
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
 
       - name: cache
-        uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7 # v2
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: docker.tar.gz
 
       - name: Create Kubernetes ${{ matrix.k8s }} cluster
         id: kind
-        uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 #v0.5.0
-        with:
-          version: v0.15.0
-          config: test/e2e/kind.yaml
-          image: kindest/node:${{ matrix.k8s }}
-
-      - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v1
-        with:
-          name: docker.tar.gz
-          failOnError: false
-
-      - name: Prepare cluster for testing
-        uses: azure/setup-helm@f382f75448129b3be48f8121b9857be18d815a82 #v2.1
-        with:
-          version: 'v3.8.0'
-        id: local-path
+        run: |
+          kind create cluster --image=kindest/node:${{ matrix.k8s }} --config test/e2e/kind.yaml
 
       - name: Load images from cache
         run: |
           echo "loading docker images..."
-          pigz -dc docker.tar.gz | docker load
+          gzip -dc docker.tar.gz | docker load
 
       - name: Run e2e tests
         env:
@@ -267,12 +256,62 @@ jobs:
           kind get kubeconfig > $HOME/.kube/kind-config-kind
           make kind-e2e-test
 
-      - name: Uplaod e2e junit-reports
-        uses: actions/upload-artifact@v2
+      - name: Upload e2e junit-reports
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         if: success() || failure()
         with:
-          name: e2e-test-reports
+          name: e2e-test-reports-${{ matrix.k8s }}
           path: 'test/junitreports/report*.xml'
+
+  kubernetes-validations:
+    name: Kubernetes with Validations
+    runs-on: ubuntu-latest
+    needs:
+      - changes
+      - build
+    if: |
+      (needs.changes.outputs.go == 'true') || ${{ inputs.run_e2e }}
+
+    strategy:
+      matrix:
+        k8s: [v1.25.11, v1.26.6, v1.27.3, v1.28.0]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+
+      - name: cache
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          name: docker.tar.gz
+
+      - name: Create Kubernetes ${{ matrix.k8s }} cluster
+        id: kind
+        run: |
+          kind create cluster --image=kindest/node:${{ matrix.k8s }} --config test/e2e/kind.yaml
+
+      - name: Load images from cache
+        run: |
+          echo "loading docker images..."
+          gzip -dc docker.tar.gz | docker load
+
+      - name: Run e2e tests
+        env:
+          KIND_CLUSTER_NAME: kind
+          SKIP_CLUSTER_CREATION: true
+          SKIP_IMAGE_CREATION: true
+          ENABLE_VALIDATIONS: true
+        run: |
+          kind get kubeconfig > $HOME/.kube/kind-config-kind
+          make kind-e2e-test
+
+      - name: Upload e2e junit-reports
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        if: success() || failure()
+        with:
+          name: e2e-test-reports-${{ matrix.k8s }}
+          path: 'test/junitreports/report*.xml'
+
 
   kubernetes-chroot:
     name: Kubernetes chroot
@@ -281,45 +320,31 @@ jobs:
       - changes
       - build
     if: |
-      (needs.changes.outputs.go == 'true') || ${{ inputs.run_e2e }} 
+      (needs.changes.outputs.go == 'true') || ${{ inputs.run_e2e }}
 
     strategy:
       matrix:
-        k8s: [v1.23.13, v1.24.7, v1.25.3]
+        k8s: [v1.25.11, v1.26.6, v1.27.3, v1.28.0]
 
     steps:
 
       - name: Checkout
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.0.2
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
 
       - name: cache
-        uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: docker.tar.gz
 
       - name: Create Kubernetes ${{ matrix.k8s }} cluster
         id: kind
-        uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 #v0.5.0
-        with:
-          version: v0.15.0
-          config: test/e2e/kind.yaml
-          image: kindest/node:${{ matrix.k8s }}
-
-      - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af
-        with:
-          name: docker.tar.gz
-          failOnError: false
-
-      - name: Prepare cluster for testing
-        uses: azure/setup-helm@f382f75448129b3be48f8121b9857be18d815a82 #v2.1
-        with:
-          version: 'v3.8.0'
-        id: local-path
+        run: |
+          kind create cluster --image=kindest/node:${{ matrix.k8s }} --config test/e2e/kind.yaml
 
       - name: Load images from cache
         run: |
           echo "loading docker images..."
-          pigz -dc docker.tar.gz | docker load
+          gzip -dc docker.tar.gz | docker load
 
       - name: Run e2e tests
         env:
@@ -331,6 +356,49 @@ jobs:
           kind get kubeconfig > $HOME/.kube/kind-config-kind
           make kind-e2e-test
 
+      - name: Upload e2e junit-reports
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        if: success() || failure()
+        with:
+          name: e2e-test-reports-chroot-${{ matrix.k8s }}
+          path: 'test/junitreports/report*.xml'
+
+  test-nginx-image-build:
+    permissions:
+      contents: read  # for dorny/paths-filter to fetch a list of changed files
+      pull-requests: read  # for dorny/paths-filter to read pull requests
+    runs-on: ubuntu-latest
+    env:
+      PLATFORMS: linux/amd64,linux/arm64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+
+      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
+        id: filter-images
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          filters: |
+            nginx-base:
+              - 'images/nginx/**'
+      - name: nginx-base-image
+        if: ${{ steps.filter-images.outputs.nginx-base == 'true' }}
+        run: |
+          cd images/nginx/rootfs && docker build -t docker.io/nginx-test-workflow/nginx:${{ github.sha }} .
+      - name: Run Trivy on NGINX Image
+        if: ${{ steps.filter-images.outputs.nginx-base == 'true' }}
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'docker.io/nginx-test-workflow/nginx:${{ github.sha }}'
+          format: 'sarif'
+          ignore-unfixed: true
+          output: 'trivy-results.sarif'
+      - name: Upload Trivy scan results to GitHub Security tab
+        if: ${{ steps.filter-images.outputs.nginx-base == 'true' && always() }}
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
 
   test-image-build:
     permissions:
@@ -341,9 +409,9 @@ jobs:
       PLATFORMS: linux/amd64,linux/arm64
     steps:
       - name: Checkout
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.0.2
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
 
-      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.10.2
+      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
         id: filter-images
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -358,13 +426,12 @@ jobs:
               - 'images/echo/**'
             go-grpc-greeter-server:
               - 'images/go-grpc-greeter-server/**'
-            httpbin:
-              - 'images/httpbin/**'
+            httpbun:
+              - 'images/httpbun/**'
             kube-webhook-certgen:
               - 'images/kube-webhook-certgen/**'
             ext-auth-example-authsvc:
               - 'images/ext-auth-example-authsvc/**'
-
       - name: custom-error-pages image build
         if: ${{ steps.filter-images.outputs.custom-error-pages == 'true' }}
         run: |
@@ -385,10 +452,10 @@ jobs:
         if: ${{ steps.filter-images.outputs.go-grpc-greeter-server == 'true' }}
         run: |
           cd images/go-grpc-greeter-server && make build
-      - name: httpbin image build
+      - name: httpbun image build
         if: ${{ steps.filter-images.outputs.httpbin == 'true' }}
         run: |
-          cd images/httpbin && make build
+          cd images/httpbun && make build
       - name: kube-webhook-certgen image build
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
         run: |
@@ -398,19 +465,25 @@ jobs:
         run: |
           cd images/ext-auth-example-authsvc && make build
 
-
   test-image:
     permissions:
       contents: read  # for dorny/paths-filter to fetch a list of changed files
       pull-requests: read  # for dorny/paths-filter to read pull requests
+
     runs-on: ubuntu-latest
+
     env:
       PLATFORMS: linux/amd64
+
+    strategy:
+      matrix:
+        k8s: [v1.25.11, v1.26.6, v1.27.3, v1.28.0]
+
     steps:
       - name: Checkout
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.0.2
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
 
-      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.10.2
+      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
         id: filter-images
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -421,19 +494,19 @@ jobs:
       - name: Create Kubernetes cluster
         id: kind
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
-        uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 #v0.5.0
-        with:
-          version: v0.15.0
-          image: kindest/node:v1.25.2
+        run: |
+          kind create cluster --image=kindest/node:${{ matrix.k8s }}
 
-      - name: Set up Go 1.19.2
+      - name: Set up Go
         id: go
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
-        uses: actions/setup-go@d0a58c1c4d2b25278816e339b944508c875f3613 # v3.2.0
+        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
-          go-version: '1.19.2'
+          go-version: '1.21.3'
+          check-latest: true
 
       - name: kube-webhook-certgen image build
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
         run: |
           cd images/kube-webhook-certgen && make test test-e2e
+

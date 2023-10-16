@@ -39,7 +39,7 @@ var _ = framework.IngressNginxDescribe("[Memory Leak] Dynamic Certificates", fun
 		f.NewEchoDeployment()
 	})
 
-	framework.MemoryLeakIt("should not leak memory from ingress SSL certificates or configuration updates", func() {
+	ginkgo.It("should not leak memory from ingress SSL certificates or configuration updates", func() {
 		hostCount := 1000
 		iterations := 10
 
@@ -87,14 +87,14 @@ func provisionIngress(hostname string, f *framework.Framework) {
 func checkIngress(hostname string, f *framework.Framework) {
 	resp := f.HTTPTestClientWithTLSConfig(&tls.Config{
 		ServerName:         hostname,
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: true, //nolint:gosec // Ignore the gosec error in testing
 	}).
 		GET("/").
 		WithURL(f.GetURL(framework.HTTPS)).
 		WithHeader("Host", hostname).
 		Expect().
 		Raw()
-
+	defer resp.Body.Close()
 	assert.Equal(ginkgo.GinkgoT(), resp.StatusCode, http.StatusOK)
 
 	// check the returned secret is not the fake one

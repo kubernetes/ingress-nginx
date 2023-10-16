@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+//nolint:dupl // Ignore dupl errors for similar test case
 package framework
 
 import (
@@ -58,7 +59,7 @@ func (f *Framework) NewNewFastCGIHelloServerDeploymentWithReplicas(replicas int3
 					Containers: []corev1.Container{
 						{
 							Name:  "fastcgi-helloserver",
-							Image: "registry.k8s.io/ingress-nginx/e2e-test-fastcgi-helloserver@sha256:723b8187e1768d199b93fd939c37c1ce9427dcbca72ec6415f4d890bca637fcc",
+							Image: "registry.k8s.io/ingress-nginx/e2e-test-fastcgi-helloserver@sha256:0e08c836cc58f1ea862578de99b13bc4264fe071e816f96dc1d79857bfba7473",
 							Env:   []corev1.EnvVar{},
 							Ports: []corev1.ContainerPort{
 								{
@@ -75,7 +76,7 @@ func (f *Framework) NewNewFastCGIHelloServerDeploymentWithReplicas(replicas int3
 
 	d := f.EnsureDeployment(deployment)
 
-	err := waitForPodsReady(f.KubeClientSet, DefaultTimeout, int(replicas), f.Namespace, metav1.ListOptions{
+	err := waitForPodsReady(f.KubeClientSet, DefaultTimeout, int(replicas), f.Namespace, &metav1.ListOptions{
 		LabelSelector: fields.SelectorFromSet(fields.Set(d.Spec.Template.ObjectMeta.Labels)).String(),
 	})
 	assert.Nil(ginkgo.GinkgoT(), err, "failed to wait for to become ready")

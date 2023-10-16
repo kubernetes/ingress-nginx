@@ -17,8 +17,10 @@ limitations under the License.
 package httpexpect
 
 import (
+	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"path"
@@ -63,11 +65,38 @@ func (h *HTTPRequest) DoRequest(method, rpath string) *HTTPRequest {
 
 	var request *http.Request
 	uri.Path = path.Join(uri.Path, rpath)
-	if request, err = http.NewRequest(method, uri.String(), nil); err != nil {
+	if request, err = http.NewRequest(method, uri.String(), http.NoBody); err != nil {
 		h.chain.fail(err.Error())
 	}
 
 	h.Request = request
+	return h
+}
+
+// ForceResolve forces the test resolver to point to a specific endpoint
+func (h *HTTPRequest) ForceResolve(ip string, port uint16) *HTTPRequest {
+	addr := net.ParseIP(ip)
+	if addr == nil {
+		h.chain.fail(fmt.Sprintf("invalid ip address: %s", ip))
+		return h
+	}
+	dialer := &net.Dialer{
+		Timeout:   h.client.Timeout,
+		KeepAlive: h.client.Timeout,
+		DualStack: true,
+	}
+	resolveAddr := fmt.Sprintf("%s:%d", ip, int(port))
+
+	oldTransport, ok := h.client.Transport.(*http.Transport)
+	if !ok {
+		h.chain.fail("invalid old transport address")
+		return h
+	}
+	newTransport := oldTransport.Clone()
+	newTransport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+		return dialer.DialContext(ctx, network, resolveAddr)
+	}
+	h.client.Transport = newTransport
 	return h
 }
 
@@ -81,6 +110,7 @@ func (h *HTTPRequest) Expect() *HTTPResponse {
 	if err != nil {
 		h.chain.fail(err.Error())
 	}
+	defer response.Body.Close()
 
 	h.HTTPResponse.Response = response // set the HTTP response
 

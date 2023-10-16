@@ -11,17 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM alpine:3.16.2 as builder
+FROM alpine:3.18.4 as builder
 
 COPY . /
 
 RUN apk update \
   && apk upgrade \
-  && apk add -U bash \
+  && apk add -U bash --no-cache \
   && /build.sh
 
 # Use a multi-stage build
-FROM alpine:3.16.2
+FROM alpine:3.18.4
 
 ENV PATH=$PATH:/usr/local/luajit/bin:/usr/local/nginx/sbin:/usr/local/nginx/bin
 
@@ -39,8 +39,6 @@ RUN apk update \
   openssl \
   pcre \
   zlib \
-  geoip \
-  curl \
   ca-certificates \
   patch \
   yajl \
@@ -49,7 +47,6 @@ RUN apk update \
   libmaxminddb \
   yaml-cpp \
   dumb-init \
-  nano \
   tzdata \
   && ln -s /usr/local/nginx/sbin/nginx /sbin/nginx \
   && adduser -S -D -H -u 101 -h /usr/local/nginx \

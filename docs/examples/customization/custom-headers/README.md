@@ -10,7 +10,7 @@ To work around this limitation, perform a rolling restart of the deployment.
 
 ## Example
 
-This example demonstrates configuration of the nginx ingress controller via
+This example demonstrates configuration of the Ingress-Nginx Controller via
 a ConfigMap to pass a custom list of headers to the upstream
 server.
 
@@ -26,7 +26,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/docs/examples/customization/custom-headers/configmap.yaml
 ```
 
-The nginx ingress controller will read the `ingress-nginx/ingress-nginx-controller` ConfigMap, find the `proxy-set-headers` key, read HTTP headers from the `ingress-nginx/custom-headers` ConfigMap, and include those HTTP headers in all requests flowing from nginx to the backends.
+The Ingress-Nginx Controller will read the `ingress-nginx/ingress-nginx-controller` ConfigMap, find the `proxy-set-headers` key, read HTTP headers from the `ingress-nginx/custom-headers` ConfigMap, and include those HTTP headers in all requests flowing from nginx to the backends.
 
 
 The above example was for passing a custom list of headers to the upstream server.
