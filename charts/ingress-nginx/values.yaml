@@ -7,8 +7,7 @@
 # nameOverride:
 # fullnameOverride:
 
-## Overrides for namespace
-# See templates/_helpers.tpl
+# -- Override the deployment namespace; defaults to .Release.Namespace
 namespaceOverride: ""
 
 ## Labels to apply to all resources
