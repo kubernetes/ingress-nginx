@@ -39,6 +39,7 @@ The following table shows a configuration option's name, type, and the default v
 |[http-access-log-path](#http-access-log-path)|string|""||
 |[stream-access-log-path](#stream-access-log-path)|string|""||
 |[enable-access-log-for-default-backend](#enable-access-log-for-default-backend)|bool|"false"||
+|[enable-auth-access-log](#enable-auth-access-log)|bool|"false"||
 |[error-log-path](#error-log-path)|string|"/var/log/nginx/error.log"||
 |[enable-modsecurity](#enable-modsecurity)|bool|"false"||
 |[modsecurity-snippet](#modsecurity-snippet)|string|""||
@@ -325,6 +326,10 @@ __Note:__ If not specified, the `access-log-path` will be used.
 ## enable-access-log-for-default-backend
 
 Enables logging access to default backend. _**default:**_ is disabled.
+
+## enable-auth-access-log
+
+Enables logging access to the authentication endpoint. _**default:**_ is disabled.
 
 ## error-log-path
 
