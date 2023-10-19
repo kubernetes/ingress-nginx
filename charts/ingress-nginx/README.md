@@ -233,6 +233,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| namespaceOverride | string | `""` | Override the deployment namespace, defaults to Release.Namespace |
 | commonLabels | object | `{}` |  |
 | controller.addHeaders | object | `{}` | Will add custom headers before sending response traffic to the client according to: https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#add-headers |
 | controller.admissionWebhooks.annotations | object | `{}` |  |
