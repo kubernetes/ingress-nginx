@@ -13,7 +13,7 @@ metadata:
     {{- toYaml .Values.controller.service.labels | nindent 4 }}
   {{- end }}
   name: {{ include "ingress-nginx.controller.fullname" . }}-internal
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ include "ingress-nginx.namespace" . }}
 spec:
   type: "{{ .Values.controller.service.type }}"
 {{- if .Values.controller.service.internal.loadBalancerIP }}
