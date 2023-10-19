@@ -12,7 +12,7 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
   name: {{ include "ingress-nginx.controller.fullname" . }}-admission
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ include "ingress-nginx.namespace" . }}
 spec:
   type: {{ .Values.controller.admissionWebhooks.service.type }}
 {{- if .Values.controller.admissionWebhooks.service.clusterIP }}

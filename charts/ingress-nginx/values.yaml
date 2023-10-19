@@ -7,6 +7,10 @@
 # nameOverride:
 # fullnameOverride:
 
+## Overrides for namespace
+# See templates/_helpers.tpl
+namespaceOverride: ""
+
 ## Labels to apply to all resources
 ##
 commonLabels: {}
@@ -707,7 +711,7 @@ controller:
       ## jobLabel: "app.kubernetes.io/name"
       namespace: ""
       namespaceSelector: {}
-      ## Default: scrape .Release.Namespace only
+      ## Default: scrape .Release.Namespace or namespaceOverride only
       ## To scrape all, use the following:
       ## namespaceSelector:
       ##   any: true
