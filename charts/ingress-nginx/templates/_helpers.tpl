@@ -35,7 +35,7 @@ Allow the release namespace to be overridden for multi-namespace deployments in 
 */}}
 {{- define "ingress-nginx.namespace" -}}
   {{- if .Values.namespaceOverride -}}
-    {{- .Values.namespaceOverride -}}
+    {{- .Values.namespaceOverride | trunc 63 | trimSuffix "-" -}}
   {{- else -}}
     {{- .Release.Namespace -}}
   {{- end -}}
