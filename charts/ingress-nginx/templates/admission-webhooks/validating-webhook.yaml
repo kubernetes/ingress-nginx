@@ -38,7 +38,7 @@ webhooks:
       - v1
     clientConfig:
       service:
-        namespace: {{ .Release.Namespace | quote }}
+        namespace: {{ (include "ingress-nginx.namespace" .) | quote }}
         name: {{ include "ingress-nginx.controller.fullname" . }}-admission
         path: /networking/v1/ingresses
     {{- if .Values.controller.admissionWebhooks.timeoutSeconds }}
