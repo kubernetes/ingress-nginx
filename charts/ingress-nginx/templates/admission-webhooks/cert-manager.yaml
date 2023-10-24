@@ -6,7 +6,7 @@ apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: {{ include "ingress-nginx.fullname" . }}-self-signed-issuer
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ include "ingress-nginx.namespace" . }}
 spec:
   selfSigned: {}
 ---
@@ -15,7 +15,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: {{ include "ingress-nginx.fullname" . }}-root-cert
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ include "ingress-nginx.namespace" . }}
 spec:
   secretName: {{ include "ingress-nginx.fullname" . }}-root-cert
   duration: {{ .Values.controller.admissionWebhooks.certManager.rootCert.duration | default "43800h0m0s" | quote }}
@@ -32,7 +32,7 @@ apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: {{ include "ingress-nginx.fullname" . }}-root-issuer
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ include "ingress-nginx.namespace" . }}
 spec:
   ca:
     secretName: {{ include "ingress-nginx.fullname" . }}-root-cert
@@ -43,7 +43,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: {{ include "ingress-nginx.fullname" . }}-admission
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ include "ingress-nginx.namespace" . }}
 spec:
   secretName: {{ include "ingress-nginx.fullname" . }}-admission
   duration: {{ .Values.controller.admissionWebhooks.certManager.admissionCert.duration | default "8760h0m0s" | quote }}
@@ -55,8 +55,8 @@ spec:
     {{- end }}
   dnsNames:
     - {{ include "ingress-nginx.controller.fullname" . }}-admission
-    - {{ include "ingress-nginx.controller.fullname" . }}-admission.{{ .Release.Namespace }}
-    - {{ include "ingress-nginx.controller.fullname" . }}-admission.{{ .Release.Namespace }}.svc
+    - {{ include "ingress-nginx.controller.fullname" . }}-admission.{{ include "ingress-nginx.namespace" . }}
+    - {{ include "ingress-nginx.controller.fullname" . }}-admission.{{ include "ingress-nginx.namespace" . }}.svc
   subject:
     organizations:
       - ingress-nginx-admission
