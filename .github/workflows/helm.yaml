@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Run Artifact Hub lint
         run: |
@@ -61,7 +61,7 @@ jobs:
 
     steps:
       - name: Checkout master
-        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           # Fetch entire history. Required for chart-releaser; see https://github.com/helm/chart-releaser-action/issues/13#issuecomment-602063896
           fetch-depth: 0
