@@ -38,8 +38,8 @@ webhooks:
       - v1
     clientConfig:
       service:
-        namespace: {{ (include "ingress-nginx.namespace" .) | quote }}
         name: {{ include "ingress-nginx.controller.fullname" . }}-admission
+        namespace: {{ include "ingress-nginx.namespace" . }}
         path: /networking/v1/ingresses
     {{- if .Values.controller.admissionWebhooks.timeoutSeconds }}
     timeoutSeconds: {{ .Values.controller.admissionWebhooks.timeoutSeconds }}

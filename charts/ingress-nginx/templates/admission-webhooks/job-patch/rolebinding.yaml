@@ -20,5 +20,5 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: {{ include "ingress-nginx.admissionWebhooks.fullname" . }}
-    namespace: {{ (include "ingress-nginx.namespace" .) | quote }}
+    namespace: {{ include "ingress-nginx.namespace" . }}
 {{- end }}
