@@ -25,7 +25,7 @@
 		"gzipTypes": "application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/javascript text/plain text/x-component",
 		"hsts": true,
 		"hstsIncludeSubdomains": true,
-		"hstsMaxAge": "15724800",
+		"hstsMaxAge": "31536000",
 		"keepAlive": 75,
 		"mapHashBucketSize": 64,
 		"maxWorkerConnections": 16384,
