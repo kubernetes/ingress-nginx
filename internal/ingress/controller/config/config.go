@@ -46,7 +46,7 @@ const (
 	// that tell browsers that it should only be communicated with using HTTPS, instead of using HTTP.
 	// https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security
 	// max-age is the time, in seconds, that the browser should remember that this site is only to be accessed using HTTPS.
-	hstsMaxAge = "15724800"
+	hstsMaxAge = "31536000"
 
 	gzipTypes = "application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/javascript text/plain text/x-component"
 
