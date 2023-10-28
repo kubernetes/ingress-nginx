@@ -127,6 +127,9 @@ ingress-nginx defaults to using TLS 1.2 and 1.3 only, with a [secure set of TLS 
 
 ### Legacy TLS
 
+!!! warning
+    TLSv1, TLSv1.1 are not supported in ingress-nginx v1.6.0 and above.
+
 The default configuration, though secure, does not support some older browsers and operating systems.
 
 For instance, TLS 1.1+ is only enabled by default from Android 5.0 on. At the time of writing,

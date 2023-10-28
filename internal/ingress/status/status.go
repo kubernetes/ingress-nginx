@@ -44,7 +44,7 @@ import (
 // which the status should check if an update is required.
 var UpdateInterval = 60
 
-// Syncer ...
+// Syncer is an interface that implements syncer
 type Syncer interface {
 	Run(chan struct{})
 
@@ -56,7 +56,7 @@ type ingressLister interface {
 	ListIngresses() []*ingress.Ingress
 }
 
-// Config ...
+// Config is a structure that implements Client interfaces
 type Config struct {
 	Client clientset.Interface
 
@@ -87,7 +87,7 @@ type statusSync struct {
 }
 
 // Start starts the loop to keep the status in sync
-func (s statusSync) Run(stopCh chan struct{}) {
+func (s *statusSync) Run(stopCh chan struct{}) {
 	go s.syncQueue.Run(time.Second, stopCh)
 
 	// trigger initial sync
@@ -95,15 +95,19 @@ func (s statusSync) Run(stopCh chan struct{}) {
 
 	// when this instance is the leader we need to enqueue
 	// an item to trigger the update of the Ingress status.
-	wait.PollUntil(time.Duration(UpdateInterval)*time.Second, func() (bool, error) {
+	//nolint:staticcheck // TODO: will replace it since wait.PollUntil is deprecated
+	err := wait.PollUntil(time.Duration(UpdateInterval)*time.Second, func() (bool, error) {
 		s.syncQueue.EnqueueTask(task.GetDummyObject("sync status"))
 		return false, nil
 	}, stopCh)
+	if err != nil {
+		klog.ErrorS(err, "error running poll")
+	}
 }
 
 // Shutdown stops the sync. In case the instance is the leader it will remove the current IP
 // if there is no other instances running.
-func (s statusSync) Shutdown() {
+func (s *statusSync) Shutdown() {
 	go s.syncQueue.Shutdown()
 
 	if !s.UpdateStatusOnShutdown {
@@ -132,7 +136,7 @@ func (s statusSync) Shutdown() {
 	s.updateStatus([]v1.IngressLoadBalancerIngress{})
 }
 
-func (s *statusSync) sync(key interface{}) error {
+func (s *statusSync) sync(_ interface{}) error {
 	if s.syncQueue.IsShuttingDown() {
 		klog.V(2).InfoS("skipping Ingress status update (shutting down in progress)")
 		return nil
@@ -147,13 +151,13 @@ func (s *statusSync) sync(key interface{}) error {
 	return nil
 }
 
-func (s statusSync) keyfunc(input interface{}) (interface{}, error) {
+func (s *statusSync) keyfunc(input interface{}) (interface{}, error) {
 	return input, nil
 }
 
 // NewStatusSyncer returns a new Syncer instance
 func NewStatusSyncer(config Config) Syncer {
-	st := statusSync{
+	st := &statusSync{
 		Config: config,
 	}
 	st.syncQueue = task.NewCustomTaskQueue(st.sync, st.keyfunc)
@@ -226,7 +230,6 @@ func (s *statusSync) runningAddresses() ([]v1.IngressLoadBalancerIngress, error)
 }
 
 func (s *statusSync) isRunningMultiplePods() bool {
-
 	// As a standard, app.kubernetes.io are "reserved well-known" labels.
 	// In our case, we add those labels as identifiers of the Ingress
 	// deployment in this namespace, so we can select it as a set of Ingress instances.
@@ -285,7 +288,8 @@ func (s *statusSync) updateStatus(newIngressPoint []v1.IngressLoadBalancerIngres
 }
 
 func runUpdate(ing *ingress.Ingress, status []v1.IngressLoadBalancerIngress,
-	client clientset.Interface) pool.WorkFunc {
+	client clientset.Interface,
+) pool.WorkFunc {
 	return func(wu pool.WorkUnit) (interface{}, error) {
 		if wu.IsCancelled() {
 			return nil, nil
@@ -338,7 +342,10 @@ func ingressSliceEqual(lhs, rhs []v1.IngressLoadBalancerIngress) bool {
 }
 
 func statusAddressFromService(service string, kubeClient clientset.Interface) ([]v1.IngressLoadBalancerIngress, error) {
-	ns, name, _ := k8s.ParseNameNS(service)
+	ns, name, err := k8s.ParseNameNS(service)
+	if err != nil {
+		return nil, err
+	}
 	svc, err := kubeClient.CoreV1().Services(ns).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
@@ -359,15 +366,15 @@ func statusAddressFromService(service string, kubeClient clientset.Interface) ([
 				IP: svc.Spec.ClusterIP,
 			}}, nil
 		}
-		addrs := make([]v1.IngressLoadBalancerIngress, len(svc.Spec.ExternalIPs))
-		for i, ip := range svc.Spec.ExternalIPs {
-			addrs[i] = v1.IngressLoadBalancerIngress{IP: ip}
+		addrs := make([]v1.IngressLoadBalancerIngress, 0, len(svc.Spec.ExternalIPs))
+		for _, ip := range svc.Spec.ExternalIPs {
+			addrs = append(addrs, v1.IngressLoadBalancerIngress{IP: ip})
 		}
 		return addrs, nil
 	case apiv1.ServiceTypeLoadBalancer:
-		addrs := make([]v1.IngressLoadBalancerIngress, len(svc.Status.LoadBalancer.Ingress))
+		addrs := make([]v1.IngressLoadBalancerIngress, 0, len(svc.Status.LoadBalancer.Ingress))
 		for i, ingress := range svc.Status.LoadBalancer.Ingress {
-			addrs[i] = v1.IngressLoadBalancerIngress{}
+			addrs = append(addrs, v1.IngressLoadBalancerIngress{})
 			if ingress.Hostname != "" {
 				addrs[i].Hostname = ingress.Hostname
 			}

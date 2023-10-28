@@ -65,7 +65,6 @@ plugins:
 
 extra_css: [extra.css]
 
-google_analytics: ["UA-118407822-1", "kubernetes.github.io"]
 
 nav:
   - Welcome:
@@ -126,6 +125,9 @@ nav:
       - Static IPs: "examples/static-ip/README.md"
       - TLS termination: "examples/tls-termination/README.md"
       - Pod Security Policy (PSP): "examples/psp/README.md"
+      - Open Policy Agent rules: "examples/openpolicyagent/README.md"
+      - Canary Deployments: "examples/canary/README.md"
   - Developer Guide:
       - Getting Started: "developer-guide/getting-started.md"
       - Code Overview: "developer-guide/code-overview.md"
+  - FAQ: "faq.md"

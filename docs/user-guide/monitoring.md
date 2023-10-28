@@ -39,10 +39,9 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
   controller:
     metrics:
       enabled: true
-      service:
-        annotations:
-          prometheus.io/port: "10254"
-          prometheus.io/scrape: "true"
+    podAnnotations:
+      prometheus.io/port: "10254"
+      prometheus.io/scrape: "true"
   ..
   ```
    - If you are **not using helm**, you will have to edit your manifests like this:
@@ -50,10 +49,6 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
        ```
        apiVersion: v1
        kind: Service
-       metadata:
-        annotations:
-          prometheus.io/scrape: "true"
-          prometheus.io/port: "10254"
        ..
        spec:
          ports:
@@ -67,16 +62,20 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
          ```
          apiVersion: v1
          kind: Deployment
-         metadata:
-          annotations:
-            prometheus.io/scrape: "true"
-            prometheus.io/port: "10254"
          ..
          spec:
-           ports:
-             - name: prometheus
-               containerPort: 10254
-               ..
+           template:
+             metadata:
+               annotations:
+                 prometheus.io/scrape: "true"
+                 prometheus.io/port: "10254"
+             spec:
+               containers:
+                 - name: controller
+                   ports:
+                     - name: prometheus
+                       containerPort: 10254
+                     ..
          ```
 
 

@@ -16,15 +16,17 @@ func hello(w http.ResponseWriter, r *http.Request) {
 	}
 
 	key := keys[0]
-	fmt.Fprintf(w, "Hello "+string(key)+"!")
+	fmt.Fprintf(w, "Hello "+key+"!")
 }
 
 func main() {
 	http.HandleFunc("/hello", hello)
 
-	l, err := net.Listen("tcp", "0.0.0.0:9000")
+	l, err := net.Listen("tcp", "0.0.0.0:9000") //nolint:gosec // Ignore the gosec error since it's a hello server
 	if err != nil {
 		panic(err)
 	}
-	fcgi.Serve(l, nil)
+	if err := fcgi.Serve(l, nil); err != nil {
+		panic(err)
+	}
 }

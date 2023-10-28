@@ -73,10 +73,13 @@ func TestIngressAccessLogConfig(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("enable-access-log")] = "false"
+	data[parser.GetAnnotationWithPrefix(enableAccessLogAnnotation)] = "false"
 	ing.SetAnnotations(data)
 
-	log, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	log, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	nginxLogs, ok := log.(*Config)
 	if !ok {
 		t.Errorf("expected a Config type")
@@ -91,10 +94,13 @@ func TestIngressRewriteLogConfig(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("enable-rewrite-log")] = "true"
+	data[parser.GetAnnotationWithPrefix(enableRewriteLogAnnotation)] = "true"
 	ing.SetAnnotations(data)
 
-	log, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	log, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error parsing annotations %v", err)
+	}
 	nginxLogs, ok := log.(*Config)
 	if !ok {
 		t.Errorf("expected a Config type")
@@ -102,5 +108,26 @@ func TestIngressRewriteLogConfig(t *testing.T) {
 
 	if !nginxLogs.Rewrite {
 		t.Errorf("expected rewrite log to be enabled but it is disabled")
+	}
+}
+
+func TestInvalidBoolConfig(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix(enableRewriteLogAnnotation)] = "blo"
+	ing.SetAnnotations(data)
+
+	log, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	nginxLogs, ok := log.(*Config)
+	if !ok {
+		t.Errorf("expected a Config type")
+	}
+
+	if !nginxLogs.Access {
+		t.Errorf("expected access log to be enabled due to invalid config, but it is disabled")
 	}
 }

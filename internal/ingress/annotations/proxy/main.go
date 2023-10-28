@@ -17,11 +17,147 @@ limitations under the License.
 package proxy
 
 import (
+	"regexp"
+
 	networking "k8s.io/api/networking/v1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
+
+const (
+	proxyConnectTimeoutAnnotation      = "proxy-connect-timeout"
+	proxySendTimeoutAnnotation         = "proxy-send-timeout"
+	proxyReadTimeoutAnnotation         = "proxy-read-timeout"
+	proxyBuffersNumberAnnotation       = "proxy-buffers-number"
+	proxyBufferSizeAnnotation          = "proxy-buffer-size"
+	proxyCookiePathAnnotation          = "proxy-cookie-path"
+	proxyCookieDomainAnnotation        = "proxy-cookie-domain"
+	proxyBodySizeAnnotation            = "proxy-body-size"
+	proxyNextUpstreamAnnotation        = "proxy-next-upstream"
+	proxyNextUpstreamTimeoutAnnotation = "proxy-next-upstream-timeout"
+	proxyNextUpstreamTriesAnnotation   = "proxy-next-upstream-tries"
+	proxyRequestBufferingAnnotation    = "proxy-request-buffering"
+	proxyRedirectFromAnnotation        = "proxy-redirect-from"
+	proxyRedirectToAnnotation          = "proxy-redirect-to"
+	proxyBufferingAnnotation           = "proxy-buffering"
+	proxyHTTPVersionAnnotation         = "proxy-http-version"
+	proxyMaxTempFileSizeAnnotation     = "proxy-max-temp-file-size" //#nosec G101
+)
+
+var validUpstreamAnnotation = regexp.MustCompile(`^((error|timeout|invalid_header|http_500|http_502|http_503|http_504|http_403|http_404|http_429|non_idempotent|off)\s?)+$`)
+
+var proxyAnnotations = parser.Annotation{
+	Group: "backend",
+	Annotations: parser.AnnotationFields{
+		proxyConnectTimeoutAnnotation: {
+			Validator:     parser.ValidateInt,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `This annotation allows setting the timeout in seconds of the connect operation to the backend.`,
+		},
+		proxySendTimeoutAnnotation: {
+			Validator:     parser.ValidateInt,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `This annotation allows setting the timeout in seconds of the send operation to the backend.`,
+		},
+		proxyReadTimeoutAnnotation: {
+			Validator:     parser.ValidateInt,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `This annotation allows setting the timeout in seconds of the read operation to the backend.`,
+		},
+		proxyBuffersNumberAnnotation: {
+			Validator: parser.ValidateInt,
+			Scope:     parser.AnnotationScopeLocation,
+			Risk:      parser.AnnotationRiskLow,
+			Documentation: `This annotation sets the number of the buffers in proxy_buffers used for reading the first part of the response received from the proxied server. 
+			By default proxy buffers number is set as 4`,
+		},
+		proxyBufferSizeAnnotation: {
+			Validator: parser.ValidateRegex(parser.SizeRegex, true),
+			Scope:     parser.AnnotationScopeLocation,
+			Risk:      parser.AnnotationRiskLow,
+			Documentation: `This annotation sets the size of the buffer proxy_buffer_size used for reading the first part of the response received from the proxied server. 
+			By default proxy buffer size is set as "4k".`,
+		},
+		proxyCookiePathAnnotation: {
+			Validator:     parser.ValidateRegex(parser.URLIsValidRegex, true),
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskMedium,
+			Documentation: `This annotation sets a text that should be changed in the path attribute of the "Set-Cookie" header fields of a proxied server response.`,
+		},
+		proxyCookieDomainAnnotation: {
+			Validator:     parser.ValidateRegex(parser.BasicCharsRegex, true),
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskMedium,
+			Documentation: `This annotation ets a text that should be changed in the domain attribute of the "Set-Cookie" header fields of a proxied server response.`,
+		},
+		proxyBodySizeAnnotation: {
+			Validator:     parser.ValidateRegex(parser.SizeRegex, true),
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskMedium,
+			Documentation: `This annotation allows setting the maximum allowed size of a client request body.`,
+		},
+		proxyNextUpstreamAnnotation: {
+			Validator: parser.ValidateRegex(validUpstreamAnnotation, false),
+			Scope:     parser.AnnotationScopeLocation,
+			Risk:      parser.AnnotationRiskMedium,
+			Documentation: `This annotation defines when the next upstream should be used. 
+			This annotation reflect the directive https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream 
+			and only the allowed values on upstream are allowed here.`,
+		},
+		proxyNextUpstreamTimeoutAnnotation: {
+			Validator:     parser.ValidateInt,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `This annotation limits the time during which a request can be passed to the next server`,
+		},
+		proxyNextUpstreamTriesAnnotation: {
+			Validator:     parser.ValidateInt,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `This annotation limits the number of possible tries for passing a request to the next server`,
+		},
+		proxyRequestBufferingAnnotation: {
+			Validator:     parser.ValidateOptions([]string{"on", "off"}, true, true),
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `This annotation enables or disables buffering of a client request body.`,
+		},
+		proxyRedirectFromAnnotation: {
+			Validator:     parser.ValidateRegex(parser.URLIsValidRegex, true),
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskMedium,
+			Documentation: `The annotations proxy-redirect-from and proxy-redirect-to will set the first and second parameters of NGINX's proxy_redirect directive respectively`,
+		},
+		proxyRedirectToAnnotation: {
+			Validator:     parser.ValidateRegex(parser.URLIsValidRegex, true),
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskMedium,
+			Documentation: `The annotations proxy-redirect-from and proxy-redirect-to will set the first and second parameters of NGINX's proxy_redirect directive respectively`,
+		},
+		proxyBufferingAnnotation: {
+			Validator:     parser.ValidateOptions([]string{"on", "off"}, true, true),
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `This annotation enables or disables buffering of responses from the proxied server. It can be "on" or "off"`,
+		},
+		proxyHTTPVersionAnnotation: {
+			Validator:     parser.ValidateOptions([]string{"1.0", "1.1"}, true, true),
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `This annotations sets the HTTP protocol version for proxying. Can be "1.0" or "1.1".`,
+		},
+		proxyMaxTempFileSizeAnnotation: {
+			Validator:     parser.ValidateRegex(parser.SizeRegex, true),
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `This annotation defines the maximum size of a temporary file when buffering responses.`,
+		},
+	},
+}
 
 // Config returns the proxy timeout to use in the upstream server/s
 type Config struct {
@@ -109,12 +245,16 @@ func (l1 *Config) Equal(l2 *Config) bool {
 }
 
 type proxy struct {
-	r resolver.Resolver
+	r                resolver.Resolver
+	annotationConfig parser.Annotation
 }
 
 // NewParser creates a new reverse proxy configuration annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return proxy{r}
+	return proxy{
+		r:                r,
+		annotationConfig: proxyAnnotations,
+	}
 }
 
 // ParseAnnotations parses the annotations contained in the ingress
@@ -125,90 +265,99 @@ func (a proxy) Parse(ing *networking.Ingress) (interface{}, error) {
 
 	var err error
 
-	config.ConnectTimeout, err = parser.GetIntAnnotation("proxy-connect-timeout", ing)
+	config.ConnectTimeout, err = parser.GetIntAnnotation(proxyConnectTimeoutAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		config.ConnectTimeout = defBackend.ProxyConnectTimeout
 	}
 
-	config.SendTimeout, err = parser.GetIntAnnotation("proxy-send-timeout", ing)
+	config.SendTimeout, err = parser.GetIntAnnotation(proxySendTimeoutAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		config.SendTimeout = defBackend.ProxySendTimeout
 	}
 
-	config.ReadTimeout, err = parser.GetIntAnnotation("proxy-read-timeout", ing)
+	config.ReadTimeout, err = parser.GetIntAnnotation(proxyReadTimeoutAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		config.ReadTimeout = defBackend.ProxyReadTimeout
 	}
 
-	config.BuffersNumber, err = parser.GetIntAnnotation("proxy-buffers-number", ing)
+	config.BuffersNumber, err = parser.GetIntAnnotation(proxyBuffersNumberAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		config.BuffersNumber = defBackend.ProxyBuffersNumber
 	}
 
-	config.BufferSize, err = parser.GetStringAnnotation("proxy-buffer-size", ing)
+	config.BufferSize, err = parser.GetStringAnnotation(proxyBufferSizeAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		config.BufferSize = defBackend.ProxyBufferSize
 	}
 
-	config.CookiePath, err = parser.GetStringAnnotation("proxy-cookie-path", ing)
+	config.CookiePath, err = parser.GetStringAnnotation(proxyCookiePathAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		config.CookiePath = defBackend.ProxyCookiePath
 	}
 
-	config.CookieDomain, err = parser.GetStringAnnotation("proxy-cookie-domain", ing)
+	config.CookieDomain, err = parser.GetStringAnnotation(proxyCookieDomainAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		config.CookieDomain = defBackend.ProxyCookieDomain
 	}
 
-	config.BodySize, err = parser.GetStringAnnotation("proxy-body-size", ing)
+	config.BodySize, err = parser.GetStringAnnotation(proxyBodySizeAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		config.BodySize = defBackend.ProxyBodySize
 	}
 
-	config.NextUpstream, err = parser.GetStringAnnotation("proxy-next-upstream", ing)
+	config.NextUpstream, err = parser.GetStringAnnotation(proxyNextUpstreamAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		config.NextUpstream = defBackend.ProxyNextUpstream
 	}
 
-	config.NextUpstreamTimeout, err = parser.GetIntAnnotation("proxy-next-upstream-timeout", ing)
+	config.NextUpstreamTimeout, err = parser.GetIntAnnotation(proxyNextUpstreamTimeoutAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		config.NextUpstreamTimeout = defBackend.ProxyNextUpstreamTimeout
 	}
 
-	config.NextUpstreamTries, err = parser.GetIntAnnotation("proxy-next-upstream-tries", ing)
+	config.NextUpstreamTries, err = parser.GetIntAnnotation(proxyNextUpstreamTriesAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		config.NextUpstreamTries = defBackend.ProxyNextUpstreamTries
 	}
 
-	config.RequestBuffering, err = parser.GetStringAnnotation("proxy-request-buffering", ing)
+	config.RequestBuffering, err = parser.GetStringAnnotation(proxyRequestBufferingAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		config.RequestBuffering = defBackend.ProxyRequestBuffering
 	}
 
-	config.ProxyRedirectFrom, err = parser.GetStringAnnotation("proxy-redirect-from", ing)
+	config.ProxyRedirectFrom, err = parser.GetStringAnnotation(proxyRedirectFromAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		config.ProxyRedirectFrom = defBackend.ProxyRedirectFrom
 	}
 
-	config.ProxyRedirectTo, err = parser.GetStringAnnotation("proxy-redirect-to", ing)
+	config.ProxyRedirectTo, err = parser.GetStringAnnotation(proxyRedirectToAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		config.ProxyRedirectTo = defBackend.ProxyRedirectTo
 	}
 
-	config.ProxyBuffering, err = parser.GetStringAnnotation("proxy-buffering", ing)
+	config.ProxyBuffering, err = parser.GetStringAnnotation(proxyBufferingAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		config.ProxyBuffering = defBackend.ProxyBuffering
 	}
 
-	config.ProxyHTTPVersion, err = parser.GetStringAnnotation("proxy-http-version", ing)
+	config.ProxyHTTPVersion, err = parser.GetStringAnnotation(proxyHTTPVersionAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		config.ProxyHTTPVersion = defBackend.ProxyHTTPVersion
 	}
 
-	config.ProxyMaxTempFileSize, err = parser.GetStringAnnotation("proxy-max-temp-file-size", ing)
+	config.ProxyMaxTempFileSize, err = parser.GetStringAnnotation(proxyMaxTempFileSizeAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		config.ProxyMaxTempFileSize = defBackend.ProxyMaxTempFileSize
 	}
 
 	return config, nil
+}
+
+func (a proxy) GetDocumentation() parser.AnnotationFields {
+	return a.annotationConfig.Annotations
+}
+
+func (a proxy) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+	return parser.CheckAnnotationRisk(anns, maxrisk, proxyAnnotations.Annotations)
 }

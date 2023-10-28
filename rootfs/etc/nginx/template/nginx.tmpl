@@ -140,7 +140,7 @@ http {
 
     {{/* Enable the real_ip module only if we use either X-Forwarded headers or Proxy Protocol. */}}
     {{/* we use the value of the real IP for the geo_ip module */}}
-    {{ if or (or $cfg.UseForwardedHeaders $cfg.UseProxyProtocol) $cfg.EnableRealIp }}
+    {{ if or (or $cfg.UseForwardedHeaders $cfg.UseProxyProtocol) $cfg.EnableRealIP }}
     {{ if $cfg.UseProxyProtocol }}
     real_ip_header      proxy_protocol;
     {{ else }}
@@ -168,16 +168,6 @@ http {
     modsecurity_rules_file /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf;
     {{ end }}
 
-    {{ end }}
-
-    {{ if $cfg.UseGeoIP }}
-    {{/* databases used to determine the country depending on the client IP address */}}
-    {{/* http://nginx.org/en/docs/http/ngx_http_geoip_module.html */}}
-    {{/* this is require to calculate traffic for individual country using GeoIP in the status page */}}
-    geoip_country       /etc/nginx/geoip/GeoIP.dat;
-    geoip_city          /etc/nginx/geoip/GeoLiteCity.dat;
-    geoip_org           /etc/nginx/geoip/GeoIPASNum.dat;
-    geoip_proxy_recursive on;
     {{ end }}
 
     {{ if $cfg.UseGeoIP2 }}
@@ -224,6 +214,8 @@ http {
         $geoip2_subregion_code source=$remote_addr subdivisions 1 iso_code;
         $geoip2_subregion_name source=$remote_addr subdivisions 1 names en;
         $geoip2_subregion_geoname_id source=$remote_addr subdivisions 1 geoname_id;
+        $geoip2_city_continent_code source=$remote_addr continent code;
+        $geoip2_city_continent_name source=$remote_addr continent names en;
     }
     {{ end }}
 
@@ -245,6 +237,8 @@ http {
         $geoip2_subregion_code source=$remote_addr subdivisions 1 iso_code;
         $geoip2_subregion_name source=$remote_addr subdivisions 1 names en;
         $geoip2_subregion_geoname_id source=$remote_addr subdivisions 1 geoname_id;
+        $geoip2_city_continent_code source=$remote_addr continent code;
+        $geoip2_city_continent_name source=$remote_addr continent names en;
     }
     {{ end }}
 
@@ -292,7 +286,10 @@ http {
     {{ end }}
 
     aio                 threads;
+
+    {{ if $cfg.EnableAioWrite }}
     aio_write           on;
+    {{ end }}
 
     tcp_nopush          on;
     tcp_nodelay         on;
@@ -307,7 +304,6 @@ http {
     client_body_temp_path           /tmp/nginx/client-body;
     fastcgi_temp_path               /tmp/nginx/fastcgi-temp;
     proxy_temp_path                 /tmp/nginx/proxy-temp;
-    ajp_temp_path                   /tmp/nginx/ajp-temp;
 
     client_header_buffer_size       {{ $cfg.ClientHeaderBufferSize }};
     client_header_timeout           {{ $cfg.ClientHeaderTimeout }}s;
@@ -315,9 +311,15 @@ http {
     client_body_buffer_size         {{ $cfg.ClientBodyBufferSize }};
     client_body_timeout             {{ $cfg.ClientBodyTimeout }}s;
 
+    {{ if and (ne $cfg.HTTP2MaxHeaderSize "") (ne $cfg.HTTP2MaxFieldSize "") }}
     http2_max_field_size            {{ $cfg.HTTP2MaxFieldSize }};
     http2_max_header_size           {{ $cfg.HTTP2MaxHeaderSize }};
+    {{ end }}
+
+    {{ if (gt $cfg.HTTP2MaxRequests 0) }}
     http2_max_requests              {{ $cfg.HTTP2MaxRequests }};
+    {{ end }}
+
     http2_max_concurrent_streams    {{ $cfg.HTTP2MaxConcurrentStreams }};
 
     types_hash_max_size             2048;
@@ -397,7 +399,7 @@ http {
     {{ if $cfg.EnableSyslog }}
     access_log syslog:server={{ $cfg.SyslogHost }}:{{ $cfg.SyslogPort }} upstreaminfo if=$loggable;
     {{ else }}
-    access_log {{ or $cfg.HttpAccessLogPath $cfg.AccessLogPath }} upstreaminfo {{ $cfg.AccessLogParams }} if=$loggable;
+    access_log {{ or $cfg.HTTPAccessLogPath $cfg.AccessLogPath }} upstreaminfo {{ $cfg.AccessLogParams }} if=$loggable;
     {{ end }}
     {{ end }}
 
@@ -539,14 +541,14 @@ http {
 
     {{ range $rl := (filterRateLimits $servers ) }}
     # Ratelimit {{ $rl.Name }}
-    geo $remote_addr $whitelist_{{ $rl.ID }} {
+    geo $remote_addr $allowlist_{{ $rl.ID }} {
         default 0;
-        {{ range $ip := $rl.Whitelist }}
+        {{ range $ip := $rl.Allowlist }}
         {{ $ip }} 1;{{ end }}
     }
 
     # Ratelimit {{ $rl.Name }}
-    map $whitelist_{{ $rl.ID }} $limit_{{ $rl.ID }} {
+    map $allowlist_{{ $rl.ID }} $limit_{{ $rl.ID }} {
         0 {{ $cfg.LimitConnZoneVariable }};
         1 "";
     }
@@ -700,6 +702,11 @@ http {
 
     # default server, used for NGINX healthcheck and access to nginx stats
     server {
+        # Ensure that modsecurity will not run on an internal location as this is not accessible from outside
+        {{ if $all.Cfg.EnableModsecurity }}
+        modsecurity off;
+        {{ end }}
+
         listen 127.0.0.1:{{ .StatusPort }};
         set $proxy_upstream_name "internal";
 
@@ -808,7 +815,7 @@ stream {
 
 
     error_log  {{ $cfg.ErrorLogPath }} {{ $cfg.ErrorLogLevel }};
-    {{ if $cfg.EnableRealIp }}
+    {{ if $cfg.EnableRealIP }}
     {{ range $trusted_ip := $cfg.ProxyRealIPCIDR }}
     set_real_ip_from    {{ $trusted_ip }};
     {{ end }}
@@ -1088,7 +1095,9 @@ stream {
             opentelemetry_propagate;
             {{ end }}
 
+            {{ if not $all.Cfg.EnableAuthAccessLog }}
             access_log off;
+            {{ end }}
 
             # Ensure that modsecurity will not run on an internal location as this is not accessible from outside
             {{ if $all.Cfg.EnableModsecurity }}
@@ -1303,8 +1312,8 @@ stream {
             {{ range $ip := $location.Denylist.CIDR }}
             deny {{ $ip }};{{ end }}
             {{ end }}
-            {{ if gt (len $location.Whitelist.CIDR) 0 }}
-            {{ range $ip := $location.Whitelist.CIDR }}
+            {{ if gt (len $location.Allowlist.CIDR) 0 }}
+            {{ range $ip := $location.Allowlist.CIDR }}
             allow {{ $ip }};{{ end }}
             deny all;
             {{ end }}
@@ -1325,7 +1334,7 @@ stream {
             # `auth_request` module does not support HTTP keepalives in upstream block:
             # https://trac.nginx.org/nginx/ticket/1579
             access_by_lua_block {
-                local res = ngx.location.capture('{{ $authPath }}', { method = ngx.HTTP_GET, body = '' })
+                local res = ngx.location.capture('{{ $authPath }}', { method = ngx.HTTP_GET, body = '', share_all_vars = {{ $externalAuth.KeepaliveShareVars }} })
                 if res.status == ngx.HTTP_OK then
                     ngx.var.auth_cookie = res.header['Set-Cookie']
                     {{- range $line := buildAuthUpstreamLuaHeaders $externalAuth.ResponseHeaders }}
@@ -1382,12 +1391,10 @@ stream {
             {{ end }}
 
             {{/* By default use vhost as Host to upstream, but allow overrides */}}
-            {{ if not (eq $proxySetHeader "grpc_set_header") }}
             {{ if not (empty $location.UpstreamVhost) }}
             {{ $proxySetHeader }} Host                   {{ $location.UpstreamVhost | quote }};
             {{ else }}
             {{ $proxySetHeader }} Host                   $best_http_host;
-            {{ end }}
             {{ end }}
 
             # Pass the extracted client certificate to the backend

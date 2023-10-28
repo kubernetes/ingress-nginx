@@ -43,7 +43,7 @@ func TestPermanentRedirectWithDefaultCode(t *testing.T) {
 	ing := new(networking.Ingress)
 
 	data := make(map[string]string, 1)
-	data[parser.GetAnnotationWithPrefix("permanent-redirect")] = defRedirectURL
+	data[parser.GetAnnotationWithPrefix(permanentRedirectAnnotation)] = defRedirectURL
 	ing.SetAnnotations(data)
 
 	i, err := rp.Parse(ing)
@@ -81,8 +81,8 @@ func TestPermanentRedirectWithCustomCode(t *testing.T) {
 			ing := new(networking.Ingress)
 
 			data := make(map[string]string, 2)
-			data[parser.GetAnnotationWithPrefix("permanent-redirect")] = defRedirectURL
-			data[parser.GetAnnotationWithPrefix("permanent-redirect-code")] = strconv.Itoa(tc.input)
+			data[parser.GetAnnotationWithPrefix(permanentRedirectAnnotation)] = defRedirectURL
+			data[parser.GetAnnotationWithPrefix(permanentRedirectAnnotationCode)] = strconv.Itoa(tc.input)
 			ing.SetAnnotations(data)
 
 			i, err := rp.Parse(ing)
@@ -112,8 +112,8 @@ func TestTemporalRedirect(t *testing.T) {
 	ing := new(networking.Ingress)
 
 	data := make(map[string]string, 1)
-	data[parser.GetAnnotationWithPrefix("from-to-www-redirect")] = "true"
-	data[parser.GetAnnotationWithPrefix("temporal-redirect")] = defRedirectURL
+	data[parser.GetAnnotationWithPrefix(fromToWWWRedirAnnotation)] = "true"
+	data[parser.GetAnnotationWithPrefix(temporalRedirectAnnotation)] = defRedirectURL
 	ing.SetAnnotations(data)
 
 	i, err := rp.Parse(ing)
@@ -136,7 +136,6 @@ func TestTemporalRedirect(t *testing.T) {
 }
 
 func TestIsValidURL(t *testing.T) {
-
 	invalid := "ok.com"
 	urlParse, err := url.Parse(invalid)
 	if err != nil {

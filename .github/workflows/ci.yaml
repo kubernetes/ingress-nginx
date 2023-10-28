@@ -7,6 +7,7 @@ on:
     paths-ignore:
       - 'docs/**'
       - 'deploy/**'
+      - '**.md'
 
   push:
     branches:
@@ -14,6 +15,7 @@ on:
     paths-ignore:
       - 'docs/**'
       - 'deploy/**'
+      - '**.md'
 
   workflow_dispatch:
     inputs:
@@ -40,7 +42,7 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
         id: filter
@@ -60,60 +62,6 @@ jobs:
               - 'charts/ingress-nginx/**/*'
               - 'NGINX_BASE'
 
-
-  security:
-    runs-on: ubuntu-latest
-    steps:
-
-      - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
-
-      - name: Run Gosec Security Scanner
-        uses: securego/gosec@a459eb0ba387d9bd083d5c2e2354dbeef2465038 # v2.15.0
-        with:
-          # G601 for zz_generated.deepcopy.go
-          # G306 TODO: Expect WriteFile permissions to be 0600 or less
-          # G307 TODO: Deferring unsafe method "Close"
-          args: -exclude=G109,G601,G104,G204,G304,G306,G307 -tests=false -exclude-dir=test -exclude-dir=images/  -exclude-dir=docs/ ./...
-
-  lint:
-    runs-on: ubuntu-latest
-    needs: changes
-    if: |
-      (needs.changes.outputs.go == 'true')
-    steps:
-      - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
-      
-      - name: Set up Go
-        id: go
-        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
-        with:
-          go-version: '1.20'
-          check-latest: true
-
-      - name: Run Lint
-        run: ./hack/verify-golint.sh
-
-  gofmt:
-    runs-on: ubuntu-latest
-    needs: changes
-    if: |
-      (needs.changes.outputs.go == 'true')
-    steps:
-      - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
-      
-      - name: Set up Go
-        id: go
-        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
-        with:
-          go-version: '1.20'
-          check-latest: true
-
-      - name: Run go-fmt
-        run: ./hack/verify-gofmt.sh
-
   test-go:
     runs-on: ubuntu-latest
     needs: changes
@@ -121,13 +69,13 @@ jobs:
       (needs.changes.outputs.go == 'true')
     steps:
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       
       - name: Set up Go
         id: go
-        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
-          go-version: '1.20'
+          go-version: '1.21.3'
           check-latest: true
 
       - name: Run test
@@ -142,21 +90,21 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Set up Go
         id: go
-        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
-          go-version: '1.20'
+          go-version: '1.21.3'
           check-latest: true
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@e81a89b1732b9c48d79cd809d8d81d79c4647a18 # v2.1.0
+        uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # v3.0.0
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@4b4e9c3e2d4531116a6f8ba8e71fc6e2cb6e6c8c # v2.5.0
+        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
         with:
           version: latest
 
@@ -165,9 +113,7 @@ jobs:
 
       - name: Prepare Host
         run: |
-          sudo apt-get -qq update || true
-          sudo apt-get install -y pigz
-          curl -LO https://dl.k8s.io/release/v1.25.5/bin/linux/amd64/kubectl
+          curl -LO https://dl.k8s.io/release/v1.27.3/bin/linux/amd64/kubectl
           chmod +x ./kubectl
           sudo mv ./kubectl /usr/local/bin/kubectl
 
@@ -186,10 +132,10 @@ jobs:
             nginx-ingress-controller:e2e \
             ingress-controller/controller:1.0.0-dev \
             ingress-controller/controller-chroot:1.0.0-dev \
-            | pigz > docker.tar.gz
+            | gzip > docker.tar.gz
 
       - name: cache
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         with:
           name: docker.tar.gz
           path: docker.tar.gz
@@ -205,16 +151,16 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.12, v1.25.8, v1.26.3,v1.27.1]
+        k8s: [v1.25.11, v1.26.6, v1.27.3, v1.28.0]
 
     steps:
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Setup Go
-        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
-          go-version: '1.20'
+          go-version: '1.21.3'
           check-latest: true
 
       - name: cache
@@ -258,7 +204,7 @@ jobs:
       - name: Load images from cache
         run: |
           echo "loading docker images..."
-          pigz -dc docker.tar.gz | docker load
+          gzip -dc docker.tar.gz | docker load
 
       - name: Test
         env:
@@ -280,11 +226,11 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.12, v1.25.8, v1.26.3,v1.27.1]
+        k8s: [v1.25.11, v1.26.6, v1.27.3, v1.28.0]
 
     steps:
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: cache
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
@@ -299,7 +245,7 @@ jobs:
       - name: Load images from cache
         run: |
           echo "loading docker images..."
-          pigz -dc docker.tar.gz | docker load
+          gzip -dc docker.tar.gz | docker load
 
       - name: Run e2e tests
         env:
@@ -310,8 +256,57 @@ jobs:
           kind get kubeconfig > $HOME/.kube/kind-config-kind
           make kind-e2e-test
 
-      - name: Uplaod e2e junit-reports
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+      - name: Upload e2e junit-reports
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        if: success() || failure()
+        with:
+          name: e2e-test-reports-${{ matrix.k8s }}
+          path: 'test/junitreports/report*.xml'
+
+  kubernetes-validations:
+    name: Kubernetes with Validations
+    runs-on: ubuntu-latest
+    needs:
+      - changes
+      - build
+    if: |
+      (needs.changes.outputs.go == 'true') || ${{ inputs.run_e2e }}
+
+    strategy:
+      matrix:
+        k8s: [v1.25.11, v1.26.6, v1.27.3, v1.28.0]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: cache
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          name: docker.tar.gz
+
+      - name: Create Kubernetes ${{ matrix.k8s }} cluster
+        id: kind
+        run: |
+          kind create cluster --image=kindest/node:${{ matrix.k8s }} --config test/e2e/kind.yaml
+
+      - name: Load images from cache
+        run: |
+          echo "loading docker images..."
+          gzip -dc docker.tar.gz | docker load
+
+      - name: Run e2e tests
+        env:
+          KIND_CLUSTER_NAME: kind
+          SKIP_CLUSTER_CREATION: true
+          SKIP_IMAGE_CREATION: true
+          ENABLE_VALIDATIONS: true
+        run: |
+          kind get kubeconfig > $HOME/.kube/kind-config-kind
+          make kind-e2e-test
+
+      - name: Upload e2e junit-reports
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         if: success() || failure()
         with:
           name: e2e-test-reports-${{ matrix.k8s }}
@@ -329,12 +324,12 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.12, v1.25.8, v1.26.3,v1.27.1]
+        k8s: [v1.25.11, v1.26.6, v1.27.3, v1.28.0]
 
     steps:
 
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: cache
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
@@ -349,7 +344,7 @@ jobs:
       - name: Load images from cache
         run: |
           echo "loading docker images..."
-          pigz -dc docker.tar.gz | docker load
+          gzip -dc docker.tar.gz | docker load
 
       - name: Run e2e tests
         env:
@@ -362,11 +357,47 @@ jobs:
           make kind-e2e-test
 
       - name: Upload e2e junit-reports
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
         if: success() || failure()
         with:
           name: e2e-test-reports-chroot-${{ matrix.k8s }}
           path: 'test/junitreports/report*.xml'
+
+  test-nginx-image-build:
+    permissions:
+      contents: read  # for dorny/paths-filter to fetch a list of changed files
+      pull-requests: read  # for dorny/paths-filter to read pull requests
+    runs-on: ubuntu-latest
+    env:
+      PLATFORMS: linux/amd64,linux/arm64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
+        id: filter-images
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          filters: |
+            nginx-base:
+              - 'images/nginx/**'
+      - name: nginx-base-image
+        if: ${{ steps.filter-images.outputs.nginx-base == 'true' }}
+        run: |
+          cd images/nginx/rootfs && docker build -t docker.io/nginx-test-workflow/nginx:${{ github.sha }} .
+      - name: Run Trivy on NGINX Image
+        if: ${{ steps.filter-images.outputs.nginx-base == 'true' }}
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'docker.io/nginx-test-workflow/nginx:${{ github.sha }}'
+          format: 'sarif'
+          ignore-unfixed: true
+          output: 'trivy-results.sarif'
+      - name: Upload Trivy scan results to GitHub Security tab
+        if: ${{ steps.filter-images.outputs.nginx-base == 'true' && always() }}
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
 
 
   test-image-build:
@@ -378,7 +409,7 @@ jobs:
       PLATFORMS: linux/amd64,linux/arm64
     steps:
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
         id: filter-images
@@ -401,7 +432,6 @@ jobs:
               - 'images/kube-webhook-certgen/**'
             ext-auth-example-authsvc:
               - 'images/ext-auth-example-authsvc/**'
-
       - name: custom-error-pages image build
         if: ${{ steps.filter-images.outputs.custom-error-pages == 'true' }}
         run: |
@@ -447,11 +477,11 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.24.12, v1.25.8, v1.26.3,v1.27.1]
+        k8s: [v1.25.11, v1.26.6, v1.27.3, v1.28.0]
 
     steps:
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
         id: filter-images
@@ -470,12 +500,13 @@ jobs:
       - name: Set up Go
         id: go
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
-        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
-          go-version: '1.20'
+          go-version: '1.21.3'
           check-latest: true
 
       - name: kube-webhook-certgen image build
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
         run: |
           cd images/kube-webhook-certgen && make test test-e2e
+

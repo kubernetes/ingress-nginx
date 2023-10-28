@@ -34,9 +34,17 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] mix Exact and Prefi
 		f.NewEchoDeployment()
 	})
 
-	var exactPathType = networking.PathTypeExact
+	exactPathType := networking.PathTypeExact
 
 	ginkgo.It("should choose the correct location", func() {
+		f.SetNginxConfigMapData(map[string]string{
+			"allow-snippet-annotations": "true",
+		})
+		defer func() {
+			f.SetNginxConfigMapData(map[string]string{
+				"allow-snippet-annotations": "false",
+			})
+		}()
 
 		host := "mixed.path"
 

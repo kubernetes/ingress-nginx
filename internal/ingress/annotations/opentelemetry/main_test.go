@@ -26,6 +26,8 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
+const enableAnnotation = "true"
+
 func buildIngress() *networking.Ingress {
 	defaultBackend := networking.IngressBackend{
 		Service: &networking.IngressServiceBackend{
@@ -73,10 +75,13 @@ func TestIngressAnnotationOpentelemetrySetTrue(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("enable-opentelemetry")] = "true"
+	data[parser.GetAnnotationWithPrefix(enableOpenTelemetryAnnotation)] = enableAnnotation
 	ing.SetAnnotations(data)
 
-	val, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	val, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	openTelemetry, ok := val.(*Config)
 	if !ok {
 		t.Errorf("expected a Config type")
@@ -100,10 +105,13 @@ func TestIngressAnnotationOpentelemetrySetFalse(t *testing.T) {
 
 	// Test with explicitly set to false
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix("enable-opentelemetry")] = "false"
+	data[parser.GetAnnotationWithPrefix(enableOpenTelemetryAnnotation)] = "false"
 	ing.SetAnnotations(data)
 
-	val, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	val, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	openTelemetry, ok := val.(*Config)
 	if !ok {
 		t.Errorf("expected a Config type")
@@ -123,12 +131,15 @@ func TestIngressAnnotationOpentelemetryTrustSetTrue(t *testing.T) {
 
 	data := map[string]string{}
 	opName := "foo-op"
-	data[parser.GetAnnotationWithPrefix("enable-opentelemetry")] = "true"
-	data[parser.GetAnnotationWithPrefix("opentelemetry-trust-incoming-span")] = "true"
-	data[parser.GetAnnotationWithPrefix("opentelemetry-operation-name")] = opName
+	data[parser.GetAnnotationWithPrefix(enableOpenTelemetryAnnotation)] = enableAnnotation
+	data[parser.GetAnnotationWithPrefix(otelTrustSpanAnnotation)] = enableAnnotation
+	data[parser.GetAnnotationWithPrefix(otelOperationNameAnnotation)] = opName
 	ing.SetAnnotations(data)
 
-	val, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	val, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Fatal(err)
+	}
 	openTelemetry, ok := val.(*Config)
 	if !ok {
 		t.Errorf("expected a Config type")
@@ -155,6 +166,21 @@ func TestIngressAnnotationOpentelemetryTrustSetTrue(t *testing.T) {
 	}
 }
 
+func TestIngressAnnotationOpentelemetryWithBadOpName(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	opName := "fooxpto_123$la;"
+	data[parser.GetAnnotationWithPrefix(enableOpenTelemetryAnnotation)] = enableAnnotation
+	data[parser.GetAnnotationWithPrefix(otelOperationNameAnnotation)] = opName
+	ing.SetAnnotations(data)
+
+	_, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err == nil {
+		t.Fatalf("This operation should return an error but no error was returned")
+	}
+}
+
 func TestIngressAnnotationOpentelemetryUnset(t *testing.T) {
 	ing := buildIngress()
 
@@ -162,7 +188,10 @@ func TestIngressAnnotationOpentelemetryUnset(t *testing.T) {
 	data := map[string]string{}
 	ing.SetAnnotations(data)
 
-	val, _ := NewParser(&resolver.Mock{}).Parse(ing)
+	val, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 	_, ok := val.(*Config)
 	if !ok {
 		t.Errorf("expected a Config type")

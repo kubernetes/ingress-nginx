@@ -2,7 +2,7 @@
 
 [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 
-![Version: 4.6.1](https://img.shields.io/badge/Version-4.6.1-informational?style=flat-square) ![AppVersion: 1.7.1](https://img.shields.io/badge/AppVersion-1.7.1-informational?style=flat-square)
+![Version: 4.8.3](https://img.shields.io/badge/Version-4.8.3-informational?style=flat-square) ![AppVersion: 1.9.4](https://img.shields.io/badge/AppVersion-1.9.4-informational?style=flat-square)
 
 To use, add `ingressClassName: nginx` spec field or the `kubernetes.io/ingress.class: nginx` annotation to your Ingress resources.
 
@@ -143,8 +143,10 @@ controller:
     internal:
       enabled: true
       annotations:
-        # Create internal ELB
-        service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+        # Create internal NLB
+        service.beta.kubernetes.io/aws-load-balancer-scheme: "internal"
+        # Create internal ELB(Deprecated)
+        # service.beta.kubernetes.io/aws-load-balancer-internal: "true"
         # Any other annotation can be declared here.
 ```
 
@@ -186,6 +188,8 @@ controller:
         service.beta.kubernetes.io/oci-load-balancer-internal: "true"
         # Any other annotation can be declared here.
 ```
+
+The load balancer annotations of more cloud service providers can be found: [Internal load balancer](https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer).
 
 An use case for this scenario is having a split-view DNS setup where the public zone CNAME records point to the external balancer URL while the private zone CNAME records point to the internal balancer URL. This way, you only need one ingress kubernetes object.
 
@@ -245,14 +249,13 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.admissionWebhooks.key | string | `"/usr/local/certificates/key"` |  |
 | controller.admissionWebhooks.labels | object | `{}` | Labels to be added to admission webhooks |
 | controller.admissionWebhooks.namespaceSelector | object | `{}` |  |
-| controller.admissionWebhooks.networkPolicyEnabled | bool | `false` |  |
 | controller.admissionWebhooks.objectSelector | object | `{}` |  |
 | controller.admissionWebhooks.patch.enabled | bool | `true` |  |
-| controller.admissionWebhooks.patch.image.digest | string | `"sha256:01d181618f270f2a96c04006f33b2699ad3ccb02da48d0f89b22abce084b292f"` |  |
+| controller.admissionWebhooks.patch.image.digest | string | `"sha256:a7943503b45d552785aa3b5e457f169a5661fb94d82b8a3373bcd9ebaf9aac80"` |  |
 | controller.admissionWebhooks.patch.image.image | string | `"ingress-nginx/kube-webhook-certgen"` |  |
 | controller.admissionWebhooks.patch.image.pullPolicy | string | `"IfNotPresent"` |  |
 | controller.admissionWebhooks.patch.image.registry | string | `"registry.k8s.io"` |  |
-| controller.admissionWebhooks.patch.image.tag | string | `"v20230312-helm-chart-4.5.2-28-g66a760794"` |  |
+| controller.admissionWebhooks.patch.image.tag | string | `"v20231011-8b53cabe0"` |  |
 | controller.admissionWebhooks.patch.labels | object | `{}` | Labels to be added to patch job resources |
 | controller.admissionWebhooks.patch.nodeSelector."kubernetes.io/os" | string | `"linux"` |  |
 | controller.admissionWebhooks.patch.podAnnotations | object | `{}` |  |
@@ -271,7 +274,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.admissionWebhooks.service.servicePort | int | `443` |  |
 | controller.admissionWebhooks.service.type | string | `"ClusterIP"` |  |
 | controller.affinity | object | `{}` | Affinity and anti-affinity rules for server scheduling to nodes # Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity # |
-| controller.allowSnippetAnnotations | bool | `true` | This configuration defines if Ingress Controller should allow users to set their own *-snippet annotations, otherwise this is forbidden / dropped when users add those annotations. Global snippets in ConfigMap are still respected |
+| controller.allowSnippetAnnotations | bool | `false` | This configuration defines if Ingress Controller should allow users to set their own *-snippet annotations, otherwise this is forbidden / dropped when users add those annotations. Global snippets in ConfigMap are still respected |
 | controller.annotations | object | `{}` | Annotations to be added to the controller Deployment or DaemonSet # |
 | controller.autoscaling.annotations | object | `{}` |  |
 | controller.autoscaling.behavior | object | `{}` |  |
@@ -291,8 +294,9 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.dnsConfig | object | `{}` | Optionally customize the pod dnsConfig. |
 | controller.dnsPolicy | string | `"ClusterFirst"` | Optionally change this to ClusterFirstWithHostNet in case you have 'hostNetwork: true'. By default, while using host network, name resolution uses the host's DNS. If you wish nginx-controller to keep resolving names inside the k8s network, use ClusterFirstWithHostNet. |
 | controller.electionID | string | `""` | Election ID to use for status update, by default it uses the controller name combined with a suffix of 'leader' |
+| controller.enableAnnotationValidations | bool | `false` |  |
 | controller.enableMimalloc | bool | `true` | Enable mimalloc as a drop-in replacement for malloc. # ref: https://github.com/microsoft/mimalloc # |
-| controller.enableTopologyAwareRouting | bool | `false` | This configuration enables Topology Aware Routing feature, used together with service annotation service.kubernetes.io/topology-aware-hints="auto" Defaults to false |
+| controller.enableTopologyAwareRouting | bool | `false` | This configuration enables Topology Aware Routing feature, used together with service annotation service.kubernetes.io/topology-mode="auto" Defaults to false |
 | controller.existingPsp | string | `""` | Use an existing PSP instead of creating one |
 | controller.extraArgs | object | `{}` | Additional command line arguments to pass to Ingress-Nginx Controller E.g. to specify the default SSL certificate you can use |
 | controller.extraContainers | list | `[]` | Additional containers to be added to the controller pod. See https://github.com/lemonldap-ng-controller/lemonldap-ng-controller as example. |
@@ -303,6 +307,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.extraVolumes | list | `[]` | Additional volumes to the controller pod. |
 | controller.healthCheckHost | string | `""` | Address to bind the health check endpoint. It is better to set this option to the internal node address if the Ingress-Nginx Controller is running in the `hostNetwork: true` mode. |
 | controller.healthCheckPath | string | `"/healthz"` | Path of the health check endpoint. All requests received on the port defined by the healthz-port parameter are forwarded internally to this path. |
+| controller.hostAliases | list | `[]` | Optionally customize the pod hostAliases. |
 | controller.hostNetwork | bool | `false` | Required for use with CNI based kubernetes installations (such as ones set up by kubeadm), since CNI and hostport don't mix yet. Can be deprecated once https://github.com/kubernetes/kubernetes/issues/23920 is merged |
 | controller.hostPort.enabled | bool | `false` | Enable 'hostPort' or not |
 | controller.hostPort.ports.http | int | `80` | 'hostPort' http port |
@@ -310,13 +315,13 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.hostname | object | `{}` | Optionally customize the pod hostname. |
 | controller.image.allowPrivilegeEscalation | bool | `true` |  |
 | controller.image.chroot | bool | `false` |  |
-| controller.image.digest | string | `"sha256:7244b95ea47bddcb8267c1e625fb163fc183ef55448855e3ac52a7b260a60407"` |  |
-| controller.image.digestChroot | string | `"sha256:e35d5ab487861b9d419c570e3530589229224a0762c7b4d2e2222434abb8d988"` |  |
+| controller.image.digest | string | `"sha256:5b161f051d017e55d358435f295f5e9a297e66158f136321d9b04520ec6c48a3"` |  |
+| controller.image.digestChroot | string | `"sha256:5976b1067cfbca8a21d0ba53d71f83543a73316a61ea7f7e436d6cf84ddf9b26"` |  |
 | controller.image.image | string | `"ingress-nginx/controller"` |  |
 | controller.image.pullPolicy | string | `"IfNotPresent"` |  |
 | controller.image.registry | string | `"registry.k8s.io"` |  |
 | controller.image.runAsUser | int | `101` |  |
-| controller.image.tag | string | `"v1.7.1"` |  |
+| controller.image.tag | string | `"v1.9.4"` |  |
 | controller.ingressClass | string | `"nginx"` | For backwards compatibility with ingress.class annotation, use ingressClass. Algorithm is as follows, first ingressClassName is considered, if not present, controller looks for ingress.class annotation |
 | controller.ingressClassByName | bool | `false` | Process IngressClass per name (additionally as per spec.controller). |
 | controller.ingressClassResource.controllerValue | string | `"k8s.io/ingress-nginx"` | Controller-value of the controller that is processing this ingressClass |
@@ -353,7 +358,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.metrics.prometheusRule.enabled | bool | `false` |  |
 | controller.metrics.prometheusRule.rules | list | `[]` |  |
 | controller.metrics.service.annotations | object | `{}` |  |
-| controller.metrics.service.externalIPs | list | `[]` | List of IP addresses at which the stats-exporter service is available # Ref: https://kubernetes.io/docs/user-guide/services/#external-ips # |
+| controller.metrics.service.externalIPs | list | `[]` | List of IP addresses at which the stats-exporter service is available # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips # |
 | controller.metrics.service.labels | object | `{}` | Labels to be added to the metrics service resource |
 | controller.metrics.service.loadBalancerSourceRanges | list | `[]` |  |
 | controller.metrics.service.nameSuffix | string | `"metrics"` | - Suffix to be used to name the metrics service |
@@ -367,13 +372,15 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.metrics.serviceMonitor.relabelings | list | `[]` |  |
 | controller.metrics.serviceMonitor.scrapeInterval | string | `"30s"` |  |
 | controller.metrics.serviceMonitor.targetLabels | list | `[]` |  |
-| controller.minAvailable | int | `1` | Define either 'minAvailable' or 'maxUnavailable', never both. |
+| controller.minAvailable | int | `1` | Minimum available pods set in PodDisruptionBudget. Define either 'minAvailable' or 'maxUnavailable', never both. |
 | controller.minReadySeconds | int | `0` | `minReadySeconds` to avoid killing pods before we are ready # |
 | controller.name | string | `"controller"` |  |
-| controller.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node labels for controller pod assignment # Ref: https://kubernetes.io/docs/user-guide/node-selection/ # |
+| controller.networkPolicy.enabled | bool | `false` | Enable 'networkPolicy' or not |
+| controller.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node labels for controller pod assignment # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ # |
 | controller.opentelemetry.containerSecurityContext.allowPrivilegeEscalation | bool | `false` |  |
 | controller.opentelemetry.enabled | bool | `false` |  |
-| controller.opentelemetry.image | string | `"registry.k8s.io/ingress-nginx/opentelemetry:v20230312-helm-chart-4.5.2-28-g66a760794@sha256:40f766ac4a9832f36f217bb0e98d44c8d38faeccbfe861fbc1a76af7e9ab257f"` |  |
+| controller.opentelemetry.image | string | `"registry.k8s.io/ingress-nginx/opentelemetry:v20230721-3e2062ee5@sha256:13bee3f5223883d3ca62fee7309ad02d22ec00ff0d7033e3e9aca7a9f60fd472"` |  |
+| controller.opentelemetry.resources | object | `{}` |  |
 | controller.podAnnotations | object | `{}` | Annotations to be added to controller pods # |
 | controller.podLabels | object | `{}` | Labels to add to the pod container metadata |
 | controller.podSecurityContext | object | `{}` | Security Context policies for controller pods |
@@ -397,15 +404,16 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.scope.enabled | bool | `false` | Enable 'scope' or not |
 | controller.scope.namespace | string | `""` | Namespace to limit the controller to; defaults to $(POD_NAMESPACE) |
 | controller.scope.namespaceSelector | string | `""` | When scope.enabled == false, instead of watching all namespaces, we watching namespaces whose labels only match with namespaceSelector. Format like foo=bar. Defaults to empty, means watching all namespaces. |
-| controller.service.annotations | object | `{}` |  |
+| controller.service.annotations | object | `{}` | Annotations are mandatory for the load balancer to come up. Varies with the cloud service. Values passed through helm tpl engine. |
 | controller.service.appProtocol | bool | `true` | If enabled is adding an appProtocol option for Kubernetes service. An appProtocol field replacing annotations that were using for setting a backend protocol. Here is an example for AWS: service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http It allows choosing the protocol for each backend specified in the Kubernetes service. See the following GitHub issue for more details about the purpose: https://github.com/kubernetes/kubernetes/issues/40244 Will be ignored for Kubernetes versions older than 1.20 # |
 | controller.service.enableHttp | bool | `true` |  |
 | controller.service.enableHttps | bool | `true` |  |
 | controller.service.enabled | bool | `true` |  |
 | controller.service.external.enabled | bool | `true` |  |
-| controller.service.externalIPs | list | `[]` | List of IP addresses at which the controller services are available # Ref: https://kubernetes.io/docs/user-guide/services/#external-ips # |
-| controller.service.internal.annotations | object | `{}` | Annotations are mandatory for the load balancer to come up. Varies with the cloud service. |
+| controller.service.externalIPs | list | `[]` | List of IP addresses at which the controller services are available # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips # |
+| controller.service.internal.annotations | object | `{}` | Annotations are mandatory for the load balancer to come up. Varies with the cloud service. Values passed through helm tpl engine. |
 | controller.service.internal.enabled | bool | `false` | Enables an additional internal load balancer (besides the external one). |
+| controller.service.internal.loadBalancerIP | string | `""` | Used by cloud providers to connect the resulting internal LoadBalancer to a pre-existing static IP. Make sure to add to the service the needed annotation to specify the subnet which the static IP belongs to. For instance, `networking.gke.io/internal-load-balancer-subnet` for GCP and `service.beta.kubernetes.io/aws-load-balancer-subnets` for AWS. |
 | controller.service.internal.loadBalancerSourceRanges | list | `[]` | Restrict access For LoadBalancer service. Defaults to 0.0.0.0/0. |
 | controller.service.internal.nameSuffix | string | `"internal"` | - Suffix to be used to name the internal service |
 | controller.service.internal.ports | object | `{}` | Custom port mapping for internal service |
@@ -413,6 +421,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.service.ipFamilies | list | `["IPv4"]` | List of IP families (e.g. IPv4, IPv6) assigned to the service. This field is usually assigned automatically based on cluster configuration and the ipFamilyPolicy field. # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/ |
 | controller.service.ipFamilyPolicy | string | `"SingleStack"` | Represents the dual-stack-ness requested or required by this Service. Possible values are SingleStack, PreferDualStack or RequireDualStack. The ipFamilies and clusterIPs fields depend on the value of this field. # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/ |
 | controller.service.labels | object | `{}` |  |
+| controller.service.loadBalancerClass | string | `""` | Used by cloud providers to select a load balancer implementation other than the cloud provider default. https://kubernetes.io/docs/concepts/services-networking/service/#load-balancer-class |
 | controller.service.loadBalancerIP | string | `""` | Used by cloud providers to connect the resulting `LoadBalancer` to a pre-existing static IP according to https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer |
 | controller.service.loadBalancerSourceRanges | list | `[]` |  |
 | controller.service.nodePorts.http | string | `""` |  |
@@ -466,7 +475,8 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | defaultBackend.minAvailable | int | `1` |  |
 | defaultBackend.minReadySeconds | int | `0` | `minReadySeconds` to avoid killing pods before we are ready # |
 | defaultBackend.name | string | `"defaultbackend"` |  |
-| defaultBackend.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node labels for default backend pod assignment # Ref: https://kubernetes.io/docs/user-guide/node-selection/ # |
+| defaultBackend.networkPolicy.enabled | bool | `false` | Enable 'networkPolicy' or not |
+| defaultBackend.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node labels for default backend pod assignment # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ # |
 | defaultBackend.podAnnotations | object | `{}` | Annotations to be added to default backend pods # |
 | defaultBackend.podLabels | object | `{}` | Labels to add to the pod container metadata |
 | defaultBackend.podSecurityContext | object | `{}` | Security Context policies for controller pods See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for notes on enabling and using sysctls # |
@@ -480,7 +490,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | defaultBackend.replicaCount | int | `1` |  |
 | defaultBackend.resources | object | `{}` |  |
 | defaultBackend.service.annotations | object | `{}` |  |
-| defaultBackend.service.externalIPs | list | `[]` | List of IP addresses at which the default backend service is available # Ref: https://kubernetes.io/docs/user-guide/services/#external-ips # |
+| defaultBackend.service.externalIPs | list | `[]` | List of IP addresses at which the default backend service is available # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips # |
 | defaultBackend.service.loadBalancerSourceRanges | list | `[]` |  |
 | defaultBackend.service.servicePort | int | `80` |  |
 | defaultBackend.service.type | string | `"ClusterIP"` |  |
@@ -491,6 +501,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | defaultBackend.updateStrategy | object | `{}` | The update strategy to apply to the Deployment or DaemonSet # |
 | dhParam | string | `""` | A base64-encoded Diffie-Hellman parameter. This can be generated with: `openssl dhparam 4096 2> /dev/null | base64` # Ref: https://github.com/kubernetes/ingress-nginx/tree/main/docs/examples/customization/ssl-dh-param |
 | imagePullSecrets | list | `[]` | Optional array of imagePullSecrets containing private registry credentials # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
+| namespaceOverride | string | `""` | Override the deployment namespace; defaults to .Release.Namespace |
 | podSecurityPolicy.enabled | bool | `false` |  |
 | portNamePrefix | string | `""` | Prefix for TCP and UDP ports names in ingress controller service # Some cloud providers, like Yandex Cloud may have a requirements for a port name regex to support cloud load balancer integration |
 | rbac.create | bool | `true` |  |

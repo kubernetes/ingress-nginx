@@ -5,6 +5,18 @@ Enables requests served by NGINX for distributed telemetry via The OpenTelemetry
 Using the third party module [opentelemetry-cpp-contrib/nginx](https://github.com/open-telemetry/opentelemetry-cpp-contrib/tree/main/instrumentation/nginx) the Ingress-Nginx Controller can configure NGINX to enable [OpenTelemetry](http://opentelemetry.io) instrumentation.
 By default this feature is disabled.
 
+Check out this demo showcasing OpenTelemetry in Ingress NGINX. The video provides an overview and
+practical demonstration of how OpenTelemetry can be utilized in Ingress NGINX for observability
+and monitoring purposes.
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=jpBfgJpTcfw&t=129" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.youtube.com/vi/jpBfgJpTcfw/0.jpg" alt="Video Thumbnail" />
+  </a>
+</p>
+
+<p align="center">Demo: OpenTelemetry in Ingress NGINX.</p>
+
 ## Usage
 
 To enable the instrumentation we must enable OpenTelemetry in the configuration ConfigMap:
@@ -140,7 +152,7 @@ To install the example and collectors run:
     ```yaml
       opentelemetry:
         enabled: true
-        image: registry.k8s.io/ingress-nginx/opentelemetry:v20230107-helm-chart-4.4.2-2-g96b3d2165@sha256:331b9bebd6acfcd2d3048abbdd86555f5be76b7e3d0b5af4300b04235c6056c9
+        image: registry.k8s.io/ingress-nginx/opentelemetry:v20230527@sha256:fd7ec835f31b7b37187238eb4fdad4438806e69f413a203796263131f4f02ed0
         containerSecurityContext:
         allowPrivilegeEscalation: false
     ```
@@ -258,3 +270,45 @@ To install the example and collectors run:
     ```
     In the Zipkin interface we can see the details:
     ![zipkin screenshot](../../images/otel-zipkin-demo.png "zipkin screenshot")
+
+## Migration from OpenTracing, Jaeger, Zipkin and Datadog
+
+If you are migrating from OpenTracing, Jaeger, Zipkin, or Datadog to OpenTelemetry,
+you may need to update various annotations and configurations. Here are the mappings
+for common annotations and configurations:
+
+### Annotations
+
+| Legacy                                           | OpenTelemetry                                    |
+|--------------------------------------------------|--------------------------------------------------|
+| `nginx.ingress.kubernetes.io/enable-opentracing` | `nginx.ingress.kubernetes.io/enable-opentelemetry` |
+| `opentracing-trust-incoming-span`                | `opentracing-trust-incoming-span`                  |
+
+### Configs
+
+| Legacy                                | OpenTelemetry                                |
+|---------------------------------------|----------------------------------------------|
+| `opentracing-operation-name`          | `opentelemetry-operation-name`               |
+| `opentracing-location-operation-name` | `opentelemetry-operation-name`               |
+| `opentracing-trust-incoming-span`     | `opentelemetry-trust-incoming-span`          |
+| `zipkin-collector-port`               | `otlp-collector-port`                        |
+| `zipkin-service-name`                 | `otel-service-name`                          |
+| `zipkin-sample-rate`                  | `otel-sampler-ratio`                         |
+| `jaeger-collector-port`               | `otlp-collector-port`                        |
+| `jaeger-endpoint`                     | `otlp-collector-port`, `otlp-collector-host` |
+| `jaeger-service-name`                 | `otel-service-name`                          |
+| `jaeger-propagation-format`           | `N/A`                                        |
+| `jaeger-sampler-type`                 | `otel-sampler`                               |
+| `jaeger-sampler-param`                | `otel-sampler`                               |
+| `jaeger-sampler-host`                 | `N/A`                                        |
+| `jaeger-sampler-port`                 | `N/A`                                        |
+| `jaeger-trace-context-header-name`    | `N/A`                                        |
+| `jaeger-debug-header`                 | `N/A`                                        |
+| `jaeger-baggage-header`               | `N/A`                                        |
+| `jaeger-tracer-baggage-header-prefix` | `N/A`                                        |
+| `datadog-collector-port`              | `otlp-collector-port`                        |
+| `datadog-service-name`                | `otel-service-name`                          |
+| `datadog-environment`                 | `N/A`                                        |
+| `datadog-operation-name-override`     | `N/A`                                        |
+| `datadog-priority-sampling`           | `otel-sampler`                               |
+| `datadog-sample-rate`                 | `otel-sampler-ratio`                         |

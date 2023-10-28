@@ -28,7 +28,6 @@ import (
 	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 
-	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -41,7 +40,6 @@ var _ = framework.IngressNginxDescribeSerial("[TopologyHints] topology aware rou
 	})
 
 	ginkgo.It("should return 200 when service has topology hints", func() {
-
 		annotations := make(map[string]string)
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
@@ -72,11 +70,12 @@ var _ = framework.IngressNginxDescribeSerial("[TopologyHints] topology aware rou
 			}
 		}
 
-		curlCmd := fmt.Sprintf("curl --fail --silent http://localhost:%v/configuration/backends", nginx.StatusPort)
-		status, err := f.ExecIngressPod(curlCmd)
+		dbgCmd := "/dbg backends all"
+		status, err := f.ExecIngressPod(dbgCmd)
 		assert.Nil(ginkgo.GinkgoT(), err)
 		var backends []map[string]interface{}
-		json.Unmarshal([]byte(status), &backends)
+		err = json.Unmarshal([]byte(status), &backends)
+		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error unmarshalling backends")
 		gotBackends := 0
 		for _, bck := range backends {
 			if strings.Contains(bck["name"].(string), "topology") {
@@ -85,7 +84,7 @@ var _ = framework.IngressNginxDescribeSerial("[TopologyHints] topology aware rou
 		}
 
 		if gotHints {
-			//we have 2 replics, if there is just one backend it means that we are routing according slices hints to same zone as controller is
+			// we have 2 replics, if there is just one backend it means that we are routing according slices hints to same zone as controller is
 			assert.Equal(ginkgo.GinkgoT(), 1, gotBackends)
 		} else {
 			// two replicas should have two endpoints without topology hints

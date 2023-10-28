@@ -32,7 +32,7 @@ import (
 )
 
 func TestNginxCheck(t *testing.T) {
-	var tests = []struct {
+	tests := []struct {
 		healthzPath string
 	}{
 		{"/healthz"},
@@ -42,7 +42,6 @@ func TestNginxCheck(t *testing.T) {
 	for _, tt := range tests {
 		testName := fmt.Sprintf("health path: %s", tt.healthzPath)
 		t.Run(testName, func(t *testing.T) {
-
 			mux := http.NewServeMux()
 
 			listener, err := tryListen("tcp", fmt.Sprintf(":%v", nginx.StatusPort))
@@ -50,7 +49,7 @@ func TestNginxCheck(t *testing.T) {
 				t.Fatalf("creating tcp listener: %s", err)
 			}
 			defer listener.Close()
-
+			//nolint:gosec // Ignore not configured ReadHeaderTimeout in testing
 			server := &httptest.Server{
 				Listener: listener,
 				Config: &http.Server{
@@ -76,7 +75,10 @@ func TestNginxCheck(t *testing.T) {
 			})
 
 			// create pid file
-			os.MkdirAll("/tmp/nginx", file.ReadWriteByUser)
+			if err := os.MkdirAll("/tmp/nginx", file.ReadWriteByUser); err != nil {
+				t.Errorf("unexpected error creating pid file: %v", err)
+			}
+
 			pidFile, err := os.Create(nginx.PID)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
@@ -90,14 +92,23 @@ func TestNginxCheck(t *testing.T) {
 
 			// start dummy process to use the PID
 			cmd := exec.Command("sleep", "3600")
-			cmd.Start()
+			if err := cmd.Start(); err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
 			pid := cmd.Process.Pid
-			defer cmd.Process.Kill()
+			defer func() {
+				if err := cmd.Process.Kill(); err != nil {
+					t.Errorf("unexpected error killing the process: %v", err)
+				}
+			}()
 			go func() {
-				cmd.Wait()
+				cmd.Wait() //nolint:errcheck // Ignore the error
 			}()
 
-			pidFile.Write([]byte(fmt.Sprintf("%v", pid)))
+			if _, err := fmt.Fprintf(pidFile, "%v", pid); err != nil {
+				t.Errorf("unexpected error writing the pid file: %v", err)
+			}
+
 			pidFile.Close()
 
 			healthz.InstallPathHandler(mux, tt.healthzPath, n)
@@ -109,7 +120,7 @@ func TestNginxCheck(t *testing.T) {
 			})
 
 			// pollute pid file
-			pidFile.Write([]byte(fmt.Sprint("999999")))
+			pidFile.WriteString("999999") //nolint:errcheck // Ignore the error
 			pidFile.Close()
 
 			t.Run("bad pid", func(t *testing.T) {
@@ -122,7 +133,7 @@ func TestNginxCheck(t *testing.T) {
 }
 
 func callHealthz(expErr bool, healthzPath string, mux *http.ServeMux) error {
-	req, err := http.NewRequest(http.MethodGet, healthzPath, nil)
+	req, err := http.NewRequest(http.MethodGet, healthzPath, http.NoBody)
 	if err != nil {
 		return fmt.Errorf("healthz error: %v", err)
 	}
