@@ -452,6 +452,9 @@ controller:
     ## Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
     ##
     externalIPs: []
+    # -- Set to false to disable loadbalancer node port allocation
+    # See https://kubernetes.io/docs/concepts/services-networking/service/#load-balancer-nodeport-allocation
+    # allocateLoadBalancerNodePorts: true
     # -- Used by cloud providers to connect the resulting `LoadBalancer` to a pre-existing static IP according to https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
     loadBalancerIP: ""
     loadBalancerSourceRanges: []
@@ -507,6 +510,9 @@ controller:
       enabled: false
       # -- Annotations are mandatory for the load balancer to come up. Varies with the cloud service. Values passed through helm tpl engine.
       annotations: {}
+      # -- Set to false to disable loadbalancer node port allocation
+      # See https://kubernetes.io/docs/concepts/services-networking/service/#load-balancer-nodeport-allocation
+      # allocateLoadBalancerNodePorts: true
       # -- Used by cloud providers to connect the resulting internal LoadBalancer to a pre-existing static IP. Make sure to add to the service the needed annotation to specify the subnet which the static IP belongs to. For instance, `networking.gke.io/internal-load-balancer-subnet` for GCP and `service.beta.kubernetes.io/aws-load-balancer-subnets` for AWS.
       loadBalancerIP: ""
       # -- Restrict access For LoadBalancer service. Defaults to 0.0.0.0/0.
