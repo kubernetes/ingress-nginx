@@ -252,3 +252,36 @@ func TestStringToURL(t *testing.T) {
 		}
 	}
 }
+
+func TestStringToSecond(t *testing.T) {
+	ing := buildIngress()
+
+	tests := []struct {
+		name  string
+		field string
+		value string
+		exp   string
+	}{
+		{"valid_10", "string", "10", "10s"},
+		{"valid_20s", "string", "20s", "20s"},
+		{"valid_30s", "string", " 30s ", "30s"},
+	}
+
+	data := map[string]string{}
+	ing.SetAnnotations(data)
+
+	for _, i := range tests {
+		data[GetAnnotationWithPrefix(i.field)] = i.value
+
+		f, err := GetTimeoutAnnotation(i.field, ing, nil)
+		if err != nil {
+			t.Errorf("expected error but GetTimeoutAnnotation retuned err")
+		}
+
+		if f != i.exp {
+			t.Errorf("%v: expected \"%v\" but \"%v\" was returned", i.name, i.exp, f)
+		}
+
+		delete(data, i.field)
+	}
+}

@@ -148,19 +148,13 @@ func (a ingAnnotations) parseTimeout(name string) (string, error) {
 			return "0", errors.NewInvalidAnnotationContent(name, val)
 		}
 
-		setUnits, err := regexp.Compile(`(\d+)(s|ms)?$`)
-		if err != nil {
-			return "0", errors.NewInvalidAnnotationContent(name, val)
-		}
+		setUnits := regexp.MustCompile(`\d+s|ms$`)
 
 		if setUnits.MatchString(s) {
 			return s, nil
 		}
 
-		noUnits, err := regexp.Compile(`\d+$`)
-				if err != nil {
-			return "0", errors.NewInvalidAnnotationContent(name, val)
-		}
+		noUnits := regexp.MustCompile(`\d+$`)
 
 		if noUnits.MatchString(s) {
 			return fmt.Sprintf("%ss", s), nil

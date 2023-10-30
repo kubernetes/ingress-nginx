@@ -32,7 +32,7 @@ const (
 	off                  = "off"
 	proxyHTTPVersion     = "1.0"
 	proxyMaxTempFileSize = "128k"
-	ProxyConnectTimeout  = "1"
+	ProxyConnectTimeout  = "1s"
 	ProxySendTimeout     = "15s"
 	ProxyReadTimeout     = "20s"
 )
@@ -130,7 +130,7 @@ func TestProxy(t *testing.T) {
 		t.Fatalf("expected a Config type")
 	}
 	if p.ConnectTimeout != ProxyConnectTimeout {
-		t.Errorf("expected 1 as connect-timeout but returned %v", p.ConnectTimeout)
+		t.Errorf("expected 1s as connect-timeout but returned %v", p.ConnectTimeout)
 	}
 	if p.SendTimeout != ProxySendTimeout {
 		t.Errorf("expected 15s as send-timeout but returned %v", p.SendTimeout)
@@ -252,8 +252,8 @@ func TestProxyWithNoAnnotation(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected a Config type")
 	}
-	if p.ConnectTimeout != "10s" {
-		t.Errorf("expected 10s as connect-timeout but returned %v", p.ConnectTimeout)
+	if p.ConnectTimeout != "1s" {
+		t.Errorf("expected 1s as connect-timeout but returned %v", p.ConnectTimeout)
 	}
 	if p.SendTimeout != ProxySendTimeout {
 		t.Errorf("expected 15s as send-timeout but returned %v", p.SendTimeout)
