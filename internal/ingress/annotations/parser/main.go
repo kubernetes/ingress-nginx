@@ -144,16 +144,24 @@ func (a ingAnnotations) parseTimeout(name string) (string, error) {
 	val, ok := a[name]
 	if ok {
 		s := normalizeString(val)
-		if len(s) == 0 {
+		if s == "" {
 			return "0", errors.NewInvalidAnnotationContent(name, val)
 		}
 
-		setUnits, _ := regexp.Compile(`(\d+)(s|ms)?$`)
+		setUnits, err := regexp.Compile(`(\d+)(s|ms)?$`)
+		if err != nil {
+			return "0", errors.NewInvalidAnnotationContent(name, val)
+		}
+
 		if setUnits.MatchString(s) {
 			return s, nil
 		}
 
-		noUnits, _ := regexp.Compile(`\d+$`)
+		noUnits, err := regexp.Compile(`\d+$`)
+				if err != nil {
+			return "0", errors.NewInvalidAnnotationContent(name, val)
+		}
+
 		if noUnits.MatchString(s) {
 			return fmt.Sprintf("%ss", s), nil
 		}
