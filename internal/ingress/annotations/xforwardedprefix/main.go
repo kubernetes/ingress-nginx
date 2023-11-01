@@ -31,10 +31,11 @@ var xForwardedForAnnotations = parser.Annotation{
 	Group: "backend",
 	Annotations: parser.AnnotationFields{
 		xForwardedForPrefixAnnotation: {
-			Validator:     parser.ValidateRegex(parser.BasicCharsRegex, true),
-			Scope:         parser.AnnotationScopeLocation,
-			Risk:          parser.AnnotationRiskLow, // Low, as it allows regexes but on a very limited set
-			Documentation: `This annotation can be used to add the non-standard X-Forwarded-Prefix header to the upstream request with a string value`,
+			Validator: parser.ValidateRegex(parser.RegexPathWithCapture, true),
+			Scope:     parser.AnnotationScopeLocation,
+			Risk:      parser.AnnotationRiskMedium,
+			Documentation: `This annotation can be used to add the non-standard X-Forwarded-Prefix header to the upstream request with a string value. It can 
+			contain regular characters and captured groups specified as '$1', '$2', etc.`,
 		},
 	},
 }
