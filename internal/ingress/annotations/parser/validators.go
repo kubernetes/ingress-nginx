@@ -71,7 +71,7 @@ var (
 	NGINXVariable = regexp.MustCompile(`^[A-Za-z0-9\-\_\$\{\}]*$`)
 	// RegexPathWithCapture allows entries that SHOULD start with "/" and may contain alphanumeric + capture
 	// character for regex based paths, like /something/$1/anything/$2
-	RegexPathWithCapture = regexp.MustCompile(`^/[` + alphaNumericChars + `\/\$]*$`)
+	RegexPathWithCapture = regexp.MustCompile(`^/?[` + alphaNumericChars + `\/\$]*$`)
 	// HeadersVariable defines a regex that allows headers separated by comma
 	HeadersVariable = regexp.MustCompile(`^[A-Za-z0-9-_, ]*$`)
 	// URLWithNginxVariableRegex defines a url that can contain nginx variables.
