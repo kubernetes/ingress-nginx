@@ -19,6 +19,7 @@ package framework
 import (
 	"context"
 	"fmt"
+	"maps"
 	"os"
 	"time"
 
@@ -120,7 +121,15 @@ func CreateKubeNamespace(baseName string, c kubernetes.Interface) (string, error
 
 // CreateKubeNamespaceWithLabel creates a new namespace with given labels in the cluster
 func CreateKubeNamespaceWithLabel(baseName string, labels map[string]string, c kubernetes.Interface) (string, error) {
-	return createNamespace(baseName, labels, c)
+	if labels == nil {
+		labels = make(map[string]string)
+	}
+	newLabels := map[string]string{
+		"pod-security.kubernetes.io/enforce": "baseline",
+		"pod-security.kubernetes.io/audit":   "restricted",
+	}
+	maps.Copy(newLabels, labels)
+	return createNamespace(baseName, newLabels, c)
 }
 
 // DeleteKubeNamespace deletes a namespace and all the objects inside

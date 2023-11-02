@@ -388,10 +388,8 @@ type IngressChartValue struct {
 		Create bool `yaml:"create"`
 		Scope  bool `yaml:"scope"`
 	} `yaml:"rbac"`
-	PodSecurityPolicy struct {
-		Enabled bool `yaml:"enabled"`
-	} `yaml:"podSecurityPolicy"`
-	ServiceAccount struct {
+	PodSecurityAdmission map[string]string `yaml:"podSecurityAdmission"`
+	ServiceAccount       struct {
 		Create                       bool     `yaml:"create"`
 		Name                         string   `yaml:"name"`
 		AutomountServiceAccountToken bool     `yaml:"automountServiceAccountToken"`

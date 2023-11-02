@@ -909,8 +909,9 @@ rbac:
   scope: false
 ## If true, create & use Pod Security Policy resources
 ## https://kubernetes.io/docs/concepts/policy/pod-security-policy/
-podSecurityPolicy:
-  enabled: false
+podSecurityAdmission:
+  enforce: baseline
+  audit: restricted
 serviceAccount:
   create: true
   name: ""

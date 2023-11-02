@@ -6,5 +6,6 @@ controller:
   service:
     type: ClusterIP
 
-podSecurityPolicy:
-  enabled: true
+podSecurityAdmission:
+  enforce: privileged
+  audit: baseline
