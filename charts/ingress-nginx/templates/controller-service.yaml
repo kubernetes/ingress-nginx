@@ -16,6 +16,9 @@ metadata:
   namespace: {{ include "ingress-nginx.namespace" . }}
 spec:
   type: {{ .Values.controller.service.type }}
+{{- if hasKey .Values.controller.service "allocateLoadBalancerNodePorts" }}
+  allocateLoadBalancerNodePorts: {{ .Values.controller.service.allocateLoadBalancerNodePorts }}
+{{- end }}
 {{- if .Values.controller.service.clusterIP }}
   clusterIP: {{ .Values.controller.service.clusterIP }}
 {{- end }}
