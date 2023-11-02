@@ -5,3 +5,4 @@ metadata:
   labels:
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/instance: ingress-nginx
+    pod-security.kubernetes.io/enforce: baseline
