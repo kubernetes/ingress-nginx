@@ -732,7 +732,7 @@ controller:
       #     description: bad ingress config - nginx config test failed
       #     summary: uninstall the latest ingress changes to allow config reloads to resume
       # - alert: NGINXCertificateExpiry
-      #   expr: (avg(nginx_ingress_controller_ssl_expire_time_seconds) by (host) - time()) < 604800
+      #   expr: (avg(nginx_ingress_controller_ssl_expire_time_seconds{host!="_"}) by (host) - time()) < 604800
       #   for: 1s
       #   labels:
       #     severity: critical
