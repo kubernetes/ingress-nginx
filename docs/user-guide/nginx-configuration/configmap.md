@@ -164,7 +164,7 @@ The following table shows a configuration option's name, type, and the default v
 |[enable-opentelemetry](#enable-opentelemetry)|bool|"false"||
 |[opentelemetry-trust-incoming-span](#opentelemetry-trust-incoming-span)|bool|"true"||
 |[opentelemetry-operation-name](#opentelemetry-operation-name)|string|""||
-|[opentelemetry-config](#/etc/nginx/opentelemetry.toml)|string|"/etc/nginx/opentelemetry.toml"||
+|[opentelemetry-config](#/etc/ingress-controller/telemetry/opentelemetry.toml)|string|"/etc/ingress-controller/telemetry/opentelemetry.toml"||
 |[otlp-collector-host](#otlp-collector-host)|string|""||
 |[otlp-collector-port](#otlp-collector-port)|int|4317||
 |[otel-max-queuesize](#otel-max-queuesize)|int|||

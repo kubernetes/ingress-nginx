@@ -1663,7 +1663,7 @@ func TestBuildOpenTracing(t *testing.T) {
 		EnableOpentracing:   true,
 		JaegerCollectorHost: "jaeger-host.com",
 	}
-	expected = "opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /etc/nginx/opentracing.json;\r\n"
+	expected = "opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /etc/ingress-controller/telemetry/opentracing.json;\r\n"
 	actual = buildOpentracing(cfgJaeger, []*ingress.Server{})
 
 	if expected != actual {
@@ -1674,7 +1674,7 @@ func TestBuildOpenTracing(t *testing.T) {
 		EnableOpentracing:   true,
 		ZipkinCollectorHost: "zipkin-host.com",
 	}
-	expected = "opentracing_load_tracer /usr/local/lib/libzipkin_opentracing_plugin.so /etc/nginx/opentracing.json;\r\n"
+	expected = "opentracing_load_tracer /usr/local/lib/libzipkin_opentracing_plugin.so /etc/ingress-controller/telemetry/opentracing.json;\r\n"
 	actual = buildOpentracing(cfgZipkin, []*ingress.Server{})
 
 	if expected != actual {
@@ -1685,7 +1685,7 @@ func TestBuildOpenTracing(t *testing.T) {
 		EnableOpentracing:    true,
 		DatadogCollectorHost: "datadog-host.com",
 	}
-	expected = "opentracing_load_tracer /usr/local/lib/libdd_opentracing.so /etc/nginx/opentracing.json;\r\n"
+	expected = "opentracing_load_tracer /usr/local/lib/libdd_opentracing.so /etc/ingress-controller/telemetry/opentracing.json;\r\n"
 	actual = buildOpentracing(cfgDatadog, []*ingress.Server{})
 
 	if expected != actual {
@@ -1696,7 +1696,7 @@ func TestBuildOpenTracing(t *testing.T) {
 		EnableOpentracing: true,
 		JaegerEndpoint:    "http://jaeger-collector.com:14268/api/traces",
 	}
-	expected = "opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /etc/nginx/opentracing.json;\r\n"
+	expected = "opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /etc/ingress-controller/telemetry/opentracing.json;\r\n"
 	actual = buildOpentracing(cfgJaegerEndpoint, []*ingress.Server{})
 
 	if expected != actual {
@@ -1709,7 +1709,7 @@ func TestBuildOpenTracing(t *testing.T) {
 		OpentracingOperationName:         "my-operation-name",
 		OpentracingLocationOperationName: "my-location-operation-name",
 	}
-	expected = "opentracing_load_tracer /usr/local/lib/libdd_opentracing.so /etc/nginx/opentracing.json;\r\n"
+	expected = "opentracing_load_tracer /usr/local/lib/libdd_opentracing.so /etc/ingress-controller/telemetry/opentracing.json;\r\n"
 	expected += "opentracing_operation_name \"my-operation-name\";\n"
 	expected += "opentracing_location_operation_name \"my-location-operation-name\";\n"
 	actual = buildOpentracing(cfgOpenTracing, []*ingress.Server{})
