@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"net"
 	"net/http"
 	"os"
@@ -180,7 +181,11 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 	}
 
 	filesToWatch := []string{}
-	err = filepath.Walk("/etc/nginx/geoip/", func(path string, info os.FileInfo, err error) error {
+
+	if err := os.Mkdir("/etc/ingress-controller/geoip/", 0o755); err != nil && !os.IsExist(err) {
+		klog.Fatalf("Error creating geoip dir: %v", err)
+	}
+	err = filepath.WalkDir("/etc/ingress-controller/geoip/", func(path string, info fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -1107,7 +1112,7 @@ func createOpentracingCfg(cfg *ngx_config.Configuration) error {
 	// Expand possible environment variables before writing the configuration to file.
 	expanded := os.ExpandEnv(configData)
 
-	return os.WriteFile("/etc/nginx/opentracing.json", []byte(expanded), file.ReadWriteByUser)
+	return os.WriteFile("/etc/ingress-controller/telemetry/opentracing.json", []byte(expanded), file.ReadWriteByUser)
 }
 
 func createOpentelemetryCfg(cfg *ngx_config.Configuration) error {
