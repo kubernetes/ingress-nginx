@@ -632,4 +632,41 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			Status(http.StatusOK).Headers().
 			ValueEqual("Access-Control-Allow-Origin", []string{"*"})
 	})
+
+	ginkgo.It("should allow correct origin but not others - cors allow origin annotations contain trailing comma", func() {
+		host := corsHost
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/enable-cors":       "true",
+			"nginx.ingress.kubernetes.io/cors-allow-origin": "https://origin-123.cors.com:8080,   ,https://origin-321.cors.com:8080,",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		origin1 := "https://origin-123.cors.com:8080"
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("Origin", origin1).
+			Expect().
+			Headers().ContainsKey("Access-Control-Allow-Origin")
+
+		origin2 := "https://origin-321.cors.com:8080"
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("Origin", origin2).
+			Expect().
+			Status(http.StatusOK).Headers().
+			ValueEqual("Access-Control-Allow-Origin", []string{origin2})
+
+		origin3 := "https://unknown.cors.com:8080"
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("Origin", origin3).
+			Expect().
+			Headers().
+			NotContainsKey("Access-Control-Allow-Origin")
+	})
 })
