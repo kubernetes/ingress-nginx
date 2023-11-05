@@ -35,7 +35,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/mirror"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/opentelemetry"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/opentracing"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxyssl"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
@@ -354,9 +353,6 @@ type Location struct {
 	// Mirror allows you to mirror traffic to a "test" backend
 	// +optional
 	Mirror mirror.Config `json:"mirror,omitempty"`
-	// Opentracing allows the global opentracing setting to be overridden for a location
-	// +optional
-	Opentracing opentracing.Config `json:"opentracing"`
 	// Opentelemetry allows the global opentelemetry setting to be overridden for a location
 	// +optional
 	Opentelemetry opentelemetry.Config `json:"opentelemetry"`
