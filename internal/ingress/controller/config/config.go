@@ -568,22 +568,6 @@ type Configuration struct {
 	// Default: true
 	ProxyAddOriginalURIHeader bool `json:"proxy-add-original-uri-header"`
 
-	// EnableOpentracing enables the nginx Opentracing extension
-	// https://github.com/opentracing-contrib/nginx-opentracing
-	// By default this is disabled
-	EnableOpentracing bool `json:"enable-opentracing"`
-
-	// OpentracingOperationName specifies a custom name for the server span
-	OpentracingOperationName string `json:"opentracing-operation-name"`
-
-	// OpentracingOperationName specifies a custom name for the location span
-	OpentracingLocationOperationName string `json:"opentracing-location-operation-name"`
-
-	// OpentracingTrustIncomingSpan sets whether or not to trust incoming trace spans
-	// If false, incoming span headers will be rejected
-	// Default: true
-	OpentracingTrustIncomingSpan bool `json:"opentracing-trust-incoming-span"`
-
 	// EnableOpentelemetry enables the nginx Opentelemetry extension
 	// By default this is disabled
 	EnableOpentelemetry bool `json:"enable-opentelemetry"`
@@ -634,94 +618,6 @@ type Configuration struct {
 	// MaxExportBatchSize specifies the max export batch size to used when uploading traces
 	// Default: 512
 	OtelMaxExportBatchSize int32 `json:"otel-max-export-batch-size"`
-
-	// ZipkinCollectorHost specifies the host to use when uploading traces
-	ZipkinCollectorHost string `json:"zipkin-collector-host"`
-
-	// ZipkinCollectorPort specifies the port to use when uploading traces
-	// Default: 9411
-	ZipkinCollectorPort int `json:"zipkin-collector-port"`
-
-	// ZipkinServiceName specifies the service name to use for any traces created
-	// Default: nginx
-	ZipkinServiceName string `json:"zipkin-service-name"`
-
-	// ZipkinSampleRate specifies sampling rate for traces
-	// Default: 1.0
-	ZipkinSampleRate float32 `json:"zipkin-sample-rate"`
-
-	// JaegerCollectorHost specifies the host to use when uploading traces
-	JaegerCollectorHost string `json:"jaeger-collector-host"`
-
-	// JaegerCollectorPort specifies the port to use when uploading traces
-	// Default: 6831
-	JaegerCollectorPort int `json:"jaeger-collector-port"`
-
-	// JaegerEndpoint specifies the enpoint to use when uploading traces to a collector over TCP
-	JaegerEndpoint string `json:"jaeger-endpoint"`
-
-	// JaegerServiceName specifies the service name to use for any traces created
-	// Default: nginx
-	JaegerServiceName string `json:"jaeger-service-name"`
-
-	// JaegerPropagationFormat specifies the traceparent/tracestate propagation format
-	JaegerPropagationFormat string `json:"jaeger-propagation-format"`
-
-	// JaegerSamplerType specifies the sampler to be used when sampling traces.
-	// The available samplers are: const, probabilistic, ratelimiting, remote
-	// Default: const
-	JaegerSamplerType string `json:"jaeger-sampler-type"`
-
-	// JaegerSamplerParam specifies the argument to be passed to the sampler constructor
-	// Default: 1
-	JaegerSamplerParam string `json:"jaeger-sampler-param"`
-
-	// JaegerSamplerHost specifies the host used for remote sampling consultation
-	// Default: http://127.0.0.1
-	JaegerSamplerHost string `json:"jaeger-sampler-host"`
-
-	// JaegerSamplerHost specifies the host used for remote sampling consultation
-	// Default: 5778
-	JaegerSamplerPort int `json:"jaeger-sampler-port"`
-
-	// JaegerTraceContextHeaderName specifies the header name used for passing trace context
-	// Default: uber-trace-id
-	JaegerTraceContextHeaderName string `json:"jaeger-trace-context-header-name"`
-
-	// JaegerDebugHeader specifies the header name used for force sampling
-	// Default: jaeger-debug-id
-	JaegerDebugHeader string `json:"jaeger-debug-header"`
-
-	// JaegerBaggageHeader specifies the header name used to submit baggage if there is no root span
-	// Default: jaeger-baggage
-	JaegerBaggageHeader string `json:"jaeger-baggage-header"`
-
-	// TraceBaggageHeaderPrefix specifies the header prefix used to propagate baggage
-	// Default: uberctx-
-	JaegerTraceBaggageHeaderPrefix string `json:"jaeger-tracer-baggage-header-prefix"`
-
-	// DatadogCollectorHost specifies the datadog agent host to use when uploading traces
-	DatadogCollectorHost string `json:"datadog-collector-host"`
-
-	// DatadogCollectorPort specifies the port to use when uploading traces
-	// Default: 8126
-	DatadogCollectorPort int `json:"datadog-collector-port"`
-
-	// DatadogEnvironment specifies the environment this trace belongs to.
-	// Default: prod
-	DatadogEnvironment string `json:"datadog-environment"`
-
-	// DatadogServiceName specifies the service name to use for any traces created
-	// Default: nginx
-	DatadogServiceName string `json:"datadog-service-name"`
-
-	// DatadogOperationNameOverride overrides the operation naem to use for any traces crated
-	// Default: nginx.handle
-	DatadogOperationNameOverride string `json:"datadog-operation-name-override"`
-
-	// DatadogSampleRate specifies sample rate for any traces created.
-	// Default: use a dynamic rate instead
-	DatadogSampleRate *float32 `json:"datadog-sample-rate,omitempty"`
 
 	// MainSnippet adds custom configuration to the main section of the nginx configuration
 	MainSnippet string `json:"main-snippet"`
@@ -985,7 +881,6 @@ func NewDefault() Configuration {
 		LimitConnZoneVariable:                  defaultLimitConnZoneVariable,
 		BindAddressIpv4:                        defBindAddress,
 		BindAddressIpv6:                        defBindAddress,
-		OpentracingTrustIncomingSpan:           true,
 		OpentelemetryTrustIncomingSpan:         true,
 		OpentelemetryConfig:                    "/etc/ingress-controller/telemetry/opentelemetry.toml",
 		OtlpCollectorPort:                      "4317",
@@ -996,21 +891,6 @@ func NewDefault() Configuration {
 		OtelScheduleDelayMillis:                5000,
 		OtelMaxExportBatchSize:                 512,
 		OtelMaxQueueSize:                       2048,
-		ZipkinCollectorPort:                    9411,
-		ZipkinServiceName:                      "nginx",
-		ZipkinSampleRate:                       1.0,
-		JaegerCollectorPort:                    6831,
-		JaegerPropagationFormat:                "jaeger",
-		JaegerServiceName:                      "nginx",
-		JaegerSamplerType:                      "const",
-		JaegerSamplerParam:                     "1",
-		JaegerSamplerPort:                      5778,
-		JaegerSamplerHost:                      "http://127.0.0.1",
-		DatadogServiceName:                     "nginx",
-		DatadogEnvironment:                     "prod",
-		DatadogCollectorPort:                   8126,
-		DatadogOperationNameOverride:           "nginx.handle",
-		DatadogSampleRate:                      nil,
 		LimitReqStatusCode:                     503,
 		LimitConnStatusCode:                    503,
 		SyslogPort:                             514,
