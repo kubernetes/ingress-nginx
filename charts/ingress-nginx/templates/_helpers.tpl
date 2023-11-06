@@ -132,47 +132,27 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- printf "%s-%s" (include "ingress-nginx.fullname" .) .Values.defaultBackend.name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-
-{{/*
-Set the version of the Chart to include in the labels mapping
-*/}}
-{{- define "ingress-nginx.version" -}}
-{{- default .Chart.Version .Chart.AppVersion | quote -}}
-{{- end -}}
-
 {{/*
 Common labels
 */}}
 {{- define "ingress-nginx.labels" -}}
-{{- if and (hasKey . "customLabels") (hasKey . "context") -}}
-{{ merge
-        (include "tplvalues.render" (dict "value" .customLabels "context" .context) | fromYaml)
-        (dict
-            "app.kubernetes.io/version" (include "ingress-nginx.version" .context)
-            "app.kubernetes.io/name" (include "ingress-nginx.name" .context)
-            "helm.sh/chart" (include "ingress-nginx.chart" .context)
-            "app.kubernetes.io/part-of" .context.Release.Name
-            "app.kubernetes.io/managed-by" .context.Release.Service
-        )
-    | toYaml
-}}
-{{- else -}}
-app.kubernetes.io/version: {{ include "ingress-nginx.version" . }}
-{{ include "ingress-nginx.selectorLabels" . }}
-app.kubernetes.io/name: {{ include "ingress-nginx.name" . }}
 helm.sh/chart: {{ include "ingress-nginx.chart" . }}
-app.kubernetes.io/part-of: {{ .Release.Name }}
+{{ include "ingress-nginx.selectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/part-of: {{ template "ingress-nginx.name" . }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- if .Values.commonLabels }}
+{{- if .Values.commonLabels}}
 {{ toYaml .Values.commonLabels }}
 {{- end }}
-{{- end -}}
 {{- end -}}
 
 {{/*
 Selector labels
 */}}
 {{- define "ingress-nginx.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "ingress-nginx.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
