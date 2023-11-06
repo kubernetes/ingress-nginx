@@ -326,12 +326,13 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.image.runAsUser | int | `101` |  |
 | controller.image.seccompProfile.type | string | `"RuntimeDefault"` |  |
 | controller.image.tag | string | `"v1.9.4"` |  |
-| controller.ingressClass | string | `"nginx"` | For backwards compatibility with ingress.class annotation, use ingressClass. (comma-seperated list NOT supported) Algorithm is as follows, first ingressClassName is considered, if not present, controller looks for ingress.class annotation |
+| controller.ingressClass | string | `"nginx"` | For backwards compatibility with ingress.class annotation, use ingressClass. Algorithm is as follows, first ingressClassName is considered, if not present, controller looks for ingress.class annotation |
 | controller.ingressClassByName | bool | `false` | Process IngressClass per name (additionally as per spec.controller). |
 | controller.ingressClassResource.controllerValue | string | `"k8s.io/ingress-nginx"` | Controller-value of the controller that is processing this ingressClass |
-| controller.ingressClassResource.default | bool | `false` | If multiple ingressClassResources are set, the default will always be the first in the list |
+| controller.ingressClassResource.default | bool | `false` | Is this the default ingressClass for the cluster |
 | controller.ingressClassResource.enabled | bool | `true` | Is this ingressClass enabled or not |
-| controller.ingressClassResource.name | string | `"nginx"` | Name of the ingressClass (comma-seperated list supported) |
+| controller.ingressClassResource.extraNames | list | `[]` | Additional ingressClass names |
+| controller.ingressClassResource.name | string | `"nginx"` | Name of the ingressClass |
 | controller.ingressClassResource.parameters | object | `{}` | Parameters is a link to a custom resource containing additional configuration for the controller. This is optional if the controller does not require extra parameters. |
 | controller.keda.apiVersion | string | `"keda.sh/v1alpha1"` |  |
 | controller.keda.behavior | object | `{}` |  |

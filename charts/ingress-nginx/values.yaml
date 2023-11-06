@@ -112,12 +112,11 @@ controller:
   ## This section refers to the creation of the IngressClass resource
   ## IngressClass resources are supported since k8s >= 1.18 and required since k8s >= 1.19
   ingressClassResource:
-    # -- Name of the ingressClass (comma-seperated list supported)
+    # -- Name of the ingressClass
     name: nginx
     # -- Is this ingressClass enabled or not
     enabled: true
     # -- Is this the default ingressClass for the cluster
-    # -- If multiple ingressClassResources are set, the default will always be the first in the list
     default: false
     # -- Controller-value of the controller that is processing this ingressClass
     controllerValue: "k8s.io/ingress-nginx"
@@ -125,7 +124,10 @@ controller:
     # configuration for the controller. This is optional if the controller
     # does not require extra parameters.
     parameters: {}
-  # -- For backwards compatibility with ingress.class annotation, use ingressClass. (comma-seperated list NOT supported)
+    # -- Additional ingressClass names
+    extraNames: []
+    # - nginx-external
+  # -- For backwards compatibility with ingress.class annotation, use ingressClass.
   # Algorithm is as follows, first ingressClassName is considered, if not present, controller looks for ingress.class annotation
   ingressClass: nginx
   # -- Labels to add to the pod container metadata
