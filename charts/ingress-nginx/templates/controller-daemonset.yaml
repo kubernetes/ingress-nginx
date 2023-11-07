@@ -60,16 +60,16 @@ spec:
     {{- end }}
     {{- if or .Values.controller.podSecurityContext .Values.controller.sysctls }}
       securityContext:
-    {{- end }}
-    {{- if .Values.controller.podSecurityContext }}
+      {{- if .Values.controller.podSecurityContext }}
         {{- toYaml .Values.controller.podSecurityContext | nindent 8 }}
-    {{- end }}
-    {{- if .Values.controller.sysctls }}
+      {{- end }}
+      {{- if .Values.controller.sysctls }}
         sysctls:
-    {{- range $sysctl, $value := .Values.controller.sysctls }}
-        - name: {{ $sysctl | quote }}
-          value: {{ $value | quote }}
-    {{- end }}
+        {{- range $sysctl, $value := .Values.controller.sysctls }}
+          - name: {{ $sysctl | quote }}
+            value: {{ $value | quote }}
+        {{- end }}
+      {{- end }}
     {{- end }}
     {{- if .Values.controller.shareProcessNamespace }}
       shareProcessNamespace: {{ .Values.controller.shareProcessNamespace }}
@@ -83,9 +83,8 @@ spec:
         {{- if .Values.controller.lifecycle }}
           lifecycle: {{ toYaml .Values.controller.lifecycle | nindent 12 }}
         {{- end }}
-          args:
-            {{- include "ingress-nginx.params" . | nindent 12 }}
-          securityContext: {{ include "controller.containerSecurityContext" . | nindent 12 }}
+          args: {{ include "ingress-nginx.params" . | nindent 12 }}
+          securityContext: {{ include "ingress-nginx.controller.containerSecurityContext" . | nindent 12 }}
           env:
             - name: POD_NAME
               valueFrom:
@@ -150,11 +149,11 @@ spec:
           volumeMounts:
           {{- if (or .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
             - name: modules
-            {{ if .Values.controller.image.chroot }}
+            {{- if .Values.controller.image.chroot }}
               mountPath: /chroot/modules_mount
-            {{ else }}
+            {{- else }}
               mountPath: /modules_mount
-            {{ end }}
+            {{- end }}
           {{- end }}
           {{- if .Values.controller.customTemplate.configMapName }}
             - mountPath: /etc/nginx/template
@@ -174,24 +173,25 @@ spec:
           resources: {{ toYaml .Values.controller.resources | nindent 12 }}
         {{- end }}
       {{- if .Values.controller.extraContainers }}
-        {{ toYaml .Values.controller.extraContainers | nindent 8 }}
+        {{- toYaml .Values.controller.extraContainers | nindent 8 }}
       {{- end }}
     {{- if (or .Values.controller.extraInitContainers .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
       initContainers:
       {{- if .Values.controller.extraInitContainers }}
-        {{ toYaml .Values.controller.extraInitContainers | nindent 8 }}
+        {{- toYaml .Values.controller.extraInitContainers | nindent 8 }}
       {{- end }}
       {{- if .Values.controller.extraModules }}
         {{- range .Values.controller.extraModules }}
           {{- $containerSecurityContext := .containerSecurityContext | default $.Values.controller.containerSecurityContext }}
-          {{- include "extraModules" (dict "name" .name "image" .image "containerSecurityContext" $containerSecurityContext) | nindent 8 }}
+          {{- include "extraModules" (dict "name" .name "image" .image "distroless" .distroless "containerSecurityContext" $containerSecurityContext "resources" .resources) | nindent 8 }}
         {{- end }}
       {{- end }}
-      {{- if .Values.controller.opentelemetry.enabled}}
-          {{- $otelContainerSecurityContext := $.Values.controller.opentelemetry.containerSecurityContext | default $.Values.controller.containerSecurityContext }}
-          {{ $otelResources := $.Values.controller.opentelemetry.resources | default dict }}
-          {{- include "extraModules" (dict "name" "opentelemetry" "image" .Values.controller.opentelemetry.image "containerSecurityContext" $otelContainerSecurityContext "distroless" true "resources" $otelResources) | nindent 8}}
-      {{- end}}
+      {{- if .Values.controller.opentelemetry.enabled }}
+        {{- with .Values.controller.opentelemetry }}
+          {{- $containerSecurityContext := .containerSecurityContext | default $.Values.controller.containerSecurityContext }}
+          {{- include "extraModules" (dict "name" .name "image" .image "distroless" .distroless "containerSecurityContext" $containerSecurityContext "resources" .resources) | nindent 8 }}
+        {{- end }}
+      {{- end }}
     {{- end }}
     {{- if .Values.controller.hostNetwork }}
       hostNetwork: {{ .Values.controller.hostNetwork }}
