@@ -1,0 +1,167 @@
+name: NGINX v1.25 Image
+
+on:
+  pull_request:
+    branches:
+    - "*"
+    paths:
+    - 'images/nginx-1.25/**'
+  push:
+    branches:
+    - main
+    paths:
+    - 'images/nginx-1.25/**'
+
+permissions:
+    contents: read
+
+jobs:
+  changes:
+    permissions:
+      contents: read  # for dorny/paths-filter to fetch a list of changed files
+      pull-requests: read  # for dorny/paths-filter to read pull requests
+    runs-on: ubuntu-latest
+    outputs:
+      nginx: ${{ steps.filter.outputs.nginx }}
+      tag: ${{ steps.filter.outputs.tag }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+    - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
+      id: filter
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        filters: |
+          nginx:
+          - 'images/nginx-1.25/**'
+          tag:
+          - 'images/nginx-1.25/TAG'
+
+  build:
+    permissions:
+      contents: read  # for dorny/paths-filter to fetch a list of changed files
+      pull-requests: read  # for dorny/paths-filter to read pull requests
+    runs-on: ubuntu-latest
+    needs: changes
+    if: |
+      (github.event_name != 'push' && github.ref != 'refs/heads/main' && needs.changes.outputs.nginx == 'true')
+    env:
+      PLATFORMS: linux/amd64
+    steps:
+    - name: Checkout
+      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+    - name: Set up Go
+      id: go
+      uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+      with:
+        go-version: '1.21.5'
+        check-latest: true
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # v3.0.0
+    - name: Set up Docker Buildx
+      id: buildx
+      uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
+      with:
+        version: latest
+        platforms: ${{ env.PLATFORMS }}
+    - name: Prepare Host
+      run: |
+        curl -LO https://dl.k8s.io/release/v1.27.3/bin/linux/amd64/kubectl
+        chmod +x ./kubectl
+        sudo mv ./kubectl /usr/local/bin/kubectl
+    - name: build-image
+      run: |
+        cd images/nginx-1.25/rootfs && docker buildx build --platform=${{ env.PLATFORMS }} --load -t nginx-1.25:1.0.0-dev .
+    - name: load-image
+      run: |
+        make clean-image build
+        make -C test/e2e-image image
+        docker build \
+          --platform linux \
+          --no-cache \
+          --build-arg BASE_IMAGE="nginx-1.25:1.0.0-dev" \
+          --build-arg VERSION="0.0.1-${{ github.sha }}" \
+          --build-arg TARGETARCH="amd64" \
+          --build-arg COMMIT_SHA="git-${{ github.sha }}" \
+          --build-arg BUILD_ID=""UNSET"" \
+          -t ingress-controller/controller:1.0.0-dev rootfs
+        docker save \
+          nginx-ingress-controller:e2e \
+          ingress-controller/controller:1.0.0-dev \
+          nginx-1.25:1.0.0-dev \
+          | gzip > docker.tar.gz
+    - name: cache
+      uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+      with:
+        name: docker.tar.gz
+        path: docker.tar.gz
+        retention-days: 2
+
+  e2e-test:
+    name: Kubernetes
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    strategy:
+      matrix:
+        k8s: [v1.27.3, v1.28.0, v1.29.0]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+  
+    - name: cache
+      uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+      with:
+        name: docker.tar.gz
+  
+    - name: Create Kubernetes ${{ matrix.k8s }} cluster
+      id: kind
+      run: |
+        kind create cluster --image=kindest/node:${{ matrix.k8s }} --config test/e2e/kind.yaml
+  
+    - name: Load images from cache
+      run: |
+        echo "loading docker images..."
+        gzip -dc docker.tar.gz | docker load
+  
+    - name: Run e2e tests
+      env:
+        KIND_CLUSTER_NAME: kind
+        SKIP_CLUSTER_CREATION: true
+        SKIP_IMAGE_CREATION: true
+        SKIP_OPENTELEMETRY_TESTS: true
+      run: |
+        kind get kubeconfig > $HOME/.kube/kind-config-kind
+        make NGINX_BASE_IMAGE="nginx-1.25:1.0.0-dev" kind-e2e-test
+        
+  push:
+    permissions:
+      contents: write
+      packages: write
+    runs-on: ubuntu-latest
+    needs: changes
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.tag == 'true')
+    env:
+      PLATFORMS: linux/amd64,linux/arm,linux/arm64,linux/s390x
+    steps:
+    - name: Checkout
+      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # v3.0.0
+    - name: Set up Docker Buildx
+      id: buildx
+      uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
+      with:
+        version: latest
+        platforms: ${{ env.PLATFORMS }}
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: build-image
+      run: |
+        export TAG=$(cat images/nginx-1.25/TAG)
+        cd images/nginx-1.25/rootfs && docker buildx build --platform=${{ env.PLATFORMS }} --push --load -t ingressnginx/nginx-1.25:${TAG} .
+
