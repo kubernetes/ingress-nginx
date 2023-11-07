@@ -242,7 +242,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.admissionWebhooks.certificate | string | `"/usr/local/certificates/cert"` |  |
 | controller.admissionWebhooks.createSecretJob.name | string | `"create"` |  |
 | controller.admissionWebhooks.createSecretJob.resources | object | `{}` |  |
-| controller.admissionWebhooks.createSecretJob.securityContext.allowPrivilegeEscalation | bool | `false` |  |
+| controller.admissionWebhooks.createSecretJob.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":65532,"seccompProfile":{"type":"RuntimeDefault"}}` | Security context for secret creation containers |
 | controller.admissionWebhooks.enabled | bool | `true` |  |
 | controller.admissionWebhooks.existingPsp | string | `""` | Use an existing PSP instead of creating one |
 | controller.admissionWebhooks.extraEnvs | list | `[]` | Additional environment variables to set |
@@ -262,13 +262,11 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.admissionWebhooks.patch.nodeSelector."kubernetes.io/os" | string | `"linux"` |  |
 | controller.admissionWebhooks.patch.podAnnotations | object | `{}` |  |
 | controller.admissionWebhooks.patch.priorityClassName | string | `""` | Provide a priority class name to the webhook patching job # |
-| controller.admissionWebhooks.patch.securityContext.fsGroup | int | `2000` |  |
-| controller.admissionWebhooks.patch.securityContext.runAsNonRoot | bool | `true` |  |
-| controller.admissionWebhooks.patch.securityContext.runAsUser | int | `2000` |  |
+| controller.admissionWebhooks.patch.securityContext | object | `{}` | Security context for secret creation & webhook patch pods |
 | controller.admissionWebhooks.patch.tolerations | list | `[]` |  |
 | controller.admissionWebhooks.patchWebhookJob.name | string | `"patch"` |  |
 | controller.admissionWebhooks.patchWebhookJob.resources | object | `{}` |  |
-| controller.admissionWebhooks.patchWebhookJob.securityContext.allowPrivilegeEscalation | bool | `false` |  |
+| controller.admissionWebhooks.patchWebhookJob.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":65532,"seccompProfile":{"type":"RuntimeDefault"}}` | Security context for webhook patch containers |
 | controller.admissionWebhooks.port | int | `8443` |  |
 | controller.admissionWebhooks.service.annotations | object | `{}` |  |
 | controller.admissionWebhooks.service.externalIPs | list | `[]` |  |
@@ -291,6 +289,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.configMapNamespace | string | `""` | Allows customization of the configmap / nginx-configmap namespace; defaults to $(POD_NAMESPACE) |
 | controller.containerName | string | `"controller"` | Configures the controller container name |
 | controller.containerPort | object | `{"http":80,"https":443}` | Configures the ports that the nginx-controller listens on |
+| controller.containerSecurityContext | object | `{}` | Security context for controller containers |
 | controller.customTemplate.configMapKey | string | `""` |  |
 | controller.customTemplate.configMapName | string | `""` |  |
 | controller.dnsConfig | object | `{}` | Optionally customize the pod dnsConfig. |
@@ -315,14 +314,17 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.hostPort.ports.http | int | `80` | 'hostPort' http port |
 | controller.hostPort.ports.https | int | `443` | 'hostPort' https port |
 | controller.hostname | object | `{}` | Optionally customize the pod hostname. |
-| controller.image.allowPrivilegeEscalation | bool | `true` |  |
+| controller.image.allowPrivilegeEscalation | bool | `false` |  |
 | controller.image.chroot | bool | `false` |  |
 | controller.image.digest | string | `"sha256:5b161f051d017e55d358435f295f5e9a297e66158f136321d9b04520ec6c48a3"` |  |
 | controller.image.digestChroot | string | `"sha256:5976b1067cfbca8a21d0ba53d71f83543a73316a61ea7f7e436d6cf84ddf9b26"` |  |
 | controller.image.image | string | `"ingress-nginx/controller"` |  |
 | controller.image.pullPolicy | string | `"IfNotPresent"` |  |
+| controller.image.readOnlyRootFilesystem | bool | `false` |  |
 | controller.image.registry | string | `"registry.k8s.io"` |  |
+| controller.image.runAsNonRoot | bool | `true` |  |
 | controller.image.runAsUser | int | `101` |  |
+| controller.image.seccompProfile.type | string | `"RuntimeDefault"` |  |
 | controller.image.tag | string | `"v1.9.4"` |  |
 | controller.ingressClass | string | `"nginx"` | For backwards compatibility with ingress.class annotation, use ingressClass. Algorithm is as follows, first ingressClassName is considered, if not present, controller looks for ingress.class annotation |
 | controller.ingressClassByName | bool | `false` | Process IngressClass per name (additionally as per spec.controller). |
@@ -379,12 +381,19 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.networkPolicy.enabled | bool | `false` | Enable 'networkPolicy' or not |
 | controller.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node labels for controller pod assignment # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ # |
 | controller.opentelemetry.containerSecurityContext.allowPrivilegeEscalation | bool | `false` |  |
+| controller.opentelemetry.containerSecurityContext.capabilities.drop[0] | string | `"ALL"` |  |
+| controller.opentelemetry.containerSecurityContext.readOnlyRootFilesystem | bool | `true` |  |
+| controller.opentelemetry.containerSecurityContext.runAsNonRoot | bool | `true` |  |
+| controller.opentelemetry.containerSecurityContext.runAsUser | int | `65532` | The image's default user, inherited from its base image `cgr.dev/chainguard/static`. |
+| controller.opentelemetry.containerSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
+| controller.opentelemetry.distroless | bool | `true` |  |
 | controller.opentelemetry.enabled | bool | `false` |  |
 | controller.opentelemetry.image | string | `"registry.k8s.io/ingress-nginx/opentelemetry:v20230721-3e2062ee5@sha256:13bee3f5223883d3ca62fee7309ad02d22ec00ff0d7033e3e9aca7a9f60fd472"` |  |
+| controller.opentelemetry.name | string | `"opentelemetry"` |  |
 | controller.opentelemetry.resources | object | `{}` |  |
 | controller.podAnnotations | object | `{}` | Annotations to be added to controller pods # |
 | controller.podLabels | object | `{}` | Labels to add to the pod container metadata |
-| controller.podSecurityContext | object | `{}` | Security Context policies for controller pods |
+| controller.podSecurityContext | object | `{}` | Security context for controller pods |
 | controller.priorityClassName | string | `""` |  |
 | controller.proxySetHeaders | object | `{}` | Will add custom headers before sending traffic to backends according to https://github.com/kubernetes/ingress-nginx/tree/main/docs/examples/customization/custom-headers |
 | controller.publishService | object | `{"enabled":true,"pathOverride":""}` | Allows customization of the source of the IP address or FQDN to report in the ingress status field. By default, it reads the information provided by the service. If disable, the status field reports the IP address of the node or nodes where an ingress controller pod is running. |
@@ -434,7 +443,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.service.targetPorts.https | string | `"https"` |  |
 | controller.service.type | string | `"LoadBalancer"` |  |
 | controller.shareProcessNamespace | bool | `false` |  |
-| controller.sysctls | object | `{}` | See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for notes on enabling and using sysctls |
+| controller.sysctls | object | `{}` | sysctls for controller pods # Ref: https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ |
 | controller.tcp.annotations | object | `{}` | Annotations to be added to the tcp config configmap |
 | controller.tcp.configMapNamespace | string | `""` | Allows customization of the tcp-services-configmap; defaults to $(POD_NAMESPACE) |
 | controller.terminationGracePeriodSeconds | int | `300` | `terminationGracePeriodSeconds` to avoid killing pods before we are ready # wait up to five minutes for the drain of connections # |
@@ -451,7 +460,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | defaultBackend.autoscaling.minReplicas | int | `1` |  |
 | defaultBackend.autoscaling.targetCPUUtilizationPercentage | int | `50` |  |
 | defaultBackend.autoscaling.targetMemoryUtilizationPercentage | int | `50` |  |
-| defaultBackend.containerSecurityContext | object | `{}` | Security Context policies for controller main container. See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for notes on enabling and using sysctls # |
+| defaultBackend.containerSecurityContext | object | `{}` | Security context for default backend containers |
 | defaultBackend.enabled | bool | `false` |  |
 | defaultBackend.existingPsp | string | `""` | Use an existing PSP instead of creating one |
 | defaultBackend.extraArgs | object | `{}` |  |
@@ -465,6 +474,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | defaultBackend.image.registry | string | `"registry.k8s.io"` |  |
 | defaultBackend.image.runAsNonRoot | bool | `true` |  |
 | defaultBackend.image.runAsUser | int | `65534` |  |
+| defaultBackend.image.seccompProfile.type | string | `"RuntimeDefault"` |  |
 | defaultBackend.image.tag | string | `"1.5"` |  |
 | defaultBackend.labels | object | `{}` | Labels to be added to the default backend resources |
 | defaultBackend.livenessProbe.failureThreshold | int | `3` |  |
@@ -479,7 +489,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | defaultBackend.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node labels for default backend pod assignment # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ # |
 | defaultBackend.podAnnotations | object | `{}` | Annotations to be added to default backend pods # |
 | defaultBackend.podLabels | object | `{}` | Labels to add to the pod container metadata |
-| defaultBackend.podSecurityContext | object | `{}` | Security Context policies for controller pods See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for notes on enabling and using sysctls # |
+| defaultBackend.podSecurityContext | object | `{}` | Security context for default backend pods |
 | defaultBackend.port | int | `8080` |  |
 | defaultBackend.priorityClassName | string | `""` |  |
 | defaultBackend.readinessProbe.failureThreshold | int | `6` |  |
