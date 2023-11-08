@@ -1,15 +1,22 @@
 # Changelog
 
-### {{  .Version }}
-Images:
+### {{ .NewControllerVersion }}
 {{ with .ControllerImages }}
-{{ range . }} * {{ .Registry }}/{{ .Name }}:{{ .Tag}}@{{ .Digest }}
-{{ end }} {{ end }}
-### All Changes:
-{{ with .Updates }}
-{{ range . }}* {{ . }}
-{{ end }}{{ end }}
-### Dependencies updates: {{ with .DepUpdates }}
-{{ range . }}* {{ . }}
-{{ end }} {{ end }}
+Images:
+{{ range . }}
+* {{ .Registry }}/{{ .Name }}:{{ .Tag}}@{{ .Digest }}
+{{- end }}
+{{ end }}
+{{- with .Updates }}
+### All changes:
+{{ range . }}
+* {{ . }}
+{{- end }}
+{{ end }}
+{{- with .DepUpdates }}
+### Dependency updates:
+{{ range . }}
+* {{ . }}
+{{- end }}
+{{ end }}
 **Full Changelog**: https://github.com/kubernetes/ingress-nginx/compare/controller-{{ .PreviousControllerVersion }}...controller-{{ .NewControllerVersion }}
