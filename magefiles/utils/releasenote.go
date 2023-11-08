@@ -65,7 +65,7 @@ func (r ReleaseNote) HelmTemplate() {
 	Debug("ChangeLog Templates %s", string(changelogTemplate))
 	t := template.Must(template.New("changelog").Parse(string(changelogTemplate)))
 	// create a new file
-	file, err := os.Create(fmt.Sprintf("charts/ingress-nginx/changelog/Changelog-%s.md", r.NewHelmChartVersion))
+	file, err := os.Create(fmt.Sprintf("charts/ingress-nginx/changelog/helm-chart-%s.md", r.NewHelmChartVersion))
 	if err != nil {
 		ErrorF("Could not create changelog file %s", err)
 	}
