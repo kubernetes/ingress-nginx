@@ -1,12 +1,13 @@
 # Changelog
 
 ### 1.7.0
+
 Images:
 
- * registry.k8s.io/ingress-nginx/controller:v1.7.0@sha256:7612338342a1e7b8090bef78f2a04fffcadd548ccaabe8a47bf7758ff549a5f7
- * registry.k8s.io/ingress-nginx/controller-chroot:v1.7.0@sha256:e84ef3b44c8efeefd8b0aa08770a886bfea1f04c53b61b4ba9a7204e9f1a7edc
- 
-### All Changes:
+* registry.k8s.io/ingress-nginx/controller:v1.7.0@sha256:7612338342a1e7b8090bef78f2a04fffcadd548ccaabe8a47bf7758ff549a5f7
+* registry.k8s.io/ingress-nginx/controller-chroot:v1.7.0@sha256:e84ef3b44c8efeefd8b0aa08770a886bfea1f04c53b61b4ba9a7204e9f1a7edc
+
+### All changes:
 
 * kick off 1.7.0 build (#9775)
 * Update exposing-tcp-udp-services.md (#9777)
@@ -46,7 +47,8 @@ Images:
 * Fix incorrect annotation name in upstream hashing configuration (#9617)
 * Release docs for Controller v1.6.3 and Helm v4.5.0 (#9614)
 
-### Dependencies updates: 
+### Dependency updates:
+
 * Bump aquasecurity/trivy-action from 0.8.0 to 0.9.2 (#9767)
 * Bump k8s.io/component-base from 0.26.2 to 0.26.3 (#9764)
 * Bump actions/dependency-review-action from 3.0.3 to 3.0.4 (#9766)
@@ -74,5 +76,5 @@ Images:
 * Bump google.golang.org/grpc from 1.52.3 to 1.53.0 (#9610)
 * Bump github.com/prometheus/client_golang (#9630)
 * Bump golang.org/x/crypto from 0.5.0 to 0.6.0 (#9609)
- 
+
 **Full Changelog**: https://github.com/kubernetes/ingress-nginx/compare/controller-controller-v1.6.3...controller-controller-v1.7.0

@@ -1,12 +1,13 @@
 # Changelog
 
 ### 1.8.1
+
 Images:
 
- * registry.k8s.io/ingress-nginx/controller:v1.8.1@sha256:e5c4824e7375fcf2a393e1c03c293b69759af37a9ca6abdb91b13d78a93da8bd
- * registry.k8s.io/ingress-nginx/controller-chroot:v1.8.1@sha256:e0d4121e3c5e39de9122e55e331a32d5ebf8d4d257227cb93ab54a1b912a7627
- 
-### All Changes:
+* registry.k8s.io/ingress-nginx/controller:v1.8.1@sha256:e5c4824e7375fcf2a393e1c03c293b69759af37a9ca6abdb91b13d78a93da8bd
+* registry.k8s.io/ingress-nginx/controller-chroot:v1.8.1@sha256:e0d4121e3c5e39de9122e55e331a32d5ebf8d4d257227cb93ab54a1b912a7627
+
+### All changes:
 
 * netlify: Only trigger preview when there are changes in docs. (#10144)
 * changed to updated baseimage and reverted tag (#10143)
@@ -48,7 +49,8 @@ Images:
 * added helmshowvalues example (#10019)
 * release controller 1.8.0 and chart 4.7.0 (#10017)
 
-### Dependencies updates: 
+### Dependency updates:
+
 * Bump ossf/scorecard-action from 2.1.3 to 2.2.0 (#10133)
 * Bump google.golang.org/grpc from 1.56.0 to 1.56.1 (#10134)
 * Bump github.com/prometheus/client_golang from 1.15.1 to 1.16.0 (#10106)
@@ -63,5 +65,5 @@ Images:
 * Bump actions/dependency-review-action from 3.0.4 to 3.0.6 (#10042)
 * Bump github.com/stretchr/testify from 1.8.3 to 1.8.4 (#10041)
 * Bump github.com/stretchr/testify from 1.8.2 to 1.8.3 (#10005)
- 
+
 **Full Changelog**: https://github.com/kubernetes/ingress-nginx/compare/controller-controller-v1.8.0...controller-controller-v1.8.1

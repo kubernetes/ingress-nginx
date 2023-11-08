@@ -1,12 +1,13 @@
 # Changelog
 
 ### 1.6.4
+
 Images:
 
- * registry.k8s.io/controller:controller-v1.6.4@sha256:15be4666c53052484dd2992efacf2f50ea77a78ae8aa21ccd91af6baaa7ea22f
- * registry.k8s.io/controller-chroot:controller-v1.6.4@sha256:0de01e2c316c3ca7847ca13b32d077af7910d07f21a4a82f81061839764f8f81
- 
-### All Changes:
+* registry.k8s.io/controller:controller-v1.6.4@sha256:15be4666c53052484dd2992efacf2f50ea77a78ae8aa21ccd91af6baaa7ea22f
+* registry.k8s.io/controller-chroot:controller-v1.6.4@sha256:0de01e2c316c3ca7847ca13b32d077af7910d07f21a4a82f81061839764f8f81
+
+### All changes:
 
 * remove tests and regex path checks (#9626)
 * Fix incorrect annotation name in upstream hashing configuration (#9617)
@@ -99,7 +100,8 @@ Images:
 * PDB: Add `maxUnavailable`. (#9278)
 * add containerSecurityContext to extraModules init containers (kubernetes#9016) (#9242)
 
-### Dependencies updates: 
+### Dependency updates:
+
 * Bump google.golang.org/grpc from 1.52.0 to 1.52.3 (#9555)
 * Bump k8s.io/klog/v2 from 2.80.1 to 2.90.0 (#9553)
 * Bump sigs.k8s.io/controller-runtime from 0.13.1 to 0.14.2 (#9552)
@@ -132,5 +134,5 @@ Images:
 * Bump github.com/onsi/ginkgo/v2 from 2.4.0 to 2.5.1 (#9317)
 * Bump actions/dependency-review-action from 2.5.1 to 3.0.0 (#9301)
 * Bump k8s.io/component-base from 0.25.3 to 0.25.4 (#9300)
- 
+
 **Full Changelog**: https://github.com/kubernetes/ingress-nginx/compare/controller-controller-v1.5.1...controller-controller-v1.6.4

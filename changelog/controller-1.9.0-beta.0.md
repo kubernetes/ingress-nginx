@@ -1,12 +1,13 @@
 # Changelog
 
 ### 1.9.0-beta.0
+
 Images:
 
- * registry.k8s.io/ingress-nginx/controller:v1.9.0-beta.0@sha256:531377e4cc9dc62af40d742402222603259673f5a755a64d74122f256dfad8f9
- * registry.k8s.io/ingress-nginx/controller-chroot:v1.9.0-beta.0@sha256:60b4c95349ce2a81a3b2a76423ee483b847b89d3fa8cb148468434f606f3fa0c
- 
-### All Changes:
+* registry.k8s.io/ingress-nginx/controller:v1.9.0-beta.0@sha256:531377e4cc9dc62af40d742402222603259673f5a755a64d74122f256dfad8f9
+* registry.k8s.io/ingress-nginx/controller-chroot:v1.9.0-beta.0@sha256:60b4c95349ce2a81a3b2a76423ee483b847b89d3fa8cb148468434f606f3fa0c
+
+### All changes:
 
 * Rework mage (#10418)
 * Start release of v1.9.0 beta0 (#10407)
@@ -59,7 +60,8 @@ Images:
 * Deprecate and remove AJP support (#10158)
 * release notes 1.8.1 (#10161)
 
-### Dependencies updates: 
+### Dependency updates:
+
 * Bump github.com/onsi/ginkgo/v2 from 2.9.5 to 2.12.0 (#10355)
 * Bump golang.org/x/crypto from 0.12.0 to 0.13.0 (#10399)
 * Bump actions/setup-go from 4.0.1 to 4.1.0 (#10403)
@@ -89,5 +91,5 @@ Images:
 * Bump golang.org/x/crypto from 0.10.0 to 0.11.0 (#10192)
 * Bump docker/setup-buildx-action from 2.8.0 to 2.9.0 (#10191)
 * Bump docker/setup-buildx-action from 2.7.0 to 2.8.0 (#10165)
- 
+
 **Full Changelog**: https://github.com/kubernetes/ingress-nginx/compare/controller-release-1.8...controller-controller-v1.9.0-beta.0
