@@ -44,7 +44,7 @@ func (r ReleaseNote) Template() {
 	Debug("ChangeLog Templates %s", string(changelogTemplate))
 	t := template.Must(template.New("changelog").Parse(string(changelogTemplate)))
 	// create a new file
-	file, err := os.Create(fmt.Sprintf("changelog/Changelog-%s.md", r.Version))
+	file, err := os.Create(fmt.Sprintf("changelog/controller-%s.md", r.Version))
 	if err != nil {
 		ErrorF("Could not create changelog file %s", err)
 	}
