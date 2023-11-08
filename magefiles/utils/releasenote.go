@@ -37,7 +37,7 @@ type ReleaseNote struct {
 
 func (r ReleaseNote) Template() {
 	// Files are provided as a slice of strings.
-	changelogTemplate, err := os.ReadFile("Changelog.md.gotmpl")
+	changelogTemplate, err := os.ReadFile("changelog/controller.md.gotmpl")
 	if err != nil {
 		ErrorF("Could not read changelog template file %s", err)
 	}
