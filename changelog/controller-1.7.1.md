@@ -1,12 +1,13 @@
 # Changelog
 
 ### 1.7.1
+
 Images:
 
- * registry.k8s.io/ingress-nginx/controller:v1.7.1@sha256:7244b95ea47bddcb8267c1e625fb163fc183ef55448855e3ac52a7b260a60407
- * registry.k8s.io/ingress-nginx/controller-chroot:v1.7.1@sha256:e35d5ab487861b9d419c570e3530589229224a0762c7b4d2e2222434abb8d988
- 
-### All Changes:
+* registry.k8s.io/ingress-nginx/controller:v1.7.1@sha256:7244b95ea47bddcb8267c1e625fb163fc183ef55448855e3ac52a7b260a60407
+* registry.k8s.io/ingress-nginx/controller-chroot:v1.7.1@sha256:e35d5ab487861b9d419c570e3530589229224a0762c7b4d2e2222434abb8d988
+
+### All changes:
 
 * Update TAG - 1.7.1 (#9922)
 * Update dependabot to watch docker images (#9600)
@@ -30,7 +31,8 @@ Images:
 * Values: Fix indention of commented values. (#9812)
 * The Ingress-Nginx project recently released version 1.7.0 of the controller, but the deployment documentation still referenced version 1.6.4. This commit updates the documentation to reference the latest version, ensuring that users have access to the most up-to-date information. Fixes#9787 (#9788)
 
-### Dependencies updates: 
+### Dependency updates:
+
 * Bump github.com/opencontainers/runc from 1.1.6 to 1.1.7 (#9912)
 * Bump github.com/prometheus/client_golang from 1.14.0 to 1.15.0 (#9868)
 * Bump aquasecurity/trivy-action from 0.9.2 to 0.10.0 (#9888)
@@ -48,5 +50,5 @@ Images:
 * Bump github.com/imdario/mergo from 0.3.13 to 0.3.15 (#9795)
 * Bump google.golang.org/grpc from 1.53.0 to 1.54.0 (#9794)
 * Bump sigs.k8s.io/controller-runtime from 0.14.5 to 0.14.6 (#9822)
- 
+
 **Full Changelog**: https://github.com/kubernetes/ingress-nginx/compare/controller-controller-v1.7.0...controller-controller-v1.7.1
