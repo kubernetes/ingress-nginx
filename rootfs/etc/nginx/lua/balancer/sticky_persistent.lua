@@ -57,7 +57,17 @@ function _M.pick_new_upstream(self, failed_upstreams)
 end
 
 function _M.sync(self, backend)
+  -- sync inherited balancer
+  balancer_sticky.sync(self, backend)
+  
+  -- note this may be inefficient
+  -- perhaps better to only update if name changes?
   self.secondary_balancer = get_secondary_balancer(backend)
+
+  -- sync secondary_balancer as well
+  if self.secondary_balancer then
+    self.secondary_balancer:sync(backend)
+  end
 end
 
 return _M
