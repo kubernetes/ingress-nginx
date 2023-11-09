@@ -2,7 +2,7 @@
 
 [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 
-![Version: 4.8.3](https://img.shields.io/badge/Version-4.8.3-informational?style=flat-square) ![AppVersion: 1.9.4](https://img.shields.io/badge/AppVersion-1.9.4-informational?style=flat-square)
+![Version: 4.8.4](https://img.shields.io/badge/Version-4.8.4-informational?style=flat-square) ![AppVersion: 1.9.4](https://img.shields.io/badge/AppVersion-1.9.4-informational?style=flat-square)
 
 To use, add `ingressClassName: nginx` spec field or the `kubernetes.io/ingress.class: nginx` annotation to your Ingress resources.
 
@@ -443,6 +443,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.service.targetPorts.https | string | `"https"` |  |
 | controller.service.type | string | `"LoadBalancer"` |  |
 | controller.shareProcessNamespace | bool | `false` |  |
+| controller.strictValidatePathType | bool | `false` | Set strict valdiation for paths When pathType is configured as `Exact` or `Prefix`, there should be a more strict validation, allowing only paths starting with "/" and containing only alphanumeric characters and "-", "_" and additional "/". |
 | controller.sysctls | object | `{}` | sysctls for controller pods # Ref: https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ |
 | controller.tcp.annotations | object | `{}` | Annotations to be added to the tcp config configmap |
 | controller.tcp.configMapNamespace | string | `""` | Allows customization of the tcp-services-configmap; defaults to $(POD_NAMESPACE) |
