@@ -38,7 +38,7 @@ type Backend struct {
 	// e.g. custom 404 and 503 when service-a does not exist or is not available
 	// but service-a can return 404 and 503 error codes without intercept
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors
-	// By default this is disabled
+	// By default this is false
 	DisableProxyInterceptErrors bool `json:"disable-proxy-intercept-errors"`
 
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size

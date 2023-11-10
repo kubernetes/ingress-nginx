@@ -18,6 +18,8 @@ package annotations
 
 import (
 	"fmt"
+	networking "k8s.io/api/networking/v1"
+	"net/http"
 	"strings"
 
 	"github.com/onsi/ginkgo/v2"
@@ -29,21 +31,21 @@ var _ = framework.DescribeAnnotation("disable-proxy-intercept-errors", func() {
 	f := framework.NewDefaultFramework("disable-proxy-intercept-errors")
 
 	ginkgo.BeforeEach(func() {
+		f.NewHttpbunDeployment()
 		f.NewEchoDeployment()
 	})
 
 	ginkgo.It("configures Nginx correctly", func() {
 		host := "pie.foo.com"
 
-		errorCodes := []string{"404"}
-
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/custom-http-errors":             strings.Join(errorCodes, ","),
+			"nginx.ingress.kubernetes.io/custom-http-errors":             "404",
 			"nginx.ingress.kubernetes.io/disable-proxy-intercept-errors": "true",
+			"nginx.ingress.kubernetes.io/default-backend":                framework.EchoService,
 		}
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		ingHTTPBunService := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBunService, 80, annotations)
+		f.EnsureIngress(ingHTTPBunService)
 
 		var serverConfig string
 		f.WaitForNginxServer(host, func(sc string) bool {
@@ -53,5 +55,46 @@ var _ = framework.DescribeAnnotation("disable-proxy-intercept-errors", func() {
 
 		ginkgo.By("turning off proxy_intercept_errors directive")
 		assert.NotContains(ginkgo.GinkgoT(), serverConfig, "proxy_intercept_errors on;")
+
+		// the plan for client side testing
+		// create ingress where we disable intercept for code 404 - that error should get to the client
+		// the same ingress should intercept any other error (>300 and not 404) where we will get intercepted error
+		ginkgo.By("client test to check response - with intercept disabled")
+		requestID := "proxy_intercept_errors"
+
+		f.HTTPTestClient().
+			GET("/status/404").
+			WithHeader("Host", host).
+			WithHeader("x-request-id", requestID).
+			Expect().
+			Status(http.StatusNotFound).
+			Body().Empty()
+
+		ginkgo.By("client test to check response - with intercept enabled")
+		err := framework.UpdateIngress(f.KubeClientSet, f.Namespace, host, func(ingress *networking.Ingress) error {
+			ingress.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/disable-proxy-intercept-errors"] = "false"
+			return nil
+		})
+		assert.Nil(ginkgo.GinkgoT(), err)
+
+		f.WaitForNginxServer(host, func(sc string) bool {
+			if serverConfig != sc {
+				serverConfig = sc
+				return true
+			}
+			return false
+		})
+
+		f.HTTPTestClient().
+			GET("/status/404").
+			WithHeader("Host", host).
+			WithHeader("x-request-id", requestID).
+			Expect().
+			Status(http.StatusOK).
+			Body().Contains("x-code=404").
+			Contains(fmt.Sprintf("x-ingress-name=%s", host)).
+			Contains(fmt.Sprintf("x-service-name=%s", framework.HTTPBunService)).
+			Contains(fmt.Sprintf("x-request-id=%s", requestID))
+
 	})
 })

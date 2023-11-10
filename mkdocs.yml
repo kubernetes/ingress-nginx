@@ -99,7 +99,6 @@ nav:
       - TLS/HTTPS: "user-guide/tls.md"
       - Third party addons:
           - ModSecurity Web Application Firewall: "user-guide/third-party-addons/modsecurity.md"
-          - OpenTracing: "user-guide/third-party-addons/opentracing.md"
           - OpenTelemetry: "user-guide/third-party-addons/opentelemetry.md"
   - Examples:
       - Introduction: "examples/index.md"

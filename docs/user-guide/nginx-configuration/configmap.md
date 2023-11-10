@@ -39,6 +39,7 @@ The following table shows a configuration option's name, type, and the default v
 |[http-access-log-path](#http-access-log-path)|string|""||
 |[stream-access-log-path](#stream-access-log-path)|string|""||
 |[enable-access-log-for-default-backend](#enable-access-log-for-default-backend)|bool|"false"||
+|[enable-auth-access-log](#enable-auth-access-log)|bool|"false"||
 |[error-log-path](#error-log-path)|string|"/var/log/nginx/error.log"||
 |[enable-modsecurity](#enable-modsecurity)|bool|"false"||
 |[modsecurity-snippet](#modsecurity-snippet)|string|""||
@@ -61,7 +62,7 @@ The following table shows a configuration option's name, type, and the default v
 |[http2-max-concurrent-streams](#http2-max-concurrent-streams)|int|128||
 |[hsts](#hsts)|bool|"true"||
 |[hsts-include-subdomains](#hsts-include-subdomains)|bool|"true"||
-|[hsts-max-age](#hsts-max-age)|string|"15724800"||
+|[hsts-max-age](#hsts-max-age)|string|"31536000"||
 |[hsts-preload](#hsts-preload)|bool|"false"||
 |[keep-alive](#keep-alive)|int|75||
 |[keep-alive-requests](#keep-alive-requests)|int|1000||
@@ -163,7 +164,7 @@ The following table shows a configuration option's name, type, and the default v
 |[enable-opentelemetry](#enable-opentelemetry)|bool|"false"||
 |[opentelemetry-trust-incoming-span](#opentelemetry-trust-incoming-span)|bool|"true"||
 |[opentelemetry-operation-name](#opentelemetry-operation-name)|string|""||
-|[opentelemetry-config](#/etc/nginx/opentelemetry.toml)|string|"/etc/nginx/opentelemetry.toml"||
+|[opentelemetry-config](#/etc/ingress-controller/telemetry/opentelemetry.toml)|string|"/etc/ingress-controller/telemetry/opentelemetry.toml"||
 |[otlp-collector-host](#otlp-collector-host)|string|""||
 |[otlp-collector-port](#otlp-collector-port)|int|4317||
 |[otel-max-queuesize](#otel-max-queuesize)|int|||
@@ -326,6 +327,10 @@ __Note:__ If not specified, the `access-log-path` will be used.
 ## enable-access-log-for-default-backend
 
 Enables logging access to default backend. _**default:**_ is disabled.
+
+## enable-auth-access-log
+
+Enables logging access to the authentication endpoint. _**default:**_ is disabled.
 
 ## error-log-path
 

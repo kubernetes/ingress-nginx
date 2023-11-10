@@ -165,7 +165,7 @@ To install the example and collectors run:
       kind: ConfigMap
       data:
         enable-opentelemetry: "true"
-        opentelemetry-config: "/etc/nginx/opentelemetry.toml"
+        opentelemetry-config: "/etc/ingress-controller/telemetry/opentelemetry.toml"
         opentelemetry-operation-name: "HTTP $request_method $service_name $uri"
         opentelemetry-trust-incoming-span: "true"
         otlp-collector-host: "otel-coll-collector.otel.svc"

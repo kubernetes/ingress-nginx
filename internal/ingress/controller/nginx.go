@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"net"
 	"net/http"
 	"os"
@@ -180,7 +181,11 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 	}
 
 	filesToWatch := []string{}
-	err = filepath.Walk("/etc/nginx/geoip/", func(path string, info os.FileInfo, err error) error {
+
+	if err := os.Mkdir("/etc/ingress-controller/geoip/", 0o755); err != nil && !os.IsExist(err) {
+		klog.Fatalf("Error creating geoip dir: %v", err)
+	}
+	err = filepath.WalkDir("/etc/ingress-controller/geoip/", func(path string, info fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -671,11 +676,6 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		return err
 	}
 
-	err = createOpentracingCfg(&cfg)
-	if err != nil {
-		return err
-	}
-
 	err = createOpentelemetryCfg(&cfg)
 	if err != nil {
 		return err
@@ -996,33 +996,6 @@ func configureCertificates(rawServers []*ingress.Server) error {
 	return nil
 }
 
-const zipkinTmpl = `{
-  "service_name": "{{ .ZipkinServiceName }}",
-  "collector_host": "{{ .ZipkinCollectorHost }}",
-  "collector_port": {{ .ZipkinCollectorPort }},
-  "sample_rate": {{ .ZipkinSampleRate }}
-}`
-
-const jaegerTmpl = `{
-  "service_name": "{{ .JaegerServiceName }}",
-  "propagation_format": "{{ .JaegerPropagationFormat }}",
-  "sampler": {
-	"type": "{{ .JaegerSamplerType }}",
-	"param": {{ .JaegerSamplerParam }},
-	"samplingServerURL": "{{ .JaegerSamplerHost }}:{{ .JaegerSamplerPort }}/sampling"
-  },
-  "reporter": {
-	"endpoint": "{{ .JaegerEndpoint }}",
-	"localAgentHostPort": "{{ .JaegerCollectorHost }}:{{ .JaegerCollectorPort }}"
-  },
-  "headers": {
-	"TraceContextHeaderName": "{{ .JaegerTraceContextHeaderName }}",
-	"jaegerDebugHeader": "{{ .JaegerDebugHeader }}",
-	"jaegerBaggageHeader": "{{ .JaegerBaggageHeader }}",
-	"traceBaggageHeaderPrefix": "{{ .JaegerTraceBaggageHeaderPrefix }}"
-  }
-}`
-
 const otelTmpl = `
 exporter = "otlp"
 processor = "batch"
@@ -1045,70 +1018,6 @@ name = "{{ .OtelSampler }}" # Also: AlwaysOff, TraceIdRatioBased
 ratio = {{ .OtelSamplerRatio }}
 parent_based = {{ .OtelSamplerParentBased }}
 `
-
-func datadogOpentracingCfg(cfg *ngx_config.Configuration) (string, error) {
-	m := map[string]interface{}{
-		"service":                 cfg.DatadogServiceName,
-		"agent_host":              cfg.DatadogCollectorHost,
-		"agent_port":              cfg.DatadogCollectorPort,
-		"environment":             cfg.DatadogEnvironment,
-		"operation_name_override": cfg.DatadogOperationNameOverride,
-	}
-
-	// Omit "sample_rate" if the configuration's sample rate is unset (nil).
-	// Omitting "sample_rate" from the plugin JSON indicates to the tracer that
-	// it should use dynamic rates instead of a configured rate.
-	if cfg.DatadogSampleRate != nil {
-		m["sample_rate"] = *cfg.DatadogSampleRate
-	}
-
-	buf, err := json.Marshal(m)
-	if err != nil {
-		return "", err
-	}
-
-	return string(buf), nil
-}
-
-func opentracingCfgFromTemplate(cfg *ngx_config.Configuration, tmplName, tmplText string) (string, error) {
-	tmpl, err := template.New(tmplName).Parse(tmplText)
-	if err != nil {
-		return "", err
-	}
-
-	tmplBuf := bytes.NewBuffer(make([]byte, 0))
-	err = tmpl.Execute(tmplBuf, cfg)
-	if err != nil {
-		return "", err
-	}
-
-	return tmplBuf.String(), nil
-}
-
-func createOpentracingCfg(cfg *ngx_config.Configuration) error {
-	var configData string
-	var err error
-
-	switch {
-	case cfg.ZipkinCollectorHost != "":
-		configData, err = opentracingCfgFromTemplate(cfg, "zipkin", zipkinTmpl)
-	case cfg.JaegerCollectorHost != "" || cfg.JaegerEndpoint != "":
-		configData, err = opentracingCfgFromTemplate(cfg, "jaeger", jaegerTmpl)
-	case cfg.DatadogCollectorHost != "":
-		configData, err = datadogOpentracingCfg(cfg)
-	default:
-		configData = "{}"
-	}
-
-	if err != nil {
-		return err
-	}
-
-	// Expand possible environment variables before writing the configuration to file.
-	expanded := os.ExpandEnv(configData)
-
-	return os.WriteFile("/etc/nginx/opentracing.json", []byte(expanded), file.ReadWriteByUser)
-}
 
 func createOpentelemetryCfg(cfg *ngx_config.Configuration) error {
 	tmpl, err := template.New("otel").Parse(otelTmpl)

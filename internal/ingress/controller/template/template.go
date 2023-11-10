@@ -268,7 +268,6 @@ var funcMap = text_template.FuncMap{
 	"buildForwardedFor":                  buildForwardedFor,
 	"buildAuthSignURL":                   buildAuthSignURL,
 	"buildAuthSignURLLocation":           buildAuthSignURLLocation,
-	"buildOpentracing":                   buildOpentracing,
 	"buildOpentelemetry":                 buildOpentelemetry,
 	"proxySetHeader":                     proxySetHeader,
 	"enforceRegexModifier":               enforceRegexModifier,
@@ -277,9 +276,7 @@ var funcMap = text_template.FuncMap{
 	"shouldLoadModSecurityModule":        shouldLoadModSecurityModule,
 	"buildHTTPListener":                  buildHTTPListener,
 	"buildHTTPSListener":                 buildHTTPSListener,
-	"buildOpentracingForLocation":        buildOpentracingForLocation,
 	"buildOpentelemetryForLocation":      buildOpentelemetryForLocation,
-	"shouldLoadOpentracingModule":        shouldLoadOpentracingModule,
 	"shouldLoadOpentelemetryModule":      shouldLoadOpentelemetryModule,
 	"buildModSecurityForLocation":        buildModSecurityForLocation,
 	"buildMirrorLocations":               buildMirrorLocations,
@@ -1209,46 +1206,6 @@ func randomString() string {
 	return string(b)
 }
 
-func buildOpentracing(c, s interface{}) string {
-	cfg, ok := c.(config.Configuration)
-	if !ok {
-		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
-		return ""
-	}
-
-	servers, ok := s.([]*ingress.Server)
-	if !ok {
-		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
-		return ""
-	}
-
-	if !shouldLoadOpentracingModule(cfg, servers) {
-		return ""
-	}
-
-	buf := bytes.NewBufferString("")
-
-	//nolint:gocritic // rewriting if-else to switch statement is not more readable
-	if cfg.DatadogCollectorHost != "" {
-		buf.WriteString("opentracing_load_tracer /usr/local/lib/libdd_opentracing.so /etc/nginx/opentracing.json;")
-	} else if cfg.ZipkinCollectorHost != "" {
-		buf.WriteString("opentracing_load_tracer /usr/local/lib/libzipkin_opentracing_plugin.so /etc/nginx/opentracing.json;")
-	} else if cfg.JaegerCollectorHost != "" || cfg.JaegerEndpoint != "" {
-		buf.WriteString("opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /etc/nginx/opentracing.json;")
-	}
-
-	buf.WriteString("\r\n")
-
-	if cfg.OpentracingOperationName != "" {
-		fmt.Fprintf(buf, "opentracing_operation_name \"%s\";\n", cfg.OpentracingOperationName)
-	}
-	if cfg.OpentracingLocationOperationName != "" {
-		fmt.Fprintf(buf, "opentracing_location_operation_name \"%s\";\n", cfg.OpentracingLocationOperationName)
-	}
-
-	return buf.String()
-}
-
 func buildOpentelemetry(c, s interface{}) string {
 	cfg, ok := c.(config.Configuration)
 	if !ok {
@@ -1360,18 +1317,6 @@ func buildCustomErrorLocationsPerServer(input interface{}) []errorLocation {
 	})
 
 	return errorLocations
-}
-
-func opentracingPropagateContext(location *ingress.Location) string {
-	if location == nil {
-		return ""
-	}
-
-	if location.BackendProtocol == grpcProtocol || location.BackendProtocol == grpcsProtocol {
-		return "opentracing_grpc_propagate_context;"
-	}
-
-	return "opentracing_propagate_context;"
 }
 
 func opentelemetryPropagateContext(location *ingress.Location) string {
@@ -1569,31 +1514,6 @@ func httpsListener(addresses []string, co string, tc *config.TemplateConfig) []s
 	return out
 }
 
-func buildOpentracingForLocation(isOTEnabled, isOTTrustSet bool, location *ingress.Location) string {
-	isOTEnabledInLoc := location.Opentracing.Enabled
-	isOTSetInLoc := location.Opentracing.Set
-
-	if isOTEnabled {
-		if isOTSetInLoc && !isOTEnabledInLoc {
-			return "opentracing off;"
-		}
-	} else if !isOTSetInLoc || !isOTEnabledInLoc {
-		return ""
-	}
-
-	opc := opentracingPropagateContext(location)
-	if opc != "" {
-		opc = fmt.Sprintf("opentracing on;\n%v", opc)
-	}
-
-	if (!isOTTrustSet && !location.Opentracing.TrustSet) ||
-		(location.Opentracing.TrustSet && !location.Opentracing.TrustEnabled) {
-		opc += "\nopentracing_trust_incoming_span off;"
-	}
-
-	return opc
-}
-
 func buildOpentelemetryForLocation(isOTEnabled, isOTTrustSet bool, location *ingress.Location) string {
 	isOTEnabledInLoc := location.Opentelemetry.Enabled
 	isOTSetInLoc := location.Opentelemetry.Set
@@ -1622,37 +1542,6 @@ func buildOpentelemetryForLocation(isOTEnabled, isOTTrustSet bool, location *ing
 		opc += "\nopentelemetry_trust_incoming_spans on;"
 	}
 	return opc
-}
-
-// shouldLoadOpentracingModule determines whether or not the Opentracing module needs to be loaded.
-// First, it checks if `enable-opentracing` is set in the ConfigMap. If it is not, it iterates over all locations to
-// check if Opentracing is enabled by the annotation `nginx.ingress.kubernetes.io/enable-opentracing`.
-func shouldLoadOpentracingModule(c, s interface{}) bool {
-	cfg, ok := c.(config.Configuration)
-	if !ok {
-		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
-		return false
-	}
-
-	servers, ok := s.([]*ingress.Server)
-	if !ok {
-		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
-		return false
-	}
-
-	if cfg.EnableOpentracing {
-		return true
-	}
-
-	for _, server := range servers {
-		for _, location := range server.Locations {
-			if location.Opentracing.Enabled {
-				return true
-			}
-		}
-	}
-
-	return false
 }
 
 // shouldLoadOpentelemetryModule determines whether or not the Opentelemetry module needs to be loaded.
