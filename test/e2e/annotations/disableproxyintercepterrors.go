@@ -18,9 +18,10 @@ package annotations
 
 import (
 	"fmt"
-	networking "k8s.io/api/networking/v1"
 	"net/http"
 	"strings"
+
+	networking "k8s.io/api/networking/v1"
 
 	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
@@ -95,6 +96,5 @@ var _ = framework.DescribeAnnotation("disable-proxy-intercept-errors", func() {
 			Contains(fmt.Sprintf("x-ingress-name=%s", host)).
 			Contains(fmt.Sprintf("x-service-name=%s", framework.HTTPBunService)).
 			Contains(fmt.Sprintf("x-request-id=%s", requestID))
-
 	})
 })
