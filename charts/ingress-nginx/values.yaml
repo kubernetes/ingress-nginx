@@ -462,7 +462,7 @@ controller:
     ## Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
     ##
     externalIPs: []
-    # -- External reference that discovery mechanisms will retrun as an alias for this service
+    # -- External reference that discovery mechanisms will return as an alias for this service
     ## Ref: https://kubernetes.io/docs/concepts/services-networking/service/#externalname
     ##
     externalName: ""
