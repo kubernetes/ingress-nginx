@@ -76,7 +76,7 @@ var (
 	HeadersVariable = regexp.MustCompile(`^[A-Za-z0-9-_, ]*$`)
 	// URLWithNginxVariableRegex defines a url that can contain nginx variables.
 	// It is a risky operation
-	URLWithNginxVariableRegex = regexp.MustCompile("^[" + alphaNumericChars + urlEnabledChars + "$]*$")
+	URLWithNginxVariableRegex = regexp.MustCompile("^[" + extendedAlphaNumeric + urlEnabledChars + "$]*$")
 )
 
 // ValidateArrayOfServerName validates if all fields on a Server name annotation are
