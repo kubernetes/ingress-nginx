@@ -103,7 +103,7 @@ func TestPermanentRedirectWithCustomCode(t *testing.T) {
 	}
 }
 
-func TestTemporalRedirect(t *testing.T) {
+func TestTemporalRedirectWithDefaultCode(t *testing.T) {
 	rp := NewParser(resolver.Mock{})
 	if rp == nil {
 		t.Fatalf("Expected a parser.IngressAnnotation but returned nil")
@@ -128,10 +128,49 @@ func TestTemporalRedirect(t *testing.T) {
 		t.Errorf("Expected %v as redirect but returned %s", defRedirectURL, redirect.URL)
 	}
 	if redirect.Code != http.StatusFound {
-		t.Errorf("Expected %v as redirect to have a code %d but had %d", defRedirectURL, defaultPermanentRedirectCode, redirect.Code)
+		t.Errorf("Expected %v as redirect to have a code %d but had %d", defRedirectURL, http.StatusFound, redirect.Code)
 	}
-	if redirect.FromToWWW != true {
-		t.Errorf("Expected %v as redirect to have from-to-www as %v but got %v", defRedirectURL, true, redirect.FromToWWW)
+}
+
+func TestTemporalRedirectWithCustomCode(t *testing.T) {
+	rp := NewParser(resolver.Mock{})
+	if rp == nil {
+		t.Fatalf("Expected a parser.IngressAnnotation but returned nil")
+	}
+
+	testCases := map[string]struct {
+		input        int
+		expectOutput int
+	}{
+		"valid code":   {http.StatusTemporaryRedirect, http.StatusTemporaryRedirect},
+		"invalid code": {http.StatusTeapot, http.StatusFound},
+	}
+
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			ing := new(networking.Ingress)
+
+			data := make(map[string]string, 2)
+			data[parser.GetAnnotationWithPrefix(fromToWWWRedirAnnotation)] = "true"
+			data[parser.GetAnnotationWithPrefix(temporalRedirectAnnotation)] = defRedirectURL
+			data[parser.GetAnnotationWithPrefix(temporalRedirectAnnotationCode)] = strconv.Itoa(tc.input)
+			ing.SetAnnotations(data)
+
+			i, err := rp.Parse(ing)
+			if err != nil {
+				t.Errorf("Unexpected error with ingress: %v", err)
+			}
+			redirect, ok := i.(*Config)
+			if !ok {
+				t.Errorf("Expected a Redirect type")
+			}
+			if redirect.URL != defRedirectURL {
+				t.Errorf("Expected %v as redirect but returned %s", defRedirectURL, redirect.URL)
+			}
+			if redirect.Code != tc.expectOutput {
+				t.Errorf("Expected %v as redirect to have a code %d but had %d", defRedirectURL, tc.expectOutput, redirect.Code)
+			}
+		})
 	}
 }
 
