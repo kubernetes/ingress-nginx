@@ -25,6 +25,9 @@ spec:
 {{- if .Values.controller.service.externalIPs }}
   externalIPs: {{ toYaml .Values.controller.service.externalIPs | nindent 4 }}
 {{- end }}
+{{- if .Values.controller.service.externalName }}
+  externalName: {{ .Values.controller.service.externalName }}
+{{- end }}
 {{- if .Values.controller.service.loadBalancerIP }}
   loadBalancerIP: {{ .Values.controller.service.loadBalancerIP }}
 {{- end }}
