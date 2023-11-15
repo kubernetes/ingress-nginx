@@ -251,6 +251,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.admissionWebhooks.labels | object | `{}` | Labels to be added to admission webhooks |
 | controller.admissionWebhooks.name | string | `"admission"` |  |
 | controller.admissionWebhooks.namespaceSelector | object | `{}` |  |
+| controller.admissionWebhooks.networkPolicyEnabled | bool | `false` |  |
 | controller.admissionWebhooks.objectSelector | object | `{}` |  |
 | controller.admissionWebhooks.patch.enabled | bool | `true` |  |
 | controller.admissionWebhooks.patch.image.digest | string | `"sha256:a7943503b45d552785aa3b5e457f169a5661fb94d82b8a3373bcd9ebaf9aac80"` |  |
