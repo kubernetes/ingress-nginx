@@ -622,6 +622,7 @@ controller:
     labels: {}
     # -- Use an existing PSP instead of creating one
     existingPsp: ""
+    networkPolicyEnabled: false
     service:
       annotations: {}
       # clusterIP: ""
