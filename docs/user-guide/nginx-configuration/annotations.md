@@ -50,6 +50,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
 |[nginx.ingress.kubernetes.io/configuration-snippet](#configuration-snippet)|string|
 |[nginx.ingress.kubernetes.io/custom-http-errors](#custom-http-errors)|[]int|
+|[nginx.ingress.kubernetes.io/disable-proxy-intercept-errors](#disable-proxy-intercept-errors)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/default-backend](#default-backend)|string|
 |[nginx.ingress.kubernetes.io/enable-cors](#enable-cors)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/cors-allow-origin](#enable-cors)|string|
@@ -328,6 +329,17 @@ If `custom-http-errors` is also specified globally, the error values specified i
 Example usage:
 ```
 nginx.ingress.kubernetes.io/custom-http-errors: "404,415"
+```
+
+## Disable Proxy intercept Errors
+
+Like the [`disable-proxy-intercept-errors`](./configmap.md#disable-proxy-intercept-errors) value in the ConfigMap, this annotation allows to disable NGINX `proxy-intercept-errors` when `custom-http-errors` are set, but only for the NGINX location associated with this ingress. If a [default backend annotation](#default-backend) is specified on the ingress, the errors will be routed to that annotation's default backend service (instead of the global default backend).
+Different ingresses can specify different sets of errors codes and there are UseCases where NGINX shall not intercept all errors returned from upstream.
+If `disable-proxy-intercept-errors` is also specified globally, the annotation will override the global value for the given ingress' hostname and path.
+
+Example usage:
+```
+nginx.ingress.kubernetes.io/disable-proxy-intercept-errors: "false"
 ```
 
 ### Default Backend
