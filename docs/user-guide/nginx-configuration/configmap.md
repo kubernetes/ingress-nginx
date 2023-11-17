@@ -180,6 +180,7 @@ The following table shows a configuration option's name, type, and the default v
 |[stream-snippet](#stream-snippet)|string|""||
 |[location-snippet](#location-snippet)|string|""||
 |[custom-http-errors](#custom-http-errors)|[]int|[]int{}||
+|[disable-proxy-intercept-errors](#disable-proxy-intercept-errors)|bool|"false"|
 |[proxy-body-size](#proxy-body-size)|string|"1m"||
 |[proxy-connect-timeout](#proxy-connect-timeout)|int|5||
 |[proxy-read-timeout](#proxy-read-timeout)|int|60||
@@ -1128,9 +1129,17 @@ You can not use this to add new locations that proxy to the Kubernetes pods, as 
 
 Enables which HTTP codes should be passed for processing with the [error_page directive](https://nginx.org/en/docs/http/ngx_http_core_module.html#error_page)
 
-Setting at least one code also enables [proxy_intercept_errors](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors) which are required to process error_page.
+Setting at least one code also enables [proxy_intercept_errors](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors) if not disabled with [disable-proxy-intercept-errors](#disable-proxy-intercept-errors).
 
 Example usage: `custom-http-errors: 404,415`
+
+## disable-proxy-intercept-errors
+
+Allows to disable [proxy-intercept-errors](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors).
+
+Disabling [proxy_intercept_errors](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors) allows to pass upstream errors to client even if [custom-http-errors](#custom-http-errors) are set.
+
+Example usage: `disable-proxy-intercept-errors: "true"`
 
 ## proxy-body-size
 
