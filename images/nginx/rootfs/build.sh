@@ -99,7 +99,7 @@ export LUA_RESTY_COOKIE_VERSION=9533f479371663107b515590fc9daf00d61ebf11
 export LUA_RESTY_DNS=0.22
 
 # Check for recent changes: https://github.com/ledgetech/lua-resty-http/compare/v0.17.1...master
-export LUA_RESTY_HTTP=v0.17.1
+export LUA_RESTY_HTTP=0.17.1
 
 # Check for recent changes: https://github.com/openresty/lua-resty-lock/compare/v0.09...master
 export LUA_RESTY_LOCK=0.09
@@ -298,7 +298,7 @@ get_src 70e9a01eb32ccade0d5116a25bcffde0445b94ad35035ce06b94ccd260ad1bf0 \
         "https://github.com/openresty/lua-resty-dns/archive/v$LUA_RESTY_DNS.tar.gz"
 
 get_src f52a0538b20a2d45025f318c18a138b78f6f88f07713dd0ed502183cb3d16f17 \
-        "https://github.com/ledgetech/lua-resty-http/archive/$LUA_RESTY_HTTP.tar.gz"
+        "https://github.com/ledgetech/lua-resty-http/archive/v$LUA_RESTY_HTTP.tar.gz"
 
 get_src 02733575c4aed15f6cab662378e4b071c0a4a4d07940c4ef19a7319e9be943d4 \
         "https://github.com/openresty/lua-resty-memcached/archive/v$LUA_RESTY_MEMCACHED_VERSION.tar.gz"
@@ -467,8 +467,6 @@ make install
 cd "$BUILD_PATH"
 git clone --depth=100 https://github.com/google/ngx_brotli.git
 cd ngx_brotli
-# https://github.com/google/ngx_brotli/issues/156
-git reset --hard 63ca02abdcf79c9e788d2eedcc388d2335902e52
 git submodule init
 git submodule update
 
