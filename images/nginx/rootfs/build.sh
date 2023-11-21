@@ -18,7 +18,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.21.6
+export NGINX_VERSION=1.25.3
 
 # Check for recent changes: https://github.com/vision5/ngx_devel_kit/compare/v0.3.2...master
 export NDK_VERSION=0.3.2
@@ -80,8 +80,8 @@ export LUA_CJSON_VERSION=2.1.0.11
 # Check for recent changes: https://github.com/leev/ngx_http_geoip2_module/compare/3.4...master
 export GEOIP2_VERSION=a607a41a8115fecfc05b5c283c81532a3d605425
 
-# Check for recent changes: https://github.com/openresty/luajit2/compare/v2.1-20230410...v2.1-agentzh
-export LUAJIT_VERSION=2.1-20230410
+# Check for recent changes: https://github.com/openresty/luajit2/compare/v2.1-20231117...v2.1-agentzh
+export LUAJIT_VERSION=2.1-20231117
 
 # Check for recent changes: https://github.com/openresty/lua-resty-balancer/compare/v0.04...master
 export LUA_RESTY_BALANCER=0.04
@@ -98,8 +98,8 @@ export LUA_RESTY_COOKIE_VERSION=9533f479371663107b515590fc9daf00d61ebf11
 # Check for recent changes: https://github.com/openresty/lua-resty-dns/compare/v0.22...master
 export LUA_RESTY_DNS=0.22
 
-# Check for recent changes: https://github.com/ledgetech/lua-resty-http/compare/v0.16.1...master
-export LUA_RESTY_HTTP=0ce55d6d15da140ecc5966fa848204c6fd9074e8
+# Check for recent changes: https://github.com/ledgetech/lua-resty-http/compare/v0.17.1...master
+export LUA_RESTY_HTTP=0.17.1
 
 # Check for recent changes: https://github.com/openresty/lua-resty-lock/compare/v0.09...master
 export LUA_RESTY_LOCK=0.09
@@ -195,7 +195,7 @@ mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src 66dc7081488811e9f925719e34d1b4504c2801c81dee2920e5452a86b11405ae \
+get_src 64c5b975ca287939e828303fa857d22f142b251f17808dfe41733512d9cded86 \
         "https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src aa961eafb8317e0eb8da37eb6e2c9ff42267edd18b56947384e719b85188f58b \
@@ -255,7 +255,7 @@ if [[ ${ARCH} == "s390x" ]]; then
 get_src 266ed1abb70a9806d97cb958537a44b67db6afb33d3b32292a2d68a2acedea75 \
         "https://github.com/openresty/luajit2/archive/$LUAJIT_VERSION.tar.gz"
 else
-get_src 77bbcbb24c3c78f51560017288f3118d995fe71240aa379f5818ff6b166712ff \
+get_src cc92968c57c00303eb9eaebf65cc8b29a0f851670f16bb514896ab5057ae381f \
         "https://github.com/openresty/luajit2/archive/v$LUAJIT_VERSION.tar.gz"
 fi
 
@@ -297,8 +297,8 @@ get_src b4ddcd47db347e9adf5c1e1491a6279a6ae2a3aff3155ef77ea0a65c998a69c1 \
 get_src 70e9a01eb32ccade0d5116a25bcffde0445b94ad35035ce06b94ccd260ad1bf0 \
         "https://github.com/openresty/lua-resty-dns/archive/v$LUA_RESTY_DNS.tar.gz"
 
-get_src 9fcb6db95bc37b6fce77d3b3dc740d593f9d90dce0369b405eb04844d56ac43f \
-        "https://github.com/ledgetech/lua-resty-http/archive/$LUA_RESTY_HTTP.tar.gz"
+get_src f52a0538b20a2d45025f318c18a138b78f6f88f07713dd0ed502183cb3d16f17 \
+        "https://github.com/ledgetech/lua-resty-http/archive/v$LUA_RESTY_HTTP.tar.gz"
 
 get_src 02733575c4aed15f6cab662378e4b071c0a4a4d07940c4ef19a7319e9be943d4 \
         "https://github.com/openresty/lua-resty-memcached/archive/v$LUA_RESTY_MEMCACHED_VERSION.tar.gz"
@@ -467,8 +467,6 @@ make install
 cd "$BUILD_PATH"
 git clone --depth=100 https://github.com/google/ngx_brotli.git
 cd ngx_brotli
-# https://github.com/google/ngx_brotli/issues/156
-git reset --hard 63ca02abdcf79c9e788d2eedcc388d2335902e52
 git submodule init
 git submodule update
 
