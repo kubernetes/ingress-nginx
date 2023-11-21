@@ -220,6 +220,7 @@ The following table shows a configuration option's name, type, and the default v
 |[global-auth-cache-key](#global-auth-cache-key)|string|""||
 |[global-auth-cache-duration](#global-auth-cache-duration)|string|"200 202 401 5m"||
 |[global-auth-always-set-cookie](#global-auth-always-set-cookie)|bool|"false"||
+|[global-auth-default-enable](#global-auth-default-enable)|bool|"true"||
 |[no-auth-locations](#no-auth-locations)|string|"/.well-known/acme-challenge"||
 |[block-cidrs](#block-cidrs)|[]string|""||
 |[block-user-agents](#block-user-agents)|[]string|""||
@@ -1347,6 +1348,10 @@ Enables caching for global auth requests. Specify a lookup key for auth response
 ## global-auth-cache-duration
 
 Set a caching time for auth responses based on their response codes, e.g. `200 202 30m`. See [proxy_cache_valid](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_valid) for details. You may specify multiple, comma-separated values: `200 202 10m, 401 5m`. defaults to `200 202 401 5m`.
+
+## global-auth-default-enable
+
+TODO : Set a caching time for auth responses based on their response codes, e.g. `200 202 30m`. See [proxy_cache_valid](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_valid) for details. You may specify multiple, comma-separated values: `200 202 10m, 401 5m`. defaults to `200 202 401 5m`.
 
 ## global-auth-always-set-cookie
 

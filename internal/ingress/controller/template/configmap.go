@@ -64,6 +64,7 @@ const (
 	globalAuthCacheKey            = "global-auth-cache-key"
 	globalAuthCacheDuration       = "global-auth-cache-duration"
 	globalAuthAlwaysSetCookie     = "global-auth-always-set-cookie"
+	globalAuthDefaultEnable       = "global-auth-default-enable"
 	luaSharedDictsKey             = "lua-shared-dicts"
 	plugins                       = "plugins"
 	debugConnections              = "debug-connections"
@@ -341,6 +342,17 @@ func ReadConfig(src map[string]string) config.Configuration {
 			klog.Warningf("Global auth location denied - %s", fmt.Errorf("cannot convert %s to bool: %v", globalAuthAlwaysSetCookie, err))
 		}
 		to.GlobalExternalAuth.AlwaysSetCookie = alwaysSetCookie
+	}
+
+	// Verify that the configured global external authorization default enable is valid
+	if val, ok := conf[globalAuthDefaultEnable]; ok {
+		delete(conf, globalAuthDefaultEnable)
+
+		authDefaultEnable, err := strconv.ParseBool(val)
+		if err != nil {
+			klog.Warningf("Global auth location denied - %s", fmt.Errorf("cannot convert %s to bool: %v", globalAuthDefaultEnable, err))
+		}
+		to.GlobalExternalAuth.DefaultEnable = authDefaultEnable
 	}
 
 	// Verify that the configured timeout is parsable as a duration. if not, set the default value
