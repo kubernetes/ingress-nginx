@@ -18,7 +18,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.21.6
+export NGINX_VERSION=1.25.3
 
 # Check for recent changes: https://github.com/vision5/ngx_devel_kit/compare/v0.3.2...master
 export NDK_VERSION=0.3.2
@@ -195,7 +195,7 @@ mkdir --verbose -p "$BUILD_PATH"
 cd "$BUILD_PATH"
 
 # download, verify and extract the source files
-get_src 66dc7081488811e9f925719e34d1b4504c2801c81dee2920e5452a86b11405ae \
+get_src 64c5b975ca287939e828303fa857d22f142b251f17808dfe41733512d9cded86 \
         "https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz"
 
 get_src aa961eafb8317e0eb8da37eb6e2c9ff42267edd18b56947384e719b85188f58b \
