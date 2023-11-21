@@ -529,7 +529,7 @@ Since version 1.9.0, `"auth-snippet"` annotation is disabled by default and has 
 
 #### Global External Authentication
 
-By default the controller redirects all requests to an existing service that provides authentication if `global-auth-url` is set in the NGINX ConfigMap. If you want to disable this behavior for that ingress, you can use `enable-global-auth: "false"` in the NGINX ConfigMap.
+By default the controller redirects all requests to an existing service that provides authentication if `global-auth-url` is set in the NGINX ConfigMap. If you want to disable this behavior for a specific ingress, you can use the annotation `nginx.ingress.kubernetes.io/enable-global-auth: "false"`.
 `nginx.ingress.kubernetes.io/enable-global-auth`:
    indicates if GlobalExternalAuth configuration should be applied or not to this Ingress rule. Default values is set to `"true"`.
 
