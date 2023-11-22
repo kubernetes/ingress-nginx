@@ -170,6 +170,7 @@ type Config struct {
 	KeepaliveTimeout       int               `json:"keepaliveTimeout"`
 	ProxySetHeaders        map[string]string `json:"proxySetHeaders,omitempty"`
 	AlwaysSetCookie        bool              `json:"alwaysSetCookie,omitempty"`
+	DefaultEnable          bool              `json:"defaultEnable,omitempty"` /*# toredash */
 }
 
 // DefaultCacheDuration is the fallback value if no cache duration is provided
