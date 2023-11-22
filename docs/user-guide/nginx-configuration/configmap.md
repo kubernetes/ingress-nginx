@@ -219,6 +219,7 @@ The following table shows a configuration option's name, type, and the default v
 |[global-auth-snippet](#global-auth-snippet)|string|""||
 |[global-auth-cache-key](#global-auth-cache-key)|string|""||
 |[global-auth-cache-duration](#global-auth-cache-duration)|string|"200 202 401 5m"||
+|[global-auth-always-set-cookie](#global-auth-always-set-cookie)|bool|"false"||
 |[no-auth-locations](#no-auth-locations)|string|"/.well-known/acme-challenge"||
 |[block-cidrs](#block-cidrs)|[]string|""||
 |[block-user-agents](#block-user-agents)|[]string|""||
