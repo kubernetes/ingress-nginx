@@ -578,7 +578,7 @@ func shouldApplyGlobalAuth(input interface{}, globalExternalAuthURL string, c in
 		return false
 	}
 
-	if (location.ExternalAuth.URL == "") && (globalExternalAuthURL != "") && (cfg.GlobalExternalAuth.DefaultEnable) || (location.EnableGlobalAuth) {
+	if (location.ExternalAuth.URL == "") && (globalExternalAuthURL != "") && ((cfg.GlobalExternalAuth.DefaultEnable) && (location.EnableGlobalAuth)) {
 		return true
 	}
 
