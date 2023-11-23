@@ -1351,7 +1351,7 @@ Set a caching time for auth responses based on their response codes, e.g. `200 2
 
 ## global-auth-default-enable
 
-TODO : Set a caching time for auth responses based on their response codes, e.g. `200 202 30m`. See [proxy_cache_valid](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_valid) for details. You may specify multiple, comma-separated values: `200 202 10m, 401 5m`. defaults to `200 202 401 5m`.
+Determines if global-auth should be applied by default for all Ingress objects. If no `nginx.ingress.kubernetes.io/auth-url` is defined for an Ingress, and `global-auth-default-enable` is `true` (default), global authentication is applied when `global-auth-url` is present. Changing this value to `false` enables users to opt-in for global-auth, rather than opt-opt when this value is `true`. Default `true`.
 
 ## global-auth-always-set-cookie
 
