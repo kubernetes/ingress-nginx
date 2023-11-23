@@ -541,14 +541,14 @@ func buildLocation(input interface{}, enforceRegex bool) string {
 	return path
 }
 
-func buildAuthLocation(input interface{}, globalExternalAuthURL string) string {
+func buildAuthLocation(input interface{}, globalExternalAuthURL string, c interface{}) string {
 	location, ok := input.(*ingress.Location)
 	if !ok {
 		klog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
 		return ""
 	}
 
-	if (location.ExternalAuth.URL == "") && (!shouldApplyGlobalAuth(input, globalExternalAuthURL)) {
+	if (location.ExternalAuth.URL == "") && (!shouldApplyGlobalAuth(input, globalExternalAuthURL, c)) {
 		return ""
 	}
 
@@ -565,14 +565,20 @@ func buildAuthLocation(input interface{}, globalExternalAuthURL string) string {
 }
 
 // shouldApplyGlobalAuth returns true only in case when ExternalAuth.URL is not set and
-// GlobalExternalAuth is set and enabled
-func shouldApplyGlobalAuth(input interface{}, globalExternalAuthURL string) bool {
+// GlobalExternalAuth is set.
+func shouldApplyGlobalAuth(input interface{}, globalExternalAuthURL string, c interface{}) bool {
 	location, ok := input.(*ingress.Location)
 	if !ok {
 		klog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
 	}
 
-	if (location.ExternalAuth.URL == "") && (globalExternalAuthURL != "") && (location.EnableGlobalAuth) {
+	cfg, ok := c.(config.Configuration)
+	if !ok {
+		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
+		return false
+	}
+
+	if (location.ExternalAuth.URL == "") && (globalExternalAuthURL != "") && (cfg.GlobalExternalAuth.DefaultEnable) {
 		return true
 	}
 
@@ -633,8 +639,14 @@ func buildAuthProxySetHeaders(headers map[string]string) []string {
 	return res
 }
 
-func buildAuthUpstreamName(input interface{}, host string) string {
-	authPath := buildAuthLocation(input, "")
+func buildAuthUpstreamName(input interface{}, host string, c interface{}) string {
+	cfg, ok := c.(config.Configuration)
+	if !ok {
+		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
+		return ""
+	}
+
+	authPath := buildAuthLocation(input, "", cfg)
 	if authPath == "" || host == "" {
 		return ""
 	}
