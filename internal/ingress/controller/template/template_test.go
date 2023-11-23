@@ -477,16 +477,17 @@ func TestShouldApplyGlobalAuth(t *testing.T) {
 		authURL                  string
 		globalAuthURL            string
 		enableglobalExternalAuth bool
+		globalAuthDefaultEnable  bool
 		expected                 bool
 	}{
-		{"authURL, globalAuthURL and enabled", authURL, globalAuthURL, true, false},
-		{"authURL, globalAuthURL and disabled", authURL, globalAuthURL, false, false},
-		{"authURL, empty globalAuthURL and enabled", authURL, "", true, false},
-		{"authURL, empty globalAuthURL and disabled", authURL, "", false, false},
-		{"globalAuthURL and enabled", "", globalAuthURL, true, true},
-		{"globalAuthURL and disabled", "", globalAuthURL, false, false},
-		{"all empty and enabled", "", "", true, false},
-		{"all empty and disabled", "", "", false, false},
+		{"authURL, globalAuthURL and enabled", authURL, globalAuthURL, true, true, false},
+		{"authURL, globalAuthURL and disabled", authURL, globalAuthURL, false, true, false},
+		{"authURL, empty globalAuthURL and enabled", authURL, "", true, true, false},
+		{"authURL, empty globalAuthURL and disabled", authURL, "", false, true, false},
+		{"globalAuthURL and enabled", "", globalAuthURL, true, true, true},
+		{"globalAuthURL and disabled", "", globalAuthURL, false, true, false},
+		{"all empty and enabled", "", "", true, true, false},
+		{"all empty and disabled", "", "", false, true, false},
 	}
 
 	for _, testCase := range testCases {
