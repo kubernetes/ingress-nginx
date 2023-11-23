@@ -636,7 +636,7 @@ http {
 
     {{ range $server := $servers }}
     {{ range $location := $server.Locations }}
-    {{ $applyGlobalAuth := shouldApplyGlobalAuth $location $all.Cfg.GlobalExternalAuth.URL }}
+    {{ $applyGlobalAuth := shouldApplyGlobalAuth $location $all.Cfg.GlobalExternalAuth.URL $all.Cfg.GlobalExternalAuth.DefaultEnable }}
     {{ $applyAuthUpstream := shouldApplyAuthUpstream $location $all.Cfg }}
     {{ if and (eq $applyAuthUpstream true) (eq $applyGlobalAuth false) }}
     ## start auth upstream {{ $server.Hostname }}{{ $location.Path }}
@@ -1058,7 +1058,7 @@ stream {
         {{ $path := buildLocation $location $enforceRegex }}
         {{ $proxySetHeader := proxySetHeader $location }}
         {{ $authPath := buildAuthLocation $location $all.Cfg.GlobalExternalAuth.URL }}
-        {{ $applyGlobalAuth := shouldApplyGlobalAuth $location $all.Cfg.GlobalExternalAuth.URL }}
+        {{ $applyGlobalAuth := shouldApplyGlobalAuth $location $all.Cfg.GlobalExternalAuth.URL $all.Cfg.GlobalExternalAuth.DefaultEnable }}
         {{ $applyAuthUpstream := shouldApplyAuthUpstream $location $all.Cfg }}
 
         {{ $externalAuth := $location.ExternalAuth }}
