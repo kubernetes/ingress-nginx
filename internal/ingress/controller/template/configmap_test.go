@@ -274,9 +274,11 @@ func TestGlobalExternalDefaultEnable(t *testing.T) {
 		},
 		"false": {
 			defaultEnable: "false",
+			result:        false,
 		},
 		"set empty": {
 			defaultEnable: "",
+			result:        true,
 		},
 		"error": {
 			defaultEnable: "error string",
