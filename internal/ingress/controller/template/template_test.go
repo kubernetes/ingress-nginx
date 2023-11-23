@@ -408,9 +408,10 @@ func TestBuildProxyPassAutoHttp(t *testing.T) {
 }
 
 func TestBuildAuthLocation(t *testing.T) {
+	cfg := config.Configuration{}
 	invalidType := &ingress.Ingress{}
 	expected := ""
-	actual := buildAuthLocation(invalidType, "")
+	actual := buildAuthLocation(invalidType, "", cfg)
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
@@ -451,7 +452,7 @@ func TestBuildAuthLocation(t *testing.T) {
 		loc.ExternalAuth.URL = testCase.authURL
 		loc.EnableGlobalAuth = testCase.enableglobalExternalAuth
 
-		str := buildAuthLocation(loc, testCase.globalAuthURL)
+		str := buildAuthLocation(loc, testCase.globalAuthURL, cfg)
 		if str != testCase.expected {
 			t.Errorf("%v: expected '%v' but returned '%v'", testCase.title, testCase.expected, str)
 		}
@@ -461,6 +462,7 @@ func TestBuildAuthLocation(t *testing.T) {
 func TestShouldApplyGlobalAuth(t *testing.T) {
 	authURL := fooAuthHost
 	globalAuthURL := "foo.com/global-auth"
+	cfg := config.Configuration{}
 
 	loc := &ingress.Location{
 		ExternalAuth: authreq.Config{
@@ -491,7 +493,7 @@ func TestShouldApplyGlobalAuth(t *testing.T) {
 		loc.ExternalAuth.URL = testCase.authURL
 		loc.EnableGlobalAuth = testCase.enableglobalExternalAuth
 
-		result := shouldApplyGlobalAuth(loc, testCase.globalAuthURL)
+		result := shouldApplyGlobalAuth(loc, testCase.globalAuthURL, cfg)
 		if result != testCase.expected {
 			t.Errorf("%v: expected '%v' but returned '%v'", testCase.title, testCase.expected, result)
 		}
@@ -569,7 +571,8 @@ func TestBuildAuthProxySetHeaders(t *testing.T) {
 func TestBuildAuthUpstreamName(t *testing.T) {
 	invalidType := &ingress.Ingress{}
 	expected := ""
-	actual := buildAuthUpstreamName(invalidType, "")
+	cfg := config.Configuration{}
+	actual := buildAuthUpstreamName(invalidType, "", cfg)
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
@@ -596,7 +599,7 @@ func TestBuildAuthUpstreamName(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		str := buildAuthUpstreamName(loc, testCase.host)
+		str := buildAuthUpstreamName(loc, testCase.host, cfg)
 		if str != testCase.expected {
 			t.Errorf("%v: expected '%v' but returned '%v'", testCase.title, testCase.expected, str)
 		}
