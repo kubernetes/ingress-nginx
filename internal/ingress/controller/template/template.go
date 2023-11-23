@@ -565,7 +565,7 @@ func buildAuthLocation(input interface{}, globalExternalAuthURL string, c interf
 }
 
 // shouldApplyGlobalAuth returns true only in case when ExternalAuth.URL is not set and
-// GlobalExternalAuth is set.
+// GlobalExternalAuth is set, or if GlobalExternalAuth.DefaultEnable is true.
 func shouldApplyGlobalAuth(input interface{}, globalExternalAuthURL string, c interface{}) bool {
 	location, ok := input.(*ingress.Location)
 	if !ok {
