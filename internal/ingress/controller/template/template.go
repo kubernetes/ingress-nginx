@@ -541,14 +541,14 @@ func buildLocation(input interface{}, enforceRegex bool) string {
 	return path
 }
 
-func buildAuthLocation(input interface{}, globalExternalAuthURL string, c interface{}) string {
+func buildAuthLocation(input interface{}, globalExternalAuthURL string) string {
 	location, ok := input.(*ingress.Location)
 	if !ok {
 		klog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
 		return ""
 	}
 
-	if (location.ExternalAuth.URL == "") && (!shouldApplyGlobalAuth(input, globalExternalAuthURL, c)) {
+	if (location.ExternalAuth.URL == "") && (!shouldApplyGlobalAuth(input, globalExternalAuthURL)) {
 		return ""
 	}
 
@@ -566,19 +566,13 @@ func buildAuthLocation(input interface{}, globalExternalAuthURL string, c interf
 
 // shouldApplyGlobalAuth returns true only in case when ExternalAuth.URL is not set and
 // GlobalExternalAuth is set, or if GlobalExternalAuth.DefaultEnable is true.
-func shouldApplyGlobalAuth(input interface{}, globalExternalAuthURL string, c interface{}) bool {
+func shouldApplyGlobalAuth(input interface{}, globalExternalAuthURL string) bool {
 	location, ok := input.(*ingress.Location)
 	if !ok {
 		klog.Errorf("expected an '*ingress.Location' type but %T was returned", input)
 	}
 
-	cfg, ok := c.(config.Configuration)
-	if !ok {
-		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
-		return false
-	}
-
-	if (location.ExternalAuth.URL == "") && (globalExternalAuthURL != "") && ((cfg.GlobalExternalAuth.DefaultEnable) && (location.EnableGlobalAuth)) {
+	if (location.ExternalAuth.URL == "") && (globalExternalAuthURL != "") && (location.EnableGlobalAuth) {
 		return true
 	}
 
@@ -639,14 +633,9 @@ func buildAuthProxySetHeaders(headers map[string]string) []string {
 	return res
 }
 
-func buildAuthUpstreamName(input interface{}, host string, c interface{}) string {
-	cfg, ok := c.(config.Configuration)
-	if !ok {
-		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
-		return ""
-	}
+func buildAuthUpstreamName(input interface{}, host string) string {
 
-	authPath := buildAuthLocation(input, "", cfg)
+	authPath := buildAuthLocation(input, "")
 	if authPath == "" || host == "" {
 		return ""
 	}

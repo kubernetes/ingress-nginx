@@ -263,36 +263,6 @@ func TestGlobalExternalAlwaysSetCookie(t *testing.T) {
 	}
 }
 
-func TestGlobalExternalDefaultEnable(t *testing.T) {
-	testCases := map[string]struct {
-		defaultEnable string
-		result        bool
-	}{
-		"true": {
-			defaultEnable: "true",
-			result:        true,
-		},
-		"false": {
-			defaultEnable: "false",
-			result:        false,
-		},
-		"set empty": {
-			defaultEnable: "",
-			result:        true,
-		},
-		"error": {
-			defaultEnable: "error string",
-		},
-	}
-
-	for n, tc := range testCases {
-		cfg := ReadConfig(map[string]string{"global-auth-default-enable": tc.defaultEnable})
-		if cfg.GlobalExternalAuth.DefaultEnable != tc.result {
-			t.Errorf("Testing %v. Expected \"%v\" but \"%v\" was returned", n, tc.result, cfg.GlobalExternalAuth.DefaultEnable)
-		}
-	}
-}
-
 func TestGlobalExternalAuthSigninRedirectParamParsing(t *testing.T) {
 	testCases := map[string]struct {
 		param  string

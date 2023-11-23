@@ -762,7 +762,7 @@ func NewDefault() Configuration {
 	defNginxStatusIpv4Whitelist = append(defNginxStatusIpv4Whitelist, "127.0.0.1")
 	defNginxStatusIpv6Whitelist = append(defNginxStatusIpv6Whitelist, "::1")
 	defProxyDeadlineDuration := time.Duration(5) * time.Second
-	defGlobalExternalAuth := GlobalExternalAuth{"", "", "", "", "", append(defResponseHeaders, ""), "", "", "", []string{}, map[string]string{}, false, true}
+	defGlobalExternalAuth := GlobalExternalAuth{"", "", "", "", "", append(defResponseHeaders, ""), "", "", "", []string{}, map[string]string{}, false}
 
 	cfg := Configuration{
 		AllowSnippetAnnotations:          false,
@@ -872,6 +872,7 @@ func NewDefault() Configuration {
 			DisableProxyInterceptErrors: false,
 			DenylistSourceRange:         []string{},
 			WhitelistSourceRange:        []string{},
+			GlobalAuthDefaultEnable:     true,
 			SkipAccessLogURLs:           []string{},
 			LimitRate:                   0,
 			LimitRateAfter:              0,
@@ -976,5 +977,4 @@ type GlobalExternalAuth struct {
 	AuthCacheDuration      []string          `json:"authCacheDuration"`
 	ProxySetHeaders        map[string]string `json:"proxySetHeaders,omitempty"`
 	AlwaysSetCookie        bool              `json:"alwaysSetCookie,omitempty"`
-	DefaultEnable          bool              `json:"defaultEnable,omitempty"`
 }

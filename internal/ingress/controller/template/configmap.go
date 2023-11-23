@@ -352,7 +352,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 		if err != nil {
 			klog.Warningf("Global auth location denied - %s", fmt.Errorf("cannot convert %s to bool: %v", globalAuthDefaultEnable, err))
 		}
-		to.GlobalExternalAuth.DefaultEnable = authDefaultEnable
+		to.GlobalAuthDefaultEnable = authDefaultEnable
 	}
 
 	// Verify that the configured timeout is parsable as a duration. if not, set the default value

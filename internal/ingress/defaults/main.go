@@ -176,6 +176,11 @@ type Backend struct {
 	// By default, the NGINX ingress controller uses a list of all endpoints (Pod IP/port) in the NGINX upstream configuration.
 	// It disables that behavior and instead uses a single upstream in NGINX, the service's Cluster IP and port.
 	ServiceUpstream bool `json:"service-upstream"`
+
+	// By default, the NGINX ingress controller applies global-auth configuration to all Ingress resources,
+	// if global-auth-url (ConfigMap) is set, and auth-url is not set (Ingess). Default is `true`. By setting this to
+	// `false`, global-auth is only applied to Ingress resources when global-auth-url (ConfigMap) is set and enable-global-auth is set (Ingress).
+	GlobalAuthDefaultEnable bool `json:"global-auth-default-enable"`
 }
 
 type SecurityConfiguration struct {

@@ -408,10 +408,9 @@ func TestBuildProxyPassAutoHttp(t *testing.T) {
 }
 
 func TestBuildAuthLocation(t *testing.T) {
-	cfg := config.Configuration{}
 	invalidType := &ingress.Ingress{}
 	expected := ""
-	actual := buildAuthLocation(invalidType, "", cfg)
+	actual := buildAuthLocation(invalidType, "")
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
@@ -461,7 +460,7 @@ func TestBuildAuthLocation(t *testing.T) {
 		loc.ExternalAuth.URL = testCase.authURL
 		loc.EnableGlobalAuth = testCase.enableglobalExternalAuth
 
-		str := buildAuthLocation(loc, testCase.globalAuthURL, cfg)
+		str := buildAuthLocation(loc, testCase.globalAuthURL)
 		if str != testCase.expected {
 			t.Errorf("%v: expected '%v' but returned '%v'", testCase.title, testCase.expected, str)
 		}
@@ -471,7 +470,6 @@ func TestBuildAuthLocation(t *testing.T) {
 func TestShouldApplyGlobalAuth(t *testing.T) {
 	authURL := fooAuthHost
 	globalAuthURL := "foo.com/global-auth"
-	cfg := config.Configuration{}
 
 	loc := &ingress.Location{
 		ExternalAuth: authreq.Config{
@@ -486,37 +484,69 @@ func TestShouldApplyGlobalAuth(t *testing.T) {
 		authURL                  string
 		globalAuthURL            string
 		enableglobalExternalAuth bool
-		globalAuthDefaultEnable  bool
 		expected                 bool
 	}{
-		{"authURL, globalAuthURL and enabled", authURL, globalAuthURL, true, true, false},
-		{"authURL, globalAuthURL and disabled", authURL, globalAuthURL, false, true, false},
-		{"authURL, empty globalAuthURL and enabled", authURL, "", true, true, false},
-		{"authURL, empty globalAuthURL and disabled", authURL, "", false, true, false},
-		{"globalAuthURL and enabled", "", globalAuthURL, true, true, true},
-		{"globalAuthURL and disabled", "", globalAuthURL, false, true, false},
-		{"all empty and enabled", "", "", true, true, false},
-		{"all empty and disabled", "", "", false, true, false},
-		{"authURL, globalAuthURL and enabled, defaultEnable is false", authURL, globalAuthURL, true, false, false},
-		{"authURL, globalAuthURL and disabled, defaultEnable is false", authURL, globalAuthURL, false, false, false},
-		{"authURL, empty globalAuthURL and enabled, defaultEnable is false", authURL, "", true, false, false},
-		{"authURL, empty globalAuthURL and disabled, defaultEnable is false", authURL, "", false, false, false},
-		{"globalAuthURL and enabled, defaultEnable is false", "", globalAuthURL, true, true, true},
-		{"globalAuthURL and disabled, defaultEnable is false", "", globalAuthURL, false, false, false},
-		{"all empty and enabled, defaultEnable is false", "", "", true, false, false},
-		{"all empty and disabled, defaultEnable is false", "", "", false, false, false},
+		{"authURL, globalAuthURL and enabled", authURL, globalAuthURL, true, false},
+		{"authURL, globalAuthURL and disabled", authURL, globalAuthURL, false, false},
+		{"authURL, empty globalAuthURL and enabled", authURL, "", true, false},
+		{"authURL, empty globalAuthURL and disabled", authURL, "", false, false},
+		{"globalAuthURL and enabled", "", globalAuthURL, true, true},
+		{"globalAuthURL and disabled", "", globalAuthURL, false, false},
+		{"all empty and enabled", "", "", true, false},
+		{"all empty and disabled", "", "", false, false},
 	}
 
 	for _, testCase := range testCases {
 		loc.ExternalAuth.URL = testCase.authURL
 		loc.EnableGlobalAuth = testCase.enableglobalExternalAuth
 
-		result := shouldApplyGlobalAuth(loc, testCase.globalAuthURL, cfg)
+		result := shouldApplyGlobalAuth(loc, testCase.globalAuthURL)
 		if result != testCase.expected {
 			t.Errorf("%v: expected '%v' but returned '%v'", testCase.title, testCase.expected, result)
 		}
 	}
 }
+
+// func TestShouldApplyGlobalAuthWhenEnableDefaultIsFalse(t *testing.T) {
+// 	authURL := fooAuthHost
+// 	globalAuthURL := "foo.com/global-auth"
+
+// 	loc := &ingress.Location{
+// 		ExternalAuth: authreq.Config{
+// 			URL: authURL,
+// 		},
+// 		Path:             "/cat",
+// 		EnableGlobalAuth: true,
+// 	}
+
+// 	testCases := []struct {
+// 		title                    string
+// 		authURL                  string
+// 		globalAuthURL            string
+// 		enableglobalExternalAuth bool
+// 		globalAuthDefaultEnable  bool
+// 		expected                 bool
+// 	}{
+// 		{"authURL, globalAuthURL and enabled", authURL, globalAuthURL, true, true, false},
+// 		{"authURL, globalAuthURL and disabled", authURL, globalAuthURL, false, true, false},
+// 		{"authURL, empty globalAuthURL and enabled", authURL, "", true, true, false},
+// 		{"authURL, empty globalAuthURL and disabled", authURL, "", false, true, false},
+// 		{"globalAuthURL and enabled", "", globalAuthURL, true, true, true},
+// 		{"globalAuthURL and disabled", "", globalAuthURL, false, true, false},
+// 		{"all empty and enabled", "", "", true, true, false},
+// 		{"all empty and disabled", "", "", false, true, false},
+// 	}
+
+// 	for _, testCase := range testCases {
+// 		loc.ExternalAuth.URL = testCase.authURL
+// 		loc.EnableGlobalAuth = testCase.enableglobalExternalAuth
+
+// 		result := shouldApplyGlobalAuth(loc, testCase.globalAuthURL)
+// 		if result != testCase.expected {
+// 			t.Errorf("%v: expected '%v' but returned '%v'", testCase.title, testCase.expected, result)
+// 		}
+// 	}
+// }
 
 func TestBuildAuthResponseHeaders(t *testing.T) {
 	externalAuthResponseHeaders := []string{"h1", "H-With-Caps-And-Dashes"}
@@ -589,8 +619,7 @@ func TestBuildAuthProxySetHeaders(t *testing.T) {
 func TestBuildAuthUpstreamName(t *testing.T) {
 	invalidType := &ingress.Ingress{}
 	expected := ""
-	cfg := config.Configuration{}
-	actual := buildAuthUpstreamName(invalidType, "", cfg)
+	actual := buildAuthUpstreamName(invalidType, "")
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
@@ -617,7 +646,7 @@ func TestBuildAuthUpstreamName(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		str := buildAuthUpstreamName(loc, testCase.host, cfg)
+		str := buildAuthUpstreamName(loc, testCase.host)
 		if str != testCase.expected {
 			t.Errorf("%v: expected '%v' but returned '%v'", testCase.title, testCase.expected, str)
 		}

@@ -39,6 +39,10 @@ var globalAuthAnnotations = parser.Annotation{
 	},
 }
 
+type Config struct {
+	GlobalAuthDefaultEnable bool `json:"global-auth-default-enable,omitempty"`
+}
+
 type authReqGlobal struct {
 	r                resolver.Resolver
 	annotationConfig parser.Annotation
@@ -57,7 +61,7 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 func (a authReqGlobal) Parse(ing *networking.Ingress) (interface{}, error) {
 	enableGlobalAuth, err := parser.GetBoolAnnotation(enableGlobalAuthAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
-		enableGlobalAuth = true
+		enableGlobalAuth = a.r.GetDefaultBackend().GlobalAuthDefaultEnable
 	}
 
 	return enableGlobalAuth, nil
