@@ -565,7 +565,7 @@ func buildAuthLocation(input interface{}, globalExternalAuthURL string) string {
 }
 
 // shouldApplyGlobalAuth returns true only in case when ExternalAuth.URL is not set and
-// GlobalExternalAuth is set, or if GlobalExternalAuth.DefaultEnable is true.
+// GlobalExternalAuth is set, assuming global-auth-default-eable is true
 func shouldApplyGlobalAuth(input interface{}, globalExternalAuthURL string) bool {
 	location, ok := input.(*ingress.Location)
 	if !ok {
@@ -634,7 +634,6 @@ func buildAuthProxySetHeaders(headers map[string]string) []string {
 }
 
 func buildAuthUpstreamName(input interface{}, host string) string {
-
 	authPath := buildAuthLocation(input, "")
 	if authPath == "" || host == "" {
 		return ""
