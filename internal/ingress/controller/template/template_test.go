@@ -436,16 +436,17 @@ func TestBuildAuthLocation(t *testing.T) {
 		authURL                  string
 		globalAuthURL            string
 		enableglobalExternalAuth bool
+		globalAuthDefaultEnable  bool
 		expected                 string
 	}{
-		{"authURL, globalAuthURL and enabled", authURL, globalAuthURL, true, externalAuthPath},
-		{"authURL, globalAuthURL and disabled", authURL, globalAuthURL, false, externalAuthPath},
-		{"authURL, empty globalAuthURL and enabled", authURL, "", true, externalAuthPath},
-		{"authURL, empty globalAuthURL and disabled", authURL, "", false, externalAuthPath},
-		{"globalAuthURL and enabled", "", globalAuthURL, true, externalAuthPath},
-		{"globalAuthURL and disabled", "", globalAuthURL, false, ""},
-		{"all empty and enabled", "", "", true, ""},
-		{"all empty and disabled", "", "", false, ""},
+		{"authURL, globalAuthURL and enabled", authURL, globalAuthURL, true, true, externalAuthPath},
+		{"authURL, globalAuthURL and disabled", authURL, globalAuthURL, false, true, externalAuthPath},
+		{"authURL, empty globalAuthURL and enabled", authURL, "", true, true, externalAuthPath},
+		{"authURL, empty globalAuthURL and disabled", authURL, "", false, true, externalAuthPath},
+		{"globalAuthURL and enabled", "", globalAuthURL, true, true, externalAuthPath},
+		{"globalAuthURL and disabled", "", globalAuthURL, false, true, ""},
+		{"all empty and enabled", "", "", true, true, ""},
+		{"all empty and disabled", "", "", false, true, ""},
 	}
 
 	for _, testCase := range testCases {
