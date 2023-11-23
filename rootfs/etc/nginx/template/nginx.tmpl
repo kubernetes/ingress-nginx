@@ -1057,7 +1057,7 @@ stream {
         {{ range $location := $server.Locations }}
         {{ $path := buildLocation $location $enforceRegex }}
         {{ $proxySetHeader := proxySetHeader $location }}
-        {{ $authPath := buildAuthLocation $location $all.Cfg.GlobalExternalAuth.URL }}
+        {{ $authPath := buildAuthLocation $location $all.Cfg.GlobalExternalAuth.URL $all.Cfg.GlobalExternalAuth.DefaultEnable }}
         {{ $applyGlobalAuth := shouldApplyGlobalAuth $location $all.Cfg.GlobalExternalAuth.URL $all.Cfg.GlobalExternalAuth.DefaultEnable }}
         {{ $applyAuthUpstream := shouldApplyAuthUpstream $location $all.Cfg }}
 
