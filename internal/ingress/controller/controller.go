@@ -400,7 +400,7 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 		ParsedAnnotations: parsed,
 	})
 	startTest := time.Now().UnixNano() / 1000000
-	_, servers, pcfg := n.getConfiguration(ings)
+	_, servers, _ := n.getConfiguration(ings)
 
 	err = checkOverlap(ing, servers)
 	if err != nil {
@@ -408,22 +408,14 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 		return err
 	}
 	testedSize := len(ings)
-	if n.cfg.DisableFullValidationTest {
-		_, _, pcfg = n.getConfiguration(ings[len(ings)-1:])
-		testedSize = 1
-	}
 
-	content, err := n.generateTemplate(cfg, *pcfg)
+	klog.Info("starting validation of ingress ", fmt.Sprintf("%v/%v", ing.Namespace, ing.Name))
+	err = n.admissionBatcher.ValidateIngress(ing)
 	if err != nil {
 		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
 		return err
 	}
 
-	err = n.testTemplate(content)
-	if err != nil {
-		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
-		return err
-	}
 	n.metricCollector.IncCheckCount(ing.ObjectMeta.Namespace, ing.Name)
 	endCheck := time.Now().UnixNano() / 1000000
 	n.metricCollector.SetAdmissionMetrics(
@@ -431,7 +423,8 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 		float64(endCheck-startTest)/1000,
 		float64(len(ings)),
 		float64(startTest-startRender)/1000,
-		float64(len(content)),
+		//can't calculate content properly because of batching
+		float64(0),
 		float64(endCheck-startCheck)/1000,
 	)
 	return nil
@@ -606,11 +599,21 @@ func (n *NGINXController) getDefaultUpstream() *ingress.Backend {
 
 // getConfiguration returns the configuration matching the standard kubernetes ingress
 func (n *NGINXController) getConfiguration(ingresses []*ingress.Ingress) (sets.Set[string], []*ingress.Server, *ingress.Configuration) {
+	var ingsListSB strings.Builder
+	for _, ing := range ingresses {
+		ingsListSB.WriteString(fmt.Sprintf("%v/%v ", ing.Namespace, ing.Name))
+	}
+	ingsListStr := ingsListSB.String()
+
+	start := time.Now()
 	upstreams, servers := n.getBackendServers(ingresses)
+	klog.Info("Got backend servers in ", time.Now().Sub(start).Seconds(), " seconds for ", ingsListStr)
+
 	var passUpstreams []*ingress.SSLPassthroughBackend
 
 	hosts := sets.New[string]()
 
+	start = time.Now()
 	for _, server := range servers {
 		// If a location is defined by a prefix string that ends with the slash character, and requests are processed by one of
 		// proxy_pass, fastcgi_pass, uwsgi_pass, scgi_pass, memcached_pass, or grpc_pass, then the special processing is performed.
@@ -654,6 +657,8 @@ func (n *NGINXController) getConfiguration(ingresses []*ingress.Ingress) (sets.S
 			break
 		}
 	}
+
+	klog.Info("Collected info about passupstreams in ", time.Now().Sub(start).Seconds(), " seconds for ", ingsListStr)
 
 	return hosts, servers, &ingress.Configuration{
 		Backends:              upstreams,
