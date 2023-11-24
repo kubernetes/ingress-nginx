@@ -927,6 +927,21 @@ defaultBackend:
   ## Additional volumes to the default backend pod.
   #  - name: copy-portal-skins
   #    emptyDir: {}
+  extraConfigMaps: []
+    ## Additional configmaps to the default backend pod.
+    # Example ConfigMap, uncomment and configure as needed
+    # - name: my-extra-configmap-1
+    #   labels:
+    #     type: config-1
+    #   data:
+    #     extra_file_1.html: |
+    #       <!-- Extra HTML content for ConfigMap 1 -->
+    # - name: my-extra-configmap-2
+    #   labels:
+    #     type: config-2
+    #   data:
+    #     extra_file_2.html: |
+    #       <!-- Extra HTML content for ConfigMap 2 -->
 
   autoscaling:
     annotations: {}
