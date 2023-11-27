@@ -220,6 +220,11 @@ func (s *statusSync) runningAddresses() ([]v1.IngressLoadBalancerIngress, error)
 			continue
 		}
 
+		if pod.GetDeletionTimestamp() != nil {
+			klog.InfoS("POD is terminating", "pod", klog.KObj(&pod), "node", pod.Spec.NodeName)
+			continue
+		}
+
 		name := k8s.GetNodeIPOrName(s.Client, pod.Spec.NodeName, s.UseNodeInternalIP)
 		if !stringInIngresses(name, addrs) {
 			addrs = append(addrs, nameOrIPToLoadBalancerIngress(name))
