@@ -117,6 +117,8 @@ func ValidateRegex(regex *regexp.Regexp, removeSpace bool) AnnotationValidator {
 	}
 }
 
+// CommonNameAnnotationValidator checks whether the annotation value starts with
+// 'CN=' and is followed by a valid regex.
 func CommonNameAnnotationValidator(s string) error {
 	if !strings.HasPrefix(s, "CN=") {
 		return fmt.Errorf("value %s is not a valid Common Name annotation: missing prefix 'CN='", s)
