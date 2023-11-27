@@ -26,13 +26,13 @@ aliases:
 
   ingress-nginx-helm-maintainers:
   - cpanato
-  - strongjz
   - Gacko
+  - strongjz
 
   ingress-nginx-helm-reviewers:
   - cpanato
-  - strongjz
   - Gacko
+  - strongjz
 
   ingress-nginx-docs-maintainers:
   - longwuyuan
