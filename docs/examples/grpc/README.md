@@ -9,6 +9,7 @@ This example demonstrates how to route traffic to a gRPC service through the Ing
 3. You have the ingress-nginx-controller installed as per docs.
 4. You have a backend application running a gRPC server listening for TCP traffic.  If you want, you can use <https://github.com/grpc/grpc-go/blob/91e0aeb192456225adf27966d04ada4cf8599915/examples/features/reflection/server/main.go> as an example.
 5. You're also responsible for provisioning an SSL certificate for the ingress. So you need to have a valid SSL certificate, deployed as a Kubernetes secret of type `tls`, in the same namespace as the gRPC application.
+   - Note: To use gRPC with ingress-nginx, TLS _must_ be terminated by the ingress or gRPC server (using the `backend-protocol: "GRPCS"` annotation described below). 
 
 ### Step 1: Create a Kubernetes `Deployment` for gRPC app
 
@@ -20,7 +21,7 @@ This example demonstrates how to route traffic to a gRPC service through the Ing
 
 - As an example gRPC application, we can use this app <https://github.com/grpc/grpc-go/blob/91e0aeb192456225adf27966d04ada4cf8599915/examples/features/reflection/server/main.go>.
 
-- To create a container image for this app, you can use [this Dockerfile](https://github.com/kubernetes/ingress-nginx/blob/5a52d99ae85cfe5ef9535291b8326b0006e75066/images/go-grpc-greeter-server/rootfs/Dockerfile). 
+- To create a container image for this app, you can use [this Dockerfile](https://github.com/kubernetes/ingress-nginx/blob/main/images/go-grpc-greeter-server/rootfs/Dockerfile). 
 
 - If you use the Dockerfile mentioned above, to create a image, then you can use the following example Kubernetes manifest to create a deployment resource that uses that image. If necessary edit this manifest to suit your needs.
 

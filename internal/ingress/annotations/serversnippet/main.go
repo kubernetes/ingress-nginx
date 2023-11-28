@@ -23,18 +23,47 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
+const (
+	serverSnippetAnnotation = "server-snippet"
+)
+
+var serverSnippetAnnotations = parser.Annotation{
+	Group: "snippets",
+	Annotations: parser.AnnotationFields{
+		serverSnippetAnnotation: {
+			Validator:     parser.ValidateNull,
+			Scope:         parser.AnnotationScopeIngress,
+			Risk:          parser.AnnotationRiskCritical, // Critical, this annotation is not validated at all and allows arbitrary configutations
+			Documentation: `This annotation allows setting a custom NGINX configuration on a server block. This annotation does not contain any validation and it's usage is not recommended!`,
+		},
+	},
+}
+
 type serverSnippet struct {
-	r resolver.Resolver
+	r                resolver.Resolver
+	annotationConfig parser.Annotation
 }
 
 // NewParser creates a new server snippet annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return serverSnippet{r}
+	return serverSnippet{
+		r:                r,
+		annotationConfig: serverSnippetAnnotations,
+	}
 }
 
 // Parse parses the annotations contained in the ingress rule
 // used to indicate if the location/s contains a fragment of
 // configuration to be included inside the paths of the rules
 func (a serverSnippet) Parse(ing *networking.Ingress) (interface{}, error) {
-	return parser.GetStringAnnotation("server-snippet", ing)
+	return parser.GetStringAnnotation(serverSnippetAnnotation, ing, a.annotationConfig.Annotations)
+}
+
+func (a serverSnippet) GetDocumentation() parser.AnnotationFields {
+	return a.annotationConfig.Annotations
+}
+
+func (a serverSnippet) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+	return parser.CheckAnnotationRisk(anns, maxrisk, serverSnippetAnnotations.Annotations)
 }

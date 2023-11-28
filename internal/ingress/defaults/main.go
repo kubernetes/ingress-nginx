@@ -34,6 +34,13 @@ type Backend struct {
 	// toggles whether or not to remove trailing slashes during TLS redirects
 	PreserveTrailingSlash bool `json:"preserve-trailing-slash"`
 
+	// allows usage of CustomHTTPErrors without intercepting service errors
+	// e.g. custom 404 and 503 when service-a does not exist or is not available
+	// but service-a can return 404 and 503 error codes without intercept
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors
+	// By default this is false
+	DisableProxyInterceptErrors bool `json:"disable-proxy-intercept-errors"`
+
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
 	// Sets the maximum allowed size of the client request body
 	ProxyBodySize string `json:"proxy-body-size"`
@@ -100,7 +107,7 @@ type Backend struct {
 
 	// Name server/s used to resolve names of upstream servers into IP addresses.
 	// The file /etc/resolv.conf is used as DNS resolution configuration.
-	Resolver []net.IP
+	Resolver []net.IP `json:"Resolver"`
 
 	// SkipAccessLogURLs sets a list of URLs that should not appear in the NGINX access log
 	// This is useful with urls like `/health` or `health-check` that make "complex" reading the logs
@@ -169,4 +176,16 @@ type Backend struct {
 	// By default, the NGINX ingress controller uses a list of all endpoints (Pod IP/port) in the NGINX upstream configuration.
 	// It disables that behavior and instead uses a single upstream in NGINX, the service's Cluster IP and port.
 	ServiceUpstream bool `json:"service-upstream"`
+}
+
+type SecurityConfiguration struct {
+	// AllowCrossNamespaceResources enables users to consume cross namespace resource on annotations
+	// Case disabled, attempts to use secrets or configmaps from a namespace different from Ingress will
+	// be denied
+	// This valid will default to `false` on future releases
+	AllowCrossNamespaceResources bool `json:"allow-cross-namespace-resources"`
+
+	// AnnotationsRiskLevel represents the risk accepted on an annotation. If the risk is, for instance `Medium`, annotations
+	// with risk High and Critical will not be accepted
+	AnnotationsRiskLevel string `json:"annotations-risk-level"`
 }

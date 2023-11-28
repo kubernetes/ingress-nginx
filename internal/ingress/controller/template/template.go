@@ -18,13 +18,14 @@ package template
 
 import (
 	"bytes"
+	"crypto/rand"
 	"crypto/sha1" // #nosec
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/rand" // #nosec
+	"math/big"
 	"net"
 	"net/url"
 	"os"
@@ -34,7 +35,6 @@ import (
 	"strconv"
 	"strings"
 	text_template "text/template"
-	"time"
 
 	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -52,6 +52,12 @@ const (
 	nonIdempotent           = "non_idempotent"
 	defBufferSize           = 65535
 	writeIndentOnEmptyLines = true // backward-compatibility
+	httpProtocol            = "HTTP"
+	autoHTTPProtocol        = "AUTO_HTTP"
+	httpsProtocol           = "HTTPS"
+	grpcProtocol            = "GRPC"
+	grpcsProtocol           = "GRPCS"
+	fcgiProtocol            = "FCGI"
 )
 
 const (
@@ -64,13 +70,13 @@ type Writer interface {
 	// Write renders the template.
 	// NOTE: Implementors must ensure that the content of the returned slice is not modified by the implementation
 	// after the return of this function.
-	Write(conf config.TemplateConfig) ([]byte, error)
+	Write(conf *config.TemplateConfig) ([]byte, error)
 }
 
-// Template ...
+// Template ingress template
 type Template struct {
 	tmpl *text_template.Template
-	//fw   watch.FileWatcher
+
 	bp *BufferPool
 }
 
@@ -97,7 +103,7 @@ func NewTemplate(file string) (*Template, error) {
 // 2. Collapses multiple empty lines to single one
 // 3. Re-indent
 // (ATW: always returns nil)
-func cleanConf(in *bytes.Buffer, out *bytes.Buffer) error {
+func cleanConf(in, out *bytes.Buffer) error {
 	depth := 0
 	lineStarted := false
 	emptyLineWritten := false
@@ -176,7 +182,7 @@ func cleanConf(in *bytes.Buffer, out *bytes.Buffer) error {
 
 // Write populates a buffer using a template with NGINX configuration
 // and the servers and upstreams created by Ingress rules
-func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
+func (t *Template) Write(conf *config.TemplateConfig) ([]byte, error) {
 	tmplBuf := t.bp.Get()
 	defer t.bp.Put(tmplBuf)
 
@@ -184,14 +190,14 @@ func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 	defer t.bp.Put(outCmdBuf)
 
 	if klog.V(3).Enabled() {
-		b, err := json.Marshal(conf)
+		b, err := json.Marshal(*conf)
 		if err != nil {
 			klog.Errorf("unexpected error: %v", err)
 		}
 		klog.InfoS("NGINX", "configuration", string(b))
 	}
 
-	err := t.tmpl.Execute(tmplBuf, conf)
+	err := t.tmpl.Execute(tmplBuf, *conf)
 	if err != nil {
 		return nil, err
 	}
@@ -211,78 +217,73 @@ func (t *Template) Write(conf config.TemplateConfig) ([]byte, error) {
 	return res, nil
 }
 
-var (
-	funcMap = text_template.FuncMap{
-		"empty": func(input interface{}) bool {
-			check, ok := input.(string)
-			if ok {
-				return len(check) == 0
-			}
-			return true
-		},
-		"escapeLiteralDollar":             escapeLiteralDollar,
-		"buildLuaSharedDictionaries":      buildLuaSharedDictionaries,
-		"luaConfigurationRequestBodySize": luaConfigurationRequestBodySize,
-		"buildLocation":                   buildLocation,
-		"buildAuthLocation":               buildAuthLocation,
-		"shouldApplyGlobalAuth":           shouldApplyGlobalAuth,
-		"buildAuthResponseHeaders":        buildAuthResponseHeaders,
-		"buildAuthUpstreamLuaHeaders":     buildAuthUpstreamLuaHeaders,
-		"buildAuthProxySetHeaders":        buildAuthProxySetHeaders,
-		"buildAuthUpstreamName":           buildAuthUpstreamName,
-		"shouldApplyAuthUpstream":         shouldApplyAuthUpstream,
-		"extractHostPort":                 extractHostPort,
-		"changeHostPort":                  changeHostPort,
-		"buildProxyPass":                  buildProxyPass,
-		"filterRateLimits":                filterRateLimits,
-		"buildRateLimitZones":             buildRateLimitZones,
-		"buildRateLimit":                  buildRateLimit,
-		"configForLua":                    configForLua,
-		"locationConfigForLua":            locationConfigForLua,
-		"buildResolvers":                  buildResolvers,
-		"buildUpstreamName":               buildUpstreamName,
-		"isLocationInLocationList":        isLocationInLocationList,
-		"isLocationAllowed":               isLocationAllowed,
-		"buildDenyVariable":               buildDenyVariable,
-		"getenv":                          os.Getenv,
-		"contains":                        strings.Contains,
-		"split":                           strings.Split,
-		"hasPrefix":                       strings.HasPrefix,
-		"hasSuffix":                       strings.HasSuffix,
-		"trimSpace":                       strings.TrimSpace,
-		"toUpper":                         strings.ToUpper,
-		"toLower":                         strings.ToLower,
-		"formatIP":                        formatIP,
-		"quote":                           quote,
-		"buildNextUpstream":               buildNextUpstream,
-		"getIngressInformation":           getIngressInformation,
-		"serverConfig": func(all config.TemplateConfig, server *ingress.Server) interface{} {
-			return struct{ First, Second interface{} }{all, server}
-		},
-		"isValidByteSize":                    isValidByteSize,
-		"buildForwardedFor":                  buildForwardedFor,
-		"buildAuthSignURL":                   buildAuthSignURL,
-		"buildAuthSignURLLocation":           buildAuthSignURLLocation,
-		"buildOpentracing":                   buildOpentracing,
-		"buildOpentelemetry":                 buildOpentelemetry,
-		"proxySetHeader":                     proxySetHeader,
-		"enforceRegexModifier":               enforceRegexModifier,
-		"buildCustomErrorDeps":               buildCustomErrorDeps,
-		"buildCustomErrorLocationsPerServer": buildCustomErrorLocationsPerServer,
-		"shouldLoadModSecurityModule":        shouldLoadModSecurityModule,
-		"buildHTTPListener":                  buildHTTPListener,
-		"buildHTTPSListener":                 buildHTTPSListener,
-		"buildOpentracingForLocation":        buildOpentracingForLocation,
-		"buildOpentelemetryForLocation":      buildOpentelemetryForLocation,
-		"shouldLoadOpentracingModule":        shouldLoadOpentracingModule,
-		"shouldLoadOpentelemetryModule":      shouldLoadOpentelemetryModule,
-		"buildModSecurityForLocation":        buildModSecurityForLocation,
-		"buildMirrorLocations":               buildMirrorLocations,
-		"shouldLoadAuthDigestModule":         shouldLoadAuthDigestModule,
-		"buildServerName":                    buildServerName,
-		"buildCorsOriginRegex":               buildCorsOriginRegex,
-	}
-)
+var funcMap = text_template.FuncMap{
+	"empty": func(input interface{}) bool {
+		check, ok := input.(string)
+		if ok {
+			return check == ""
+		}
+		return true
+	},
+	"escapeLiteralDollar":             escapeLiteralDollar,
+	"buildLuaSharedDictionaries":      buildLuaSharedDictionaries,
+	"luaConfigurationRequestBodySize": luaConfigurationRequestBodySize,
+	"buildLocation":                   buildLocation,
+	"buildAuthLocation":               buildAuthLocation,
+	"shouldApplyGlobalAuth":           shouldApplyGlobalAuth,
+	"buildAuthResponseHeaders":        buildAuthResponseHeaders,
+	"buildAuthUpstreamLuaHeaders":     buildAuthUpstreamLuaHeaders,
+	"buildAuthProxySetHeaders":        buildAuthProxySetHeaders,
+	"buildAuthUpstreamName":           buildAuthUpstreamName,
+	"shouldApplyAuthUpstream":         shouldApplyAuthUpstream,
+	"extractHostPort":                 extractHostPort,
+	"changeHostPort":                  changeHostPort,
+	"buildProxyPass":                  buildProxyPass,
+	"filterRateLimits":                filterRateLimits,
+	"buildRateLimitZones":             buildRateLimitZones,
+	"buildRateLimit":                  buildRateLimit,
+	"configForLua":                    configForLua,
+	"locationConfigForLua":            locationConfigForLua,
+	"buildResolvers":                  buildResolvers,
+	"buildUpstreamName":               buildUpstreamName,
+	"isLocationInLocationList":        isLocationInLocationList,
+	"isLocationAllowed":               isLocationAllowed,
+	"buildDenyVariable":               buildDenyVariable,
+	"getenv":                          os.Getenv,
+	"contains":                        strings.Contains,
+	"split":                           strings.Split,
+	"hasPrefix":                       strings.HasPrefix,
+	"hasSuffix":                       strings.HasSuffix,
+	"trimSpace":                       strings.TrimSpace,
+	"toUpper":                         strings.ToUpper,
+	"toLower":                         strings.ToLower,
+	"formatIP":                        formatIP,
+	"quote":                           quote,
+	"buildNextUpstream":               buildNextUpstream,
+	"getIngressInformation":           getIngressInformation,
+	"serverConfig": func(all config.TemplateConfig, server *ingress.Server) interface{} {
+		return struct{ First, Second interface{} }{all, server}
+	},
+	"isValidByteSize":                    isValidByteSize,
+	"buildForwardedFor":                  buildForwardedFor,
+	"buildAuthSignURL":                   buildAuthSignURL,
+	"buildAuthSignURLLocation":           buildAuthSignURLLocation,
+	"buildOpentelemetry":                 buildOpentelemetry,
+	"proxySetHeader":                     proxySetHeader,
+	"enforceRegexModifier":               enforceRegexModifier,
+	"buildCustomErrorDeps":               buildCustomErrorDeps,
+	"buildCustomErrorLocationsPerServer": buildCustomErrorLocationsPerServer,
+	"shouldLoadModSecurityModule":        shouldLoadModSecurityModule,
+	"buildHTTPListener":                  buildHTTPListener,
+	"buildHTTPSListener":                 buildHTTPSListener,
+	"buildOpentelemetryForLocation":      buildOpentelemetryForLocation,
+	"shouldLoadOpentelemetryModule":      shouldLoadOpentelemetryModule,
+	"buildModSecurityForLocation":        buildModSecurityForLocation,
+	"buildMirrorLocations":               buildMirrorLocations,
+	"shouldLoadAuthDigestModule":         shouldLoadAuthDigestModule,
+	"buildServerName":                    buildServerName,
+	"buildCorsOriginRegex":               buildCorsOriginRegex,
+}
 
 // escapeLiteralDollar will replace the $ character with ${literal_dollar}
 // which is made to work via the following configuration in the http section of
@@ -296,7 +297,7 @@ func escapeLiteralDollar(input interface{}) string {
 	if !ok {
 		return ""
 	}
-	return strings.Replace(inputStr, `$`, `${literal_dollar}`, -1)
+	return strings.ReplaceAll(inputStr, `$`, `${literal_dollar}`)
 }
 
 // formatIP will wrap IPv6 addresses in [] and return IPv4 addresses
@@ -328,9 +329,7 @@ func quote(input interface{}) string {
 	return fmt.Sprintf("%q", inputStr)
 }
 
-func buildLuaSharedDictionaries(c interface{}, s interface{}) string {
-	var out []string
-
+func buildLuaSharedDictionaries(c, s interface{}) string {
 	cfg, ok := c.(config.Configuration)
 	if !ok {
 		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
@@ -343,6 +342,7 @@ func buildLuaSharedDictionaries(c interface{}, s interface{}) string {
 		return ""
 	}
 
+	out := make([]string, 0, len(cfg.LuaSharedDicts))
 	for name, size := range cfg.LuaSharedDicts {
 		sizeStr := dictKbToStr(size)
 		out = append(out, fmt.Sprintf("lua_shared_dict %s %s", name, sizeStr))
@@ -364,7 +364,7 @@ func luaConfigurationRequestBodySize(c interface{}) string {
 	if size < cfg.LuaSharedDicts["certificate_data"] {
 		size = cfg.LuaSharedDicts["certificate_data"]
 	}
-	size = size + 1024
+	size += 1024
 
 	return dictKbToStr(size)
 }
@@ -418,7 +418,7 @@ func configForLua(input interface{}) string {
 }
 
 // locationConfigForLua formats some location specific configuration into Lua table represented as string
-func locationConfigForLua(l interface{}, a interface{}) string {
+func locationConfigForLua(l, a interface{}) string {
 	location, ok := l.(*ingress.Location)
 	if !ok {
 		klog.Errorf("expected an '*ingress.Location' type but %T was given", l)
@@ -459,7 +459,7 @@ func locationConfigForLua(l interface{}, a interface{}) string {
 }
 
 // buildResolvers returns the resolvers reading the /etc/resolv.conf file
-func buildResolvers(res interface{}, disableIpv6 interface{}) string {
+func buildResolvers(res, disableIpv6 interface{}) string {
 	// NGINX need IPV6 addresses to be surrounded by brackets
 	nss, ok := res.([]net.IP)
 	if !ok {
@@ -484,7 +484,7 @@ func buildResolvers(res interface{}, disableIpv6 interface{}) string {
 			}
 			r = append(r, fmt.Sprintf("[%v]", ns))
 		} else {
-			r = append(r, fmt.Sprintf("%v", ns))
+			r = append(r, ns.String())
 		}
 	}
 	r = append(r, "valid=30s")
@@ -554,7 +554,7 @@ func buildAuthLocation(input interface{}, globalExternalAuthURL string) string {
 
 	str := base64.URLEncoding.EncodeToString([]byte(location.Path))
 	// removes "=" after encoding
-	str = strings.Replace(str, "=", "", -1)
+	str = strings.ReplaceAll(str, "=", "")
 
 	pathType := "default"
 	if location.PathType != nil {
@@ -644,7 +644,7 @@ func buildAuthUpstreamName(input interface{}, host string) string {
 
 // shouldApplyAuthUpstream returns true only in case when ExternalAuth.URL and
 // ExternalAuth.KeepaliveConnections are all set
-func shouldApplyAuthUpstream(l interface{}, c interface{}) bool {
+func shouldApplyAuthUpstream(l, c interface{}) bool {
 	location, ok := l.(*ingress.Location)
 	if !ok {
 		klog.Errorf("expected an '*ingress.Location' type but %T was returned", l)
@@ -672,14 +672,14 @@ func shouldApplyAuthUpstream(l interface{}, c interface{}) bool {
 }
 
 // extractHostPort will extract the host:port part from the URL specified by url
-func extractHostPort(url string) string {
-	if url == "" {
+func extractHostPort(newURL string) string {
+	if newURL == "" {
 		return ""
 	}
 
-	authURL, err := parser.StringToURL(url)
+	authURL, err := parser.StringToURL(newURL)
 	if err != nil {
-		klog.Errorf("expected a valid URL but %s was returned", url)
+		klog.Errorf("expected a valid URL but %s was returned", newURL)
 		return ""
 	}
 
@@ -687,14 +687,14 @@ func extractHostPort(url string) string {
 }
 
 // changeHostPort will change the host:port part of the url to value
-func changeHostPort(url string, value string) string {
-	if url == "" {
+func changeHostPort(newURL, value string) string {
+	if newURL == "" {
 		return ""
 	}
 
-	authURL, err := parser.StringToURL(url)
+	authURL, err := parser.StringToURL(newURL)
 	if err != nil {
-		klog.Errorf("expected a valid URL but %s was returned", url)
+		klog.Errorf("expected a valid URL but %s was returned", newURL)
 		return ""
 	}
 
@@ -707,7 +707,7 @@ func changeHostPort(url string, value string) string {
 // (specified through the nginx.ingress.kubernetes.io/rewrite-target annotation)
 // If the annotation nginx.ingress.kubernetes.io/add-base-url:"true" is specified it will
 // add a base tag in the head of the response from the service
-func buildProxyPass(host string, b interface{}, loc interface{}) string {
+func buildProxyPass(_ string, b, loc interface{}) string {
 	backends, ok := b.([]*ingress.Backend)
 	if !ok {
 		klog.Errorf("expected an '[]*ingress.Backend' type but %T was returned", b)
@@ -725,21 +725,18 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 
 	proxyPass := "proxy_pass"
 
-	switch location.BackendProtocol {
-	case "AUTO_HTTP":
+	switch strings.ToUpper(location.BackendProtocol) {
+	case autoHTTPProtocol:
 		proto = "$scheme://"
-	case "HTTPS":
+	case httpsProtocol:
 		proto = "https://"
-	case "GRPC":
+	case grpcProtocol:
 		proto = "grpc://"
 		proxyPass = "grpc_pass"
-	case "GRPCS":
+	case grpcsProtocol:
 		proto = "grpcs://"
 		proxyPass = "grpc_pass"
-	case "AJP":
-		proto = ""
-		proxyPass = "ajp_pass"
-	case "FCGI":
+	case fcgiProtocol:
 		proto = ""
 		proxyPass = "fastcgi_pass"
 	}
@@ -751,7 +748,7 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 			if backend.SSLPassthrough {
 				proto = "https://"
 
-				if location.BackendProtocol == "GRPCS" {
+				if location.BackendProtocol == grpcsProtocol {
 					proto = "grpcs://"
 				}
 			}
@@ -778,7 +775,7 @@ func buildProxyPass(host string, b interface{}, loc interface{}) string {
 		var xForwardedPrefix string
 
 		if len(location.XForwardedPrefix) > 0 {
-			xForwardedPrefix = fmt.Sprintf("%s X-Forwarded-Prefix \"%s\";\n", proxySetHeader(location), location.XForwardedPrefix)
+			xForwardedPrefix = fmt.Sprintf("%s X-Forwarded-Prefix %q;\n", proxySetHeader(location), location.XForwardedPrefix)
 		}
 
 		return fmt.Sprintf(`
@@ -938,9 +935,7 @@ func isLocationAllowed(input interface{}) bool {
 	return loc.Denied == nil
 }
 
-var (
-	denyPathSlugMap = map[string]string{}
-)
+var denyPathSlugMap = map[string]string{}
 
 // buildDenyVariable returns a nginx variable for a location in a
 // server to be used in the whitelist check
@@ -980,7 +975,11 @@ func buildNextUpstream(i, r interface{}) string {
 		return ""
 	}
 
-	retryNonIdempotent := r.(bool)
+	retryNonIdempotent, ok := r.(bool)
+	if !ok {
+		klog.Errorf("expected a 'bool' type but %T was returned", i)
+		return ""
+	}
 
 	parts := strings.Split(nextUpstream, " ")
 
@@ -1005,8 +1004,10 @@ func buildNextUpstream(i, r interface{}) string {
 // refer to http://nginx.org/en/docs/syntax.html
 // Nginx differentiates between size and offset
 // offset directives support gigabytes in addition
-var nginxSizeRegex = regexp.MustCompile("^[0-9]+[kKmM]{0,1}$")
-var nginxOffsetRegex = regexp.MustCompile("^[0-9]+[kKmMgG]{0,1}$")
+var (
+	nginxSizeRegex   = regexp.MustCompile(`^\d+[kKmM]?$`)
+	nginxOffsetRegex = regexp.MustCompile(`^\d+[kKmMgG]?$`)
+)
 
 // isValidByteSize validates size units valid in nginx
 // http://nginx.org/en/docs/syntax.html
@@ -1156,13 +1157,17 @@ func buildForwardedFor(input interface{}) string {
 		return ""
 	}
 
-	ffh := strings.Replace(s, "-", "_", -1)
+	ffh := strings.ReplaceAll(s, "-", "_")
 	ffh = strings.ToLower(ffh)
 	return fmt.Sprintf("$http_%v", ffh)
 }
 
 func buildAuthSignURL(authSignURL, authRedirectParam string) string {
-	u, _ := url.Parse(authSignURL)
+	u, err := url.Parse(authSignURL)
+	if err != nil {
+		klog.Errorf("error parsing authSignURL: %v", err)
+		return ""
+	}
 	q := u.Query()
 	if authRedirectParam == "" {
 		authRedirectParam = defaultGlobalAuthRedirectParam
@@ -1187,59 +1192,21 @@ func buildAuthSignURLLocation(location, authSignURL string) string {
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
 func randomString() string {
 	b := make([]rune, 32)
 	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))] // #nosec
+		idx, err := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
+		if err != nil {
+			klog.Errorf("unexpected error generating random index: %v", err)
+			return ""
+		}
+		b[i] = letters[idx.Int64()]
 	}
 
 	return string(b)
 }
 
-func buildOpentracing(c interface{}, s interface{}) string {
-	cfg, ok := c.(config.Configuration)
-	if !ok {
-		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
-		return ""
-	}
-
-	servers, ok := s.([]*ingress.Server)
-	if !ok {
-		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
-		return ""
-	}
-
-	if !shouldLoadOpentracingModule(cfg, servers) {
-		return ""
-	}
-
-	buf := bytes.NewBufferString("")
-
-	if cfg.DatadogCollectorHost != "" {
-		buf.WriteString("opentracing_load_tracer /usr/local/lib/libdd_opentracing.so /etc/nginx/opentracing.json;")
-	} else if cfg.ZipkinCollectorHost != "" {
-		buf.WriteString("opentracing_load_tracer /usr/local/lib/libzipkin_opentracing_plugin.so /etc/nginx/opentracing.json;")
-	} else if cfg.JaegerCollectorHost != "" || cfg.JaegerEndpoint != "" {
-		buf.WriteString("opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /etc/nginx/opentracing.json;")
-	}
-
-	buf.WriteString("\r\n")
-
-	if cfg.OpentracingOperationName != "" {
-		buf.WriteString(fmt.Sprintf("opentracing_operation_name \"%s\";\n", cfg.OpentracingOperationName))
-	}
-	if cfg.OpentracingLocationOperationName != "" {
-		buf.WriteString(fmt.Sprintf("opentracing_location_operation_name \"%s\";\n", cfg.OpentracingLocationOperationName))
-	}
-
-	return buf.String()
-}
-
-func buildOpentelemetry(c interface{}, s interface{}) string {
+func buildOpentelemetry(c, s interface{}) string {
 	cfg, ok := c.(config.Configuration)
 	if !ok {
 		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
@@ -1261,7 +1228,7 @@ func buildOpentelemetry(c interface{}, s interface{}) string {
 	buf.WriteString("\r\n")
 
 	if cfg.OpentelemetryOperationName != "" {
-		buf.WriteString(fmt.Sprintf("opentelemetry_operation_name \"%s\";\n", cfg.OpentelemetryOperationName))
+		fmt.Fprintf(buf, "opentelemetry_operation_name \"%s\";\n", cfg.OpentelemetryOperationName)
 	}
 	return buf.String()
 }
@@ -1273,7 +1240,7 @@ func proxySetHeader(loc interface{}) string {
 		return "proxy_set_header"
 	}
 
-	if location.BackendProtocol == "GRPC" || location.BackendProtocol == "GRPCS" {
+	if location.BackendProtocol == grpcProtocol || location.BackendProtocol == grpcsProtocol {
 		return "grpc_set_header"
 	}
 
@@ -1282,7 +1249,7 @@ func proxySetHeader(loc interface{}) string {
 
 // buildCustomErrorDeps is a utility function returning a struct wrapper with
 // the data required to build the 'CUSTOM_ERRORS' template
-func buildCustomErrorDeps(upstreamName string, errorCodes []int, enableMetrics bool, modsecurityEnabled bool) interface{} {
+func buildCustomErrorDeps(upstreamName string, errorCodes []int, enableMetrics, modsecurityEnabled bool) interface{} {
 	return struct {
 		UpstreamName       string
 		ErrorCodes         []int
@@ -1352,18 +1319,6 @@ func buildCustomErrorLocationsPerServer(input interface{}) []errorLocation {
 	return errorLocations
 }
 
-func opentracingPropagateContext(location *ingress.Location) string {
-	if location == nil {
-		return ""
-	}
-
-	if location.BackendProtocol == "GRPC" || location.BackendProtocol == "GRPCS" {
-		return "opentracing_grpc_propagate_context;"
-	}
-
-	return "opentracing_propagate_context;"
-}
-
 func opentelemetryPropagateContext(location *ingress.Location) string {
 	if location == nil {
 		return ""
@@ -1374,7 +1329,7 @@ func opentelemetryPropagateContext(location *ingress.Location) string {
 // shouldLoadModSecurityModule determines whether or not the ModSecurity module needs to be loaded.
 // First, it checks if `enable-modsecurity` is set in the ConfigMap. If it is not, it iterates over all locations to
 // check if ModSecurity is enabled by the annotation `nginx.ingress.kubernetes.io/enable-modsecurity`.
-func shouldLoadModSecurityModule(c interface{}, s interface{}) bool {
+func shouldLoadModSecurityModule(c, s interface{}) bool {
 	cfg, ok := c.(config.Configuration)
 	if !ok {
 		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
@@ -1405,7 +1360,7 @@ func shouldLoadModSecurityModule(c interface{}, s interface{}) bool {
 	return false
 }
 
-func buildHTTPListener(t interface{}, s interface{}) string {
+func buildHTTPListener(t, s interface{}) string {
 	var out []string
 
 	tc, ok := t.(config.TemplateConfig)
@@ -1425,9 +1380,9 @@ func buildHTTPListener(t interface{}, s interface{}) string {
 		addrV4 = tc.Cfg.BindAddressIpv4
 	}
 
-	co := commonListenOptions(tc, hostname)
+	co := commonListenOptions(&tc, hostname)
 
-	out = append(out, httpListener(addrV4, co, tc)...)
+	out = append(out, httpListener(addrV4, co, &tc)...)
 
 	if !tc.IsIPV6Enabled {
 		return strings.Join(out, "\n")
@@ -1438,12 +1393,12 @@ func buildHTTPListener(t interface{}, s interface{}) string {
 		addrV6 = tc.Cfg.BindAddressIpv6
 	}
 
-	out = append(out, httpListener(addrV6, co, tc)...)
+	out = append(out, httpListener(addrV6, co, &tc)...)
 
 	return strings.Join(out, "\n")
 }
 
-func buildHTTPSListener(t interface{}, s interface{}) string {
+func buildHTTPSListener(t, s interface{}) string {
 	var out []string
 
 	tc, ok := t.(config.TemplateConfig)
@@ -1458,14 +1413,14 @@ func buildHTTPSListener(t interface{}, s interface{}) string {
 		return ""
 	}
 
-	co := commonListenOptions(tc, hostname)
+	co := commonListenOptions(&tc, hostname)
 
 	addrV4 := []string{""}
 	if len(tc.Cfg.BindAddressIpv4) > 0 {
 		addrV4 = tc.Cfg.BindAddressIpv4
 	}
 
-	out = append(out, httpsListener(addrV4, co, tc)...)
+	out = append(out, httpsListener(addrV4, co, &tc)...)
 
 	if !tc.IsIPV6Enabled {
 		return strings.Join(out, "\n")
@@ -1476,12 +1431,12 @@ func buildHTTPSListener(t interface{}, s interface{}) string {
 		addrV6 = tc.Cfg.BindAddressIpv6
 	}
 
-	out = append(out, httpsListener(addrV6, co, tc)...)
+	out = append(out, httpsListener(addrV6, co, &tc)...)
 
 	return strings.Join(out, "\n")
 }
 
-func commonListenOptions(template config.TemplateConfig, hostname string) string {
+func commonListenOptions(template *config.TemplateConfig, hostname string) string {
 	var out []string
 
 	if template.Cfg.UseProxyProtocol {
@@ -1505,7 +1460,7 @@ func commonListenOptions(template config.TemplateConfig, hostname string) string
 	return strings.Join(out, " ")
 }
 
-func httpListener(addresses []string, co string, tc config.TemplateConfig) []string {
+func httpListener(addresses []string, co string, tc *config.TemplateConfig) []string {
 	out := make([]string, 0)
 	for _, address := range addresses {
 		lo := []string{"listen"}
@@ -1516,15 +1471,14 @@ func httpListener(addresses []string, co string, tc config.TemplateConfig) []str
 			lo = append(lo, fmt.Sprintf("%v:%v", address, tc.ListenPorts.HTTP))
 		}
 
-		lo = append(lo, co)
-		lo = append(lo, ";")
+		lo = append(lo, co, ";")
 		out = append(out, strings.Join(lo, " "))
 	}
 
 	return out
 }
 
-func httpsListener(addresses []string, co string, tc config.TemplateConfig) []string {
+func httpsListener(addresses []string, co string, tc *config.TemplateConfig) []string {
 	out := make([]string, 0)
 	for _, address := range addresses {
 		lo := []string{"listen"}
@@ -1547,8 +1501,7 @@ func httpsListener(addresses []string, co string, tc config.TemplateConfig) []st
 			}
 		}
 
-		lo = append(lo, co)
-		lo = append(lo, "ssl")
+		lo = append(lo, co, "ssl")
 
 		if tc.Cfg.UseHTTP2 {
 			lo = append(lo, "http2")
@@ -1561,32 +1514,7 @@ func httpsListener(addresses []string, co string, tc config.TemplateConfig) []st
 	return out
 }
 
-func buildOpentracingForLocation(isOTEnabled bool, isOTTrustSet bool, location *ingress.Location) string {
-	isOTEnabledInLoc := location.Opentracing.Enabled
-	isOTSetInLoc := location.Opentracing.Set
-
-	if isOTEnabled {
-		if isOTSetInLoc && !isOTEnabledInLoc {
-			return "opentracing off;"
-		}
-	} else if !isOTSetInLoc || !isOTEnabledInLoc {
-		return ""
-	}
-
-	opc := opentracingPropagateContext(location)
-	if opc != "" {
-		opc = fmt.Sprintf("opentracing on;\n%v", opc)
-	}
-
-	if (!isOTTrustSet && !location.Opentracing.TrustSet) ||
-		(location.Opentracing.TrustSet && !location.Opentracing.TrustEnabled) {
-		opc = opc + "\nopentracing_trust_incoming_span off;"
-	}
-
-	return opc
-}
-
-func buildOpentelemetryForLocation(isOTEnabled bool, isOTTrustSet bool, location *ingress.Location) string {
+func buildOpentelemetryForLocation(isOTEnabled, isOTTrustSet bool, location *ingress.Location) string {
 	isOTEnabledInLoc := location.Opentelemetry.Enabled
 	isOTSetInLoc := location.Opentelemetry.Set
 
@@ -1604,52 +1532,21 @@ func buildOpentelemetryForLocation(isOTEnabled bool, isOTTrustSet bool, location
 	}
 
 	if location.Opentelemetry.OperationName != "" {
-		opc = opc + "\nopentelemetry_operation_name " + location.Opentelemetry.OperationName + ";"
+		opc += "\nopentelemetry_operation_name " + location.Opentelemetry.OperationName + ";"
 	}
 
 	if (!isOTTrustSet && !location.Opentelemetry.TrustSet) ||
 		(location.Opentelemetry.TrustSet && !location.Opentelemetry.TrustEnabled) {
-		opc = opc + "\nopentelemetry_trust_incoming_spans off;"
+		opc += "\nopentelemetry_trust_incoming_spans off;"
 	} else {
-		opc = opc + "\nopentelemetry_trust_incoming_spans on;"
+		opc += "\nopentelemetry_trust_incoming_spans on;"
 	}
 	return opc
 }
 
-// shouldLoadOpentracingModule determines whether or not the Opentracing module needs to be loaded.
-// First, it checks if `enable-opentracing` is set in the ConfigMap. If it is not, it iterates over all locations to
-// check if Opentracing is enabled by the annotation `nginx.ingress.kubernetes.io/enable-opentracing`.
-func shouldLoadOpentracingModule(c interface{}, s interface{}) bool {
-	cfg, ok := c.(config.Configuration)
-	if !ok {
-		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
-		return false
-	}
-
-	servers, ok := s.([]*ingress.Server)
-	if !ok {
-		klog.Errorf("expected an '[]*ingress.Server' type but %T was returned", s)
-		return false
-	}
-
-	if cfg.EnableOpentracing {
-		return true
-	}
-
-	for _, server := range servers {
-		for _, location := range server.Locations {
-			if location.Opentracing.Enabled {
-				return true
-			}
-		}
-	}
-
-	return false
-}
-
 // shouldLoadOpentelemetryModule determines whether or not the Opentelemetry module needs to be loaded.
 // It checks if `enable-opentelemetry` is set in the ConfigMap.
-func shouldLoadOpentelemetryModule(c interface{}, s interface{}) bool {
+func shouldLoadOpentelemetryModule(c, s interface{}) bool {
 	cfg, ok := c.(config.Configuration)
 	if !ok {
 		klog.Errorf("expected a 'config.Configuration' type but %T was returned", c)
@@ -1676,6 +1573,7 @@ func shouldLoadOpentelemetryModule(c interface{}, s interface{}) bool {
 	return false
 }
 
+//nolint:gocritic // Ignore passing cfg by pointer error
 func buildModSecurityForLocation(cfg config.Configuration, location *ingress.Location) string {
 	isMSEnabledInLoc := location.ModSecurity.Enable
 	isMSEnableSetInLoc := location.ModSecurity.EnableSet
@@ -1727,7 +1625,7 @@ func buildMirrorLocations(locs []*ingress.Location) string {
 	mapped := sets.Set[string]{}
 
 	for _, loc := range locs {
-		if loc.Mirror.Source == "" || loc.Mirror.Target == "" {
+		if loc.Mirror.Source == "" || loc.Mirror.Target == "" || loc.Mirror.Host == "" {
 			continue
 		}
 
@@ -1738,8 +1636,8 @@ func buildMirrorLocations(locs []*ingress.Location) string {
 		mapped.Insert(loc.Mirror.Source)
 		buffer.WriteString(fmt.Sprintf(`location = %v {
 internal;
-proxy_set_header Host %v;
-proxy_pass %v;
+proxy_set_header Host "%v";
+proxy_pass "%v";
 }
 
 `, loc.Mirror.Source, loc.Mirror.Host, loc.Mirror.Target))
@@ -1809,7 +1707,7 @@ func convertGoSliceIntoLuaTable(goSliceInterface interface{}, emptyStringAsNil b
 
 	switch kind {
 	case reflect.String:
-		if emptyStringAsNil && len(goSlice.Interface().(string)) == 0 {
+		if emptyStringAsNil && goSlice.Interface().(string) == "" {
 			return "nil", nil
 		}
 		return fmt.Sprintf(`"%v"`, goSlice.Interface()), nil
@@ -1842,17 +1740,17 @@ func buildCorsOriginRegex(corsOrigins []string) string {
 		return "set $http_origin *;\nset $cors 'true';"
 	}
 
-	var originsRegex string = "if ($http_origin ~* ("
+	originsRegex := "if ($http_origin ~* ("
 	for i, origin := range corsOrigins {
 		originTrimmed := strings.TrimSpace(origin)
 		if len(originTrimmed) > 0 {
 			builtOrigin := buildOriginRegex(originTrimmed)
 			originsRegex += builtOrigin
 			if i != len(corsOrigins)-1 {
-				originsRegex = originsRegex + "|"
+				originsRegex += "|"
 			}
 		}
 	}
-	originsRegex = originsRegex + ")$ ) { set $cors 'true'; }"
+	originsRegex += ")$ ) { set $cors 'true'; }"
 	return originsRegex
 }

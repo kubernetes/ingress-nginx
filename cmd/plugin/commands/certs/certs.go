@@ -18,6 +18,7 @@ package certs
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 
@@ -46,7 +47,10 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	}
 
 	cmd.Flags().String("host", "", "Get the cert for this hostname")
-	cobra.MarkFlagRequired(cmd.Flags(), "host")
+	if err := cobra.MarkFlagRequired(cmd.Flags(), "host"); err != nil {
+		util.PrintError(err)
+		os.Exit(1)
+	}
 	pod = util.AddPodFlag(cmd)
 	deployment = util.AddDeploymentFlag(cmd)
 	selector = util.AddSelectorFlag(cmd)
@@ -55,7 +59,7 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	return cmd
 }
 
-func certs(flags *genericclioptions.ConfigFlags, podName string, deployment string, selector string, container string, host string) error {
+func certs(flags *genericclioptions.ConfigFlags, podName, deployment, selector, container, host string) error {
 	command := []string{"/dbg", "certs", "get", host}
 
 	pod, err := request.ChoosePod(flags, podName, deployment, selector)

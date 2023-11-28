@@ -1,13 +1,12 @@
 ARG E2E_BASE_IMAGE
 FROM ${E2E_BASE_IMAGE} AS BASE
 
-FROM alpine:3.17.2
+FROM alpine:3.18.4
 
 RUN apk update \
 	&& apk upgrade && apk add -U --no-cache \
   ca-certificates \
   bash \
-  curl \
   tzdata \
   libc6-compat \
   openssl

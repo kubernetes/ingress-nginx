@@ -18,6 +18,7 @@ package fastcgi
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	api "k8s.io/api/core/v1"
@@ -49,10 +50,16 @@ func buildIngress() *networking.Ingress {
 
 type mockConfigMap struct {
 	resolver.Mock
+	extraConfigMap map[string]map[string]string
 }
 
 func (m mockConfigMap) GetConfigMap(name string) (*api.ConfigMap, error) {
-	if name != "default/demo-configmap" && name != "otherns/demo-configmap" {
+	if m.extraConfigMap == nil {
+		m.extraConfigMap = make(map[string]map[string]string)
+	}
+	cmdata, ok := m.extraConfigMap[name]
+
+	if name != "default/demo-configmap" && name != "otherns/demo-configmap" && !ok {
 		return nil, fmt.Errorf("there is no configmap with name %v", name)
 	}
 
@@ -61,12 +68,17 @@ func (m mockConfigMap) GetConfigMap(name string) (*api.ConfigMap, error) {
 		return nil, fmt.Errorf("invalid configmap name")
 	}
 
+	data := map[string]string{"REDIRECT_STATUS": "200", "SERVER_NAME": "$server_name"}
+	if ok {
+		data = cmdata
+	}
+
 	return &api.ConfigMap{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Namespace: cmns,
 			Name:      cmn,
 		},
-		Data: map[string]string{"REDIRECT_STATUS": "200", "SERVER_NAME": "$server_name"},
+		Data: data,
 	}, nil
 }
 
@@ -143,7 +155,6 @@ func TestParseFastCGIInvalidParamsConfigMapAnnotation(t *testing.T) {
 
 	invalidConfigMapList := []string{"unknown/configMap", "unknown/config/map"}
 	for _, configmap := range invalidConfigMapList {
-
 		data := map[string]string{}
 		data[parser.GetAnnotationWithPrefix("fastcgi-params-configmap")] = configmap
 		ing.SetAnnotations(data)
@@ -227,11 +238,9 @@ func TestParseFastCGIParamsConfigMapAnnotationWithDifferentNS(t *testing.T) {
 	if err == nil {
 		t.Errorf("Different namespace configmap should return an error")
 	}
-
 }
 
 func TestConfigEquality(t *testing.T) {
-
 	var nilConfig *Config
 
 	config := Config{
@@ -281,5 +290,123 @@ func TestConfigEquality(t *testing.T) {
 
 	if !config.Equal(&config4) {
 		t.Errorf("config4 should be equal to config")
+	}
+}
+
+func Test_fastcgi_Parse(t *testing.T) {
+	tests := []struct {
+		name          string
+		index         string
+		configmapname string
+		configmap     map[string]string
+		want          interface{}
+		wantErr       bool
+	}{
+		{
+			name:          "valid configuration",
+			index:         "indexxpto-92123.php",
+			configmapname: "default/fcgiconfig",
+			configmap: map[string]string{
+				"REQUEST_METHOD":  "$request_method",
+				"SCRIPT_FILENAME": "$document_root$fastcgi_script_name",
+			},
+			want: Config{
+				Index: "indexxpto-92123.php",
+				Params: map[string]string{
+					"REQUEST_METHOD":  "$request_method",
+					"SCRIPT_FILENAME": "$document_root$fastcgi_script_name",
+				},
+			},
+		},
+		{
+			name:          "invalid index name",
+			index:         "indexxpto-92123$xx.php",
+			configmapname: "default/fcgiconfig",
+			configmap: map[string]string{
+				"REQUEST_METHOD":  "$request_method",
+				"SCRIPT_FILENAME": "$document_root$fastcgi_script_name",
+			},
+			want:    Config{},
+			wantErr: true,
+		},
+		{
+			name:          "invalid configmap namespace",
+			index:         "indexxpto-92123.php",
+			configmapname: "otherns/fcgiconfig",
+			configmap: map[string]string{
+				"REQUEST_METHOD":  "$request_method",
+				"SCRIPT_FILENAME": "$document_root$fastcgi_script_name",
+			},
+			want:    Config{Index: "indexxpto-92123.php"},
+			wantErr: true,
+		},
+		{
+			name:          "invalid configmap namespace name",
+			index:         "indexxpto-92123.php",
+			configmapname: "otherns/fcgicon;{fig",
+			configmap: map[string]string{
+				"REQUEST_METHOD":  "$request_method",
+				"SCRIPT_FILENAME": "$document_root$fastcgi_script_name",
+			},
+			want:    Config{Index: "indexxpto-92123.php"},
+			wantErr: true,
+		},
+		{
+			name:          "invalid configmap values key",
+			index:         "indexxpto-92123.php",
+			configmapname: "default/fcgiconfig",
+			configmap: map[string]string{
+				"REQUEST_METHOD$XPTO": "$request_method",
+			},
+			want:    Config{Index: "indexxpto-92123.php"},
+			wantErr: true,
+		},
+		{
+			name:          "invalid configmap values val",
+			index:         "indexxpto-92123.php",
+			configmapname: "default/fcgiconfig",
+			configmap: map[string]string{
+				"REQUEST_METHOD_XPTO": "$request_method{test};a",
+			},
+			want:    Config{Index: "indexxpto-92123.php"},
+			wantErr: true,
+		},
+		{
+			name:          "invalid configmap values val",
+			index:         "indexxpto-92123.php",
+			configmapname: "default/fcgiconfig",
+			configmap: map[string]string{
+				"SCRIPT_FILENAME": "/app/src/index.php",
+			},
+			want: Config{Index: "indexxpto-92123.php", Params: map[string]string{
+				"SCRIPT_FILENAME": "/app/src/index.php",
+			}},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ing := buildIngress()
+
+			data := map[string]string{}
+			data[parser.GetAnnotationWithPrefix("fastcgi-index")] = tt.index
+			data[parser.GetAnnotationWithPrefix("fastcgi-params-configmap")] = tt.configmapname
+			ing.SetAnnotations(data)
+
+			m := &mockConfigMap{
+				extraConfigMap: map[string]map[string]string{
+					tt.configmapname: tt.configmap,
+				},
+			}
+
+			got, err := NewParser(m).Parse(ing)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("fastcgi.Parse() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("fastcgi.Parse() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

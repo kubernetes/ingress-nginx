@@ -15,7 +15,7 @@ ARG BASE_IMAGE
 ARG GOLANG_VERSION
 ARG ETCD_VERSION
 
-FROM golang:${GOLANG_VERSION}-alpine3.17 as GO
+FROM golang:${GOLANG_VERSION}-alpine3.18 as GO
 FROM registry.k8s.io/etcd:${ETCD_VERSION} as etcd
 
 FROM ${BASE_IMAGE}
@@ -65,7 +65,6 @@ RUN apk update && apk upgrade && apk add --no-cache \
   unzip \
   openssl \
   cfssl@testing \
-  curl \
   tzdata \
   libc6-compat
 
@@ -92,11 +91,11 @@ RUN  luarocks install busted \
   && luarocks install luacheck
 
 RUN wget -qO /usr/local/bin/kubectl \
-  https://storage.googleapis.com/kubernetes-release/release/${K8S_RELEASE}/bin/linux/${TARGETARCH}/kubectl \
+  https://dl.k8s.io/release/${K8S_RELEASE}/bin/linux/${TARGETARCH}/kubectl \
   && chmod +x /usr/local/bin/kubectl
 
 RUN wget -qO /usr/local/bin/kube-apiserver \
-  https://storage.googleapis.com/kubernetes-release/release/${K8S_RELEASE}/bin/linux/${TARGETARCH}/kube-apiserver \
+  https://dl.k8s.io/release/${K8S_RELEASE}/bin/linux/${TARGETARCH}/kube-apiserver \
   && chmod +x /usr/local/bin/kube-apiserver
 
 RUN wget -qO /tmp/ct-${CHART_TESTING_VERSION}-linux-${TARGETARCH}.tar.gz \

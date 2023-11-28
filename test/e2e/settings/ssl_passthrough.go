@@ -19,7 +19,7 @@ package settings
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
+	"net"
 	"net/http"
 	"strings"
 
@@ -34,7 +34,7 @@ import (
 )
 
 var _ = framework.IngressNginxDescribe("[Flag] enable-ssl-passthrough", func() {
-	f := framework.NewDefaultFramework("ssl-passthrough")
+	f := framework.NewDefaultFramework("ssl-passthrough", framework.WithHTTPBunEnabled())
 
 	ginkgo.BeforeEach(func() {
 		err := f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
@@ -54,7 +54,6 @@ var _ = framework.IngressNginxDescribe("[Flag] enable-ssl-passthrough", func() {
 
 	ginkgo.Describe("With enable-ssl-passthrough enabled", func() {
 		ginkgo.It("should enable ssl-passthrough-proxy-port on a different port", func() {
-
 			err := f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
 				args := deployment.Spec.Template.Spec.Containers[0].Args
 				args = append(args, "--ssl-passthrough-proxy-port=1442")
@@ -77,7 +76,6 @@ var _ = framework.IngressNginxDescribe("[Flag] enable-ssl-passthrough", func() {
 		})
 
 		ginkgo.It("should pass unknown traffic to default backend and handle known traffic", func() {
-
 			host := "testpassthrough.com"
 			echoName := "echopass"
 
@@ -86,7 +84,14 @@ var _ = framework.IngressNginxDescribe("[Flag] enable-ssl-passthrough", func() {
 				"nginx.ingress.kubernetes.io/ssl-passthrough": "true",
 			}
 
-			ingressDef := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, echoName, 80, annotations)
+			ingressDef := framework.NewSingleIngressWithTLS(host,
+				"/",
+				host,
+				[]string{host},
+				f.Namespace,
+				echoName,
+				80,
+				annotations)
 			tlsConfig, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
 				ingressDef.Spec.TLS[0].Hosts,
 				ingressDef.Spec.TLS[0].SecretName,
@@ -119,7 +124,17 @@ var _ = framework.IngressNginxDescribe("[Flag] enable-ssl-passthrough", func() {
 					Value: "/certs/tls.key",
 				},
 			}
-			f.NewDeploymentWithOpts("echopass", "ghcr.io/sharat87/httpbun:latest", 80, 1, nil, nil, envs, volumeMount, volume, false)
+
+			f.NewDeploymentWithOpts("echopass",
+				framework.HTTPBunImage,
+				80,
+				1,
+				nil,
+				nil,
+				envs,
+				volumeMount,
+				volume,
+				false)
 
 			f.EnsureIngress(ingressDef)
 
@@ -133,7 +148,14 @@ var _ = framework.IngressNginxDescribe("[Flag] enable-ssl-passthrough", func() {
 
 			/* This one should not receive traffic as it does not contain passthrough annotation */
 			hostBad := "noannotationnopassthrough.com"
-			ingBad := f.EnsureIngress(framework.NewSingleIngressWithTLS(hostBad, "/", hostBad, []string{hostBad}, f.Namespace, echoName, 80, nil))
+			ingBad := f.EnsureIngress(framework.NewSingleIngressWithTLS(hostBad,
+				"/",
+				hostBad,
+				[]string{hostBad},
+				f.Namespace,
+				echoName,
+				80,
+				nil))
 			tlsConfigBad, err := framework.CreateIngressTLSSecret(f.KubeClientSet,
 				ingBad.Spec.TLS[0].Hosts,
 				ingBad.Spec.TLS[0].SecretName,
@@ -146,20 +168,21 @@ var _ = framework.IngressNginxDescribe("[Flag] enable-ssl-passthrough", func() {
 					return strings.Contains(server, "listen 442")
 				})
 
+			//nolint:gosec // Ignore the gosec error in testing
 			f.HTTPTestClientWithTLSConfig(&tls.Config{ServerName: host, InsecureSkipVerify: true}).
 				GET("/").
-				WithURL(fmt.Sprintf("https://%s:443", host)).
+				WithURL("https://"+net.JoinHostPort(host, "443")).
 				ForceResolve(f.GetNginxIP(), 443).
 				Expect().
 				Status(http.StatusOK)
 
+			//nolint:gosec // Ignore the gosec error in testing
 			f.HTTPTestClientWithTLSConfig(&tls.Config{ServerName: hostBad, InsecureSkipVerify: true}).
 				GET("/").
-				WithURL(fmt.Sprintf("https://%s:443", hostBad)).
+				WithURL("https://"+net.JoinHostPort(hostBad, "443")).
 				ForceResolve(f.GetNginxIP(), 443).
 				Expect().
 				Status(http.StatusNotFound)
-
 		})
 	})
 })

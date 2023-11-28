@@ -17,7 +17,6 @@ limitations under the License.
 package annotations
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -27,13 +26,12 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	networking "k8s.io/api/networking/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
 var _ = framework.DescribeAnnotation("satisfy", func() {
-	f := framework.NewDefaultFramework("satisfy")
+	f := framework.NewDefaultFramework("satisfy", framework.WithHTTPBunEnabled())
 
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
@@ -84,17 +82,6 @@ var _ = framework.DescribeAnnotation("satisfy", func() {
 	ginkgo.It("should allow multiple auth with satisfy any", func() {
 		host := "auth"
 
-		// setup external auth
-		f.NewHttpbunDeployment()
-
-		err := framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, framework.HTTPBunService, f.Namespace, 1)
-		assert.Nil(ginkgo.GinkgoT(), err)
-
-		e, err := f.KubeClientSet.CoreV1().Endpoints(f.Namespace).Get(context.TODO(), framework.HTTPBunService, metav1.GetOptions{})
-		assert.Nil(ginkgo.GinkgoT(), err)
-
-		httpbunIP := e.Subsets[0].Addresses[0].IP
-
 		// create basic auth secret at ingress
 		s := f.EnsureSecret(buildSecret("uname", "pwd", "basic-secret", f.Namespace))
 
@@ -105,7 +92,7 @@ var _ = framework.DescribeAnnotation("satisfy", func() {
 			"nginx.ingress.kubernetes.io/auth-realm":  "test basic auth",
 
 			// annotations for external auth
-			"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/basic-auth/user/password", httpbunIP),
+			"nginx.ingress.kubernetes.io/auth-url":    fmt.Sprintf("http://%s/basic-auth/user/password", f.HTTPBunIP),
 			"nginx.ingress.kubernetes.io/auth-signin": "http://$host/auth/start",
 
 			// set satisfy any

@@ -12,6 +12,6 @@ metadata:
   annotations: {{ toYaml .Values.controller.tcp.annotations | nindent 4 }}
 {{- end }}
   name: {{ include "ingress-nginx.fullname" . }}-tcp
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ include "ingress-nginx.namespace" . }}
 data: {{ tpl (toYaml .Values.tcp) . | nindent 2 }}
 {{- end }}

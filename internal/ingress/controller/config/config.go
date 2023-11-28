@@ -29,10 +29,8 @@ import (
 	"k8s.io/ingress-nginx/pkg/util/runtime"
 )
 
-var (
-	// EnableSSLChainCompletion Autocomplete SSL certificate chains with missing intermediate CA certificates.
-	EnableSSLChainCompletion = false
-)
+// EnableSSLChainCompletion Autocomplete SSL certificate chains with missing intermediate CA certificates.
+var EnableSSLChainCompletion = false
 
 const (
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
@@ -48,7 +46,7 @@ const (
 	// that tell browsers that it should only be communicated with using HTTPS, instead of using HTTP.
 	// https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security
 	// max-age is the time, in seconds, that the browser should remember that this site is only to be accessed using HTTPS.
-	hstsMaxAge = "15724800"
+	hstsMaxAge = "31536000"
 
 	gzipTypes = "application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/javascript text/plain text/x-component"
 
@@ -91,11 +89,22 @@ const (
 
 // Configuration represents the content of nginx.conf file
 type Configuration struct {
-	defaults.Backend `json:",squash"`
+	defaults.Backend `json:",squash"` //nolint:staticcheck // Ignore unknown JSON option "squash" error
 
 	// AllowSnippetAnnotations enable users to add their own snippets via ingress annotation.
 	// If disabled, only snippets added via ConfigMap are added to ingress.
 	AllowSnippetAnnotations bool `json:"allow-snippet-annotations"`
+
+	// AllowCrossNamespaceResources enables users to consume cross namespace resource on annotations
+	// Case disabled, attempts to use secrets or configmaps from a namespace different from Ingress will
+	// be denied
+	// This value will default to `false` on future releases
+	AllowCrossNamespaceResources bool `json:"allow-cross-namespace-resources"`
+
+	// AnnotationsRiskLevel represents the risk accepted on an annotation. If the risk is, for instance `Medium`, annotations
+	// with risk High and Critical will not be accepted.
+	// Default Risk is Critical by default, but this may be changed in future releases
+	AnnotationsRiskLevel string `json:"annotations-risk-level"`
 
 	// AnnotationValueWordBlocklist defines words that should not be part of an user annotation value
 	// (can be used to run arbitrary code or configs, for example) and that should be dropped.
@@ -120,15 +129,19 @@ type Configuration struct {
 	// By default this is disabled
 	EnableAccessLogForDefaultBackend bool `json:"enable-access-log-for-default-backend"`
 
+	// EnableAuthAccessLog enable auth access log
+	// By default this is disabled
+	EnableAuthAccessLog bool `json:"enable-auth-access-log"`
+
 	// AccessLogPath sets the path of the access logs for both http and stream contexts if enabled
 	// http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log
 	// http://nginx.org/en/docs/stream/ngx_stream_log_module.html#access_log
 	// By default access logs go to /var/log/nginx/access.log
 	AccessLogPath string `json:"access-log-path,omitempty"`
 
-	// HttpAccessLogPath sets the path of the access logs for http context globally if enabled
+	// HTTPAccessLogPath sets the path of the access logs for http context globally if enabled
 	// http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log
-	HttpAccessLogPath string `json:"http-access-log-path,omitempty"`
+	HTTPAccessLogPath string `json:"http-access-log-path,omitempty"`
 
 	// StreamAccessLogPath sets the path of the access logs for stream context globally if enabled
 	// http://nginx.org/en/docs/stream/ngx_stream_log_module.html#access_log
@@ -215,16 +228,19 @@ type Configuration struct {
 
 	// https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_field_size
 	// HTTP2MaxFieldSize Limits the maximum size of an HPACK-compressed request header field
+	// Deprecated: HTTP2MaxFieldSize is deprecated.
 	HTTP2MaxFieldSize string `json:"http2-max-field-size,omitempty"`
 
 	// https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_header_size
 	// HTTP2MaxHeaderSize Limits the maximum size of the entire request header list after HPACK decompression
+	// Deprecated: HTTP2MaxHeaderSize is deprecated.
 	HTTP2MaxHeaderSize string `json:"http2-max-header-size,omitempty"`
 
 	// http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_requests
 	// HTTP2MaxRequests Sets the maximum number of requests (including push requests) that can be served
 	// through one HTTP/2 connection, after which the next client request will lead to connection closing
 	// and the need of establishing a new connection.
+	// Deprecated: HTTP2MaxRequests is deprecated.
 	HTTP2MaxRequests int `json:"http2-max-requests,omitempty"`
 
 	// http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_concurrent_streams
@@ -408,13 +424,13 @@ type Configuration struct {
 	// Example '60s'
 	ProxyProtocolHeaderTimeout time.Duration `json:"proxy-protocol-header-timeout,omitempty"`
 
+	// Enables or disables the directive aio_write that writes files files asynchronously
+	// https://nginx.org/en/docs/http/ngx_http_core_module.html#aio_write
+	EnableAioWrite bool `json:"enable-aio-write,omitempty"`
+
 	// Enables or disables the use of the nginx module that compresses responses using the "gzip" method
 	// http://nginx.org/en/docs/http/ngx_http_gzip_module.html
 	UseGzip bool `json:"use-gzip,omitempty"`
-
-	// Enables or disables the use of the nginx geoip module that creates variables with values depending on the client IP
-	// http://nginx.org/en/docs/http/ngx_http_geoip_module.html
-	UseGeoIP bool `json:"use-geoip,omitempty"`
 
 	// UseGeoIP2 enables the geoip2 module for NGINX
 	// By default this is disabled
@@ -524,6 +540,10 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_http_version
 	ProxyHTTPVersion string `json:"proxy-http-version"`
 
+	// Disables NGINX proxy-intercept-errors when error_page/custom-http-errors are set
+	// https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors
+	DisableProxyInterceptErrors bool `json:"disable-proxy-intercept-errors,omitempty"`
+
 	// Sets the ipv4 addresses on which the server will accept requests.
 	BindAddressIpv4 []string `json:"bind-address-ipv4,omitempty"`
 
@@ -534,7 +554,7 @@ type Configuration struct {
 	UseForwardedHeaders bool `json:"use-forwarded-headers"`
 
 	// Sets whether to enable the real ip module
-	EnableRealIp bool `json:"enable-real-ip"`
+	EnableRealIP bool `json:"enable-real-ip"`
 
 	// Sets the header field for identifying the originating IP address of a client
 	// Default is X-Forwarded-For
@@ -551,22 +571,6 @@ type Configuration struct {
 	// Adds an X-Original-Uri header with the original request URI to the backend request
 	// Default: true
 	ProxyAddOriginalURIHeader bool `json:"proxy-add-original-uri-header"`
-
-	// EnableOpentracing enables the nginx Opentracing extension
-	// https://github.com/opentracing-contrib/nginx-opentracing
-	// By default this is disabled
-	EnableOpentracing bool `json:"enable-opentracing"`
-
-	// OpentracingOperationName specifies a custom name for the server span
-	OpentracingOperationName string `json:"opentracing-operation-name"`
-
-	// OpentracingOperationName specifies a custom name for the location span
-	OpentracingLocationOperationName string `json:"opentracing-location-operation-name"`
-
-	// OpentracingTrustIncomingSpan sets whether or not to trust incoming trace spans
-	// If false, incoming span headers will be rejected
-	// Default: true
-	OpentracingTrustIncomingSpan bool `json:"opentracing-trust-incoming-span"`
 
 	// EnableOpentelemetry enables the nginx Opentelemetry extension
 	// By default this is disabled
@@ -596,120 +600,28 @@ type Configuration struct {
 	OtelServiceName string `json:"otel-service-name"`
 
 	// OtelSampler specifies the sampler to use for any traces created
-	// Default: AlwaysOff
+	// Default: AlwaysOn
 	OtelSampler string `json:"otel-sampler"`
 
 	// OtelSamplerRatio specifies the sampler ratio to use for any traces created
 	// Default: 0.01
 	OtelSamplerRatio float32 `json:"otel-sampler-ratio"`
 
-	//OtelSamplerParentBased specifies the parent based sampler to be use for any traces created
-	// Default: false
+	// OtelSamplerParentBased specifies the parent based sampler to be use for any traces created
+	// Default: true
 	OtelSamplerParentBased bool `json:"otel-sampler-parent-based"`
 
 	// MaxQueueSize specifies the max queue size for uploading traces
+	// Default: 2048
 	OtelMaxQueueSize int32 `json:"otel-max-queuesize"`
 
 	// ScheduleDelayMillis specifies the max delay between uploading traces
+	// Default: 5000
 	OtelScheduleDelayMillis int32 `json:"otel-schedule-delay-millis"`
 
 	// MaxExportBatchSize specifies the max export batch size to used when uploading traces
+	// Default: 512
 	OtelMaxExportBatchSize int32 `json:"otel-max-export-batch-size"`
-
-	// ZipkinCollectorHost specifies the host to use when uploading traces
-	ZipkinCollectorHost string `json:"zipkin-collector-host"`
-
-	// ZipkinCollectorPort specifies the port to use when uploading traces
-	// Default: 9411
-	ZipkinCollectorPort int `json:"zipkin-collector-port"`
-
-	// ZipkinServiceName specifies the service name to use for any traces created
-	// Default: nginx
-	ZipkinServiceName string `json:"zipkin-service-name"`
-
-	// ZipkinSampleRate specifies sampling rate for traces
-	// Default: 1.0
-	ZipkinSampleRate float32 `json:"zipkin-sample-rate"`
-
-	// JaegerCollectorHost specifies the host to use when uploading traces
-	JaegerCollectorHost string `json:"jaeger-collector-host"`
-
-	// JaegerCollectorPort specifies the port to use when uploading traces
-	// Default: 6831
-	JaegerCollectorPort int `json:"jaeger-collector-port"`
-
-	// JaegerEndpoint specifies the enpoint to use when uploading traces to a collector over TCP
-	JaegerEndpoint string `json:"jaeger-endpoint"`
-
-	// JaegerServiceName specifies the service name to use for any traces created
-	// Default: nginx
-	JaegerServiceName string `json:"jaeger-service-name"`
-
-	// JaegerPropagationFormat specifies the traceparent/tracestate propagation format
-	JaegerPropagationFormat string `json:"jaeger-propagation-format"`
-
-	// JaegerSamplerType specifies the sampler to be used when sampling traces.
-	// The available samplers are: const, probabilistic, ratelimiting, remote
-	// Default: const
-	JaegerSamplerType string `json:"jaeger-sampler-type"`
-
-	// JaegerSamplerParam specifies the argument to be passed to the sampler constructor
-	// Default: 1
-	JaegerSamplerParam string `json:"jaeger-sampler-param"`
-
-	// JaegerSamplerHost specifies the host used for remote sampling consultation
-	// Default: http://127.0.0.1
-	JaegerSamplerHost string `json:"jaeger-sampler-host"`
-
-	// JaegerSamplerHost specifies the host used for remote sampling consultation
-	// Default: 5778
-	JaegerSamplerPort int `json:"jaeger-sampler-port"`
-
-	// JaegerTraceContextHeaderName specifies the header name used for passing trace context
-	// Default: uber-trace-id
-	JaegerTraceContextHeaderName string `json:"jaeger-trace-context-header-name"`
-
-	// JaegerDebugHeader specifies the header name used for force sampling
-	// Default: jaeger-debug-id
-	JaegerDebugHeader string `json:"jaeger-debug-header"`
-
-	// JaegerBaggageHeader specifies the header name used to submit baggage if there is no root span
-	// Default: jaeger-baggage
-	JaegerBaggageHeader string `json:"jaeger-baggage-header"`
-
-	// TraceBaggageHeaderPrefix specifies the header prefix used to propagate baggage
-	// Default: uberctx-
-	JaegerTraceBaggageHeaderPrefix string `json:"jaeger-tracer-baggage-header-prefix"`
-
-	// DatadogCollectorHost specifies the datadog agent host to use when uploading traces
-	DatadogCollectorHost string `json:"datadog-collector-host"`
-
-	// DatadogCollectorPort specifies the port to use when uploading traces
-	// Default: 8126
-	DatadogCollectorPort int `json:"datadog-collector-port"`
-
-	// DatadogEnvironment specifies the environment this trace belongs to.
-	// Default: prod
-	DatadogEnvironment string `json:"datadog-environment"`
-
-	// DatadogServiceName specifies the service name to use for any traces created
-	// Default: nginx
-	DatadogServiceName string `json:"datadog-service-name"`
-
-	// DatadogOperationNameOverride overrides the operation naem to use for any traces crated
-	// Default: nginx.handle
-	DatadogOperationNameOverride string `json:"datadog-operation-name-override"`
-
-	// DatadogPrioritySampling specifies to use client-side sampling
-	// If true disables client-side sampling (thus ignoring sample_rate) and enables distributed
-	// priority sampling, where traces are sampled based on a combination of user-assigned
-	// Default: true
-	DatadogPrioritySampling bool `json:"datadog-priority-sampling"`
-
-	// DatadogSampleRate specifies sample rate for any traces created.
-	// This is effective only when datadog-priority-sampling is false
-	// Default: 1.0
-	DatadogSampleRate float32 `json:"datadog-sample-rate"`
 
 	// MainSnippet adds custom configuration to the main section of the nginx configuration
 	MainSnippet string `json:"main-snippet"`
@@ -830,6 +742,12 @@ type Configuration struct {
 	// http://nginx.org/en/docs/ngx_core_module.html#debug_connection
 	// Default: ""
 	DebugConnections []string `json:"debug-connections"`
+
+	// StrictValidatePathType enable the strict validation of Ingress Paths
+	// It enforces that pathType of type Exact or Prefix should start with / and contain only
+	// alphanumeric chars, "-", "_", "/".In case of additional characters,
+	// like used on Rewrite configurations the user should use pathType as ImplementationSpecific
+	StrictValidatePathType bool `json:"strict-validate-path-type"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -847,12 +765,15 @@ func NewDefault() Configuration {
 	defGlobalExternalAuth := GlobalExternalAuth{"", "", "", "", "", append(defResponseHeaders, ""), "", "", "", []string{}, map[string]string{}, false}
 
 	cfg := Configuration{
-		AllowSnippetAnnotations:          true,
+		AllowSnippetAnnotations:          false,
+		AllowCrossNamespaceResources:     true,
 		AllowBackendServerHeader:         false,
 		AnnotationValueWordBlocklist:     "",
+		AnnotationsRiskLevel:             "Critical",
 		AccessLogPath:                    "/var/log/nginx/access.log",
 		AccessLogParams:                  "",
 		EnableAccessLogForDefaultBackend: false,
+		EnableAuthAccessLog:              false,
 		WorkerCPUAffinity:                "",
 		ErrorLogPath:                     "/var/log/nginx/error.log",
 		BlockCIDRs:                       defBlockEntity,
@@ -868,14 +789,14 @@ func NewDefault() Configuration {
 		EnableUnderscoresInHeaders:       false,
 		ErrorLogLevel:                    errorLevel,
 		UseForwardedHeaders:              false,
-		EnableRealIp:                     false,
+		EnableRealIP:                     false,
 		ForwardedForHeader:               "X-Forwarded-For",
 		ComputeFullForwardedFor:          false,
 		ProxyAddOriginalURIHeader:        false,
 		GenerateRequestID:                true,
-		HTTP2MaxFieldSize:                "4k",
-		HTTP2MaxHeaderSize:               "16k",
-		HTTP2MaxRequests:                 1000,
+		HTTP2MaxFieldSize:                "",
+		HTTP2MaxHeaderSize:               "",
+		HTTP2MaxRequests:                 0,
 		HTTP2MaxConcurrentStreams:        128,
 		HTTPRedirectCode:                 308,
 		HSTS:                             true,
@@ -917,45 +838,47 @@ func NewDefault() Configuration {
 		SSLSessionTickets:                false,
 		SSLSessionTimeout:                sslSessionTimeout,
 		EnableBrotli:                     false,
+		EnableAioWrite:                   true,
 		UseGzip:                          false,
-		UseGeoIP:                         true,
 		UseGeoIP2:                        false,
 		WorkerProcesses:                  strconv.Itoa(runtime.NumCPU()),
 		WorkerShutdownTimeout:            "240s",
 		VariablesHashBucketSize:          256,
 		VariablesHashMaxSize:             2048,
 		UseHTTP2:                         true,
+		DisableProxyInterceptErrors:      false,
 		ProxyStreamTimeout:               "600s",
 		ProxyStreamNextUpstream:          true,
 		ProxyStreamNextUpstreamTimeout:   "600s",
 		ProxyStreamNextUpstreamTries:     3,
 		Backend: defaults.Backend{
-			ProxyBodySize:            bodySize,
-			ProxyConnectTimeout:      5,
-			ProxyReadTimeout:         60,
-			ProxySendTimeout:         60,
-			ProxyBuffersNumber:       4,
-			ProxyBufferSize:          "4k",
-			ProxyCookieDomain:        "off",
-			ProxyCookiePath:          "off",
-			ProxyNextUpstream:        "error timeout",
-			ProxyNextUpstreamTimeout: 0,
-			ProxyNextUpstreamTries:   3,
-			ProxyRequestBuffering:    "on",
-			ProxyRedirectFrom:        "off",
-			ProxyRedirectTo:          "off",
-			PreserveTrailingSlash:    false,
-			SSLRedirect:              true,
-			CustomHTTPErrors:         []int{},
-			DenylistSourceRange:      []string{},
-			WhitelistSourceRange:     []string{},
-			SkipAccessLogURLs:        []string{},
-			LimitRate:                0,
-			LimitRateAfter:           0,
-			ProxyBuffering:           "off",
-			ProxyHTTPVersion:         "1.1",
-			ProxyMaxTempFileSize:     "1024m",
-			ServiceUpstream:          false,
+			ProxyBodySize:               bodySize,
+			ProxyConnectTimeout:         5,
+			ProxyReadTimeout:            60,
+			ProxySendTimeout:            60,
+			ProxyBuffersNumber:          4,
+			ProxyBufferSize:             "4k",
+			ProxyCookieDomain:           "off",
+			ProxyCookiePath:             "off",
+			ProxyNextUpstream:           "error timeout",
+			ProxyNextUpstreamTimeout:    0,
+			ProxyNextUpstreamTries:      3,
+			ProxyRequestBuffering:       "on",
+			ProxyRedirectFrom:           "off",
+			ProxyRedirectTo:             "off",
+			PreserveTrailingSlash:       false,
+			SSLRedirect:                 true,
+			CustomHTTPErrors:            []int{},
+			DisableProxyInterceptErrors: false,
+			DenylistSourceRange:         []string{},
+			WhitelistSourceRange:        []string{},
+			SkipAccessLogURLs:           []string{},
+			LimitRate:                   0,
+			LimitRateAfter:              0,
+			ProxyBuffering:              "off",
+			ProxyHTTPVersion:            "1.1",
+			ProxyMaxTempFileSize:        "1024m",
+			ServiceUpstream:             false,
 		},
 		UpstreamKeepaliveConnections:           320,
 		UpstreamKeepaliveTime:                  "1h",
@@ -964,30 +887,16 @@ func NewDefault() Configuration {
 		LimitConnZoneVariable:                  defaultLimitConnZoneVariable,
 		BindAddressIpv4:                        defBindAddress,
 		BindAddressIpv6:                        defBindAddress,
-		OpentracingTrustIncomingSpan:           true,
 		OpentelemetryTrustIncomingSpan:         true,
-		OpentelemetryConfig:                    "/etc/nginx/opentelemetry.toml",
+		OpentelemetryConfig:                    "/etc/ingress-controller/telemetry/opentelemetry.toml",
 		OtlpCollectorPort:                      "4317",
 		OtelServiceName:                        "nginx",
-		OtelSampler:                            "AlwaysOff",
+		OtelSampler:                            "AlwaysOn",
 		OtelSamplerRatio:                       0.01,
-		OtelSamplerParentBased:                 false,
-		ZipkinCollectorPort:                    9411,
-		ZipkinServiceName:                      "nginx",
-		ZipkinSampleRate:                       1.0,
-		JaegerCollectorPort:                    6831,
-		JaegerPropagationFormat:                "jaeger",
-		JaegerServiceName:                      "nginx",
-		JaegerSamplerType:                      "const",
-		JaegerSamplerParam:                     "1",
-		JaegerSamplerPort:                      5778,
-		JaegerSamplerHost:                      "http://127.0.0.1",
-		DatadogServiceName:                     "nginx",
-		DatadogEnvironment:                     "prod",
-		DatadogCollectorPort:                   8126,
-		DatadogOperationNameOverride:           "nginx.handle",
-		DatadogSampleRate:                      1.0,
-		DatadogPrioritySampling:                true,
+		OtelSamplerParentBased:                 true,
+		OtelScheduleDelayMillis:                5000,
+		OtelMaxExportBatchSize:                 512,
+		OtelMaxQueueSize:                       2048,
 		LimitReqStatusCode:                     503,
 		LimitConnStatusCode:                    503,
 		SyslogPort:                             514,
@@ -1002,6 +911,7 @@ func NewDefault() Configuration {
 		GlobalRateLimitMemcachedPoolSize:       50,
 		GlobalRateLimitStatucCode:              429,
 		DebugConnections:                       []string{},
+		StrictValidatePathType:                 false, // TODO: This will be true in future releases
 	}
 
 	if klog.V(5).Enabled() {
@@ -1013,41 +923,41 @@ func NewDefault() Configuration {
 
 // TemplateConfig contains the nginx configuration to render the file nginx.conf
 type TemplateConfig struct {
-	ProxySetHeaders          map[string]string
-	AddHeaders               map[string]string
-	BacklogSize              int
-	Backends                 []*ingress.Backend
-	PassthroughBackends      []*ingress.SSLPassthroughBackend
-	Servers                  []*ingress.Server
-	TCPBackends              []ingress.L4Service
-	UDPBackends              []ingress.L4Service
-	HealthzURI               string
-	Cfg                      Configuration
-	IsIPV6Enabled            bool
-	IsSSLPassthroughEnabled  bool
-	NginxStatusIpv4Whitelist []string
-	NginxStatusIpv6Whitelist []string
-	RedirectServers          interface{}
-	ListenPorts              *ListenPorts
-	PublishService           *apiv1.Service
-	EnableMetrics            bool
-	MaxmindEditionFiles      *[]string
-	MonitorMaxBatchSize      int
-	PID                      string
-	StatusPath               string
-	StatusPort               int
-	StreamPort               int
-	StreamSnippets           []string
+	ProxySetHeaders          map[string]string                `json:"ProxySetHeaders"`
+	AddHeaders               map[string]string                `json:"AddHeaders"`
+	BacklogSize              int                              `json:"BacklogSize"`
+	Backends                 []*ingress.Backend               `json:"Backends"`
+	PassthroughBackends      []*ingress.SSLPassthroughBackend `json:"PassthroughBackends"`
+	Servers                  []*ingress.Server                `json:"Servers"`
+	TCPBackends              []ingress.L4Service              `json:"TCPBackends"`
+	UDPBackends              []ingress.L4Service              `json:"UDPBackends"`
+	HealthzURI               string                           `json:"HealthzURI"`
+	Cfg                      Configuration                    `json:"Cfg"`
+	IsIPV6Enabled            bool                             `json:"IsIPV6Enabled"`
+	IsSSLPassthroughEnabled  bool                             `json:"IsSSLPassthroughEnabled"`
+	NginxStatusIpv4Whitelist []string                         `json:"NginxStatusIpv4Whitelist"`
+	NginxStatusIpv6Whitelist []string                         `json:"NginxStatusIpv6Whitelist"`
+	RedirectServers          interface{}                      `json:"RedirectServers"`
+	ListenPorts              *ListenPorts                     `json:"ListenPorts"`
+	PublishService           *apiv1.Service                   `json:"PublishService"`
+	EnableMetrics            bool                             `json:"EnableMetrics"`
+	MaxmindEditionFiles      *[]string                        `json:"MaxmindEditionFiles"`
+	MonitorMaxBatchSize      int                              `json:"MonitorMaxBatchSize"`
+	PID                      string                           `json:"PID"`
+	StatusPath               string                           `json:"StatusPath"`
+	StatusPort               int                              `json:"StatusPort"`
+	StreamPort               int                              `json:"StreamPort"`
+	StreamSnippets           []string                         `json:"StreamSnippets"`
 }
 
 // ListenPorts describe the ports required to run the
 // NGINX Ingress controller
 type ListenPorts struct {
-	HTTP     int
-	HTTPS    int
-	Health   int
-	Default  int
-	SSLProxy int
+	HTTP     int `json:"HTTP"`
+	HTTPS    int `json:"HTTPS"`
+	Health   int `json:"Health"`
+	Default  int `json:"Default"`
+	SSLProxy int `json:"SSLProxy"`
 }
 
 // GlobalExternalAuth describe external authentication configuration for the

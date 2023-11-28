@@ -100,7 +100,7 @@ func matchHostnames(pattern, host string) bool {
 	host = strings.TrimSuffix(host, ".")
 	pattern = strings.TrimSuffix(pattern, ".")
 
-	if len(pattern) == 0 || len(host) == 0 {
+	if pattern == "" || host == "" {
 		return false
 	}
 

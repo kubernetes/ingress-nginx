@@ -17,6 +17,7 @@ limitations under the License.
 package cors
 
 import (
+	"reflect"
 	"testing"
 
 	api "k8s.io/api/core/v1"
@@ -75,13 +76,13 @@ func TestIngressCorsConfigValid(t *testing.T) {
 	data := map[string]string{}
 
 	// Valid
-	data[parser.GetAnnotationWithPrefix("enable-cors")] = "true"
-	data[parser.GetAnnotationWithPrefix("cors-allow-headers")] = "DNT,X-CustomHeader, Keep-Alive,User-Agent"
-	data[parser.GetAnnotationWithPrefix("cors-allow-credentials")] = "false"
-	data[parser.GetAnnotationWithPrefix("cors-allow-methods")] = "GET, PATCH"
-	data[parser.GetAnnotationWithPrefix("cors-allow-origin")] = "https://origin123.test.com:4443"
-	data[parser.GetAnnotationWithPrefix("cors-expose-headers")] = "*, X-CustomResponseHeader"
-	data[parser.GetAnnotationWithPrefix("cors-max-age")] = "600"
+	data[parser.GetAnnotationWithPrefix(corsEnableAnnotation)] = "true"
+	data[parser.GetAnnotationWithPrefix(corsAllowHeadersAnnotation)] = "DNT,X-CustomHeader, Keep-Alive,User-Agent"
+	data[parser.GetAnnotationWithPrefix(corsAllowCredentialsAnnotation)] = "false"
+	data[parser.GetAnnotationWithPrefix(corsAllowMethodsAnnotation)] = "GET, PATCH"
+	data[parser.GetAnnotationWithPrefix(corsAllowOriginAnnotation)] = "https://origin123.test.com:4443"
+	data[parser.GetAnnotationWithPrefix(corsExposeHeadersAnnotation)] = "*, X-CustomResponseHeader"
+	data[parser.GetAnnotationWithPrefix(corsMaxAgeAnnotation)] = "600"
 	ing.SetAnnotations(data)
 
 	corst, err := NewParser(&resolver.Mock{}).Parse(ing)
@@ -95,31 +96,31 @@ func TestIngressCorsConfigValid(t *testing.T) {
 	}
 
 	if !nginxCors.CorsEnabled {
-		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix("enable-cors")], nginxCors.CorsEnabled)
+		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix(corsEnableAnnotation)], nginxCors.CorsEnabled)
 	}
 
 	if nginxCors.CorsAllowCredentials {
-		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix("cors-allow-credentials")], nginxCors.CorsAllowCredentials)
+		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix(corsAllowCredentialsAnnotation)], nginxCors.CorsAllowCredentials)
 	}
 
 	if nginxCors.CorsAllowHeaders != "DNT,X-CustomHeader, Keep-Alive,User-Agent" {
-		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix("cors-allow-headers")], nginxCors.CorsAllowHeaders)
+		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix(corsAllowHeadersAnnotation)], nginxCors.CorsAllowHeaders)
 	}
 
 	if nginxCors.CorsAllowMethods != "GET, PATCH" {
-		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix("cors-allow-methods")], nginxCors.CorsAllowMethods)
+		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix(corsAllowMethodsAnnotation)], nginxCors.CorsAllowMethods)
 	}
 
 	if nginxCors.CorsAllowOrigin[0] != "https://origin123.test.com:4443" {
-		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix("cors-allow-origin")], nginxCors.CorsAllowOrigin)
+		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix(corsAllowOriginAnnotation)], nginxCors.CorsAllowOrigin)
 	}
 
 	if nginxCors.CorsExposeHeaders != "*, X-CustomResponseHeader" {
-		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix("cors-expose-headers")], nginxCors.CorsExposeHeaders)
+		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix(corsExposeHeadersAnnotation)], nginxCors.CorsExposeHeaders)
 	}
 
 	if nginxCors.CorsMaxAge != 600 {
-		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix("cors-max-age")], nginxCors.CorsMaxAge)
+		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix(corsMaxAgeAnnotation)], nginxCors.CorsMaxAge)
 	}
 }
 
@@ -129,13 +130,13 @@ func TestIngressCorsConfigInvalid(t *testing.T) {
 	data := map[string]string{}
 
 	// Valid
-	data[parser.GetAnnotationWithPrefix("enable-cors")] = "yes"
-	data[parser.GetAnnotationWithPrefix("cors-allow-headers")] = "@alright, #ingress"
-	data[parser.GetAnnotationWithPrefix("cors-allow-credentials")] = "no"
-	data[parser.GetAnnotationWithPrefix("cors-allow-methods")] = "GET, PATCH, $nginx"
-	data[parser.GetAnnotationWithPrefix("cors-allow-origin")] = "origin123.test.com:4443"
-	data[parser.GetAnnotationWithPrefix("cors-expose-headers")] = "@alright, #ingress"
-	data[parser.GetAnnotationWithPrefix("cors-max-age")] = "abcd"
+	data[parser.GetAnnotationWithPrefix(corsEnableAnnotation)] = "yes"
+	data[parser.GetAnnotationWithPrefix(corsAllowHeadersAnnotation)] = "@alright, #ingress"
+	data[parser.GetAnnotationWithPrefix(corsAllowCredentialsAnnotation)] = "no"
+	data[parser.GetAnnotationWithPrefix(corsAllowMethodsAnnotation)] = "GET, PATCH, $nginx"
+	data[parser.GetAnnotationWithPrefix(corsAllowOriginAnnotation)] = "origin123.test.com:4443"
+	data[parser.GetAnnotationWithPrefix(corsExposeHeadersAnnotation)] = "@alright, #ingress"
+	data[parser.GetAnnotationWithPrefix(corsMaxAgeAnnotation)] = "abcd"
 	ing.SetAnnotations(data)
 
 	corst, err := NewParser(&resolver.Mock{}).Parse(ing)
@@ -170,5 +171,35 @@ func TestIngressCorsConfigInvalid(t *testing.T) {
 
 	if nginxCors.CorsMaxAge != defaultCorsMaxAge {
 		t.Errorf("expected %v but returned %v", defaultCorsMaxAge, nginxCors.CorsMaxAge)
+	}
+}
+
+func TestIngresCorsConfigAllowOriginWithTrailingComma(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix(corsEnableAnnotation)] = "true"
+
+	// Include a trailing comma and an empty value between the commas.
+	data[parser.GetAnnotationWithPrefix(corsAllowOriginAnnotation)] = "https://origin123.test.com:4443,    ,https://origin321.test.com:4443,"
+	ing.SetAnnotations(data)
+
+	corst, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("error parsing annotations: %v", err)
+	}
+
+	nginxCors, ok := corst.(*Config)
+	if !ok {
+		t.Errorf("expected a Config type but returned %t", corst)
+	}
+
+	if !nginxCors.CorsEnabled {
+		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix(corsEnableAnnotation)], nginxCors.CorsEnabled)
+	}
+
+	expectedCorsAllowOrigins := []string{"https://origin123.test.com:4443", "https://origin321.test.com:4443"}
+	if !reflect.DeepEqual(nginxCors.CorsAllowOrigin, expectedCorsAllowOrigins) {
+		t.Errorf("expected %v but returned %v", expectedCorsAllowOrigins, nginxCors.CorsAllowOrigin)
 	}
 }

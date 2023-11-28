@@ -48,7 +48,7 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-catch-all", func() {
 	})
 
 	ginkgo.It("should ignore catch all Ingress with backend", func() {
-		host := "foo"
+		host := fooHost
 
 		ing := framework.NewSingleCatchAllIngress("catch-all", f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
@@ -67,7 +67,7 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-catch-all", func() {
 	})
 
 	ginkgo.It("should ignore catch all Ingress with backend and rules", func() {
-		host := "foo"
+		host := fooHost
 
 		ing := framework.NewSingleIngressWithBackendAndRules(host, "/", host, f.Namespace, framework.EchoService, 80, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
@@ -79,7 +79,7 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-catch-all", func() {
 	})
 
 	ginkgo.It("should delete Ingress updated to catch-all", func() {
-		host := "foo"
+		host := fooHost
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
@@ -121,7 +121,7 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-catch-all", func() {
 	})
 
 	ginkgo.It("should allow Ingress with rules", func() {
-		host := "foo"
+		host := fooHost
 
 		ing := framework.NewSingleIngress("not-catch-all", "/", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)

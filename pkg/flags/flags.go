@@ -152,6 +152,9 @@ Requires the update-status parameter.`)
 		annotationsPrefix = flags.String("annotations-prefix", parser.DefaultAnnotationsPrefix,
 			`Prefix of the Ingress annotations specific to the NGINX controller.`)
 
+		enableAnnotationValidation = flags.Bool("enable-annotation-validation", false,
+			`If true, will enable the annotation validation feature. This value will be defaulted to true on a future release`)
+
 		enableSSLChainCompletion = flags.Bool("enable-ssl-chain-completion", false,
 			`Autocomplete SSL certificate chains with missing intermediate CA certificates.
 Certificates uploaded to Kubernetes must have the "Authority Information Access" X.509 v3
@@ -218,7 +221,7 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 
 		disableSyncEvents = flags.Bool("disable-sync-events", false, "Disables the creation of 'Sync' event resources")
 
-		enableTopologyAwareRouting = flags.Bool("enable-topology-aware-routing", false, "Enable topology aware hints feature, needs service object annotation service.kubernetes.io/topology-aware-hints sets to auto.")
+		enableTopologyAwareRouting = flags.Bool("enable-topology-aware-routing", false, "Enable topology aware routing feature, needs service object annotation service.kubernetes.io/topology-mode sets to auto.")
 	)
 
 	flags.StringVar(&nginx.MaxmindMirror, "maxmind-mirror", "", `Maxmind mirror url (example: http://geoip.local/databases.`)
@@ -228,14 +231,10 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 	flags.IntVar(&nginx.MaxmindRetriesCount, "maxmind-retries-count", 1, "Number of attempts to download the GeoIP DB.")
 	flags.DurationVar(&nginx.MaxmindRetriesTimeout, "maxmind-retries-timeout", time.Second*0, "Maxmind downloading delay between 1st and 2nd attempt, 0s - do not retry to download if something went wrong.")
 
-	flag.Set("logtostderr", "true")
-
 	flags.AddGoFlagSet(flag.CommandLine)
-	flags.Parse(os.Args)
-
-	// Workaround for this issue:
-	// https://github.com/kubernetes/kubernetes/issues/17162
-	flag.CommandLine.Parse([]string{})
+	if err := flags.Parse(os.Args); err != nil {
+		return false, nil, err
+	}
 
 	pflag.VisitAll(func(flag *pflag.Flag) {
 		klog.V(2).InfoS("FLAG", flag.Name, flag.Value)
@@ -253,6 +252,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 	}
 
 	parser.AnnotationsPrefix = *annotationsPrefix
+	parser.EnableAnnotationValidation = *enableAnnotationValidation
 
 	// check port collisions
 	if !ing_net.IsPortAvailable(*httpPort) {
@@ -298,12 +298,12 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		nginx.HealthCheckTimeout = time.Duration(*defHealthCheckTimeout) * time.Second
 	}
 
-	if len(*watchNamespace) != 0 && len(*watchNamespaceSelector) != 0 {
+	if *watchNamespace != "" && *watchNamespaceSelector != "" {
 		return false, nil, fmt.Errorf("flags --watch-namespace and --watch-namespace-selector are mutually exclusive")
 	}
 
 	var namespaceSelector labels.Selector
-	if len(*watchNamespaceSelector) != 0 {
+	if *watchNamespaceSelector != "" {
 		var err error
 		namespaceSelector, err = labels.Parse(*watchNamespaceSelector)
 		if err != nil {
@@ -311,7 +311,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		}
 	}
 
-	var histogramBuckets = &collectors.HistogramBuckets{
+	histogramBuckets := &collectors.HistogramBuckets{
 		TimeBuckets:   *timeBuckets,
 		LengthBuckets: *lengthBuckets,
 		SizeBuckets:   *sizeBuckets,
@@ -360,7 +360,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 			HTTPS:    *httpsPort,
 			SSLProxy: *sslProxyPort,
 		},
-		IngressClassConfiguration: &ingressclass.IngressClassConfiguration{
+		IngressClassConfiguration: &ingressclass.Configuration{
 			Controller:         *ingressClassController,
 			AnnotationValue:    *ingressClassAnnotation,
 			WatchWithoutClass:  *watchWithoutClass,
@@ -380,7 +380,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 
 	var err error
 	if nginx.MaxmindEditionIDs != "" {
-		if err = nginx.ValidateGeoLite2DBEditions(); err != nil {
+		if err := nginx.ValidateGeoLite2DBEditions(); err != nil {
 			return false, nil, err
 		}
 		if nginx.MaxmindLicenseKey != "" || nginx.MaxmindMirror != "" {

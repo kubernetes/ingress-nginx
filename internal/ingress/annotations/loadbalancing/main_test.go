@@ -38,7 +38,8 @@ func TestParse(t *testing.T) {
 		annotations map[string]string
 		expected    string
 	}{
-		{map[string]string{annotation: "ip_hash"}, "ip_hash"},
+		{map[string]string{annotation: "ewma"}, "ewma"},
+		{map[string]string{annotation: "ip_hash"}, ""}, // This is invalid and should not return anything
 		{map[string]string{}, ""},
 		{nil, ""},
 	}
@@ -53,6 +54,7 @@ func TestParse(t *testing.T) {
 
 	for _, testCase := range testCases {
 		ing.SetAnnotations(testCase.annotations)
+		//nolint:errcheck // Ignore the error since invalid cases will be checked with expected results
 		result, _ := ap.Parse(ing)
 		if result != testCase.expected {
 			t.Errorf("expected %v but returned %v, annotations: %s", testCase.expected, result, testCase.annotations)

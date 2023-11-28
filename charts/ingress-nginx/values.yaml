@@ -7,6 +7,9 @@
 # nameOverride:
 # fullnameOverride:
 
+# -- Override the deployment namespace; defaults to .Release.Namespace
+namespaceOverride: ""
+
 ## Labels to apply to all resources
 ##
 commonLabels: {}
@@ -15,6 +18,7 @@ commonLabels: {}
 
 controller:
   name: controller
+  enableAnnotationValidations: false
   image:
     ## Keep false as default for now!
     chroot: false
@@ -23,13 +27,17 @@ controller:
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
-    tag: "v1.7.1"
-    digest: sha256:7244b95ea47bddcb8267c1e625fb163fc183ef55448855e3ac52a7b260a60407
-    digestChroot: sha256:e35d5ab487861b9d419c570e3530589229224a0762c7b4d2e2222434abb8d988
+    tag: "v1.9.4"
+    digest: sha256:5b161f051d017e55d358435f295f5e9a297e66158f136321d9b04520ec6c48a3
+    digestChroot: sha256:5976b1067cfbca8a21d0ba53d71f83543a73316a61ea7f7e436d6cf84ddf9b26
     pullPolicy: IfNotPresent
+    runAsNonRoot: true
     # www-data -> uid 101
     runAsUser: 101
-    allowPrivilegeEscalation: true
+    allowPrivilegeEscalation: false
+    seccompProfile:
+      type: RuntimeDefault
+    readOnlyRootFilesystem: false
   # -- Use an existing PSP instead of creating one
   existingPsp: ""
   # -- Configures the controller container name
@@ -48,6 +56,16 @@ controller:
   addHeaders: {}
   # -- Optionally customize the pod dnsConfig.
   dnsConfig: {}
+  # -- Optionally customize the pod hostAliases.
+  hostAliases: []
+  # - ip: 127.0.0.1
+  #   hostnames:
+  #   - foo.local
+  #   - bar.local
+  # - ip: 10.1.2.3
+  #   hostnames:
+  #   - foo.remote
+  #   - bar.remote
   # -- Optionally customize the pod hostname.
   hostname: {}
   # -- Optionally change this to ClusterFirstWithHostNet in case you have 'hostNetwork: true'.
@@ -63,14 +81,14 @@ controller:
   watchIngressWithoutClass: false
   # -- Process IngressClass per name (additionally as per spec.controller).
   ingressClassByName: false
-  # -- This configuration enables Topology Aware Routing feature, used together with service annotation service.kubernetes.io/topology-aware-hints="auto"
+  # -- This configuration enables Topology Aware Routing feature, used together with service annotation service.kubernetes.io/topology-mode="auto"
   # Defaults to false
   enableTopologyAwareRouting: false
   # -- This configuration defines if Ingress Controller should allow users to set
   # their own *-snippet annotations, otherwise this is forbidden / dropped
   # when users add those annotations.
   # Global snippets in ConfigMap are still respected
-  allowSnippetAnnotations: true
+  allowSnippetAnnotations: false
   # -- Required for use with CNI based kubernetes installations (such as ones set up by kubeadm),
   # since CNI and hostport don't mix yet. Can be deprecated once https://github.com/kubernetes/kubernetes/issues/23920
   # is merged
@@ -85,6 +103,10 @@ controller:
       http: 80
       # -- 'hostPort' https port
       https: 443
+  # NetworkPolicy for controller component.
+  networkPolicy:
+    # -- Enable 'networkPolicy' or not
+    enabled: false
   # -- Election ID to use for status update, by default it uses the controller name combined with a suffix of 'leader'
   electionID: ""
   ## This section refers to the creation of the IngressClass resource
@@ -109,12 +131,15 @@ controller:
   podLabels: {}
   #  key: value
 
-  # -- Security Context policies for controller pods
+  # -- Security context for controller pods
   podSecurityContext: {}
-  # -- See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for notes on enabling and using sysctls
+  # -- sysctls for controller pods
+  ## Ref: https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/
   sysctls: {}
   # sysctls:
   #   "net.core.somaxconn": "8192"
+  # -- Security context for controller containers
+  containerSecurityContext: {}
 
   # -- Allows customization of the source of the IP address or FQDN to report
   # in the ingress status field. By default, it reads the information provided
@@ -155,6 +180,9 @@ controller:
   extraArgs: {}
   ## extraArgs:
   ##   default-ssl-certificate: "<namespace>/<secret_name>"
+  ##   time-buckets: "0.005,0.01,0.025,0.05,0.1,0.25,0.5,1,2.5,5,10"
+  ##   length-buckets: "10,20,30,40,50,60,70,80,90,100"
+  ##   size-buckets: "10,100,1000,10000,100000,1e+06,1e+07"
 
   # -- Additional environment variables to set
   extraEnvs: []
@@ -245,19 +273,29 @@ controller:
   ## Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
   ##
   topologySpreadConstraints: []
-  # - maxSkew: 1
-  #   topologyKey: topology.kubernetes.io/zone
-  #   whenUnsatisfiable: DoNotSchedule
-  #   labelSelector:
+  # - labelSelector:
   #     matchLabels:
-  #       app.kubernetes.io/instance: ingress-nginx-internal
+  #       app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
+  #       app.kubernetes.io/instance: '{{ .Release.Name }}'
+  #       app.kubernetes.io/component: controller
+  #   topologyKey: topology.kubernetes.io/zone
+  #   maxSkew: 1
+  #   whenUnsatisfiable: ScheduleAnyway
+  # - labelSelector:
+  #     matchLabels:
+  #       app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
+  #       app.kubernetes.io/instance: '{{ .Release.Name }}'
+  #       app.kubernetes.io/component: controller
+  #   topologyKey: kubernetes.io/hostname
+  #   maxSkew: 1
+  #   whenUnsatisfiable: ScheduleAnyway
 
   # -- `terminationGracePeriodSeconds` to avoid killing pods before we are ready
   ## wait up to five minutes for the drain of connections
   ##
   terminationGracePeriodSeconds: 300
   # -- Node labels for controller pod assignment
-  ## Ref: https://kubernetes.io/docs/user-guide/node-selection/
+  ## Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
   ##
   nodeSelector:
     kubernetes.io/os: linux
@@ -308,9 +346,10 @@ controller:
   ##
   podAnnotations: {}
   replicaCount: 1
-  # -- Define either 'minAvailable' or 'maxUnavailable', never both.
+  # -- Minimum available pods set in PodDisruptionBudget.
+  # Define either 'minAvailable' or 'maxUnavailable', never both.
   minAvailable: 1
-  # -- Define either 'minAvailable' or 'maxUnavailable', never both.
+  # -- Maximum unavailable pods set in PodDisruptionBudget. If set, 'minAvailable' is ignored.
   # maxUnavailable: 1
 
   ## Define requests resources to avoid probe issues due to CPU utilization in busy nodes
@@ -326,7 +365,6 @@ controller:
       memory: 90Mi
   # Mutually exclusive with keda autoscaling
   autoscaling:
-    apiVersion: autoscaling/v2
     enabled: false
     annotations: {}
     minReplicas: 1
@@ -368,6 +406,9 @@ controller:
     maxReplicas: 11
     pollingInterval: 30
     cooldownPeriod: 300
+    # fallback:
+    #   failureThreshold: 3
+    #   replicas: 11
     restoreToOriginalReplicaCount: false
     scaledObject:
       annotations: {}
@@ -412,17 +453,23 @@ controller:
     # Will be ignored for Kubernetes versions older than 1.20
     ##
     appProtocol: true
+    # -- Annotations are mandatory for the load balancer to come up. Varies with the cloud service. Values passed through helm tpl engine.
     annotations: {}
     labels: {}
     # clusterIP: ""
 
     # -- List of IP addresses at which the controller services are available
-    ## Ref: https://kubernetes.io/docs/user-guide/services/#external-ips
+    ## Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
     ##
     externalIPs: []
+    # -- Set to false to disable loadbalancer node port allocation
+    # See https://kubernetes.io/docs/concepts/services-networking/service/#load-balancer-nodeport-allocation
+    # allocateLoadBalancerNodePorts: true
     # -- Used by cloud providers to connect the resulting `LoadBalancer` to a pre-existing static IP according to https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
     loadBalancerIP: ""
     loadBalancerSourceRanges: []
+    # -- Used by cloud providers to select a load balancer implementation other than the cloud provider default. https://kubernetes.io/docs/concepts/services-networking/service/#load-balancer-class
+    loadBalancerClass: ""
     enableHttp: true
     enableHttps: true
     ## Set external traffic policy to: "Local" to preserve source IP on providers supporting it.
@@ -471,10 +518,13 @@ controller:
     internal:
       # -- Enables an additional internal load balancer (besides the external one).
       enabled: false
-      # -- Annotations are mandatory for the load balancer to come up. Varies with the cloud service.
+      # -- Annotations are mandatory for the load balancer to come up. Varies with the cloud service. Values passed through helm tpl engine.
       annotations: {}
-      # loadBalancerIP: ""
-
+      # -- Set to false to disable loadbalancer node port allocation
+      # See https://kubernetes.io/docs/concepts/services-networking/service/#load-balancer-nodeport-allocation
+      # allocateLoadBalancerNodePorts: true
+      # -- Used by cloud providers to connect the resulting internal LoadBalancer to a pre-existing static IP. Make sure to add to the service the needed annotation to specify the subnet which the static IP belongs to. For instance, `networking.gke.io/internal-load-balancer-subnet` for GCP and `service.beta.kubernetes.io/aws-load-balancer-subnets` for AWS.
+      loadBalancerIP: ""
       # -- Restrict access For LoadBalancer service. Defaults to 0.0.0.0/0.
       loadBalancerSourceRanges: []
       ## Set external traffic policy to: "Local" to preserve source IP on
@@ -538,8 +588,18 @@ controller:
   extraModules: []
   # - name: mytestmodule
   #   image: registry.k8s.io/ingress-nginx/mytestmodule
+  #   distroless: false
   #   containerSecurityContext:
+  #     runAsNonRoot: true
+  #     runAsUser: <user-id>
   #     allowPrivilegeEscalation: false
+  #     seccompProfile:
+  #       type: RuntimeDefault
+  #     capabilities:
+  #       drop:
+  #       - ALL
+  #     readOnlyRootFilesystem: true
+  #   resources: {}
   #
   # The image must contain a `/usr/local/bin/init_module.sh` executable, which
   # will be executed as initContainers, to move its config files within the
@@ -547,14 +607,32 @@ controller:
 
   opentelemetry:
     enabled: false
+    name: opentelemetry
+    image: registry.k8s.io/ingress-nginx/opentelemetry:v20230721-3e2062ee5@sha256:13bee3f5223883d3ca62fee7309ad02d22ec00ff0d7033e3e9aca7a9f60fd472
+
+
     image:
       registry: registry.k8s.io
       image: ingress-nginx/opentelemetry
       tag: "v20230312-helm-chart-4.5.2-28-g66a760794"
       digest: sha256:40f766ac4a9832f36f217bb0e98d44c8d38faeccbfe861fbc1a76af7e9ab257f
+
+
+    distroless: true
     containerSecurityContext:
+      runAsNonRoot: true
+      # -- The image's default user, inherited from its base image `cgr.dev/chainguard/static`.
+      runAsUser: 65532
       allowPrivilegeEscalation: false
+      seccompProfile:
+        type: RuntimeDefault
+      capabilities:
+        drop:
+        - ALL
+      readOnlyRootFilesystem: true
+    resources: {}
   admissionWebhooks:
+    name: admission
     annotations: {}
     # ignore-check.kube-linter.io/no-read-only-rootfs: "This deployment needs write access to root filesystem".
 
@@ -582,7 +660,6 @@ controller:
     labels: {}
     # -- Use an existing PSP instead of creating one
     existingPsp: ""
-    networkPolicyEnabled: false
     service:
       annotations: {}
       # clusterIP: ""
@@ -592,8 +669,18 @@ controller:
       servicePort: 443
       type: ClusterIP
     createSecretJob:
+      name: create
+      # -- Security context for secret creation containers
       securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
         allowPrivilegeEscalation: false
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+          - ALL
+        readOnlyRootFilesystem: true
       resources: {}
       # limits:
       #   cpu: 10m
@@ -602,8 +689,18 @@ controller:
       #   cpu: 10m
       #   memory: 20Mi
     patchWebhookJob:
+      name: patch
+      # -- Security context for webhook patch containers
       securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
         allowPrivilegeEscalation: false
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+          - ALL
+        readOnlyRootFilesystem: true
       resources: {}
     patch:
       enabled: true
@@ -613,8 +710,8 @@ controller:
         ## for backwards compatibility consider setting the full image url via the repository value below
         ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
         ## repository:
-        tag: v20230312-helm-chart-4.5.2-28-g66a760794
-        digest: sha256:01d181618f270f2a96c04006f33b2699ad3ccb02da48d0f89b22abce084b292f
+        tag: v20231011-8b53cabe0
+        digest: sha256:a7943503b45d552785aa3b5e457f169a5661fb94d82b8a3373bcd9ebaf9aac80
         pullPolicy: IfNotPresent
       # -- Provide a priority class name to the webhook patching job
       ##
@@ -625,10 +722,8 @@ controller:
       tolerations: []
       # -- Labels to be added to patch job resources
       labels: {}
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 2000
-        fsGroup: 2000
+      # -- Security context for secret creation & webhook patch pods
+      securityContext: {}
     # Use certmanager to generate webhook certs
     certManager:
       enabled: false
@@ -656,7 +751,7 @@ controller:
       # clusterIP: ""
 
       # -- List of IP addresses at which the stats-exporter service is available
-      ## Ref: https://kubernetes.io/docs/user-guide/services/#external-ips
+      ## Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
       ##
       externalIPs: []
       # loadBalancerIP: ""
@@ -672,7 +767,7 @@ controller:
       ## jobLabel: "app.kubernetes.io/name"
       namespace: ""
       namespaceSelector: {}
-      ## Default: scrape .Release.Namespace only
+      ## Default: scrape .Release.Namespace or namespaceOverride only
       ## To scrape all, use the following:
       ## namespaceSelector:
       ##   any: true
@@ -695,8 +790,13 @@ controller:
       #   annotations:
       #     description: bad ingress config - nginx config test failed
       #     summary: uninstall the latest ingress changes to allow config reloads to resume
+      # # By default a fake self-signed certificate is generated as default and
+      # # it is fine if it expires. If `--default-ssl-certificate` flag is used
+      # # and a valid certificate passed please do not filter for `host` label!
+      # # (i.e. delete `{host!="_"}` so also the default SSL certificate is
+      # # checked for expiration)
       # - alert: NGINXCertificateExpiry
-      #   expr: (avg(nginx_ingress_controller_ssl_expire_time_seconds) by (host) - time()) < 604800
+      #   expr: (avg(nginx_ingress_controller_ssl_expire_time_seconds{host!="_"}) by (host) - time()) < 604800
       #   for: 1s
       #   labels:
       #     severity: critical
@@ -749,11 +849,13 @@ defaultBackend:
     ## repository:
     tag: "1.5"
     pullPolicy: IfNotPresent
+    runAsNonRoot: true
     # nobody user -> uid 65534
     runAsUser: 65534
-    runAsNonRoot: true
-    readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
+    seccompProfile:
+      type: RuntimeDefault
+    readOnlyRootFilesystem: true
   # -- Use an existing PSP instead of creating one
   existingPsp: ""
   extraArgs: {}
@@ -799,22 +901,16 @@ defaultBackend:
   #    effect: "NoSchedule|PreferNoSchedule|NoExecute(1.6 only)"
 
   affinity: {}
-  # -- Security Context policies for controller pods
-  # See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for
-  # notes on enabling and using sysctls
-  ##
+  # -- Security context for default backend pods
   podSecurityContext: {}
-  # -- Security Context policies for controller main container.
-  # See https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ for
-  # notes on enabling and using sysctls
-  ##
+  # -- Security context for default backend containers
   containerSecurityContext: {}
   # -- Labels to add to the pod container metadata
   podLabels: {}
   #  key: value
 
   # -- Node labels for default backend pod assignment
-  ## Ref: https://kubernetes.io/docs/user-guide/node-selection/
+  ## Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
   ##
   nodeSelector:
     kubernetes.io/os: linux
@@ -842,19 +938,22 @@ defaultBackend:
   #    emptyDir: {}
 
   autoscaling:
-    apiVersion: autoscaling/v2
     annotations: {}
     enabled: false
     minReplicas: 1
     maxReplicas: 2
     targetCPUUtilizationPercentage: 50
     targetMemoryUtilizationPercentage: 50
+  # NetworkPolicy for default backend component.
+  networkPolicy:
+    # -- Enable 'networkPolicy' or not
+    enabled: false
   service:
     annotations: {}
     # clusterIP: ""
 
     # -- List of IP addresses at which the default backend service is available
-    ## Ref: https://kubernetes.io/docs/user-guide/services/#external-ips
+    ## Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
     ##
     externalIPs: []
     # loadBalancerIP: ""
