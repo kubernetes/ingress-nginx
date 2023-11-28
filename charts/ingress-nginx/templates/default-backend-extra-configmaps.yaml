@@ -1,10 +1,11 @@
 {{- if .Values.defaultBackend.enabled }}
   {{- range .Values.defaultBackend.extraConfigMaps }}
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .name }}
-  namespace: {{ include "ingress-nginx.namespace" . }}
+  namespace: {{ include "ingress-nginx.namespace" $ | quote }}
   labels:
     {{- include "ingress-nginx.labels" $ | nindent 4 }}
     {{- with $.Values.defaultBackend.labels }}
