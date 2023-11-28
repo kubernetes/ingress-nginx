@@ -587,7 +587,10 @@ controller:
   # -- Modules, which are mounted into the core nginx image. See values.yaml for a sample to add opentelemetry module
   extraModules: []
   # - name: mytestmodule
-  #   image: registry.k8s.io/ingress-nginx/mytestmodule
+  #   image:
+  #     registry: registry.k8s.io
+  #     image: ingress-nginx/mytestmodule
+  #     tag: latest
   #   distroless: false
   #   containerSecurityContext:
   #     runAsNonRoot: true
@@ -608,16 +611,11 @@ controller:
   opentelemetry:
     enabled: false
     name: opentelemetry
-    image: registry.k8s.io/ingress-nginx/opentelemetry:v20230721-3e2062ee5@sha256:13bee3f5223883d3ca62fee7309ad02d22ec00ff0d7033e3e9aca7a9f60fd472
-
-
     image:
       registry: registry.k8s.io
       image: ingress-nginx/opentelemetry
-      tag: "v20230312-helm-chart-4.5.2-28-g66a760794"
-      digest: sha256:40f766ac4a9832f36f217bb0e98d44c8d38faeccbfe861fbc1a76af7e9ab257f
-
-
+      tag: "v20230721-3e2062ee5"
+      digest: sha256:13bee3f5223883d3ca62fee7309ad02d22ec00ff0d7033e3e9aca7a9f60fd472
     distroless: true
     containerSecurityContext:
       runAsNonRoot: true

@@ -257,7 +257,7 @@ Extra modules.
 */}}
 {{- define "extraModules" -}}
 - name: {{ .name }}
-  image: {{ .image }}
+  image: {{ printf "%s/%s:%s" .image.registry .image.image .image.tag }}{{ include "ingress-nginx.imageDigest" .image }}
   command:
   {{- if .distroless }}
     - /init_module
