@@ -651,7 +651,6 @@ controller:
     labels: {}
     # -- Use an existing PSP instead of creating one
     existingPsp: ""
-    networkPolicyEnabled: false
     service:
       annotations: {}
       # clusterIP: ""
@@ -709,6 +708,10 @@ controller:
       ##
       priorityClassName: ""
       podAnnotations: {}
+      # NetworkPolicy for webhook patch
+      networkPolicy:
+        # -- Enable 'networkPolicy' or not
+        enabled: false
       nodeSelector:
         kubernetes.io/os: linux
       tolerations: []
