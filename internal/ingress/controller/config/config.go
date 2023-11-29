@@ -559,7 +559,7 @@ type Configuration struct {
 	// Sets whether to use recursive search in the real ip module
 	// https://nginx.org/en/docs/http/ngx_http_realip_module.html#real_ip_recursive
 	// Default: true
-	EnableRealIpRecursive bool `json:"enable-real-ip-recursive"`
+	EnableRealIPRecursive bool `json:"enable-real-ip-recursive"`
 
 	// Sets the header field for identifying the originating IP address of a client
 	// Default is X-Forwarded-For
