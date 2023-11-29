@@ -17,7 +17,6 @@ limitations under the License.
 package settings
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -26,6 +25,8 @@ import (
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
+
+const forwardedForHost = "forwarded-for-header"
 
 var _ = framework.DescribeSetting("enable-real-ip-recursive", func() {
 	f := framework.NewDefaultFramework("enable-real-ip-recursive")
@@ -44,7 +45,7 @@ var _ = framework.DescribeSetting("enable-real-ip-recursive", func() {
 	})
 
 	ginkgo.It("should use the first IP in X-Forwarded-For header when setting is true", func() {
-		host := "forwarded-for-header"
+		host := forwardedForHost
 
 		f.UpdateNginxConfigMapData(setting, "true")
 
@@ -65,7 +66,7 @@ var _ = framework.DescribeSetting("enable-real-ip-recursive", func() {
 			Body().
 			Raw()
 
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-for=127.0.0.1"))
+		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-for=127.0.0.1")
 
 		logs, err := f.NginxLogs()
 		assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
@@ -73,7 +74,7 @@ var _ = framework.DescribeSetting("enable-real-ip-recursive", func() {
 	})
 
 	ginkgo.It("should use the last IP in X-Forwarded-For header when setting is false", func() {
-		host := "forwarded-for-header"
+		host := forwardedForHost
 
 		f.UpdateNginxConfigMapData(setting, "false")
 
@@ -92,7 +93,7 @@ var _ = framework.DescribeSetting("enable-real-ip-recursive", func() {
 			Body().
 			Raw()
 
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-for=1.2.3.4"))
+		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-for=1.2.3.4")
 
 		logs, err := f.NginxLogs()
 		assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
