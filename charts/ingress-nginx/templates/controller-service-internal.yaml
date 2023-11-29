@@ -16,6 +16,9 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   type: "{{ .Values.controller.service.type }}"
+{{- if hasKey .Values.controller.service.internal "allocateLoadBalancerNodePorts" }}
+  allocateLoadBalancerNodePorts: {{ .Values.controller.service.internal.allocateLoadBalancerNodePorts }}
+{{- end }}
 {{- if .Values.controller.service.internal.loadBalancerIP }}
   loadBalancerIP: {{ .Values.controller.service.internal.loadBalancerIP }}
 {{- end }}
