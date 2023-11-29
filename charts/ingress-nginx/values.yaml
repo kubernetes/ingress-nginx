@@ -591,7 +591,7 @@ controller:
   #     registry: registry.k8s.io
   #     image: ingress-nginx/mytestmodule
   #     tag: latest
-  #   distroless: false
+  #     distroless: false
   #   containerSecurityContext:
   #     runAsNonRoot: true
   #     runAsUser: <user-id>
@@ -616,7 +616,7 @@ controller:
       image: ingress-nginx/opentelemetry
       tag: "v20230721-3e2062ee5"
       digest: sha256:13bee3f5223883d3ca62fee7309ad02d22ec00ff0d7033e3e9aca7a9f60fd472
-    distroless: true
+      distroless: true
     containerSecurityContext:
       runAsNonRoot: true
       # -- The image's default user, inherited from its base image `cgr.dev/chainguard/static`.
