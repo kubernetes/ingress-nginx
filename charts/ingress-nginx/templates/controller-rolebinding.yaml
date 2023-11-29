@@ -17,5 +17,5 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: {{ template "ingress-nginx.serviceAccountName" . }}
-    namespace: {{ (include "ingress-nginx.namespace" .) | quote }}
+    namespace: {{ include "ingress-nginx.namespace" . }}
 {{- end }}

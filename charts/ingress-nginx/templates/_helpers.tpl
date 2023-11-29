@@ -31,16 +31,12 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 
 {{/*
-Allow the release namespace to be overridden for multi-namespace deployments in combined charts
+Expand the namespace of the release.
+Allows overriding it for multi-namespace deployments in combined charts.
 */}}
 {{- define "ingress-nginx.namespace" -}}
-  {{- if .Values.namespaceOverride -}}
-    {{- .Values.namespaceOverride | trunc 63 | trimSuffix "-" -}}
-  {{- else -}}
-    {{- .Release.Namespace -}}
-  {{- end -}}
+{{- default .Release.Namespace .Values.namespaceOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
-
 
 {{/*
 Container SecurityContext.
@@ -113,7 +109,6 @@ By convention this will simply use the <namespace>/<controller-name> to match th
 service generated.
 
 Users can provide an override for an explicit service they want bound via `.Values.controller.publishService.pathOverride`
-
 */}}
 {{- define "ingress-nginx.controller.publishServicePath" -}}
 {{- $defServiceName := printf "%s/%s" "$(POD_NAMESPACE)" (include "ingress-nginx.controller.fullname" .) -}}
