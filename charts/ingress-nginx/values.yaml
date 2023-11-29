@@ -736,7 +736,7 @@ controller:
       # # (i.e. delete `{host!="_"}` so also the default SSL certificate is
       # # checked for expiration)
       # - alert: NGINXCertificateExpiry
-      #   expr: (avg(nginx_ingress_controller_ssl_expire_time_seconds) by (host) - time()) < 604800
+      #   expr: (avg(nginx_ingress_controller_ssl_expire_time_seconds{host!="_"}) by (host) - time()) < 604800
       #   for: 1s
       #   labels:
       #     severity: critical
