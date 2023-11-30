@@ -2,59 +2,98 @@
 
 It is possible to enable Client-Certificate Authentication by adding additional annotations to your Ingress Resource.
 
-Before getting started you must have the following Certificates configured:
+## 1. Prerequisites / Certificates
 
-1. CA certificate and Key (Intermediate Certs need to be in CA)
-2. Server Certificate (Signed by CA) and Key (CN should be equal the hostname you will use)
-3. Client Certificate (Signed by CA) and Key
+- Certificate Authority (CA) Certificate ```ca-cert.pem```
+- Server Certificate (Signed by CA) and Key ```server-cert.pem``` and ```server-key.pem```
+- Client Certificate (Signed by CA), Key and CA Certificate for following client side authentication (See Sub-Section 4 - Test)
 
-For more details on the generation process, checkout the Prerequisite [docs](../../PREREQUISITES.md#client-certificate-authentication).
+:memo: If Intermediate CA-Certificates (Official CA, non-self-signed) used, they all need to be concatenated (CA authority chain) in one CA file.
 
-You can have as many certificates as you want. If they're in the binary DER format, you can convert them as the following:
+The following commands let you generate self-signed Certificates and Keys for testing-purpose.
+
+- Generate the CA Key and Certificate:
+
+```bash
+openssl req -x509 -sha256 -newkey rsa:4096 -keyout ca-key.der -out ca-cert.der -days 356 -nodes -subj '/CN=My Cert Authority'
+```
+
+- Generate the Server Key, and Certificate and Sign with the CA Certificate:
+
+```bash
+openssl req -new -newkey rsa:4096 -keyout server-key.der -out server.csr -nodes -subj '/CN=mydomain.com'
+openssl x509 -req -sha256 -days 365 -in server.csr -CA ca-cert.der -CAkey ca-key.der -set_serial 01 -out server-cert.der
+```
+
+:memo: The CN (Common Name) x.509 attribute for the server Certificate ***must*** match the dns hostname referenced in ingress definition, see example below.
+
+- Generate the Client Key, and Certificate and Sign with the CA Certificate:
+
+```bash
+openssl req -new -newkey rsa:4096 -keyout client-key.der -out client.csr -nodes -subj '/CN=My Client'
+openssl x509 -req -sha256 -days 365 -in client.csr -CA ca-cert.der -CAkey ca-key.der -set_serial 02 -out client-cert.der
+```
+
+## 2. Import Certificates / Keys to Kubernetes Secret-Backend
+
+- Convert all files specified in 1) from .der (binary format) to .pem (base64 encoded):
 
 ```bash
 openssl x509 -in certificate.der -inform der -out certificate.crt -outform pem
 ```
 
-Then, you can concatenate them all into one file, named 'ca.crt' with the following:
+:exclamation: Kubernetes Web-Services import relies on .pem Base64-encoded format.
+
+:zap: There is no need to import the CA Private Key, the Private Key is used only to sign new Client Certificates.
+
+- Import the CA Certificate as Kubernetes sub-type ```generic```
 
 ```bash
-cat certificate1.crt certificate2.crt certificate3.crt >> ca.crt
+kubectl create secret generic ca-secret --from-file ca.crt
 ```
 
-**Note:** Make sure that the Key Size is greater than 1024 and Hashing Algorithm (Digest) is something better than md5
-for each certificate generated. Otherwise you will receive an error.
+- Import the Server Certificate and Key as Kubernetes sub-type ```tls``` for transport layer
 
-## Creating Certificate Secrets
+```bash
+kubectl create secret tls tls-secret --cert server-cert.pem --key server-key.pem
+```
 
-There are many different ways of configuring your secrets to enable Client-Certificate
-Authentication to work properly.
+## 3. Annotations / Ingress-Reference
 
-*   You can create a secret containing just the CA certificate and another
-    Secret containing the Server Certificate which is Signed by the CA.
+Now we are able to reference the created secrets in the ingress definition.
 
-    ```bash
-    kubectl create secret generic ca-secret --from-file=ca.crt=ca.crt
-    kubectl create secret generic tls-secret --from-file=tls.crt=server.crt --from-file=tls.key=server.key
-    ```
+:memo: The CA Certificate "authentication" will be reference in annotations.
 
-*   You can create a secret containing CA certificate along with the Server
-    Certificate that can be used for both TLS and Client Auth.
+| Annotation                                                                | Description                | Remark             |
+|---------------------------------------------------------------------------|----------------------------|--------------------|
+| nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"                  | Activate Client-Auth       | If "on", verify client Certificate |
+| nginx.ingress.kubernetes.io/auth-tls-secret: "default/ca-secret"          | CA "secret" reference      | Secret namespace and service / ingress namespace must match |
+| nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"                    | CA "chain" depth           | How many CA levels should be processed |
+| nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "true" | Pass Cert / Header         | Pass Certificate to Web-App for e.g. parsing Client E-Mail Address x.509 Property |
 
-    ```bash
-    kubectl create secret generic ca-secret --from-file=tls.crt=server.crt --from-file=tls.key=server.key --from-file=ca.crt=ca.crt
-    ```
+:memo: The Server Certificate for transport layer will be referenced in tls .yaml subsection.
 
-*  If you want to also enable Certificate Revocation List verification you can
-   create the secret also containing the CRL file in PEM format:
-   ```bash
-   kubectl create secret generic ca-secret --from-file=ca.crt=ca.crt --from-file=ca.crl=ca.crl
-   ```
+```yaml
+tls:
+  - hosts:
+    - mydomain.com
+    secretName: tls-secret
+```
 
-Note: The CA Certificate must contain the trusted certificate authority chain to verify client certificates.
+| :exclamation: In future releases, CN verification seems to be "replaced" by SAN (Subject Alternate Name) for verrification  |
+|-----------------------------------------------------------------------------------------------------------------------------|
 
-## Setup Instructions
+## 4. Example / Test
 
-1. Add the annotations as provided in the [ingress.yaml](ingress.yaml) example to your own ingress resources as required.
-2. Test by performing a curl against the Ingress Path without the Client Cert and expect a Status Code 400.
-3. Test by performing a curl against the Ingress Path with the Client Cert and expect a Status Code 200.
+The working .yaml Eyample: [ingress.yaml](ingress.yaml)
+
+- Test by performing a curl / wget against the Ingress Path without the Client Cert and expect a Status Code 400.
+- Test by performing a curl / wget against the Ingress Path with the Client Cert and expect a Status Code 200.
+
+```bash
+wget \
+--ca-cert=ca-cert.pem \
+--certificate=client-cert.pem \
+--private-key=client-key.pem \
+https://mydomain.com
+```
