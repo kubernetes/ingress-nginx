@@ -9,4 +9,5 @@ controller:
     allowPrivilegeEscalation: false
   extraModules:
     - name: opentelemetry
-      image: busybox
+      image:
+        image: busybox

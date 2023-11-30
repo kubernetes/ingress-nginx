@@ -7,4 +7,5 @@ controller:
     type: ClusterIP
   extraModules:
     - name: opentelemetry
-      image: busybox
+      image:
+        image: busybox

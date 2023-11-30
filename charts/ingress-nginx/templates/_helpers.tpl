@@ -257,7 +257,7 @@ Extra modules.
 */}}
 {{- define "extraModules" -}}
 - name: {{ .name }}
-  image: {{ printf "%s/%s:%s" .image.registry .image.image .image.tag }}{{ include "ingress-nginx.imageDigest" .image }}
+  image: {{ include "imageName" .image }}{{ include "ingress-nginx.imageDigest" .image }}
   command:
   {{- if .image.distroless }}
     - /init_module
@@ -275,4 +275,17 @@ Extra modules.
   volumeMounts:
     - name: modules
       mountPath: /modules_mount
+{{- end -}}
+
+{{/*
+Image Name with optional registry and tag.
+*/}}
+{{- define "imageName" -}}
+{{- if .registry -}}
+{{- printf "%s/" .registry -}}
+{{- end -}}
+{{- printf "%s" .image -}}
+{{- if .tag -}}
+{{- printf ":%s" .tag -}}
+{{- end -}}
 {{- end -}}
