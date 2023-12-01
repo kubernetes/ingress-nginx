@@ -173,21 +173,21 @@ func nameOrIPToLoadBalancerIngress(nameOrIP string) v1.IngressLoadBalancerIngres
 	return v1.IngressLoadBalancerIngress{Hostname: nameOrIP}
 }
 
-func filterLables(toFilter map[string]string) map[string]string {
+func filterLabels(toFilter map[string]string) map[string]string {
 	// As a standard, app.kubernetes.io are "reserved well-known" labels.
 	// In our case, we add those labels as identifiers of the Ingress
 	// deployment in this namespace, so we can select it as a set of Ingress instances.
 	// As those labels are also generated as part of a HELM deployment, we can be "safe" they
 	// cover 95% of the cases
 
-	podLabel := make(map[string]string)
+	podLabels := make(map[string]string)
 	for k, v := range toFilter {
 		if k != "pod-template-hash" && k != "controller-revision-hash" && k != "pod-template-generation" {
-			podLabel[k] = v
+			podLabels[k] = v
 		}
 	}
 
-	return podLabel
+	return podLabels
 }
 
 // runningAddresses returns a list of IP addresses and/or FQDN where the
@@ -207,11 +207,11 @@ func (s *statusSync) runningAddresses() ([]v1.IngressLoadBalancerIngress, error)
 		return statusAddressFromService(s.PublishService, s.Client)
 	}
 
-	podLabel := filterLables(k8s.IngressPodDetails.Labels)
+	podLabels := filterLabels(k8s.IngressPodDetails.Labels)
 
 	// get information about all the pods running the ingress controller
 	pods, err := s.Client.CoreV1().Pods(k8s.IngressPodDetails.Namespace).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: labels.SelectorFromSet(podLabel).String(),
+		LabelSelector: labels.SelectorFromSet(podLabels).String(),
 	})
 	if err != nil {
 		return nil, err
@@ -254,10 +254,10 @@ func (s *statusSync) runningAddresses() ([]v1.IngressLoadBalancerIngress, error)
 }
 
 func (s *statusSync) isRunningMultiplePods() bool {
-	podLabel := filterLables(k8s.IngressPodDetails.Labels)
+	podLabels := filterLabels(k8s.IngressPodDetails.Labels)
 
 	pods, err := s.Client.CoreV1().Pods(k8s.IngressPodDetails.Namespace).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: labels.SelectorFromSet(podLabel).String(),
+		LabelSelector: labels.SelectorFromSet(podLabels).String(),
 	})
 	if err != nil {
 		return false
