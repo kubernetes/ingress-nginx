@@ -61,4 +61,3 @@ cmd/plugin/release/*.tar.gz
 cmd/plugin/release/LICENSE
 tmp/
 test/junitreports/
-tests/__snapshot__
