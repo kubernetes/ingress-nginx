@@ -92,13 +92,6 @@ tls:
     secretName: tls-secret
 ```
 
-| :exclamation: In future releases, CN verification seems to be "replaced" by SAN (Subject Alternate Name) for verrification, so do not forget to add |
-|-----------------------------------------------------------------------------------------------------------------------------------------------------|
-
-```bash
-openssl req -addext "subjectAltName = DNS:mydomain.com" ...
-```
-
 ## 4. Example / Test
 
 The working .yaml Eyample: [ingress.yaml](ingress.yaml)
@@ -113,3 +106,13 @@ wget \
 --private-key=client-key.pem \
 https://mydomain.com
 ```
+
+## 5. Remarks
+
+| :exclamation: In future releases, CN verification seems to be "replaced" by SAN (Subject Alternate Name) for verrification, so do not forget to add |
+|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+
+```bash
+openssl req -addext "subjectAltName = DNS:mydomain.com" ...
+```
+
