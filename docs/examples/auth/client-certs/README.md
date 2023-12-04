@@ -44,7 +44,7 @@ openssl x509 -in certificate.der -inform der -out certificate.crt -outform pem
 
 :exclamation: Kubernetes Web-Services import relies on .pem Base64-encoded format.
 
-:zap: There is no need to import the CA Private Key, the Private Key is used only to sign new Client Certificates.
+:zap: There is no need to import the CA Private Key, the Private Key is used only to sign new Client Certificates by the CA.
 
 - Import the CA Certificate as Kubernetes sub-type ```generic/ca.crt```
 
