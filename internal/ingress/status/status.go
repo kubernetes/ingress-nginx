@@ -270,7 +270,18 @@ func (s *statusSync) isRunningMultiplePods() bool {
 		return false
 	}
 
-	return len(pods.Items) > 1
+	runningPods := make([]apiv1.Pod, 0)
+	for i := range pods.Items {
+		pod := pods.Items[i]
+		if pod.GetDeletionTimestamp() != nil {
+			klog.InfoS("POD is terminating", "pod", klog.KObj(&pod), "node", pod.Spec.NodeName)
+			continue
+		}
+
+		runningPods = append(runningPods, pod)
+	}
+
+	return len(runningPods) > 1
 }
 
 // standardizeLoadBalancerIngresses sorts the list of loadbalancer by
