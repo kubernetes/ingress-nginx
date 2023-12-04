@@ -103,6 +103,31 @@ func buildSimpleClientSet() *testclient.Clientset {
 			},
 			{
 				ObjectMeta: metav1.ObjectMeta{
+					Name:      "foo_terminating",
+					Namespace: metav1.NamespaceDefault,
+					Labels: map[string]string{
+						"label_sig":                 "foo_pod",
+						"app.kubernetes.io/version": "x.x.x",
+						"pod-template-hash":         "hash-value",
+						"controller-revision-hash":  "deadbeef",
+					},
+					DeletionTimestamp: &metav1.Time{},
+				},
+				Spec: apiv1.PodSpec{
+					NodeName: "foo_node_3",
+				},
+				Status: apiv1.PodStatus{
+					Phase: apiv1.PodRunning,
+					Conditions: []apiv1.PodCondition{
+						{
+							Type:   apiv1.PodReady,
+							Status: apiv1.ConditionTrue,
+						},
+					},
+				},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "foo3",
 					Namespace: metav1.NamespaceSystem,
 					Labels: map[string]string{
@@ -164,6 +189,23 @@ func buildSimpleClientSet() *testclient.Clientset {
 						{
 							Type:    apiv1.NodeExternalIP,
 							Address: "11.0.0.2",
+						},
+					},
+				},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "foo_node_3",
+				},
+				Status: apiv1.NodeStatus{
+					Addresses: []apiv1.NodeAddress{
+						{
+							Type:    apiv1.NodeInternalIP,
+							Address: "12.0.0.1",
+						},
+						{
+							Type:    apiv1.NodeExternalIP,
+							Address: "12.0.0.2",
 						},
 					},
 				},
