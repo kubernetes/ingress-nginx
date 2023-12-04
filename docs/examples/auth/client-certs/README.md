@@ -46,16 +46,28 @@ openssl x509 -in certificate.der -inform der -out certificate.crt -outform pem
 
 :zap: There is no need to import the CA Private Key, the Private Key is used only to sign new Client Certificates.
 
-- Import the CA Certificate as Kubernetes sub-type ```generic```
+- Import the CA Certificate as Kubernetes sub-type ```generic/ca.crt```
 
 ```bash
-kubectl create secret generic ca-secret --from-file ca.crt
+kubectl create secret generic ca-secret --from-file=ca.crt=./ca-cert.pem
 ```
 
 - Import the Server Certificate and Key as Kubernetes sub-type ```tls``` for transport layer
 
 ```bash
-kubectl create secret tls tls-secret --cert server-cert.pem --key server-key.pem
+kubectl create secret tls tls-secret --cert ./server-cert.pem --key ./server-key.pem
+```
+
+- Optional import CA-cert, Server-cert and Server-Key for TLS and Client-Auth
+
+```bash
+kubectl create secret generic tls-and-auth --from-file=tls.crt=./server-crt.pem --from-file=tls.key=./server-key.pem --from-file=ca.crt=./ca-cert.pem
+```
+
+- Optional import a CRL (Certificate Revocation List)
+
+```bash
+kubectl create secret generic ca-secret --from-file=ca.crt=./ca-cert.pem --from-file=ca.crl=./ca-crl.pem
 ```
 
 ## 3. Annotations / Ingress-Reference
@@ -80,14 +92,14 @@ tls:
     secretName: tls-secret
 ```
 
-| :exclamation: In future releases, CN verification seems to be "replaced" by SAN (Subject Alternate Name) for verrification  |
-|-----------------------------------------------------------------------------------------------------------------------------|
+| :exclamation: In future releases, CN verification seems to be "replaced" by SAN (Subject Alternate Name) for verrification |
+|----------------------------------------------------------------------------------------------------------------------------|
 
 ## 4. Example / Test
 
 The working .yaml Eyample: [ingress.yaml](ingress.yaml)
 
-- Test by performing a curl / wget against the Ingress Path without the Client Cert and expect a Status Code 400.
+- Test by performing a curl / wget against the Ingress Path without the Client Cert and expect a Status Code 400 (Bad Request - No required SSL certificate was sent).
 - Test by performing a curl / wget against the Ingress Path with the Client Cert and expect a Status Code 200.
 
 ```bash
