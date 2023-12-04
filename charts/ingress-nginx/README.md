@@ -2,7 +2,7 @@
 
 [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 
-![Version: 4.8.5](https://img.shields.io/badge/Version-4.8.5-informational?style=flat-square) ![AppVersion: 1.9.4](https://img.shields.io/badge/AppVersion-1.9.4-informational?style=flat-square)
+![Version: 4.8.4](https://img.shields.io/badge/Version-4.8.4-informational?style=flat-square) ![AppVersion: 1.9.4](https://img.shields.io/badge/AppVersion-1.9.4-informational?style=flat-square)
 
 To use, add `ingressClassName: nginx` spec field or the `kubernetes.io/ingress.class: nginx` annotation to your Ingress resources.
 
@@ -428,7 +428,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.service.internal.loadBalancerSourceRanges | list | `[]` | Restrict access For LoadBalancer service. Defaults to 0.0.0.0/0. |
 | controller.service.internal.ports | object | `{}` | Custom port mapping for internal service |
 | controller.service.internal.targetPorts | object | `{}` | Custom target port mapping for internal service |
-| controller.service.internal.type | string | `"LoadBalancer"` | Addes the abilaty to have a diffrnet service type for the internal load balancer |
+| controller.service.internal.type | string | `"LoadBalancer"` | Type of the internal controller service. |
 | controller.service.ipFamilies | list | `["IPv4"]` | List of IP families (e.g. IPv4, IPv6) assigned to the service. This field is usually assigned automatically based on cluster configuration and the ipFamilyPolicy field. # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/ |
 | controller.service.ipFamilyPolicy | string | `"SingleStack"` | Represents the dual-stack-ness requested or required by this Service. Possible values are SingleStack, PreferDualStack or RequireDualStack. The ipFamilies and clusterIPs fields depend on the value of this field. # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/ |
 | controller.service.labels | object | `{}` |  |
