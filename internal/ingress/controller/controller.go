@@ -107,6 +107,8 @@ type Configuration struct {
 	MetricsBuckets       *collectors.HistogramBuckets
 	ReportStatusClasses  bool
 	ExcludeSocketMetrics []string
+	IncludeIngressLabels []string
+	IngressLabelsPrefix  string
 
 	FakeCertificate *ingress.SSLCert
 
@@ -725,6 +727,8 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 			if server == nil {
 				server = servers[defServerName]
 			}
+
+			server.Labels = ing.ObjectMeta.GetLabels()
 
 			if rule.HTTP == nil &&
 				host != defServerName {

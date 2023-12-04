@@ -21,6 +21,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"slices"
 	"strings"
 	"syscall"
 
@@ -49,6 +50,8 @@ type socketData struct {
 	Service      string  `json:"service"`
 	Canary       string  `json:"canary"`
 	Path         string  `json:"path"`
+
+	IngressLabels string `json:"ingressLabels"`
 }
 
 // HistogramBuckets allow customizing prometheus histogram buckets values
@@ -82,7 +85,11 @@ type SocketCollector struct {
 
 	hosts sets.Set[string]
 
-	metricsPerHost      bool
+	metricsPerHost bool
+
+	labels       []string
+	labelsPrefix string
+
 	reportStatusClasses bool
 }
 
@@ -104,7 +111,7 @@ var defObjectives = map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001}
 
 // NewSocketCollector creates a new SocketCollector instance using
 // the ingress watch namespace and class used by the controller
-func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStatusClasses bool, buckets HistogramBuckets, excludeMetrics []string) (*SocketCollector, error) {
+func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStatusClasses bool, buckets HistogramBuckets, excludeMetrics []string, includeIngressMetrics []string, ingressLabelsPrefix string) (*SocketCollector, error) {
 	socket := "/tmp/nginx/prometheus-nginx.socket"
 	// unix sockets must be unlink()ed before being used
 	//nolint:errcheck // Ignore unlink error
@@ -129,6 +136,10 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 	requestTags := requestTags
 	if metricsPerHost {
 		requestTags = append(requestTags, "host")
+	}
+
+	if len(includeIngressMetrics) > 0 {
+		requestTags = append(requestTags, buildIngressMetricsLabels(includeIngressMetrics, ingressLabelsPrefix)...)
 	}
 
 	em := make(map[string]struct{}, len(excludeMetrics))
@@ -263,6 +274,9 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 		),
 	}
 
+	sc.labels = includeIngressMetrics
+	sc.labelsPrefix = ingressLabelsPrefix
+
 	sc.metricMapping = mm
 	return sc, nil
 }
@@ -363,6 +377,13 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 			"ingress":   stats.Ingress,
 			"service":   stats.Service,
 			"canary":    stats.Canary,
+		}
+
+		if stats.IngressLabels != "-" && len(sc.labels) > 0 {
+			for label, value := range parseLabels(sc.labels, replaceLabelsString(stats.IngressLabels), sc.labelsPrefix) {
+				requestLabels[label] = value
+				collectorLabels[label] = value
+			}
 		}
 
 		if sc.requests != nil {
@@ -574,4 +595,45 @@ func deleteConstants(labels prometheus.Labels) {
 	delete(labels, "controller_namespace")
 	delete(labels, "controller_class")
 	delete(labels, "controller_pod")
+}
+
+// replaceLabelsString key with underscores, dots and dashes. This is needed to convert the labels to valid prometheus labels.
+func replaceLabelsString(labelString string) string {
+	labelString = strings.Replace(labelString, ".", "_", -1)
+	labelString = strings.Replace(labelString, "/", "_", -1)
+	labelString = strings.Replace(labelString, "-", "_", -1)
+	return labelString
+}
+
+// replaceLabels key with underscores, dots and dashes. This is needed to convert the labels to valid prometheus labels.
+func replaceLabels(labels []string) []string {
+	for k, v := range labels {
+		labels[k] = replaceLabelsString(v)
+	}
+	return labels
+}
+
+// parseLabels parses the ingressLabels string and returns a map of labels
+func parseLabels(includedLabels []string, ingressLabels string, prefix string) map[string]string {
+	labels := make(map[string]string, len(includedLabels))
+	for _, v := range strings.Split(ingressLabels, ";") {
+		label := strings.Split(v, "=")
+
+		if slices.Contains(includedLabels, addLabelsPrefix(label[0], prefix)) {
+			labels[addLabelsPrefix(label[0], prefix)] = label[1]
+		}
+	}
+	return labels
+}
+
+// addLabelsPrefix add ingress labels prefix
+func addLabelsPrefix(str string, prefix string) string {
+	return fmt.Sprintf("%s%s", prefix, str)
+}
+
+func buildIngressMetricsLabels(labels []string, prefix string) []string {
+	for i, v := range labels {
+		labels[i] = addLabelsPrefix(v, prefix)
+	}
+	return replaceLabels(labels)
 }

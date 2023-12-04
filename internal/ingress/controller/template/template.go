@@ -283,6 +283,7 @@ var funcMap = text_template.FuncMap{
 	"shouldLoadAuthDigestModule":         shouldLoadAuthDigestModule,
 	"buildServerName":                    buildServerName,
 	"buildCorsOriginRegex":               buildCorsOriginRegex,
+	"buildLabels":                        buildLabels,
 }
 
 // escapeLiteralDollar will replace the $ character with ${literal_dollar}
@@ -1037,6 +1038,7 @@ type ingressInformation struct {
 	Rule        string
 	Service     string
 	ServicePort string
+	Labels      map[string]string
 	Annotations map[string]string
 }
 
@@ -1054,6 +1056,9 @@ func (info *ingressInformation) Equal(other *ingressInformation) bool {
 		return false
 	}
 	if !reflect.DeepEqual(info.Annotations, other.Annotations) {
+		return false
+	}
+	if !reflect.DeepEqual(info.Labels, other.Labels) {
 		return false
 	}
 
@@ -1087,6 +1092,7 @@ func getIngressInformation(i, h, p interface{}) *ingressInformation {
 		Namespace:   ing.GetNamespace(),
 		Rule:        ing.GetName(),
 		Annotations: ing.Annotations,
+		Labels:      ing.Labels,
 		Path:        ingressPath,
 	}
 
@@ -1753,4 +1759,17 @@ func buildCorsOriginRegex(corsOrigins []string) string {
 	}
 	originsRegex += ")$ ) { set $cors 'true'; }"
 	return originsRegex
+}
+
+func buildLabels(labels map[string]string) string {
+	var parsedLabels []string
+	for k, v := range labels {
+		k = strings.Replace(k, ".", "_", -1)
+		k = strings.Replace(k, "/", "_", -1)
+		k = strings.Replace(k, "-", "_", -1)
+
+		parsedLabels = append(parsedLabels, fmt.Sprintf("%s=%s", k, v))
+	}
+
+	return strings.Join(parsedLabels, ";")
 }

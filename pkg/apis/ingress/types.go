@@ -214,6 +214,8 @@ type Server struct {
 	SSLPreferServerCiphers string `json:"sslPreferServerCiphers,omitempty"`
 	// AuthTLSError contains the reason why the access to a server should be denied
 	AuthTLSError string `json:"authTLSError,omitempty"`
+	// Metrics labels from ingress labels
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 // Location describes an URI inside a server.

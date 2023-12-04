@@ -1180,6 +1180,9 @@ func TestGetIngressInformation(t *testing.T) {
 						Annotations: map[string]string{
 							"ingress.annotation": "ok",
 						},
+						Labels: map[string]string{
+							"test_label": "test_label_value",
+						},
 					},
 					Spec: networking.IngressSpec{
 						DefaultBackend: &networking.IngressBackend{
@@ -1202,6 +1205,9 @@ func TestGetIngressInformation(t *testing.T) {
 				Annotations: map[string]string{
 					"ingress.annotation": "ok",
 				},
+				Labels: map[string]string{
+					"test_label": "test_label_value",
+				},
 				Service:     "a-svc",
 				ServicePort: "8080",
 			},
@@ -1214,6 +1220,9 @@ func TestGetIngressInformation(t *testing.T) {
 						Namespace: apiv1.NamespaceDefault,
 						Annotations: map[string]string{
 							"ingress.annotation": "ok",
+						},
+						Labels: map[string]string{
+							"test_label": "test_label_value",
 						},
 					},
 					Spec: networking.IngressSpec{
@@ -1237,6 +1246,9 @@ func TestGetIngressInformation(t *testing.T) {
 				Annotations: map[string]string{
 					"ingress.annotation": "ok",
 				},
+				Labels: map[string]string{
+					"test_label": "test_label_value",
+				},
 				Service:     "a-svc",
 				ServicePort: "b-svc",
 			},
@@ -1249,6 +1261,9 @@ func TestGetIngressInformation(t *testing.T) {
 						Namespace: apiv1.NamespaceDefault,
 						Annotations: map[string]string{
 							"ingress.annotation": "ok",
+						},
+						Labels: map[string]string{
+							"test_label": "test_label_value",
 						},
 					},
 					Spec: networking.IngressSpec{
@@ -1269,6 +1284,9 @@ func TestGetIngressInformation(t *testing.T) {
 				Annotations: map[string]string{
 					"ingress.annotation": "ok",
 				},
+				Labels: map[string]string{
+					"test_label": "test_label_value",
+				},
 				Service: "a-svc",
 			},
 		},
@@ -1280,6 +1298,9 @@ func TestGetIngressInformation(t *testing.T) {
 						Namespace: "something",
 						Annotations: map[string]string{
 							"ingress.annotation": "ok",
+						},
+						Labels: map[string]string{
+							"test_label": "test_label_value",
 						},
 					},
 					Spec: networking.IngressSpec{
@@ -1318,6 +1339,9 @@ func TestGetIngressInformation(t *testing.T) {
 				Annotations: map[string]string{
 					"ingress.annotation": "ok",
 				},
+				Labels: map[string]string{
+					"test_label": "test_label_value",
+				},
 				Service:     "b-svc",
 				ServicePort: "80",
 			},
@@ -1330,6 +1354,9 @@ func TestGetIngressInformation(t *testing.T) {
 						Namespace: "something",
 						Annotations: map[string]string{
 							"ingress.annotation": "ok",
+						},
+						Labels: map[string]string{
+							"test_label": "test_label_value",
 						},
 					},
 					Spec: networking.IngressSpec{
@@ -1368,6 +1395,9 @@ func TestGetIngressInformation(t *testing.T) {
 				Annotations: map[string]string{
 					"ingress.annotation": "ok",
 				},
+				Labels: map[string]string{
+					"test_label": "test_label_value",
+				},
 				Service:     "b-svc",
 				ServicePort: "b-svc-80",
 			},
@@ -1380,6 +1410,9 @@ func TestGetIngressInformation(t *testing.T) {
 						Namespace: "something",
 						Annotations: map[string]string{
 							"ingress.annotation": "ok",
+						},
+						Labels: map[string]string{
+							"test_label": "test_label_value",
 						},
 					},
 					Spec: networking.IngressSpec{
@@ -1413,6 +1446,9 @@ func TestGetIngressInformation(t *testing.T) {
 				Annotations: map[string]string{
 					"ingress.annotation": "ok",
 				},
+				Labels: map[string]string{
+					"test_label": "test_label_value",
+				},
 			},
 		},
 		"valid ingress definition with name demo in namespace something and path /ok with both a nil service and a valid one": {
@@ -1423,6 +1459,9 @@ func TestGetIngressInformation(t *testing.T) {
 						Namespace: "something",
 						Annotations: map[string]string{
 							"ingress.annotation": "ok",
+						},
+						Labels: map[string]string{
+							"test_label": "test_label_value",
 						},
 					},
 					Spec: networking.IngressSpec{
@@ -1467,6 +1506,9 @@ func TestGetIngressInformation(t *testing.T) {
 				Rule:      "demo",
 				Annotations: map[string]string{
 					"ingress.annotation": "ok",
+				},
+				Labels: map[string]string{
+					"test_label": "test_label_value",
 				},
 				Service:     "b-svc",
 				ServicePort: "b-svc-80",

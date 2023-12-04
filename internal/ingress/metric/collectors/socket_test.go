@@ -85,14 +85,16 @@ func TestCollector(t *testing.T) {
 	}
 
 	cases := []struct {
-		name             string
-		data             []string
-		metrics          []string
-		useStatusClasses bool
-		excludeMetrics   []string
-		wantBefore       string
-		removeIngresses  []string
-		wantAfter        string
+		name                 string
+		data                 []string
+		metrics              []string
+		useStatusClasses     bool
+		excludeMetrics       []string
+		includeIngressLabels []string
+		ingressLabelsPrefix  string
+		wantBefore           string
+		removeIngresses      []string
+		wantAfter            string
 	}{
 		{
 			name: "invalid metric object should not increase prometheus metrics",
@@ -589,13 +591,103 @@ func TestCollector(t *testing.T) {
 				nginx_ingress_controller_response_duration_seconds_count{canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx"} 1
 			`,
 		},
+		{
+			name: "include ingress labels metrics exist",
+			data: []string{`[{
+				"host":"testshop.com",
+				"status":"200",
+				"bytesSent":150.0,
+				"method":"GET",
+				"path":"/admin",
+				"requestLength":300.0,
+				"requestTime":60.0,
+				"upstreamLatency":1.0,
+				"upstreamHeaderTime":5.0,
+				"upstreamName":"test-upstream",
+				"upstreamIP":"1.1.1.1:8080",
+				"upstreamResponseTime":200,
+				"upstreamStatus":"220",
+				"namespace":"test-app-production",
+				"ingress":"web-yml",
+				"service":"test-app",
+				"canary":"",
+				"ingressLabels":"app.kubernetes.io/name=test-app;test=test"
+			}]`},
+			metrics:              []string{"nginx_ingress_controller_response_duration_seconds"},
+			includeIngressLabels: []string{"app.kubernetes.io/name"},
+			useStatusClasses:     true,
+			wantBefore: `
+				# HELP nginx_ingress_controller_response_duration_seconds The time spent on receiving the response from the upstream server
+				# TYPE nginx_ingress_controller_response_duration_seconds histogram
+				nginx_ingress_controller_response_duration_seconds_bucket{app_kubernetes_io_name="test_app",canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",le="0.005"} 0
+				nginx_ingress_controller_response_duration_seconds_bucket{app_kubernetes_io_name="test_app",canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",le="0.01"} 0
+				nginx_ingress_controller_response_duration_seconds_bucket{app_kubernetes_io_name="test_app",canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",le="0.025"} 0
+				nginx_ingress_controller_response_duration_seconds_bucket{app_kubernetes_io_name="test_app",canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",le="0.05"} 0
+				nginx_ingress_controller_response_duration_seconds_bucket{app_kubernetes_io_name="test_app",canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",le="0.1"} 0
+				nginx_ingress_controller_response_duration_seconds_bucket{app_kubernetes_io_name="test_app",canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",le="0.25"} 0
+				nginx_ingress_controller_response_duration_seconds_bucket{app_kubernetes_io_name="test_app",canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",le="0.5"} 0
+				nginx_ingress_controller_response_duration_seconds_bucket{app_kubernetes_io_name="test_app",canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",le="1"} 0
+				nginx_ingress_controller_response_duration_seconds_bucket{app_kubernetes_io_name="test_app",canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",le="2.5"} 0
+				nginx_ingress_controller_response_duration_seconds_bucket{app_kubernetes_io_name="test_app",canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",le="5"} 0
+				nginx_ingress_controller_response_duration_seconds_bucket{app_kubernetes_io_name="test_app",canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",le="10"} 0
+				nginx_ingress_controller_response_duration_seconds_bucket{app_kubernetes_io_name="test_app",canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",le="+Inf"} 1
+				nginx_ingress_controller_response_duration_seconds_sum{app_kubernetes_io_name="test_app",canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx"} 200
+				nginx_ingress_controller_response_duration_seconds_count{app_kubernetes_io_name="test_app",canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx"} 1
+			`,
+		},
+
+		{
+			name: "include ingress labels metrics with prefix exist",
+			data: []string{`[{
+				"host":"testshop.com",
+				"status":"200",
+				"bytesSent":150.0,
+				"method":"GET",
+				"path":"/admin",
+				"requestLength":300.0,
+				"requestTime":60.0,
+				"upstreamLatency":1.0,
+				"upstreamHeaderTime":5.0,
+				"upstreamName":"test-upstream",
+				"upstreamIP":"1.1.1.1:8080",
+				"upstreamResponseTime":200,
+				"upstreamStatus":"220",
+				"namespace":"test-app-production",
+				"ingress":"web-yml",
+				"service":"test-app",
+				"canary":"",
+				"ingressLabels":"app.kubernetes.io/name=test-app;test=test-app"
+			}]`},
+			metrics:              []string{"nginx_ingress_controller_response_duration_seconds"},
+			includeIngressLabels: []string{"app.kubernetes.io/name"},
+			ingressLabelsPrefix:  "test_",
+			useStatusClasses:     true,
+			wantBefore: `
+				# HELP nginx_ingress_controller_response_duration_seconds The time spent on receiving the response from the upstream server
+				# TYPE nginx_ingress_controller_response_duration_seconds histogram
+				nginx_ingress_controller_response_duration_seconds_bucket{canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",test_app_kubernetes_io_name="test_app",le="0.005"} 0
+				nginx_ingress_controller_response_duration_seconds_bucket{canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",test_app_kubernetes_io_name="test_app",le="0.01"} 0
+				nginx_ingress_controller_response_duration_seconds_bucket{canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",test_app_kubernetes_io_name="test_app",le="0.025"} 0
+				nginx_ingress_controller_response_duration_seconds_bucket{canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",test_app_kubernetes_io_name="test_app",le="0.05"} 0
+				nginx_ingress_controller_response_duration_seconds_bucket{canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",test_app_kubernetes_io_name="test_app",le="0.1"} 0
+				nginx_ingress_controller_response_duration_seconds_bucket{canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",test_app_kubernetes_io_name="test_app",le="0.25"} 0
+				nginx_ingress_controller_response_duration_seconds_bucket{canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",test_app_kubernetes_io_name="test_app",le="0.5"} 0
+				nginx_ingress_controller_response_duration_seconds_bucket{canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",test_app_kubernetes_io_name="test_app",le="1"} 0
+				nginx_ingress_controller_response_duration_seconds_bucket{canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",test_app_kubernetes_io_name="test_app",le="2.5"} 0
+				nginx_ingress_controller_response_duration_seconds_bucket{canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",test_app_kubernetes_io_name="test_app",le="5"} 0
+				nginx_ingress_controller_response_duration_seconds_bucket{canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",test_app_kubernetes_io_name="test_app",le="10"} 0
+				nginx_ingress_controller_response_duration_seconds_bucket{canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",test_app_kubernetes_io_name="test_app",le="+Inf"} 1
+				nginx_ingress_controller_response_duration_seconds_sum{canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",test_app_kubernetes_io_name="test_app"} 200
+				nginx_ingress_controller_response_duration_seconds_count{canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx",test_app_kubernetes_io_name="test_app"} 1
+			`,
+		},
 	}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			registry := prometheus.NewPedanticRegistry()
 
-			sc, err := NewSocketCollector("pod", "default", "ingress", true, c.useStatusClasses, buckets, c.excludeMetrics)
+			sc, err := NewSocketCollector("pod", "default", "ingress", true, c.useStatusClasses, buckets, c.excludeMetrics, c.includeIngressLabels, c.ingressLabelsPrefix)
 			if err != nil {
 				t.Errorf("%v: unexpected error creating new SocketCollector: %v", c.name, err)
 			}

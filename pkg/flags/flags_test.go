@@ -18,6 +18,7 @@ package flags
 
 import (
 	"os"
+	"slices"
 	"testing"
 )
 
@@ -107,5 +108,38 @@ func TestMaxmindRetryDownload(t *testing.T) {
 	_, _, err := ParseFlags()
 	if err == nil {
 		t.Fatalf("Expected an error parsing flags but none returned")
+	}
+}
+
+func TestIncludeIngressLabels(t *testing.T) {
+	ResetForTesting(func() { t.Fatal("Parsing failed") })
+
+	oldArgs := os.Args
+	defer func() { os.Args = oldArgs }()
+
+	os.Args = []string{
+		"cmd",
+		"--default-backend-service", "namespace/test",
+		"--http-port", "0",
+		"--https-port", "0",
+		"--ingress-class", "test",
+		"--include-ingress-labels", "app.kubernetes.io/name,testlabel",
+	}
+
+	_, conf, err := ParseFlags()
+	if err != nil {
+		t.Fatalf("Unexpected error parsing default flags: %v", err)
+	}
+
+	if len(conf.IncludeIngressLabels) != 2 {
+		t.Fatal("Expected flag \"include-ingress-labels\" should have 2 elements")
+	}
+
+	if !slices.Contains(conf.IncludeIngressLabels, "app.kubernetes.io/name") {
+		t.Fatal("Expected flag \"include-ingress-labels\" should contain \"app.kubernetes.io/name\"")
+	}
+
+	if !slices.Contains(conf.IncludeIngressLabels, "testlabel") {
+		t.Fatal("Expected flag \"include-ingress-labels\" should contain \"testlabel\"")
 	}
 }

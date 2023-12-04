@@ -757,7 +757,7 @@ stream {
     lua_package_path "/etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/?.lua;;";
 
     lua_shared_dict tcp_udp_configuration_data 5M;
-    
+
     {{ buildResolvers $cfg.Resolver $cfg.DisableIpv6DNS }}
 
     init_by_lua_block {
@@ -1222,6 +1222,10 @@ stream {
             set $service_port   {{ $ing.ServicePort | quote }};
             set $location_path  {{ $ing.Path | escapeLiteralDollar | quote }};
             set $global_rate_limit_exceeding n;
+
+            {{ if gt (len $server.Labels) 0 }}
+            set $ingress_labels {{ buildLabels $server.Labels | quote }};
+            {{ end }}
 
             {{ buildOpentelemetryForLocation $all.Cfg.EnableOpentelemetry $all.Cfg.OpentelemetryTrustIncomingSpan $location }}
 
