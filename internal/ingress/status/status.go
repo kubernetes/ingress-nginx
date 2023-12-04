@@ -182,7 +182,14 @@ func filterLabels(toFilter map[string]string) map[string]string {
 
 	podLabels := make(map[string]string)
 	for k, v := range toFilter {
-		if k != "pod-template-hash" && k != "controller-revision-hash" && k != "pod-template-generation" {
+		switch k {
+		case "pod-template-hash":
+		case "controller-revision-hash":
+		case "pod-template-generation":
+		// Handle helm upgrade
+		case "app.kubernetes.io/version":
+		case "helm.sh/chart":
+		default:
 			podLabels[k] = v
 		}
 	}
