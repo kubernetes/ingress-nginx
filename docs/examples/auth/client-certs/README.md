@@ -79,7 +79,7 @@ Now we are able to reference the created secrets in the ingress definition.
 | Annotation                                                                | Description                | Remark             |
 |---------------------------------------------------------------------------|----------------------------|--------------------|
 | nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"                  | Activate Client-Auth       | If "on", verify client Certificate |
-| nginx.ingress.kubernetes.io/auth-tls-secret: "default/ca-secret"          | CA "secret" reference      | Secret namespace and service / ingress namespace must match |
+| nginx.ingress.kubernetes.io/auth-tls-secret: "namespace/ca-secret"        | CA "secret" reference      | Secret namespace and service / ingress namespace must match |
 | nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"                    | CA "chain" depth           | How many CA levels should be processed |
 | nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "true" | Pass Cert / Header         | Pass Certificate to Web-App for e.g. parsing Client E-Mail Address x.509 Property |
 
