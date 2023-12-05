@@ -94,7 +94,7 @@ tls:
 
 ## 4. Example / Test
 
-The working .yaml Eyample: [ingress.yaml](ingress.yaml)
+The working .yaml Example: [ingress.yaml](ingress.yaml)
 
 - Test by performing a curl / wget against the Ingress Path without the Client Cert and expect a Status Code 400 (Bad Request - No required SSL certificate was sent).
 - Test by performing a curl / wget against the Ingress Path with the Client Cert and expect a Status Code 200.
