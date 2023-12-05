@@ -16,9 +16,6 @@ metadata:
   namespace: {{ include "ingress-nginx.namespace" . }}
 spec:
   type: {{ .Values.controller.service.type }}
-{{- if hasKey .Values.controller.service "allocateLoadBalancerNodePorts" }}
-  allocateLoadBalancerNodePorts: {{ .Values.controller.service.allocateLoadBalancerNodePorts }}
-{{- end }}
 {{- if .Values.controller.service.clusterIP }}
   clusterIP: {{ .Values.controller.service.clusterIP }}
 {{- end }}
@@ -34,6 +31,9 @@ spec:
 {{- if .Values.controller.service.loadBalancerClass }}
   loadBalancerClass: {{ .Values.controller.service.loadBalancerClass }}
 {{- end }}
+{{- if hasKey .Values.controller.service "allocateLoadBalancerNodePorts" }}
+  allocateLoadBalancerNodePorts: {{ .Values.controller.service.allocateLoadBalancerNodePorts }}
+{{- end }}
 {{- if .Values.controller.service.externalTrafficPolicy }}
   externalTrafficPolicy: {{ .Values.controller.service.externalTrafficPolicy }}
 {{- end }}
@@ -47,8 +47,6 @@ spec:
 {{- if .Values.controller.service.ipFamilyPolicy }}
   ipFamilyPolicy: {{ .Values.controller.service.ipFamilyPolicy }}
 {{- end }}
-{{- end }}
-{{- if semverCompare ">=1.21.0-0" .Capabilities.KubeVersion.Version -}}
 {{- if .Values.controller.service.ipFamilies }}
   ipFamilies: {{ toYaml .Values.controller.service.ipFamilies | nindent 4 }}
 {{- end }}
