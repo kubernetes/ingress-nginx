@@ -1,0 +1,12 @@
+
+suite: test controller configmap
+templates:
+  - controller-configmap.yaml
+
+tests:
+  - it: should create a configmap
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap

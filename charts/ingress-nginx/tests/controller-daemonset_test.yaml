@@ -1,0 +1,14 @@
+suite: test controller daemonset
+templates:
+  - controller-daemonset.yaml
+
+tests:
+  - it: should create a daemonset when controller kind is DaemonSet
+    set:
+      controller.kind: DaemonSet
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: DaemonSet
+

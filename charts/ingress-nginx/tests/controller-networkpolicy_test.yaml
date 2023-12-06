@@ -1,0 +1,20 @@
+suite: test controller network policy
+templates:
+  - controller-networkpolicy.yaml
+
+tests:
+  - it: should not create a network policy by default
+    set:
+      controller.networkPolicy.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create a network policy when enabled
+    set:
+      controller.networkPolicy.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: NetworkPolicy

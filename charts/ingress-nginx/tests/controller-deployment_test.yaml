@@ -1,0 +1,33 @@
+suite: test controller deployment
+templates:
+  - controller-deployment.yaml
+
+tests:
+  - it: should always create a deployment
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Deployment
+
+  - it: custom replica count
+    set:
+      controller.enabled: true
+      controller.replicaCount: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: custom resource limits
+    set:
+      controller.enabled: true
+      controller.resources.limits.cpu: "500m"
+      controller.resources.limits.memory: "512Mi"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: "500m"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: "512Mi"

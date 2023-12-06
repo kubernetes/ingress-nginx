@@ -1,0 +1,32 @@
+suite: test controller service
+templates:
+  - controller-service.yaml
+
+tests:
+  - it: should not create any service by default
+    set:
+      controller.service.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create a service when enabled
+    set:
+      controller.service.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-controller
+
+  - it: custom service type
+    set:
+      controller.service.enabled: true
+      controller.service.type: NodePort
+    asserts:
+      - equal:
+          path: spec.type
+          value: NodePort

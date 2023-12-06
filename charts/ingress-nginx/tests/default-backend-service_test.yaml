@@ -1,0 +1,32 @@
+suite: test default backend service
+templates:
+  - default-backend-service.yaml
+
+tests:
+  - it: should not create any default backend service by default
+    set:
+      defaultBackend.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create a default backend service when enabled
+    set:
+      defaultBackend.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-defaultbackend
+
+  - it: verify service port configuration
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.service.port: 80
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 80

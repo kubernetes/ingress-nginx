@@ -1,0 +1,15 @@
+suite: test controller keda
+templates:
+  - controller-keda.yaml
+
+tests:
+  - it: should create a keda scaled object when controller kind is Deployment and keda is enabled
+    set:
+      controller.kind: Deployment
+      controller.keda.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ScaledObject
+

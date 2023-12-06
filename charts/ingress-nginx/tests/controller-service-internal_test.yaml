@@ -1,0 +1,24 @@
+suite: test controller internal service
+templates:
+  - controller-service-internal.yaml
+
+tests:
+  - it: should not create an internal service by default
+    set:
+      controller.service.enabled: true
+      controller.service.internal.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create an internal service when enabled
+    set:
+      controller.service.enabled: true
+      controller.service.internal.enabled: true
+      controller.service.internal.annotations:
+        test.annotation: "true"
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Service

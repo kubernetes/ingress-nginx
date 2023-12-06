@@ -1,0 +1,16 @@
+suite: test controller hpa
+templates:
+  - controller-hpa.yaml
+
+tests:
+  - it: should create an hpa when controller kind is Deployment and autoscaling is enabled
+    set:
+      controller.kind: Deployment
+      controller.autoscaling.enabled: true
+      controller.keda.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: HorizontalPodAutoscaler
+
