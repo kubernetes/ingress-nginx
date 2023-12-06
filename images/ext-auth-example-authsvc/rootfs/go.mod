@@ -1,6 +1,6 @@
 module example.com/authsvc
 
-go 1.21.3
+go 1.21.5
 
 require k8s.io/apimachinery v0.23.1
 
