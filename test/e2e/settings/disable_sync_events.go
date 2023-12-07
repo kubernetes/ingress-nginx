@@ -32,7 +32,6 @@ import (
 var _ = framework.IngressNginxDescribe("[Flag] disable-sync-events", func() {
 	f := framework.NewDefaultFramework("disable-sync-events")
 
-	selectorHost := "reason=Sync,involvedObject.name="
 	ginkgo.It("should create sync events (default)", func() {
 		host := "sync-events-default"
 		f.NewEchoDeployment(framework.WithDeploymentReplicas(1))
@@ -45,7 +44,8 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-sync-events", func() {
 				return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 			})
 
-		events, err := f.KubeClientSet.CoreV1().Events(ing.Namespace).List(context.TODO(), metav1.ListOptions{FieldSelector: selectorHost + host})
+		//nolint:goconst //string interpolation
+		events, err := f.KubeClientSet.CoreV1().Events(ing.Namespace).List(context.TODO(), metav1.ListOptions{FieldSelector: "reason=Sync,involvedObject.name=" + host})
 		assert.Nil(ginkgo.GinkgoT(), err, "listing events")
 
 		assert.NotEmpty(ginkgo.GinkgoT(), events.Items, "got events")
@@ -73,7 +73,7 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-sync-events", func() {
 				return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 			})
 
-		events, err := f.KubeClientSet.CoreV1().Events(ing.Namespace).List(context.TODO(), metav1.ListOptions{FieldSelector: selectorHost + host})
+		events, err := f.KubeClientSet.CoreV1().Events(ing.Namespace).List(context.TODO(), metav1.ListOptions{FieldSelector: "reason=Sync,involvedObject.name=" + host})
 		assert.Nil(ginkgo.GinkgoT(), err, "listing events")
 
 		assert.NotEmpty(ginkgo.GinkgoT(), events.Items, "got events")
@@ -101,7 +101,7 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-sync-events", func() {
 				return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 			})
 
-		events, err := f.KubeClientSet.CoreV1().Events(ing.Namespace).List(context.TODO(), metav1.ListOptions{FieldSelector: selectorHost + host})
+		events, err := f.KubeClientSet.CoreV1().Events(ing.Namespace).List(context.TODO(), metav1.ListOptions{FieldSelector: "reason=Sync,involvedObject.name=" + host})
 		assert.Nil(ginkgo.GinkgoT(), err, "listing events")
 
 		assert.Empty(ginkgo.GinkgoT(), events.Items, "got events")
