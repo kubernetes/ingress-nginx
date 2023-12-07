@@ -40,8 +40,6 @@ const echoHost = "echo"
 var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 	f := framework.NewDefaultFramework("grpc", framework.WithHTTPBunEnabled())
 
-	nginxIPsecure := f.GetNginxIP() + ":443"
-
 	ginkgo.It("should use grpc_pass in the configuration file", func() {
 		f.NewGRPCFortuneTellerDeployment()
 
@@ -105,7 +103,8 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 				return strings.Contains(server, "grpc_pass grpc://upstream_balancer;")
 			})
 
-		conn, err := grpc.Dial(nginxIPsecure,
+		//nolint:goconst //string interpolation
+		conn, err := grpc.Dial(f.GetNginxIP()+":443",
 			grpc.WithTransportCredentials(
 				credentials.NewTLS(&tls.Config{
 					ServerName:         echoHost,
@@ -166,7 +165,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 				return strings.Contains(server, "grpc_pass grpc://upstream_balancer;")
 			})
 
-		conn, err := grpc.Dial(nginxIPsecure,
+		conn, err := grpc.Dial(f.GetNginxIP()+":443",
 			grpc.WithTransportCredentials(
 				credentials.NewTLS(&tls.Config{
 					ServerName:         echoHost,
@@ -240,7 +239,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 				return strings.Contains(server, "grpc_pass grpcs://upstream_balancer;")
 			})
 
-		conn, err := grpc.Dial(nginxIPsecure,
+		conn, err := grpc.Dial(f.GetNginxIP()+":443",
 			grpc.WithTransportCredentials(
 				credentials.NewTLS(&tls.Config{
 					ServerName:         echoHost,
