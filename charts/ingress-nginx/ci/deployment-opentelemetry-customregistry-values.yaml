@@ -2,6 +2,3 @@ controller:
   kind: Deployment
   opentelemetry:
     enabled: true
-    image:
-      registry: registry.k8s.io
-      image: ingress-nginx/opentelemetry

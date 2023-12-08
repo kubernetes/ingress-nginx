@@ -257,14 +257,16 @@ Extra modules.
 */}}
 {{- define "extraModules" -}}
 - name: {{ .name }}
-  image: {{ include "imageName" .image }}{{ include "ingress-nginx.imageDigest" .image }}
+  {{- with .image }}
+  image: {{ if .repository }}{{ .repository }}{{ else }}{{ .registry }}/{{ .image }}{{ end }}:{{ .tag }}{{ if .digest }}@{{ .digest }}{{ end }}
   command:
-  {{- if .image.distroless }}
+  {{- if .distroless }}
     - /init_module
   {{- else }}
     - sh
     - -c
     - /usr/local/bin/init_module.sh
+  {{- end }}
   {{- end }}
   {{- if .containerSecurityContext }}
   securityContext: {{ toYaml .containerSecurityContext | nindent 4 }}
@@ -275,17 +277,4 @@ Extra modules.
   volumeMounts:
     - name: modules
       mountPath: /modules_mount
-{{- end -}}
-
-{{/*
-Image Name with optional registry and tag.
-*/}}
-{{- define "imageName" -}}
-{{- if .registry -}}
-{{- printf "%s/" .registry -}}
-{{- end -}}
-{{- printf "%s" .image -}}
-{{- if .tag -}}
-{{- printf ":%s" .tag -}}
-{{- end -}}
 {{- end -}}
