@@ -684,6 +684,11 @@ type Configuration struct {
 	// +optional
 	GlobalExternalAuth GlobalExternalAuth `json:"global-external-auth"`
 
+	// By default, the NGINX ingress controller applies global-auth configuration to all Ingress resources,
+	// if global-auth-url (ConfigMap) is set, and auth-url is not set (Ingess). Default is `true`. By setting this to
+	// `false`, global-auth is only applied to Ingress resources when global-auth-url (ConfigMap) is set and enable-global-auth is set (Ingress).
+	GlobalAuthDefaultEnable bool `json:"global-auth-default-enable"`
+
 	// Checksum contains a checksum of the configmap configuration
 	Checksum string `json:"-"`
 
