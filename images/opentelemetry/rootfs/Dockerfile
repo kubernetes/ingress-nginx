@@ -54,7 +54,7 @@ COPY . .
 RUN go mod download
 RUN CGO_ENABLED=0 go build -o /go/bin/init_module
 
-FROM cgr.dev/chainguard/static as final
+FROM gcr.io/distroless/static-debian11 as final
 COPY --from=build-init /go/bin/init_module /
 COPY --from=nginx /etc/nginx/modules /etc/nginx/modules
 
