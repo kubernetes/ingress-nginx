@@ -17,6 +17,8 @@ limitations under the License.
 package authreqglobal
 
 import (
+	"strconv"
+
 	networking "k8s.io/api/networking/v1"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
@@ -39,10 +41,6 @@ var globalAuthAnnotations = parser.Annotation{
 	},
 }
 
-type Config struct {
-	GlobalAuthDefaultEnable bool `json:"global-auth-default-enable,omitempty"`
-}
-
 type authReqGlobal struct {
 	r                resolver.Resolver
 	annotationConfig parser.Annotation
@@ -61,7 +59,13 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 func (a authReqGlobal) Parse(ing *networking.Ingress) (interface{}, error) {
 	enableGlobalAuth, err := parser.GetBoolAnnotation(enableGlobalAuthAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
-		enableGlobalAuth = a.r.GetDefaultBackend().GlobalAuthDefaultEnable
+		globalAuthDefaultEnable, err := a.r.GetConfigMap("ingress-nginx/ingress-nginx-controller")
+		if err != nil {
+			return nil, err
+		}
+
+		enableGlobalAuth, err = strconv.ParseBool(globalAuthDefaultEnable.Data["global-auth-default-enable"])
+		// enableGlobalAuth = a.r.GetDefaultBackend().GlobalAuthDefaultEnable
 	}
 
 	return enableGlobalAuth, nil

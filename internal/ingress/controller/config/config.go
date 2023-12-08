@@ -877,7 +877,6 @@ func NewDefault() Configuration {
 			DisableProxyInterceptErrors: false,
 			DenylistSourceRange:         []string{},
 			WhitelistSourceRange:        []string{},
-			GlobalAuthDefaultEnable:     true,
 			SkipAccessLogURLs:           []string{},
 			LimitRate:                   0,
 			LimitRateAfter:              0,
