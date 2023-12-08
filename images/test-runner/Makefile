@@ -43,7 +43,7 @@ image:
 		--pull \
 		--push \
 		--build-arg BASE_IMAGE=${NGINX_BASE_IMAGE} \
-		--build-arg GOLANG_VERSION=1.21.3 \
+		--build-arg GOLANG_VERSION=1.21.5 \
 		--build-arg ETCD_VERSION=3.4.3-0 \
 		--build-arg K8S_RELEASE=v1.26.0 \
 		--build-arg RESTY_CLI_VERSION=0.27 \
@@ -64,7 +64,7 @@ build: ensure-buildx
 		--progress=${PROGRESS} \
 		--pull \
 		--build-arg BASE_IMAGE=${NGINX_BASE_IMAGE} \
-		--build-arg GOLANG_VERSION=1.21.3 \
+		--build-arg GOLANG_VERSION=1.21.5 \
 		--build-arg ETCD_VERSION=3.4.3-0 \
 		--build-arg K8S_RELEASE=v1.26.0 \
 		--build-arg RESTY_CLI_VERSION=0.27 \
