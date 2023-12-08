@@ -39,7 +39,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/auth-proxy-set-headers](#external-authentication)|string|Medium|
 |[nginx.ingress.kubernetes.io/auth-snippet](#external-authentication)|string| Critical |
 |[nginx.ingress.kubernetes.io/enable-global-auth](#external-authentication)|"true" or "false"|Low|
-|[nginx.ingress.kubernetes.io/backend-protocol](#backend-protocol)|string|HTTP,HTTPS,GRPC,GRPCS|Low|
+|[nginx.ingress.kubernetes.io/backend-protocol](#backend-protocol)|string|Low|
 |[nginx.ingress.kubernetes.io/canary](#canary)|"true" or "false"|Low|
 |[nginx.ingress.kubernetes.io/canary-by-header](#canary)|string|Medium|
 |[nginx.ingress.kubernetes.io/canary-by-header-value](#canary)|string|Medium|
@@ -59,7 +59,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/cors-expose-headers](#enable-cors)|string|Medium|
 |[nginx.ingress.kubernetes.io/cors-allow-credentials](#enable-cors)|"true" or "false"|Low|
 |[nginx.ingress.kubernetes.io/cors-max-age](#enable-cors)|number|Low|
-|[nginx.ingress.kubernetes.io/force-ssl-redirect]Medium|(#server-side-https-enforcement-through-redirect)|"true" or "false"|Medium|
+|[nginx.ingress.kubernetes.io/force-ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|Medium|
 |[nginx.ingress.kubernetes.io/from-to-www-redirect](#redirect-fromto-www)|"true" or "false"| Low
 |[nginx.ingress.kubernetes.io/http2-push-preload](#http2-push-preload)|"true" or "false"|Low|
 |[nginx.ingress.kubernetes.io/limit-connections](#rate-limiting)|number|Low|
