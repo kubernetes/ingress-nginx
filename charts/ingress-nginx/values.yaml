@@ -682,8 +682,15 @@ controller:
   # -- Modules, which are mounted into the core nginx image. See values.yaml for a sample to add opentelemetry module
   extraModules: []
   # - name: mytestmodule
-  #   image: registry.k8s.io/ingress-nginx/mytestmodule
-  #   distroless: false
+  #   image:
+  #     registry: registry.k8s.io
+  #     image: ingress-nginx/mytestmodule
+  #     ## for backwards compatibility consider setting the full image url via the repository value below
+  #     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
+  #     ## repository:
+  #     tag: "v1.0.0"
+  #     digest: ""
+  #     distroless: false
   #   containerSecurityContext:
   #     runAsNonRoot: true
   #     runAsUser: <user-id>
@@ -703,8 +710,15 @@ controller:
   opentelemetry:
     enabled: false
     name: opentelemetry
-    image: registry.k8s.io/ingress-nginx/opentelemetry:v20230721-3e2062ee5@sha256:13bee3f5223883d3ca62fee7309ad02d22ec00ff0d7033e3e9aca7a9f60fd472
-    distroless: true
+    image:
+      registry: registry.k8s.io
+      image: ingress-nginx/opentelemetry
+      ## for backwards compatibility consider setting the full image url via the repository value below
+      ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
+      ## repository:
+      tag: "v20230721-3e2062ee5"
+      digest: sha256:13bee3f5223883d3ca62fee7309ad02d22ec00ff0d7033e3e9aca7a9f60fd472
+      distroless: true
     containerSecurityContext:
       runAsNonRoot: true
       # -- The image's default user, inherited from its base image `cgr.dev/chainguard/static`.
