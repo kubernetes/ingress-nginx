@@ -13,126 +13,126 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
     but the default is `nginx.ingress.kubernetes.io`, as described in the
     table below.
 
-|Name                       | type |
-|---------------------------|------|
-|[nginx.ingress.kubernetes.io/app-root](#rewrite)|string|
-|[nginx.ingress.kubernetes.io/affinity](#session-affinity)|cookie|
-|[nginx.ingress.kubernetes.io/affinity-mode](#session-affinity)|"balanced" or "persistent"|
-|[nginx.ingress.kubernetes.io/affinity-canary-behavior](#session-affinity)|"sticky" or "legacy"|
-|[nginx.ingress.kubernetes.io/auth-realm](#authentication)|string|
-|[nginx.ingress.kubernetes.io/auth-secret](#authentication)|string|
-|[nginx.ingress.kubernetes.io/auth-secret-type](#authentication)|string|
-|[nginx.ingress.kubernetes.io/auth-type](#authentication)|"basic" or "digest"|
-|[nginx.ingress.kubernetes.io/auth-tls-secret](#client-certificate-authentication)|string|
-|[nginx.ingress.kubernetes.io/auth-tls-verify-depth](#client-certificate-authentication)|number|
-|[nginx.ingress.kubernetes.io/auth-tls-verify-client](#client-certificate-authentication)|string|
-|[nginx.ingress.kubernetes.io/auth-tls-error-page](#client-certificate-authentication)|string|
-|[nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream](#client-certificate-authentication)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/auth-tls-match-cn](#client-certificate-authentication)|string|
-|[nginx.ingress.kubernetes.io/auth-url](#external-authentication)|string|
-|[nginx.ingress.kubernetes.io/auth-cache-key](#external-authentication)|string|
-|[nginx.ingress.kubernetes.io/auth-cache-duration](#external-authentication)|string|
-|[nginx.ingress.kubernetes.io/auth-keepalive](#external-authentication)|number|
-|[nginx.ingress.kubernetes.io/auth-keepalive-share-vars](#external-authentication)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/auth-keepalive-requests](#external-authentication)|number|
-|[nginx.ingress.kubernetes.io/auth-keepalive-timeout](#external-authentication)|number|
-|[nginx.ingress.kubernetes.io/auth-proxy-set-headers](#external-authentication)|string|
-|[nginx.ingress.kubernetes.io/auth-snippet](#external-authentication)|string|
-|[nginx.ingress.kubernetes.io/enable-global-auth](#external-authentication)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/backend-protocol](#backend-protocol)|string|HTTP,HTTPS,GRPC,GRPCS|
-|[nginx.ingress.kubernetes.io/canary](#canary)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/canary-by-header](#canary)|string|
-|[nginx.ingress.kubernetes.io/canary-by-header-value](#canary)|string|
-|[nginx.ingress.kubernetes.io/canary-by-header-pattern](#canary)|string|
-|[nginx.ingress.kubernetes.io/canary-by-cookie](#canary)|string|
-|[nginx.ingress.kubernetes.io/canary-weight](#canary)|number|
-|[nginx.ingress.kubernetes.io/canary-weight-total](#canary)|number|
-|[nginx.ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
-|[nginx.ingress.kubernetes.io/configuration-snippet](#configuration-snippet)|string|
-|[nginx.ingress.kubernetes.io/custom-http-errors](#custom-http-errors)|[]int|
-|[nginx.ingress.kubernetes.io/disable-proxy-intercept-errors](#disable-proxy-intercept-errors)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/default-backend](#default-backend)|string|
-|[nginx.ingress.kubernetes.io/enable-cors](#enable-cors)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/cors-allow-origin](#enable-cors)|string|
-|[nginx.ingress.kubernetes.io/cors-allow-methods](#enable-cors)|string|
-|[nginx.ingress.kubernetes.io/cors-allow-headers](#enable-cors)|string|
-|[nginx.ingress.kubernetes.io/cors-expose-headers](#enable-cors)|string|
-|[nginx.ingress.kubernetes.io/cors-allow-credentials](#enable-cors)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/cors-max-age](#enable-cors)|number|
-|[nginx.ingress.kubernetes.io/force-ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/from-to-www-redirect](#redirect-fromto-www)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/http2-push-preload](#http2-push-preload)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
-|[nginx.ingress.kubernetes.io/limit-rps](#rate-limiting)|number|
-|[nginx.ingress.kubernetes.io/global-rate-limit](#global-rate-limiting)|number|
-|[nginx.ingress.kubernetes.io/global-rate-limit-window](#global-rate-limiting)|duration|
-|[nginx.ingress.kubernetes.io/global-rate-limit-key](#global-rate-limiting)|string|
-|[nginx.ingress.kubernetes.io/global-rate-limit-ignored-cidrs](#global-rate-limiting)|string|
-|[nginx.ingress.kubernetes.io/permanent-redirect](#permanent-redirect)|string|
-|[nginx.ingress.kubernetes.io/permanent-redirect-code](#permanent-redirect-code)|number|
-|[nginx.ingress.kubernetes.io/temporal-redirect](#temporal-redirect)|string|
-|[nginx.ingress.kubernetes.io/preserve-trailing-slash](#server-side-https-enforcement-through-redirect)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/proxy-body-size](#custom-max-body-size)|string|
-|[nginx.ingress.kubernetes.io/proxy-cookie-domain](#proxy-cookie-domain)|string|
-|[nginx.ingress.kubernetes.io/proxy-cookie-path](#proxy-cookie-path)|string|
-|[nginx.ingress.kubernetes.io/proxy-connect-timeout](#custom-timeouts)|number|
-|[nginx.ingress.kubernetes.io/proxy-send-timeout](#custom-timeouts)|number|
-|[nginx.ingress.kubernetes.io/proxy-read-timeout](#custom-timeouts)|number|
-|[nginx.ingress.kubernetes.io/proxy-next-upstream](#custom-timeouts)|string|
-|[nginx.ingress.kubernetes.io/proxy-next-upstream-timeout](#custom-timeouts)|number|
-|[nginx.ingress.kubernetes.io/proxy-next-upstream-tries](#custom-timeouts)|number|
-|[nginx.ingress.kubernetes.io/proxy-request-buffering](#custom-timeouts)|string|
-|[nginx.ingress.kubernetes.io/proxy-redirect-from](#proxy-redirect)|string|
-|[nginx.ingress.kubernetes.io/proxy-redirect-to](#proxy-redirect)|string|
-|[nginx.ingress.kubernetes.io/proxy-http-version](#proxy-http-version)|"1.0" or "1.1"|
-|[nginx.ingress.kubernetes.io/proxy-ssl-secret](#backend-certificate-authentication)|string|
-|[nginx.ingress.kubernetes.io/proxy-ssl-ciphers](#backend-certificate-authentication)|string|
-|[nginx.ingress.kubernetes.io/proxy-ssl-name](#backend-certificate-authentication)|string|
-|[nginx.ingress.kubernetes.io/proxy-ssl-protocols](#backend-certificate-authentication)|string|
-|[nginx.ingress.kubernetes.io/proxy-ssl-verify](#backend-certificate-authentication)|string|
-|[nginx.ingress.kubernetes.io/proxy-ssl-verify-depth](#backend-certificate-authentication)|number|
-|[nginx.ingress.kubernetes.io/proxy-ssl-server-name](#backend-certificate-authentication)|string|
-|[nginx.ingress.kubernetes.io/enable-rewrite-log](#enable-rewrite-log)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/rewrite-target](#rewrite)|URI|
-|[nginx.ingress.kubernetes.io/satisfy](#satisfy)|string|
-|[nginx.ingress.kubernetes.io/server-alias](#server-alias)|string|
-|[nginx.ingress.kubernetes.io/server-snippet](#server-snippet)|string|
-|[nginx.ingress.kubernetes.io/service-upstream](#service-upstream)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/session-cookie-name](#cookie-affinity)|string|
-|[nginx.ingress.kubernetes.io/session-cookie-path](#cookie-affinity)|string|
-|[nginx.ingress.kubernetes.io/session-cookie-domain](#cookie-affinity)|string|
-|[nginx.ingress.kubernetes.io/session-cookie-change-on-failure](#cookie-affinity)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/session-cookie-samesite](#cookie-affinity)|string|
-|[nginx.ingress.kubernetes.io/session-cookie-conditional-samesite-none](#cookie-affinity)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/ssl-passthrough](#ssl-passthrough)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/stream-snippet](#stream-snippet)|string|
-|[nginx.ingress.kubernetes.io/upstream-hash-by](#custom-nginx-upstream-hashing)|string|
-|[nginx.ingress.kubernetes.io/x-forwarded-prefix](#x-forwarded-prefix-header)|string|
-|[nginx.ingress.kubernetes.io/load-balance](#custom-nginx-load-balancing)|string|
-|[nginx.ingress.kubernetes.io/upstream-vhost](#custom-nginx-upstream-vhost)|string|
-|[nginx.ingress.kubernetes.io/denylist-source-range](#denylist-source-range)|CIDR|
-|[nginx.ingress.kubernetes.io/whitelist-source-range](#whitelist-source-range)|CIDR|
-|[nginx.ingress.kubernetes.io/proxy-buffering](#proxy-buffering)|string|
-|[nginx.ingress.kubernetes.io/proxy-buffers-number](#proxy-buffers-number)|number|
-|[nginx.ingress.kubernetes.io/proxy-buffer-size](#proxy-buffer-size)|string|
-|[nginx.ingress.kubernetes.io/proxy-max-temp-file-size](#proxy-max-temp-file-size)|string|
-|[nginx.ingress.kubernetes.io/ssl-ciphers](#ssl-ciphers)|string|
-|[nginx.ingress.kubernetes.io/ssl-prefer-server-ciphers](#ssl-ciphers)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/connection-proxy-header](#connection-proxy-header)|string|
-|[nginx.ingress.kubernetes.io/enable-access-log](#enable-access-log)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/enable-opentracing](#enable-opentracing)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/opentracing-trust-incoming-span](#opentracing-trust-incoming-span)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/enable-opentelemetry](#enable-opentelemetry)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/opentelemetry-trust-incoming-span](#opentelemetry-trust-incoming-spans)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/use-regex](#use-regex)|bool|
-|[nginx.ingress.kubernetes.io/enable-modsecurity](#modsecurity)|bool|
-|[nginx.ingress.kubernetes.io/enable-owasp-core-rules](#modsecurity)|bool|
-|[nginx.ingress.kubernetes.io/modsecurity-transaction-id](#modsecurity)|string|
-|[nginx.ingress.kubernetes.io/modsecurity-snippet](#modsecurity)|string|
-|[nginx.ingress.kubernetes.io/mirror-request-body](#mirror)|string|
-|[nginx.ingress.kubernetes.io/mirror-target](#mirror)|string|
-|[nginx.ingress.kubernetes.io/mirror-host](#mirror)|string|
+|Name                       | type | risk level |
+|---------------------------|------|------------|
+|[nginx.ingress.kubernetes.io/app-root](#rewrite)|string|Medium|
+|[nginx.ingress.kubernetes.io/affinity](#session-affinity)|cookie|Low|
+|[nginx.ingress.kubernetes.io/affinity-mode](#session-affinity)|"balanced" or "persistent"|Medium|
+|[nginx.ingress.kubernetes.io/affinity-canary-behavior](#session-affinity)|"sticky" or "legacy"|Low|
+|[nginx.ingress.kubernetes.io/auth-realm](#authentication)|string|Medium|
+|[nginx.ingress.kubernetes.io/auth-secret](#authentication)|string|Low|
+|[nginx.ingress.kubernetes.io/auth-secret-type](#authentication)|string|Low|
+|[nginx.ingress.kubernetes.io/auth-type](#authentication)|"basic" or "digest"|Low|
+|[nginx.ingress.kubernetes.io/auth-tls-secret](#client-certificate-authentication)|string|Medium|
+|[nginx.ingress.kubernetes.io/auth-tls-verify-depth](#client-certificate-authentication)|number|Low|
+|[nginx.ingress.kubernetes.io/auth-tls-verify-client](#client-certificate-authentication)|string|Medium|
+|[nginx.ingress.kubernetes.io/auth-tls-error-page](#client-certificate-authentication)|string|High|
+|[nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream](#client-certificate-authentication)|"true" or "false"|Low|
+|[nginx.ingress.kubernetes.io/auth-tls-match-cn](#client-certificate-authentication)|string|Low|
+|[nginx.ingress.kubernetes.io/auth-url](#external-authentication)|string|High|
+|[nginx.ingress.kubernetes.io/auth-cache-key](#external-authentication)|string|Medium|
+|[nginx.ingress.kubernetes.io/auth-cache-duration](#external-authentication)|string|Medium|
+|[nginx.ingress.kubernetes.io/auth-keepalive](#external-authentication)|number|Low|
+|[nginx.ingress.kubernetes.io/auth-keepalive-share-vars](#external-authentication)|"true" or "false"|Low|
+|[nginx.ingress.kubernetes.io/auth-keepalive-requests](#external-authentication)|number|Low|
+|[nginx.ingress.kubernetes.io/auth-keepalive-timeout](#external-authentication)|number|Low|
+|[nginx.ingress.kubernetes.io/auth-proxy-set-headers](#external-authentication)|string|Medium|
+|[nginx.ingress.kubernetes.io/auth-snippet](#external-authentication)|string| Critical |
+|[nginx.ingress.kubernetes.io/enable-global-auth](#external-authentication)|"true" or "false"|Low|
+|[nginx.ingress.kubernetes.io/backend-protocol](#backend-protocol)|string|HTTP,HTTPS,GRPC,GRPCS|Low|
+|[nginx.ingress.kubernetes.io/canary](#canary)|"true" or "false"|Low|
+|[nginx.ingress.kubernetes.io/canary-by-header](#canary)|string|Medium|
+|[nginx.ingress.kubernetes.io/canary-by-header-value](#canary)|string|Medium|
+|[nginx.ingress.kubernetes.io/canary-by-header-pattern](#canary)|string|Medium|
+|[nginx.ingress.kubernetes.io/canary-by-cookie](#canary)|string|Medium|
+|[nginx.ingress.kubernetes.io/canary-weight](#canary)|number|Low|
+|[nginx.ingress.kubernetes.io/canary-weight-total](#canary)|number|Low|
+|[nginx.ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|Low|
+|[nginx.ingress.kubernetes.io/configuration-snippet](#configuration-snippet)|string| Critical |
+|[nginx.ingress.kubernetes.io/custom-http-errors](#custom-http-errors)|[]int|Low|
+|[nginx.ingress.kubernetes.io/disable-proxy-intercept-errors](#disable-proxy-intercept-errors)|"true" or "false"|Low|
+|[nginx.ingress.kubernetes.io/default-backend](#default-backend)|string|Low|
+|[nginx.ingress.kubernetes.io/enable-cors](#enable-cors)|"true" or "false"|Low|
+|[nginx.ingress.kubernetes.io/cors-allow-origin](#enable-cors)|string|Medium|
+|[nginx.ingress.kubernetes.io/cors-allow-methods](#enable-cors)|string|Medium|
+|[nginx.ingress.kubernetes.io/cors-allow-headers](#enable-cors)|string|Medium|
+|[nginx.ingress.kubernetes.io/cors-expose-headers](#enable-cors)|string|Medium|
+|[nginx.ingress.kubernetes.io/cors-allow-credentials](#enable-cors)|"true" or "false"|Low|
+|[nginx.ingress.kubernetes.io/cors-max-age](#enable-cors)|number|Low|
+|[nginx.ingress.kubernetes.io/force-ssl-redirect]Medium|(#server-side-https-enforcement-through-redirect)|"true" or "false"|Medium|
+|[nginx.ingress.kubernetes.io/from-to-www-redirect](#redirect-fromto-www)|"true" or "false"| Low
+|[nginx.ingress.kubernetes.io/http2-push-preload](#http2-push-preload)|"true" or "false"|Low|
+|[nginx.ingress.kubernetes.io/limit-connections](#rate-limiting)|number|Low|
+|[nginx.ingress.kubernetes.io/limit-rps](#rate-limiting)|number|Low|
+|[nginx.ingress.kubernetes.io/global-rate-limit](#global-rate-limiting)|number|Low|
+|[nginx.ingress.kubernetes.io/global-rate-limit-window](#global-rate-limiting)|duration|Low|
+|[nginx.ingress.kubernetes.io/global-rate-limit-key](#global-rate-limiting)|string|High|
+|[nginx.ingress.kubernetes.io/global-rate-limit-ignored-cidrs](#global-rate-limiting)|string|Medium|
+|[nginx.ingress.kubernetes.io/permanent-redirect](#permanent-redirect)|string|Medium|
+|[nginx.ingress.kubernetes.io/permanent-redirect-code](#permanent-redirect-code)|number|Low|
+|[nginx.ingress.kubernetes.io/temporal-redirect](#temporal-redirect)|string|Medium|
+|[nginx.ingress.kubernetes.io/preserve-trailing-slash](#server-side-https-enforcement-through-redirect)|"true" or "false"|Medium|
+|[nginx.ingress.kubernetes.io/proxy-body-size](#custom-max-body-size)|string|Medium|
+|[nginx.ingress.kubernetes.io/proxy-cookie-domain](#proxy-cookie-domain)|string|Medium|
+|[nginx.ingress.kubernetes.io/proxy-cookie-path](#proxy-cookie-path)|string|Medium|
+|[nginx.ingress.kubernetes.io/proxy-connect-timeout](#custom-timeouts)|number|Low|
+|[nginx.ingress.kubernetes.io/proxy-send-timeout](#custom-timeouts)|number|Low|
+|[nginx.ingress.kubernetes.io/proxy-read-timeout](#custom-timeouts)|number|Low|
+|[nginx.ingress.kubernetes.io/proxy-next-upstream](#custom-timeouts)|string|Medium|
+|[nginx.ingress.kubernetes.io/proxy-next-upstream-timeout](#custom-timeouts)|number|Low|
+|[nginx.ingress.kubernetes.io/proxy-next-upstream-tries](#custom-timeouts)|number|Low|
+|[nginx.ingress.kubernetes.io/proxy-request-buffering](#custom-timeouts)|string|Low|
+|[nginx.ingress.kubernetes.io/proxy-redirect-from](#proxy-redirect)|string|Medium|
+|[nginx.ingress.kubernetes.io/proxy-redirect-to](#proxy-redirect)|string|Medium|
+|[nginx.ingress.kubernetes.io/proxy-http-version](#proxy-http-version)|"1.0" or "1.1"|Low|
+|[nginx.ingress.kubernetes.io/proxy-ssl-secret](#backend-certificate-authentication)|string|Medium|
+|[nginx.ingress.kubernetes.io/proxy-ssl-ciphers](#backend-certificate-authentication)|string|Medium|
+|[nginx.ingress.kubernetes.io/proxy-ssl-name](#backend-certificate-authentication)|string|High|
+|[nginx.ingress.kubernetes.io/proxy-ssl-protocols](#backend-certificate-authentication)|string|Low|
+|[nginx.ingress.kubernetes.io/proxy-ssl-verify](#backend-certificate-authentication)|string|Low|
+|[nginx.ingress.kubernetes.io/proxy-ssl-verify-depth](#backend-certificate-authentication)|number|Low|
+|[nginx.ingress.kubernetes.io/proxy-ssl-server-name](#backend-certificate-authentication)|string|Low|
+|[nginx.ingress.kubernetes.io/enable-rewrite-log](#enable-rewrite-log)|"true" or "false"|Low|
+|[nginx.ingress.kubernetes.io/rewrite-target](#rewrite)|URI|Medium|
+|[nginx.ingress.kubernetes.io/satisfy](#satisfy)|string|Low|
+|[nginx.ingress.kubernetes.io/server-alias](#server-alias)|string|High|
+|[nginx.ingress.kubernetes.io/server-snippet](#server-snippet)|string| Critical |
+|[nginx.ingress.kubernetes.io/service-upstream](#service-upstream)|"true" or "false"|Low|
+|[nginx.ingress.kubernetes.io/session-cookie-name](#cookie-affinity)|string|Medium|
+|[nginx.ingress.kubernetes.io/session-cookie-path](#cookie-affinity)|string|Medium|
+|[nginx.ingress.kubernetes.io/session-cookie-domain](#cookie-affinity)|string|Medium|
+|[nginx.ingress.kubernetes.io/session-cookie-change-on-failure](#cookie-affinity)|"true" or "false"|Low|
+|[nginx.ingress.kubernetes.io/session-cookie-samesite](#cookie-affinity)|string|Low|
+|[nginx.ingress.kubernetes.io/session-cookie-conditional-samesite-none](#cookie-affinity)|"true" or "false"|Low|
+|[nginx.ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|Low|
+|[nginx.ingress.kubernetes.io/ssl-passthrough](#ssl-passthrough)|"true" or "false"|Low|
+|[nginx.ingress.kubernetes.io/stream-snippet](#stream-snippet)|string| Critical |
+|[nginx.ingress.kubernetes.io/upstream-hash-by](#custom-nginx-upstream-hashing)|string|High|
+|[nginx.ingress.kubernetes.io/x-forwarded-prefix](#x-forwarded-prefix-header)|string|Medium|
+|[nginx.ingress.kubernetes.io/load-balance](#custom-nginx-load-balancing)|string|Low|
+|[nginx.ingress.kubernetes.io/upstream-vhost](#custom-nginx-upstream-vhost)|string|Low|
+|[nginx.ingress.kubernetes.io/denylist-source-range](#denylist-source-range)|CIDR|Medium|
+|[nginx.ingress.kubernetes.io/whitelist-source-range](#whitelist-source-range)|CIDR|Medium|
+|[nginx.ingress.kubernetes.io/proxy-buffering](#proxy-buffering)|string|Low|
+|[nginx.ingress.kubernetes.io/proxy-buffers-number](#proxy-buffers-number)|number|Low|
+|[nginx.ingress.kubernetes.io/proxy-buffer-size](#proxy-buffer-size)|string|Low|
+|[nginx.ingress.kubernetes.io/proxy-max-temp-file-size](#proxy-max-temp-file-size)|string|Low|
+|[nginx.ingress.kubernetes.io/ssl-ciphers](#ssl-ciphers)|string|Low| 
+|[nginx.ingress.kubernetes.io/ssl-prefer-server-ciphers](#ssl-ciphers)|"true" or "false"|Low|
+|[nginx.ingress.kubernetes.io/connection-proxy-header](#connection-proxy-header)|string|Low|
+|[nginx.ingress.kubernetes.io/enable-access-log](#enable-access-log)|"true" or "false"|Low|
+|[nginx.ingress.kubernetes.io/enable-opentracing](#enable-opentracing)|"true" or "false"|Not Provided|
+|[nginx.ingress.kubernetes.io/opentracing-trust-incoming-span](#opentracing-trust-incoming-span)|"true" or "false"|Not Provided|
+|[nginx.ingress.kubernetes.io/enable-opentelemetry](#enable-opentelemetry)|"true" or "false"|Low|
+|[nginx.ingress.kubernetes.io/opentelemetry-trust-incoming-span](#opentelemetry-trust-incoming-spans)|"true" or "false"|Low|
+|[nginx.ingress.kubernetes.io/use-regex](#use-regex)|bool|Low|
+|[nginx.ingress.kubernetes.io/enable-modsecurity](#modsecurity)|bool|Low|
+|[nginx.ingress.kubernetes.io/enable-owasp-core-rules](#modsecurity)|bool|Low|
+|[nginx.ingress.kubernetes.io/modsecurity-transaction-id](#modsecurity)|string|High|
+|[nginx.ingress.kubernetes.io/modsecurity-snippet](#modsecurity)|string| Critical |
+|[nginx.ingress.kubernetes.io/mirror-request-body](#mirror)|string|Low|
+|[nginx.ingress.kubernetes.io/mirror-target](#mirror)|string|High|
+|[nginx.ingress.kubernetes.io/mirror-host](#mirror)|string|High|
 
 ### Canary
 
