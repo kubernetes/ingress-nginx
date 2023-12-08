@@ -59,13 +59,13 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 func (a authReqGlobal) Parse(ing *networking.Ingress) (interface{}, error) {
 	enableGlobalAuth, err := parser.GetBoolAnnotation(enableGlobalAuthAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
+		// This is definitely not the correct way but I dont understand how to do it correctly
 		globalAuthDefaultEnable, err := a.r.GetConfigMap("ingress-nginx/ingress-nginx-controller")
 		if err != nil {
 			return nil, err
 		}
 
 		enableGlobalAuth, err = strconv.ParseBool(globalAuthDefaultEnable.Data["global-auth-default-enable"])
-		// enableGlobalAuth = a.r.GetDefaultBackend().GlobalAuthDefaultEnable
 	}
 
 	return enableGlobalAuth, nil
