@@ -1,4 +1,4 @@
-FROM golang:1.21.5-alpine:3.19 as builder
+FROM golang:1.21.5-alpine3.19 as builder
 RUN mkdir /authsvc
 WORKDIR /authsvc
 COPY . ./
