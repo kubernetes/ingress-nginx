@@ -13,4 +13,3 @@ tests:
           count: 1
       - isKind:
           of: HorizontalPodAutoscaler
-

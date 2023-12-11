@@ -1,4 +1,3 @@
-
 suite: test controller configmap
 templates:
   - controller-configmap.yaml

@@ -12,4 +12,3 @@ tests:
           count: 1
       - isKind:
           of: ScaledObject
-

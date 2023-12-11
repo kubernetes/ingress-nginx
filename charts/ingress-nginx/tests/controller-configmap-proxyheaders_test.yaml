@@ -22,5 +22,3 @@ tests:
       - equal:
           path: metadata.name
           value: RELEASE-NAME-ingress-nginx-custom-proxy-headers
-
-
