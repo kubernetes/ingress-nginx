@@ -11,4 +11,4 @@ tests:
           of: ConfigMap
       - equal:
           path: metadata.name
-          value: RELEASE-NAME-ingress-nginx
+          value: RELEASE-NAME-ingress-nginx-controller
