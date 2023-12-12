@@ -1,9 +1,9 @@
-suite: test controller daemonset
+suite: Controller > DaemonSet
 templates:
   - controller-daemonset.yaml
 
 tests:
-  - it: should create a daemonset when controller kind is DaemonSet
+  - it: should create a DaemonSet when `controller.kind` is "DaemonSet"
     set:
       controller.kind: DaemonSet
     asserts:

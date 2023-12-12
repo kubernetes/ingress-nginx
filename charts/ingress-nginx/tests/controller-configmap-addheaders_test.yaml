@@ -1,19 +1,19 @@
-suite: test controller addHeaders configmap
+suite: Controller > ConfigMap > Add Headers
 templates:
   - controller-configmap-addheaders.yaml
 
 tests:
-  - it: should not create a configmap if addHeaders is not set
+  - it: should not create a ConfigMap if `controller.addHeaders` is not set
     set:
       controller.addHeaders: null
     asserts:
       - hasDocuments:
           count: 0
 
-  - it: should create a configmap if addHeaders is set
+  - it: should create a ConfigMap if `controller.addHeaders` is set
     set:
       controller.addHeaders:
-        X-Another-Custom-Header: "Value"
+        X-Another-Custom-Header: Value
     asserts:
       - hasDocuments:
           count: 1
@@ -22,3 +22,6 @@ tests:
       - equal:
           path: metadata.name
           value: RELEASE-NAME-ingress-nginx-custom-add-headers
+      - equal:
+          path: data.X-Another-Custom-Header
+          value: Value

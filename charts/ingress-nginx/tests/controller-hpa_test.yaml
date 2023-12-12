@@ -1,4 +1,4 @@
-suite: test controller hpa
+suite: Controller > HPA
 templates:
   - controller-hpa.yaml
 
