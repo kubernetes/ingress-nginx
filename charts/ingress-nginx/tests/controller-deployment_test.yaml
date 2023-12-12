@@ -12,7 +12,6 @@ tests:
 
   - it: should create a Deployment with 3 replicas when `controller.replicaCount` is 3
     set:
-      controller.enabled: true
       controller.replicaCount: 3
     asserts:
       - equal:
@@ -21,7 +20,6 @@ tests:
 
   - it: should create a Deployment with resource limits when `controller.resources.limits` is set
     set:
-      controller.enabled: true
       controller.resources.limits.cpu: 500m
       controller.resources.limits.memory: 512Mi
     asserts:
