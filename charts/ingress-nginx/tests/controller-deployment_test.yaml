@@ -23,11 +23,11 @@ tests:
     set:
       controller.enabled: true
       controller.resources.limits.cpu: 500m
-      controller.resources.limits.memory: "512Mi"
+      controller.resources.limits.memory: 512Mi
     asserts:
       - equal:
           path: spec.template.spec.containers[0].resources.limits.cpu
           value: 500m
       - equal:
           path: spec.template.spec.containers[0].resources.limits.memory
-          value: "512Mi"
+          value: 512Mi
