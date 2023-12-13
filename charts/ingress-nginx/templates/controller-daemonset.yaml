@@ -183,13 +183,13 @@ spec:
       {{- if .Values.controller.extraModules }}
         {{- range .Values.controller.extraModules }}
           {{- $containerSecurityContext := .containerSecurityContext | default $.Values.controller.containerSecurityContext }}
-          {{- include "extraModules" (dict "name" .name "image" .image "distroless" .distroless "containerSecurityContext" $containerSecurityContext "resources" .resources) | nindent 8 }}
+          {{- include "extraModules" (dict "name" .name "image" .image "containerSecurityContext" $containerSecurityContext "resources" .resources) | nindent 8 }}
         {{- end }}
       {{- end }}
       {{- if .Values.controller.opentelemetry.enabled }}
         {{- with .Values.controller.opentelemetry }}
           {{- $containerSecurityContext := .containerSecurityContext | default $.Values.controller.containerSecurityContext }}
-          {{- include "extraModules" (dict "name" .name "image" .image "distroless" .distroless "containerSecurityContext" $containerSecurityContext "resources" .resources) | nindent 8 }}
+          {{- include "extraModules" (dict "name" .name "image" .image "containerSecurityContext" $containerSecurityContext "resources" .resources) | nindent 8 }}
         {{- end }}
       {{- end }}
     {{- end }}
