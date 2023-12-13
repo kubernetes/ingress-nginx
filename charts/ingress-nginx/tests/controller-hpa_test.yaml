@@ -3,13 +3,15 @@ templates:
   - controller-hpa.yaml
 
 tests:
-  - it: should create an hpa when controller kind is Deployment and autoscaling is enabled
+  - it: should create a HPA if `controller.kind` is "Deployment" and `controller.autoscaling.enabled` is true
     set:
       controller.kind: Deployment
       controller.autoscaling.enabled: true
-      controller.keda.enabled: false
     asserts:
       - hasDocuments:
           count: 1
       - isKind:
           of: HorizontalPodAutoscaler
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-controller

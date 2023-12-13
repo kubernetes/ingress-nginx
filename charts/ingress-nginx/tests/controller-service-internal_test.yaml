@@ -1,19 +1,17 @@
-suite: test controller internal service
+suite: Controller > Service > Internal
 templates:
   - controller-service-internal.yaml
 
 tests:
-  - it: should not create an internal service by default
+  - it: should not create an internal Service if `controller.service.internal.enabled` is false
     set:
-      controller.service.enabled: true
       controller.service.internal.enabled: false
     asserts:
       - hasDocuments:
           count: 0
 
-  - it: should create an internal service when enabled
+  - it: should create an internal Service if `controller.service.internal.enabled` is true and `controller.service.internal.annotations` are set
     set:
-      controller.service.enabled: true
       controller.service.internal.enabled: true
       controller.service.internal.annotations:
         test.annotation: "true"
@@ -22,3 +20,6 @@ tests:
           count: 1
       - isKind:
           of: Service
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-controller-internal

@@ -1,18 +1,18 @@
-suite: test controller service
+suite: Controller > Service
 templates:
   - controller-service.yaml
 
 tests:
-  - it: should not create any service by default
+  - it: should not create a Service if `controller.service.external.enabled` is false
     set:
-      controller.service.enabled: false
+      controller.service.external.enabled: false
     asserts:
       - hasDocuments:
           count: 0
 
-  - it: should create a service when enabled
+  - it: should create a Service if `controller.service.external.enabled` is true
     set:
-      controller.service.enabled: true
+      controller.service.external.enabled: true
     asserts:
       - hasDocuments:
           count: 1
@@ -22,7 +22,7 @@ tests:
           path: metadata.name
           value: RELEASE-NAME-ingress-nginx-controller
 
-  - it: custom service type
+  - it: should create a Service of type "NodePort" if `controller.service.external.enabled` is true and `controller.service.type` is "NodePort"
     set:
       controller.service.enabled: true
       controller.service.type: NodePort

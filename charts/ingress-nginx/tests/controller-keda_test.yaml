@@ -1,9 +1,9 @@
-suite: test controller keda
+suite: Controller > KEDA
 templates:
   - controller-keda.yaml
 
 tests:
-  - it: should create a keda scaled object when controller kind is Deployment and keda is enabled
+  - it: should create a ScaledObject if `controller.kind` is "Deployment" and `controller.keda.enabled` is true
     set:
       controller.kind: Deployment
       controller.keda.enabled: true
@@ -12,3 +12,6 @@ tests:
           count: 1
       - isKind:
           of: ScaledObject
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-controller

@@ -1,16 +1,16 @@
-suite: test controller metrics service
+suite: Controller > Service > Metrics
 templates:
   - controller-service-metrics.yaml
 
 tests:
-  - it: should not create a metrics service by default
+  - it: should not create a metrics Service if `controller.metrics.enabled` is false
     set:
       controller.metrics.enabled: false
     asserts:
       - hasDocuments:
           count: 0
 
-  - it: should create a metrics service when enabled
+  - it: should create a metrics Service if `controller.metrics.enabled` is true
     set:
       controller.metrics.enabled: true
     asserts:
@@ -18,3 +18,6 @@ tests:
           count: 1
       - isKind:
           of: Service
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-controller-metrics
