@@ -78,7 +78,7 @@ nav:
       - Role Based Access Control (RBAC): "deploy/rbac.md"
       - Upgrade: "deploy/upgrade.md"
       - Hardening guide: "deploy/hardening-guide.md"
-  - User guide:
+  - User Guide:
       - NGINX Configuration:
           - Introduction: "user-guide/nginx-configuration/index.md"
           - Basic usage: "user-guide/basic-usage.md"
