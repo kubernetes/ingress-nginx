@@ -1,0 +1,16 @@
+suite: Controller > DaemonSet
+templates:
+  - controller-daemonset.yaml
+
+tests:
+  - it: should create a DaemonSet if `controller.kind` is "DaemonSet"
+    set:
+      controller.kind: DaemonSet
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: DaemonSet
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-controller
