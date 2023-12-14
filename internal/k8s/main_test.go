@@ -57,16 +57,17 @@ func TestParseNameNS(t *testing.T) {
 
 func TestGetNodeIP(t *testing.T) {
 	fKNodes := []struct {
-		name          string
-		cs            *testclient.Clientset
-		nodeName      string
-		ea            string
-		useInternalIP bool
+		name           string
+		cs             *testclient.Clientset
+		nodeName       string
+		preferExternal bool
+		ea             string
 	}{
 		{
 			"empty node list",
 			testclient.NewSimpleClientset(),
-			"demo", "", true,
+			"demo", false,
+			"",
 		},
 		{
 			"node does not exist",
@@ -82,10 +83,11 @@ func TestGetNodeIP(t *testing.T) {
 						},
 					},
 				},
-			}}}), "notexistnode", "", true,
+			}}}), "notexistnode", false,
+			"",
 		},
 		{
-			"node exist and only has an internal IP address (useInternalIP=false)",
+			"node exist and only has an internal IP address (preferExternal=true)",
 			testclient.NewSimpleClientset(&apiv1.NodeList{Items: []apiv1.Node{{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "demo",
@@ -98,7 +100,8 @@ func TestGetNodeIP(t *testing.T) {
 						},
 					},
 				},
-			}}}), "demo", "10.0.0.1", false,
+			}}}), "demo", true,
+			"10.0.0.1",
 		},
 		{
 			"node exist and only has an internal IP address",
@@ -114,7 +117,8 @@ func TestGetNodeIP(t *testing.T) {
 						},
 					},
 				},
-			}}}), "demo", "10.0.0.1", true,
+			}}}), "demo", false,
+			"10.0.0.1",
 		},
 		{
 			"node exist and only has an external IP address",
@@ -130,7 +134,8 @@ func TestGetNodeIP(t *testing.T) {
 						},
 					},
 				},
-			}}}), "demo", "10.0.0.1", false,
+			}}}), "demo", true,
+			"10.0.0.1",
 		},
 		{
 			"multiple nodes - choose the right one",
@@ -162,7 +167,8 @@ func TestGetNodeIP(t *testing.T) {
 					},
 				},
 			}}),
-			"demo2", "10.0.0.2", true,
+			"demo2", false,
+			"10.0.0.2",
 		},
 		{
 			"node with both IP internal and external IP address - returns external IP",
@@ -182,7 +188,8 @@ func TestGetNodeIP(t *testing.T) {
 					},
 				},
 			}}}),
-			"demo", "10.0.0.2", false,
+			"demo", true,
+			"10.0.0.2",
 		},
 		{
 			"node with both IP internal and external IP address - returns internal IP",
@@ -202,12 +209,13 @@ func TestGetNodeIP(t *testing.T) {
 					},
 				},
 			}}}),
-			"demo", "10.0.0.2", true,
+			"demo", false,
+			"10.0.0.2",
 		},
 	}
 
 	for _, fk := range fKNodes {
-		address := GetNodeIPOrName(fk.cs, fk.nodeName, fk.useInternalIP)
+		address := GetNodeIPOrName(fk.cs, fk.nodeName, fk.preferExternal)
 		if address != fk.ea {
 			t.Errorf("%v - expected %s, but returned %s", fk.name, fk.ea, address)
 		}
