@@ -3,7 +3,7 @@ templates:
   - controller-daemonset.yaml
 
 tests:
-  - it: should create a DaemonSet when `controller.kind` is "DaemonSet"
+  - it: should create a DaemonSet if `controller.kind` is "DaemonSet"
     set:
       controller.kind: DaemonSet
     asserts:
