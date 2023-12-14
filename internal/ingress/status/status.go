@@ -221,9 +221,11 @@ func (s *statusSync) runningAddresses() ([]v1.IngressLoadBalancerIngress, error)
 		}
 
 		preferExternal := !s.UseNodeInternalIP
-		name := k8s.GetNodeIPOrName(s.Client, pod.Spec.NodeName, preferExternal)
-		if !stringInIngresses(name, addrs) {
-			addrs = append(addrs, nameOrIPToLoadBalancerIngress(name))
+		addresses := k8s.GetNodeAddresses(s.Client, pod.Spec.NodeName, preferExternal)
+		for _, addr := range addresses {
+			if !stringInIngresses(addr, addrs) {
+				addrs = append(addrs, nameOrIPToLoadBalancerIngress(addr))
+			}
 		}
 	}
 

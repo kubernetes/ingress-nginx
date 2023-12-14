@@ -42,16 +42,17 @@ func ParseNameNS(input string) (ns, name string, err error) {
 	return nsName[0], nsName[1], nil
 }
 
-// GetNodeIPOrName returns the IP address or name of a node in the cluster.
-// If preferExternal==true AND any non-empty NodeExternalIP addresses exist, the first one will be returned.
-// Otherwise, the node's first non-empty NodeInternalIP address will be returned.
-func GetNodeIPOrName(kubeClient clientset.Interface, name string, preferExternal bool) string {
+// GetNodeAddresses returns the IP address or name of a node in the cluster.
+// If preferExternal==true AND any non-empty NodeExternalIP addresses exist, they will be returned.
+// Otherwise, the node's non-empty NodeInternalIP addresses will be returned.
+func GetNodeAddresses(kubeClient clientset.Interface, name string, preferExternal bool) []string {
 	node, err := kubeClient.CoreV1().Nodes().Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		klog.ErrorS(err, "Error getting node", "name", name)
-		return ""
+		return nil
 	}
 
+	addresses := make([]string, 0)
 	if preferExternal {
 		for _, address := range node.Status.Addresses {
 			if address.Type != apiv1.NodeExternalIP {
@@ -60,7 +61,10 @@ func GetNodeIPOrName(kubeClient clientset.Interface, name string, preferExternal
 			if address.Address == "" {
 				continue
 			}
-			return address.Address
+			addresses = append(addresses, address.Address)
+		}
+		if len(addresses) > 0 {
+			return addresses
 		}
 	}
 
@@ -71,10 +75,10 @@ func GetNodeIPOrName(kubeClient clientset.Interface, name string, preferExternal
 		if address.Address == "" {
 			continue
 		}
-		return address.Address
+		addresses = append(addresses, address.Address)
 	}
 
-	return ""
+	return addresses
 }
 
 var (
