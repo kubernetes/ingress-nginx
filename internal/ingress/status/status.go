@@ -121,12 +121,6 @@ func (s *statusSync) Shutdown() {
 		return
 	}
 
-	if len(addrs) > 1 {
-		// leave the job to the next leader
-		klog.InfoS("leaving status update for next leader")
-		return
-	}
-
 	if s.isRunningMultiplePods() {
 		klog.V(2).InfoS("skipping Ingress status update (multiple pods running - another one will be elected as master)")
 		return
