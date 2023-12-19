@@ -25,7 +25,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/yudai/gojsondiff v1.0.0
 	github.com/zakjan/cert-chain-resolver v0.0.0-20221221105603-fcedb00c5b30
-	golang.org/x/crypto v0.16.0
+	golang.org/x/crypto v0.17.0
 	google.golang.org/grpc v1.59.0
 	google.golang.org/grpc/examples v0.0.0-20221220003428-4f16fbe410f7
 	gopkg.in/go-playground/pool.v3 v3.1.1
