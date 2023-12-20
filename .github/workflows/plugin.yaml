@@ -1,11 +1,8 @@
 name: kubectl plugin
 
 on:
-  push:
-    branches:
-      - "main"
-    tags:
-      - 'v*.*.*\+plugin'
+  release:
+    types: [published]
 
 permissions:
   contents: write # for goreleaser/goreleaser-action
