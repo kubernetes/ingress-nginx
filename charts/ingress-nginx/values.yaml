@@ -9,7 +9,6 @@
 
 # -- Override the deployment namespace; defaults to .Release.Namespace
 namespaceOverride: ""
-
 ## Labels to apply to all resources
 ##
 commonLabels: {}
@@ -27,9 +26,9 @@ controller:
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
-    tag: "v1.9.4"
-    digest: sha256:5b161f051d017e55d358435f295f5e9a297e66158f136321d9b04520ec6c48a3
-    digestChroot: sha256:5976b1067cfbca8a21d0ba53d71f83543a73316a61ea7f7e436d6cf84ddf9b26
+    tag: "v1.9.5"
+    digest: sha256:b3aba22b1da80e7acfc52b115cae1d4c687172cbf2b742d5b502419c25ff340e
+    digestChroot: sha256:9a8d7b25a846a6461cd044b9aea9cf6cad972bcf2e64d9fd246c0279979aad2d
     pullPolicy: IfNotPresent
     runAsNonRoot: true
     # www-data -> uid 101
@@ -140,7 +139,6 @@ controller:
   #   "net.core.somaxconn": "8192"
   # -- Security context for controller containers
   containerSecurityContext: {}
-
   # -- Allows customization of the source of the IP address or FQDN to report
   # in the ingress status field. By default, it reads the information provided
   # by the service. If disable, the status field reports the IP address of the
@@ -444,33 +442,26 @@ controller:
   customTemplate:
     configMapName: ""
     configMapKey: ""
-
   service:
     # -- Enable controller services or not. This does not influence the creation of either the admission webhook or the metrics service.
     enabled: true
-
     external:
       # -- Enable the external controller service or not. Useful for internal-only deployments.
       enabled: true
-
     # -- Annotations to be added to the external controller service. See `controller.service.internal.annotations` for annotations to be added to the internal controller service.
     annotations: {}
     # -- Labels to be added to both controller services.
     labels: {}
-
     # -- Type of the external controller service.
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
     type: LoadBalancer
-
     # -- Pre-defined cluster internal IP address of the external controller service. Take care of collisions with existing services.
     # This value is immutable. Set once, it can not be changed without deleting and re-creating the service.
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#choosing-your-own-ip-address
     clusterIP: ""
-
     # -- List of node IP addresses at which the external controller service is available.
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
     externalIPs: []
-
     # -- Deprecated: Pre-defined IP address of the external controller service. Used by cloud providers to connect the resulting load balancer service to a pre-existing static IP.
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
     loadBalancerIP: ""
@@ -479,7 +470,6 @@ controller:
     # -- Load balancer class of the external controller service. Used by cloud providers to select a load balancer implementation other than the cloud provider default.
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#load-balancer-class
     loadBalancerClass: ""
-
     # -- Enable node port allocation for the external controller service or not. Applies to type `LoadBalancer` only.
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#load-balancer-nodeport-allocation
     # allocateLoadBalancerNodePorts: true
@@ -487,11 +477,9 @@ controller:
     # -- External traffic policy of the external controller service. Set to "Local" to preserve source IP on providers supporting it.
     # Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
     externalTrafficPolicy: ""
-
     # -- Session affinity of the external controller service. Must be either "None" or "ClientIP" if set. Defaults to "None".
     # Ref: https://kubernetes.io/docs/reference/networking/virtual-ips/#session-affinity
     sessionAffinity: ""
-
     # -- Specifies the health check node port (numeric port number) for the external controller service.
     # If not specified, the service controller allocates a port from your cluster's node port range.
     # Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
@@ -505,28 +493,23 @@ controller:
     # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
     ipFamilies:
       - IPv4
-
     # -- Enable the HTTP listener on both controller services or not.
     enableHttp: true
     # -- Enable the HTTPS listener on both controller services or not.
     enableHttps: true
-
     ports:
       # -- Port the external HTTP listener is published with.
       http: 80
       # -- Port the external HTTPS listener is published with.
       https: 443
-
     targetPorts:
       # -- Port of the ingress controller the external HTTP listener is mapped to.
       http: http
       # -- Port of the ingress controller the external HTTPS listener is mapped to.
       https: https
-
     # -- Declare the app protocol of the external HTTP and HTTPS listeners or not. Supersedes provider-specific annotations for declaring the backend protocol.
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#application-protocol
     appProtocol: true
-
     nodePorts:
       # -- Node port allocated for the external HTTP listener. If left empty, the service controller allocates one from the configured node port range.
       http: ""
@@ -542,29 +525,23 @@ controller:
       # udp:
       #   53: 30053
       udp: {}
-
     internal:
       # -- Enable the internal controller service or not. Remember to configure `controller.service.internal.annotations` when enabling this.
       enabled: false
-
       # -- Annotations to be added to the internal controller service. Mandatory for the internal controller service to be created. Varies with the cloud service.
       # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
       annotations: {}
-
       # -- Type of the internal controller service.
       # Defaults to the value of `controller.service.type`.
       # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
       type: ""
-
       # -- Pre-defined cluster internal IP address of the internal controller service. Take care of collisions with existing services.
       # This value is immutable. Set once, it can not be changed without deleting and re-creating the service.
       # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#choosing-your-own-ip-address
       clusterIP: ""
-
       # -- List of node IP addresses at which the internal controller service is available.
       # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
       externalIPs: []
-
       # -- Deprecated: Pre-defined IP address of the internal controller service. Used by cloud providers to connect the resulting load balancer service to a pre-existing static IP.
       # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
       loadBalancerIP: ""
@@ -573,7 +550,6 @@ controller:
       # -- Load balancer class of the internal controller service. Used by cloud providers to select a load balancer implementation other than the cloud provider default.
       # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#load-balancer-class
       loadBalancerClass: ""
-
       # -- Enable node port allocation for the internal controller service or not. Applies to type `LoadBalancer` only.
       # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#load-balancer-nodeport-allocation
       # allocateLoadBalancerNodePorts: true
@@ -581,11 +557,9 @@ controller:
       # -- External traffic policy of the internal controller service. Set to "Local" to preserve source IP on providers supporting it.
       # Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
       externalTrafficPolicy: ""
-
       # -- Session affinity of the internal controller service. Must be either "None" or "ClientIP" if set. Defaults to "None".
       # Ref: https://kubernetes.io/docs/reference/networking/virtual-ips/#session-affinity
       sessionAffinity: ""
-
       # -- Specifies the health check node port (numeric port number) for the internal controller service.
       # If not specified, the service controller allocates a port from your cluster's node port range.
       # Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
@@ -599,27 +573,25 @@ controller:
       # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
       ipFamilies:
         - IPv4
-
       ports: {}
-        # -- Port the internal HTTP listener is published with.
-        # Defaults to the value of `controller.service.ports.http`.
-        # http: 80
-        # -- Port the internal HTTPS listener is published with.
-        # Defaults to the value of `controller.service.ports.https`.
-        # https: 443
+      # -- Port the internal HTTP listener is published with.
+      # Defaults to the value of `controller.service.ports.http`.
+      # http: 80
+      # -- Port the internal HTTPS listener is published with.
+      # Defaults to the value of `controller.service.ports.https`.
+      # https: 443
 
       targetPorts: {}
-        # -- Port of the ingress controller the internal HTTP listener is mapped to.
-        # Defaults to the value of `controller.service.targetPorts.http`.
-        # http: http
-        # -- Port of the ingress controller the internal HTTPS listener is mapped to.
-        # Defaults to the value of `controller.service.targetPorts.https`.
-        # https: https
+      # -- Port of the ingress controller the internal HTTP listener is mapped to.
+      # Defaults to the value of `controller.service.targetPorts.http`.
+      # http: http
+      # -- Port of the ingress controller the internal HTTPS listener is mapped to.
+      # Defaults to the value of `controller.service.targetPorts.https`.
+      # https: https
 
       # -- Declare the app protocol of the internal HTTP and HTTPS listeners or not. Supersedes provider-specific annotations for declaring the backend protocol.
       # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#application-protocol
       appProtocol: true
-
       nodePorts:
         # -- Node port allocated for the internal HTTP listener. If left empty, the service controller allocates one from the configured node port range.
         http: ""
@@ -635,7 +607,6 @@ controller:
         # udp:
         #   53: 30053
         udp: {}
-
   # shareProcessNamespace enables process namespace sharing within the pod.
   # This can be used for example to signal log rotation using `kill -USR1` from a sidecar.
   shareProcessNamespace: false
@@ -728,7 +699,7 @@ controller:
         type: RuntimeDefault
       capabilities:
         drop:
-        - ALL
+          - ALL
       readOnlyRootFilesystem: true
     resources: {}
   admissionWebhooks:
@@ -779,7 +750,7 @@ controller:
           type: RuntimeDefault
         capabilities:
           drop:
-          - ALL
+            - ALL
         readOnlyRootFilesystem: true
       resources: {}
       # limits:
@@ -799,7 +770,7 @@ controller:
           type: RuntimeDefault
         capabilities:
           drop:
-          - ALL
+            - ALL
         readOnlyRootFilesystem: true
       resources: {}
     patch:
