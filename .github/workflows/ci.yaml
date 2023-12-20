@@ -163,6 +163,14 @@ jobs:
           go-version: '1.21.5'
           check-latest: true
 
+      - name: Install Helm Unit Test Plugin
+        run: |
+          helm plugin install https://github.com/helm-unittest/helm-unittest
+
+      - name: Run Helm Unit Tests
+        run: |
+          helm unittest charts/ingress-nginx -d
+
       - name: cache
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
