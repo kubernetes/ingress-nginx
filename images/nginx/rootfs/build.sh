@@ -77,8 +77,8 @@ export LUA_UPSTREAM_VERSION=8aa93ead98ba2060d4efd594ae33a35d153589bf
 # Check for recent changes: https://github.com/openresty/lua-cjson/compare/2.1.0.11...openresty:master
 export LUA_CJSON_VERSION=2.1.0.11
 
-# Check for recent changes: https://github.com/leev/ngx_http_geoip2_module/compare/3.3...master
-export GEOIP2_VERSION=a26c6beed77e81553686852dceb6c7fdacc5970d
+# Check for recent changes: https://github.com/leev/ngx_http_geoip2_module/compare/3.4...master
+export GEOIP2_VERSION=a607a41a8115fecfc05b5c283c81532a3d605425
 
 # Check for recent changes: https://github.com/openresty/luajit2/compare/v2.1-20230410...v2.1-agentzh
 export LUAJIT_VERSION=2.1-20230410
@@ -164,7 +164,6 @@ apk add \
   linux-headers \
   libxslt-dev \
   gd-dev \
-  geoip-dev \
   perl-dev \
   libedit-dev \
   mercurial \
@@ -263,7 +262,7 @@ fi
 get_src 8d39c6b23f941a2d11571daaccc04e69539a3fcbcc50a631837560d5861a7b96 \
         "https://github.com/DataDog/dd-opentracing-cpp/archive/v$DATADOG_CPP_VERSION.tar.gz"
 
-get_src 4c1933434572226942c65b2f2b26c8a536ab76aa771a3c7f6c2629faa764976b \
+get_src b6c9c09fd43eb34a71e706ad780b2ead26549a9a9f59280fe558f5b7b980b7c6 \
         "https://github.com/leev/ngx_http_geoip2_module/archive/$GEOIP2_VERSION.tar.gz"
 
 get_src deb4ab1ffb9f3d962c4b4a2c4bdff692b86a209e3835ae71ebdf3b97189e40a9 \
@@ -583,7 +582,6 @@ WITH_FLAGS="--with-debug \
   --with-http_realip_module \
   --with-http_auth_request_module \
   --with-http_addition_module \
-  --with-http_geoip_module \
   --with-http_gzip_static_module \
   --with-http_sub_module \
   --with-http_v2_module \
