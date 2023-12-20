@@ -14,6 +14,9 @@ metadata:
   {{- if .Values.controller.metrics.serviceMonitor.additionalLabels }}
     {{- toYaml .Values.controller.metrics.serviceMonitor.additionalLabels | nindent 4 }}
   {{- end }}
+  {{- if .Values.controller.metrics.serviceMonitor.annotations }}
+  annotations: {{ toYaml .Values.controller.metrics.serviceMonitor.annotations | nindent 4 }}
+  {{- end }}
 spec:
   endpoints:
     - port: {{ .Values.controller.metrics.portName }}
