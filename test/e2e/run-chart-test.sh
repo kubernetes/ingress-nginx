@@ -78,7 +78,7 @@ fi
 
 if [ "${SKIP_IMAGE_CREATION:-false}" = "false" ]; then
   if ! command -v ginkgo &> /dev/null; then
-    go install github.com/onsi/ginkgo/v2/ginkgo@v2.13.0
+    go install github.com/onsi/ginkgo/v2/ginkgo@v2.13.1
   fi
   echo "[dev-env] building image"
   make -C ${DIR}/../../ clean-image build image
@@ -104,13 +104,12 @@ if [ "${SKIP_CERT_MANAGER_CREATION:-false}" = "false" ]; then
 fi
 
 echo "[dev-env] running helm chart e2e tests..."
-# Uses a custom chart-testing image to avoid timeouts waiting for namespace deletion.
-# The changes can be found here: https://github.com/aledbf/chart-testing/commit/41fe0ae0733d0c9a538099fb3cec522e888e3d82
 docker run --rm --interactive --network host \
     --name ct \
     --volume $KUBECONFIG:/root/.kube/config \
     --volume "${DIR}/../../":/workdir \
     --workdir /workdir \
-    aledbf/chart-testing:v3.3.1-next ct install \
+    registry.k8s.io/ingress-nginx/e2e-test-runner:v20231208-4c39e6acc@sha256:0607184ca9c53c9c24a47b6f52347dd96137b05c6f276efa67051929a39e8f7a \
+        ct install \
         --charts charts/ingress-nginx \
         --helm-extra-args "--timeout 60s"

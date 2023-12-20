@@ -1,0 +1,49 @@
+suite: test default backend extra ConfigMaps
+templates:
+  - default-backend-extra-configmaps.yaml
+
+tests:
+  - it: should not create any ConfigMap by default
+    set:
+      Release.Namespace: default
+      defaultBackend.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create one ConfigMap
+    set:
+      Release.Namespace: default
+      defaultBackend.enabled: true
+      defaultBackend.extraConfigMaps:
+        - name: my-configmap-1
+          data:
+            key1: value1
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: my-configmap-1
+
+  - it: should correctly render multiple ConfigMaps
+    set:
+      Release.Namespace: nginx
+      defaultBackend.enabled: true
+      defaultBackend.extraConfigMaps:
+        - name: my-configmap-1
+          data:
+            key1: value1
+        - name: my-configmap-2
+          data:
+            key2: value2
+    asserts:
+      - hasDocuments:
+          count: 2
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: metadata.name
+          pattern: "my-configmap-\\d+"

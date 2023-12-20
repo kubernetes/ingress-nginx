@@ -43,7 +43,7 @@ image:
 		--pull \
 		--push \
 		--build-arg BASE_IMAGE=${NGINX_BASE_IMAGE} \
-		--build-arg GOLANG_VERSION=1.21.3 \
+		--build-arg GOLANG_VERSION=1.21.5 \
 		--build-arg ETCD_VERSION=3.4.3-0 \
 		--build-arg K8S_RELEASE=v1.26.0 \
 		--build-arg RESTY_CLI_VERSION=0.27 \
@@ -54,7 +54,7 @@ image:
 		--build-arg YAML_LINT_VERSION=1.27.1 \
 		--build-arg YAMALE_VERSION=4.0.4 \
 		--build-arg HELM_VERSION=3.11.2 \
-		--build-arg GINKGO_VERSION=2.13.0 \
+		--build-arg GINKGO_VERSION=2.13.1 \
 		--build-arg GOLINT_VERSION=latest \
 		-t ${IMAGE}:${TAG} rootfs
 
@@ -64,7 +64,7 @@ build: ensure-buildx
 		--progress=${PROGRESS} \
 		--pull \
 		--build-arg BASE_IMAGE=${NGINX_BASE_IMAGE} \
-		--build-arg GOLANG_VERSION=1.21.3 \
+		--build-arg GOLANG_VERSION=1.21.5 \
 		--build-arg ETCD_VERSION=3.4.3-0 \
 		--build-arg K8S_RELEASE=v1.26.0 \
 		--build-arg RESTY_CLI_VERSION=0.27 \
@@ -75,7 +75,7 @@ build: ensure-buildx
 		--build-arg YAML_LINT_VERSION=1.27.1 \
 		--build-arg YAMALE_VERSION=4.0.4 \
 		--build-arg HELM_VERSION=3.11.2 \
-		--build-arg GINKGO_VERSION=2.13.0 \
+		--build-arg GINKGO_VERSION=2.13.1 \
 		--build-arg GOLINT_VERSION=latest \
 		-t ${IMAGE}:${TAG} rootfs
 

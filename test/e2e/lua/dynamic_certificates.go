@@ -62,6 +62,7 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic certificates", func() {
 		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 
+		//time.Sleep(1 * time.Hour)
 		time.Sleep(1 * time.Hour)
 
 		ensureHTTPSRequest(f, f.GetURL(framework.HTTPS), host, host)
