@@ -24,7 +24,7 @@ tests:
 
   - it: should create a Service of type "NodePort" if `controller.service.external.enabled` is true and `controller.service.type` is "NodePort"
     set:
-      controller.service.enabled: true
+      controller.service.external.enabled: true
       controller.service.type: NodePort
     asserts:
       - equal:
