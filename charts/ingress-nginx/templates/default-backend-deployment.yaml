@@ -30,7 +30,7 @@ spec:
       annotations: {{ toYaml .Values.defaultBackend.podAnnotations | nindent 8 }}
     {{- end }}
       labels:
-        {{- include "ingress-nginx.selectorLabels" . | nindent 8 }}
+        {{- include "ingress-nginx.labels" . | nindent 8 }}
         app.kubernetes.io/component: default-backend
         {{- with .Values.defaultBackend.labels }}
         {{- toYaml . | nindent 8 }}
