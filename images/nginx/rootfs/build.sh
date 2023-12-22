@@ -60,7 +60,7 @@ export DATADOG_CPP_VERSION=1.3.7
 export MODSECURITY_VERSION=1.0.3
 
 # Check for recent changes: https://github.com/SpiderLabs/ModSecurity/compare/v3.0.11...v3/master
-export MODSECURITY_LIB_VERSION=3.0.11
+export MODSECURITY_LIB_VERSION=bbde9381cbccb49ea73f6194b08b478adc53f3bc
 
 # Check for recent changes: https://github.com/coreruleset/coreruleset/compare/v3.3.2...v3.3/master
 export OWASP_MODSECURITY_CRS_VERSION=v3.3.5
