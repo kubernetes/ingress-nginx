@@ -71,7 +71,7 @@ const (
 	emptyUID         = "-1"
 )
 
-var tmpDir = os.TempDir() + "/nginx"
+var tmpDir = os.TempDir() + "/nginx/"
 
 // NewNGINXController creates a new NGINX Ingress controller.
 func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXController {
