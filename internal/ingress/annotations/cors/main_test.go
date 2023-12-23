@@ -17,6 +17,7 @@ limitations under the License.
 package cors
 
 import (
+	"reflect"
 	"testing"
 
 	api "k8s.io/api/core/v1"
@@ -170,5 +171,35 @@ func TestIngressCorsConfigInvalid(t *testing.T) {
 
 	if nginxCors.CorsMaxAge != defaultCorsMaxAge {
 		t.Errorf("expected %v but returned %v", defaultCorsMaxAge, nginxCors.CorsMaxAge)
+	}
+}
+
+func TestIngresCorsConfigAllowOriginWithTrailingComma(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix(corsEnableAnnotation)] = "true"
+
+	// Include a trailing comma and an empty value between the commas.
+	data[parser.GetAnnotationWithPrefix(corsAllowOriginAnnotation)] = "https://origin123.test.com:4443,    ,https://origin321.test.com:4443,"
+	ing.SetAnnotations(data)
+
+	corst, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("error parsing annotations: %v", err)
+	}
+
+	nginxCors, ok := corst.(*Config)
+	if !ok {
+		t.Errorf("expected a Config type but returned %t", corst)
+	}
+
+	if !nginxCors.CorsEnabled {
+		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix(corsEnableAnnotation)], nginxCors.CorsEnabled)
+	}
+
+	expectedCorsAllowOrigins := []string{"https://origin123.test.com:4443", "https://origin321.test.com:4443"}
+	if !reflect.DeepEqual(nginxCors.CorsAllowOrigin, expectedCorsAllowOrigins) {
+		t.Errorf("expected %v but returned %v", expectedCorsAllowOrigins, nginxCors.CorsAllowOrigin)
 	}
 }

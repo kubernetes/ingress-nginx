@@ -458,15 +458,15 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 
-	if !l1.Opentracing.Equal(&l2.Opentracing) {
-		return false
-	}
-
 	if !l1.Opentelemetry.Equal(&l2.Opentelemetry) {
 		return false
 	}
 
 	if !l1.Mirror.Equal(&l2.Mirror) {
+		return false
+	}
+
+	if l1.DisableProxyInterceptErrors != l2.DisableProxyInterceptErrors {
 		return false
 	}
 

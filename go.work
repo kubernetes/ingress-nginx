@@ -1,6 +1,7 @@
-go 1.21.1
+go 1.21.5
 
 use (
 	.
+	./images/kube-webhook-certgen/rootfs
 	./magefiles
 )

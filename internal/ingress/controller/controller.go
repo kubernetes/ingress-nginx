@@ -1507,7 +1507,6 @@ func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) 
 	loc.ExternalAuth = anns.ExternalAuth
 	loc.EnableGlobalAuth = anns.EnableGlobalAuth
 	loc.HTTP2PushPreload = anns.HTTP2PushPreload
-	loc.Opentracing = anns.Opentracing
 	loc.Opentelemetry = anns.Opentelemetry
 	loc.Proxy = anns.Proxy
 	loc.ProxySSL = anns.ProxySSL
@@ -1527,6 +1526,7 @@ func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) 
 	loc.BackendProtocol = anns.BackendProtocol
 	loc.FastCGI = anns.FastCGI
 	loc.CustomHTTPErrors = anns.CustomHTTPErrors
+	loc.DisableProxyInterceptErrors = anns.DisableProxyInterceptErrors
 	loc.ModSecurity = anns.ModSecurity
 	loc.Satisfy = anns.Satisfy
 	loc.Mirror = anns.Mirror

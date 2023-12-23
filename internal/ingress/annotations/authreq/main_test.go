@@ -99,13 +99,13 @@ func TestAnnotations(t *testing.T) {
 		{"no scheme", "bar", "bar", "", "", "", "", "", false, true},
 		{"invalid host", "http://", "http://", "", "", "", "", "", false, true},
 		{"invalid host (multiple dots)", "http://foo..bar.com", "http://foo..bar.com", "", "", "", "", "", false, true},
-		{"valid URL", "http://bar.foo.com/external-auth", "http://bar.foo.com/external-auth", "", "", "", "", "", false, false},
-		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "POST", "", "", "", false, false},
-		{"valid URL - send body", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "GET", "", "", "", false, false},
-		{"valid URL - request redirect", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "GET", "http://foo.com/redirect-me", "", "", false, false},
-		{"auth snippet", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "", "", "proxy_set_header My-Custom-Header 42;", "", false, false},
-		{"auth cache ", "http://foo.com/external-auth", "http://foo.com/external-auth", "", "", "", "", "$foo$bar", false, false},
-		{"redirect param", "http://bar.foo.com/external-auth", "http://bar.foo.com/external-auth", "origUrl", "", "", "", "", true, false},
+		{"valid URL", "http://bar.foo.com/external-auth/auth?allowed_groups=snow-group,rain-group", "http://bar.foo.com/external-auth/start?rd=https://$host$escaped_request_uri", "", "", "", "", "", false, false},
+		{"valid URL - send body", "http://foo.com/external-auth/auth?allowed_groups=snow-group,rain-group", "http://foo.com/external-auth/start?rd=https://$host$escaped_request_uri", "", "POST", "", "", "", false, false},
+		{"valid URL - send body", "http://foo.com/external-auth/auth?allowed_groups=snow-group,rain-group", "http://foo.com/external-auth/start?rd=https://$host$escaped_request_uri", "", "GET", "", "", "", false, false},
+		{"valid URL - request redirect", "http://foo.com/external-auth/auth?allowed_groups=snow-group,rain-group", "http://foo.com/external-auth/start?rd=https://$host$escaped_request_uri", "", "GET", "http://foo.com/redirect-me", "", "", false, false},
+		{"auth snippet", "http://foo.com/external-auth/auth?allowed_groups=snow-group,rain-group", "http://foo.com/external-auth/start?rd=https://$host$escaped_request_uri", "", "", "", "proxy_set_header My-Custom-Header 42;", "", false, false},
+		{"auth cache ", "http://foo.com/external-auth/auth?allowed_groups=snow-group,rain-group", "http://foo.com/external-auth/start?rd=https://$host$escaped_request_uri", "", "", "", "", "$foo$bar", false, false},
+		{"redirect param", "http://bar.foo.com/external-auth/auth?allowed_groups=snow-group,rain-group", "http://bar.foo.com/external-auth/start?rd=https://$host$escaped_request_uri", "origUrl", "", "", "", "", true, false},
 	}
 
 	for _, test := range tests {

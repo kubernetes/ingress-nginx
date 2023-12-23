@@ -11,7 +11,7 @@
 
 ### a. Make changes to appropriate files in required directories
 
-- Make changes in files where gingko version is hardcoded. These files are :
+- Make changes in files where ginkgo version is hardcoded. These files are :
     - [run-in-docker.sh ](build/run-in-docker.sh)
     - [Dockerfile ](images/test-runner/rootfs/Dockerfile)
     - [run.sh ](test/e2e/run.sh)

@@ -12,6 +12,6 @@ metadata:
   annotations: {{ toYaml .Values.controller.udp.annotations | nindent 4 }}
 {{- end }}
   name: {{ include "ingress-nginx.fullname" . }}-udp
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ include "ingress-nginx.namespace" . }}
 data: {{ tpl (toYaml .Values.udp) . | nindent 2 }}
 {{- end }}

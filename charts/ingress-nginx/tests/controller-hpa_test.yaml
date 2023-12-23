@@ -1,0 +1,17 @@
+suite: Controller > HPA
+templates:
+  - controller-hpa.yaml
+
+tests:
+  - it: should create a HPA if `controller.kind` is "Deployment" and `controller.autoscaling.enabled` is true
+    set:
+      controller.kind: Deployment
+      controller.autoscaling.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: HorizontalPodAutoscaler
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-controller

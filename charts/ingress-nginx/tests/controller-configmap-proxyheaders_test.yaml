@@ -1,0 +1,27 @@
+suite: Controller > ConfigMap > Proxy Headers
+templates:
+  - controller-configmap-proxyheaders.yaml
+
+tests:
+  - it: should not create a ConfigMap if `controller.proxySetHeaders` is not set
+    set:
+      controller.proxySetHeaders: null
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create a ConfigMap if `controller.proxySetHeaders` is set
+    set:
+      controller.proxySetHeaders:
+        X-Custom-Header: Value
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-custom-proxy-headers
+      - equal:
+          path: data.X-Custom-Header
+          value: Value

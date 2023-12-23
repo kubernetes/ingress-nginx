@@ -9,7 +9,7 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
   name: {{ include "ingress-nginx.fullname" . }}
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ include "ingress-nginx.namespace" . }}
 rules:
   - apiGroups:
       - ""
@@ -44,12 +44,15 @@ rules:
       - get
       - list
       - watch
+  # Omit Ingress status permissions if `--update-status` is disabled.
+  {{- if ne (index .Values.controller.extraArgs "update-status") "false" }}
   - apiGroups:
       - networking.k8s.io
     resources:
       - ingresses/status
     verbs:
       - update
+  {{- end }}
   - apiGroups:
       - networking.k8s.io
     resources:

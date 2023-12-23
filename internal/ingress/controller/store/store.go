@@ -1215,7 +1215,7 @@ func (s *k8sStore) setConfig(cmap *corev1.ConfigMap) {
 		s.backendConfig.UseGeoIP2 = false
 	}
 
-	s.writeSSLSessionTicketKey(cmap, "/etc/nginx/tickets.key")
+	s.writeSSLSessionTicketKey(cmap, "/etc/ingress-controller/tickets.key")
 }
 
 // Run initiates the synchronization of the informers and the initial

@@ -1,0 +1,22 @@
+# Changelog
+
+### {{ .NewControllerVersion }}
+{{ with .ControllerImages }}
+Images:
+{{ range . }}
+* {{ .Registry }}/{{ .Name }}:{{ .Tag}}@{{ .Digest }}
+{{- end }}
+{{ end }}
+{{- with .Updates }}
+### All changes:
+{{ range . }}
+* {{ . }}
+{{- end }}
+{{ end }}
+{{- with .DepUpdates }}
+### Dependency updates:
+{{ range . }}
+* {{ . }}
+{{- end }}
+{{ end }}
+**Full Changelog**: https://github.com/kubernetes/ingress-nginx/compare/controller-{{ .PreviousControllerVersion }}...controller-{{ .NewControllerVersion }}

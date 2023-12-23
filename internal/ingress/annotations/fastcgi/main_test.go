@@ -371,6 +371,18 @@ func Test_fastcgi_Parse(t *testing.T) {
 			want:    Config{Index: "indexxpto-92123.php"},
 			wantErr: true,
 		},
+		{
+			name:          "invalid configmap values val",
+			index:         "indexxpto-92123.php",
+			configmapname: "default/fcgiconfig",
+			configmap: map[string]string{
+				"SCRIPT_FILENAME": "/app/src/index.php",
+			},
+			want: Config{Index: "indexxpto-92123.php", Params: map[string]string{
+				"SCRIPT_FILENAME": "/app/src/index.php",
+			}},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

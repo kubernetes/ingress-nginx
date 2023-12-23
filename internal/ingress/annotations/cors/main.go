@@ -201,6 +201,10 @@ func (c cors) Parse(ing *networking.Ingress) (interface{}, error) {
 		origins := strings.Split(unparsedOrigins, ",")
 		for _, origin := range origins {
 			origin = strings.TrimSpace(origin)
+			if origin == "" {
+				continue
+			}
+
 			if origin == "*" {
 				config.CorsAllowOrigin = []string{"*"}
 				break

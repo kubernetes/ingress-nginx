@@ -271,5 +271,5 @@ release: ensure-buildx clean
 
 .PHONY: build-docs
 build-docs:
-	pip install -U mkdocs-material==6.2.4 mkdocs-awesome-pages-plugin mkdocs-minify-plugin mkdocs-redirects
+	pip install -r docs/requirements.txt
 	mkdocs build --config-file mkdocs.yml

@@ -26,10 +26,12 @@ aliases:
 
   ingress-nginx-helm-maintainers:
   - cpanato
+  - Gacko
   - strongjz
 
   ingress-nginx-helm-reviewers:
   - cpanato
+  - Gacko
   - strongjz
 
   ingress-nginx-docs-maintainers:

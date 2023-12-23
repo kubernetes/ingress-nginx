@@ -37,14 +37,14 @@ type ReleaseNote struct {
 
 func (r ReleaseNote) Template() {
 	// Files are provided as a slice of strings.
-	changelogTemplate, err := os.ReadFile("Changelog.md.gotmpl")
+	changelogTemplate, err := os.ReadFile("changelog/controller.md.gotmpl")
 	if err != nil {
 		ErrorF("Could not read changelog template file %s", err)
 	}
 	Debug("ChangeLog Templates %s", string(changelogTemplate))
 	t := template.Must(template.New("changelog").Parse(string(changelogTemplate)))
 	// create a new file
-	file, err := os.Create(fmt.Sprintf("changelog/Changelog-%s.md", r.Version))
+	file, err := os.Create(fmt.Sprintf("changelog/controller-%s.md", r.Version))
 	if err != nil {
 		ErrorF("Could not create changelog file %s", err)
 	}
@@ -58,14 +58,14 @@ func (r ReleaseNote) Template() {
 
 func (r ReleaseNote) HelmTemplate() {
 	// Files are provided as a slice of strings.
-	changelogTemplate, err := os.ReadFile("charts/ingress-nginx/changelog.md.gotmpl")
+	changelogTemplate, err := os.ReadFile("charts/ingress-nginx/changelog/helm-chart.md.gotmpl")
 	if err != nil {
 		ErrorF("Could not read changelog template file %s", err)
 	}
 	Debug("ChangeLog Templates %s", string(changelogTemplate))
 	t := template.Must(template.New("changelog").Parse(string(changelogTemplate)))
 	// create a new file
-	file, err := os.Create(fmt.Sprintf("charts/ingress-nginx/changelog/Changelog-%s.md", r.NewHelmChartVersion))
+	file, err := os.Create(fmt.Sprintf("charts/ingress-nginx/changelog/helm-chart-%s.md", r.NewHelmChartVersion))
 	if err != nil {
 		ErrorF("Could not create changelog file %s", err)
 	}

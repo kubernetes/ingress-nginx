@@ -36,7 +36,10 @@ const (
 )
 
 // fast-cgi valid parameters is just a single file name (like index.php)
-var regexValidIndexAnnotationAndKey = regexp.MustCompile(`^[A-Za-z0-9.\-\_]+$`)
+var (
+	regexValidIndexAnnotationAndKey = regexp.MustCompile(`^[A-Za-z0-9.\-\_]+$`)
+	validFCGIValue                  = regexp.MustCompile(`^[A-Za-z0-9\-\_\$\{\}/.]*$`)
+)
 
 var fastCGIAnnotations = parser.Annotation{
 	Group: "fastcgi",
@@ -142,7 +145,7 @@ func (a fastcgi) Parse(ing *networking.Ingress) (interface{}, error) {
 	}
 
 	for k, v := range cmap.Data {
-		if !regexValidIndexAnnotationAndKey.MatchString(k) || !parser.NGINXVariable.MatchString(v) {
+		if !regexValidIndexAnnotationAndKey.MatchString(k) || !validFCGIValue.MatchString(v) {
 			klog.ErrorS(fmt.Errorf("fcgi contains invalid key or value"), "fcgi annotation error", "configmap", cmap.Name, "namespace", cmap.Namespace, "key", k, "value", v)
 			return fcgiConfig, ing_errors.NewValidationError(fastCGIParamsAnnotation)
 		}

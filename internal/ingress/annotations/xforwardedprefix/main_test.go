@@ -40,6 +40,7 @@ func TestParse(t *testing.T) {
 		{map[string]string{annotation: "true"}, "true"},
 		{map[string]string{annotation: "1"}, "1"},
 		{map[string]string{annotation: ""}, ""},
+		{map[string]string{annotation: "/$1"}, "/$1"},
 		{map[string]string{}, ""},
 		{nil, ""},
 	}

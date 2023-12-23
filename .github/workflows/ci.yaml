@@ -42,7 +42,7 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
         id: filter
@@ -69,13 +69,13 @@ jobs:
       (needs.changes.outputs.go == 'true')
     steps:
       - name: Checkout
-        uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       
       - name: Set up Go
         id: go
-        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
-          go-version: '1.21.1'
+          go-version: '1.21.5'
           check-latest: true
 
       - name: Run test
@@ -90,13 +90,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Set up Go
         id: go
-        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
-          go-version: '1.21.1'
+          go-version: '1.21.5'
           check-latest: true
 
       - name: Set up QEMU
@@ -155,13 +155,21 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Setup Go
-        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
-          go-version: '1.21.1'
+          go-version: '1.21.5'
           check-latest: true
+
+      - name: Install Helm Unit Test Plugin
+        run: |
+          helm plugin install https://github.com/helm-unittest/helm-unittest
+
+      - name: Run Helm Unit Tests
+        run: |
+          helm unittest charts/ingress-nginx -d
 
       - name: cache
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
@@ -230,7 +238,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: cache
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
@@ -278,7 +286,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: cache
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
@@ -329,7 +337,7 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: cache
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
@@ -362,7 +370,7 @@ jobs:
         with:
           name: e2e-test-reports-chroot-${{ matrix.k8s }}
           path: 'test/junitreports/report*.xml'
-
+          
   kind:
     name: Kind Static Deployment
     runs-on: ubuntu-latest
@@ -421,6 +429,42 @@ jobs:
           name: e2e-test-reports-${{ matrix.k8s }}
           path: 'test/junitreports/report*.xml'
 
+  test-nginx-image-build:
+    permissions:
+      contents: read  # for dorny/paths-filter to fetch a list of changed files
+      pull-requests: read  # for dorny/paths-filter to read pull requests
+    runs-on: ubuntu-latest
+    env:
+      PLATFORMS: linux/amd64,linux/arm64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
+        id: filter-images
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          filters: |
+            nginx-base:
+              - 'images/nginx/**'
+      - name: nginx-base-image
+        if: ${{ steps.filter-images.outputs.nginx-base == 'true' }}
+        run: |
+          cd images/nginx/rootfs && docker build -t docker.io/nginx-test-workflow/nginx:${{ github.sha }} .
+      - name: Run Trivy on NGINX Image
+        if: ${{ steps.filter-images.outputs.nginx-base == 'true' }}
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'docker.io/nginx-test-workflow/nginx:${{ github.sha }}'
+          format: 'sarif'
+          ignore-unfixed: true
+          output: 'trivy-results.sarif'
+      - name: Upload Trivy scan results to GitHub Security tab
+        if: ${{ steps.filter-images.outputs.nginx-base == 'true' && always() }}
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
   test-image-build:
     permissions:
       contents: read  # for dorny/paths-filter to fetch a list of changed files
@@ -430,7 +474,7 @@ jobs:
       PLATFORMS: linux/amd64,linux/arm64
     steps:
       - name: Checkout
-        uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
         id: filter-images
@@ -453,7 +497,6 @@ jobs:
               - 'images/kube-webhook-certgen/**'
             ext-auth-example-authsvc:
               - 'images/ext-auth-example-authsvc/**'
-
       - name: custom-error-pages image build
         if: ${{ steps.filter-images.outputs.custom-error-pages == 'true' }}
         run: |
@@ -503,7 +546,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
         id: filter-images
@@ -522,12 +565,13 @@ jobs:
       - name: Set up Go
         id: go
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
-        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
-          go-version: '1.21.1'
+          go-version: '1.21.5'
           check-latest: true
 
       - name: kube-webhook-certgen image build
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
         run: |
           cd images/kube-webhook-certgen && make test test-e2e
+

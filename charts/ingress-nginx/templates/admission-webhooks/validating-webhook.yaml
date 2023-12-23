@@ -6,8 +6,8 @@ kind: ValidatingWebhookConfiguration
 metadata:
   annotations:
   {{- if .Values.controller.admissionWebhooks.certManager.enabled }}
-    certmanager.k8s.io/inject-ca-from: {{ printf "%s/%s-admission" .Release.Namespace (include "ingress-nginx.fullname" .) | quote }}
-    cert-manager.io/inject-ca-from: {{ printf "%s/%s-admission" .Release.Namespace (include "ingress-nginx.fullname" .) | quote }}
+    certmanager.k8s.io/inject-ca-from: {{ printf "%s/%s" (include "ingress-nginx.namespace" .) (include "ingress-nginx.admissionWebhooks.fullname" .) | quote }}
+    cert-manager.io/inject-ca-from: {{ printf "%s/%s" (include "ingress-nginx.namespace" .) (include "ingress-nginx.admissionWebhooks.fullname" .) | quote }}
   {{- end }}
   {{- if .Values.controller.admissionWebhooks.annotations }}
     {{- toYaml .Values.controller.admissionWebhooks.annotations | nindent 4 }}
@@ -18,7 +18,7 @@ metadata:
     {{- with .Values.controller.admissionWebhooks.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-  name: {{ include "ingress-nginx.fullname" . }}-admission
+  name: {{ include "ingress-nginx.admissionWebhooks.fullname" . }}
 webhooks:
   - name: validate.nginx.ingress.kubernetes.io
     matchPolicy: Equivalent
@@ -38,8 +38,8 @@ webhooks:
       - v1
     clientConfig:
       service:
-        namespace: {{ .Release.Namespace | quote }}
         name: {{ include "ingress-nginx.controller.fullname" . }}-admission
+        namespace: {{ include "ingress-nginx.namespace" . }}
         path: /networking/v1/ingresses
     {{- if .Values.controller.admissionWebhooks.timeoutSeconds }}
     timeoutSeconds: {{ .Values.controller.admissionWebhooks.timeoutSeconds }}

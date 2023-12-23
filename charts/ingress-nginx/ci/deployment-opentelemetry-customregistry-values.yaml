@@ -1,0 +1,9 @@
+controller:
+  image:
+    repository: ingress-controller/controller
+    tag: 1.0.0-dev
+    digest: null
+  service:
+    type: ClusterIP
+  opentelemetry:
+    enabled: true

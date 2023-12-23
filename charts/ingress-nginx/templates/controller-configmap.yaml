@@ -11,17 +11,17 @@ metadata:
   annotations: {{ toYaml .Values.controller.configAnnotations | nindent 4 }}
 {{- end }}
   name: {{ include "ingress-nginx.controller.fullname" . }}
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ include "ingress-nginx.namespace" . }}
 data:
   allow-snippet-annotations: "{{ .Values.controller.allowSnippetAnnotations }}"
 {{- if .Values.controller.addHeaders }}
-  add-headers: {{ .Release.Namespace }}/{{ include "ingress-nginx.fullname" . }}-custom-add-headers
+  add-headers: {{ include "ingress-nginx.namespace" . }}/{{ include "ingress-nginx.fullname" . }}-custom-add-headers
 {{- end }}
 {{- if .Values.controller.proxySetHeaders }}
-  proxy-set-headers: {{ .Release.Namespace }}/{{ include "ingress-nginx.fullname" . }}-custom-proxy-headers
+  proxy-set-headers: {{ include "ingress-nginx.namespace" . }}/{{ include "ingress-nginx.fullname" . }}-custom-proxy-headers
 {{- end }}
 {{- if .Values.dhParam }}
-  ssl-dh-param: {{ .Release.Namespace }}/{{ include "ingress-nginx.controller.fullname" . }}
+  ssl-dh-param: {{ include "ingress-nginx.namespace" . }}/{{ include "ingress-nginx.controller.fullname" . }}
 {{- end }}
 {{- range $key, $value := .Values.controller.config }}
   {{- $key | nindent 2 }}: {{ $value | quote }}

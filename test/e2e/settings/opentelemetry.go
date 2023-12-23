@@ -31,7 +31,7 @@ const (
 	opentelemetryOperationName         = "opentelemetry-operation-name"
 	opentelemetryLocationOperationName = "opentelemetry-location-operation-name"
 	opentelemetryConfig                = "opentelemetry-config"
-	opentelemetryConfigPath            = "/etc/nginx/opentelemetry.toml"
+	opentelemetryConfigPath            = "/etc/ingress-controller/telemetry/opentelemetry.toml"
 
 	enable = "true"
 )

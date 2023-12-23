@@ -21,7 +21,7 @@ spec:
         arch: amd64
     {{addURIAndSha "https://github.com/kubernetes/ingress-nginx/releases/download/{{ .TagName }}/kubectl-ingress-nginx_darwin_amd64.tar.gz" .TagName }}
     bin: kubectl-ingress-nginx
-    selector:
+  - selector:
       matchLabels:
         os: linux
         arch: amd64

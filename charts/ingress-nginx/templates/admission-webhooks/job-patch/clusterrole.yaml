@@ -2,7 +2,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "ingress-nginx.fullname" . }}-admission
+  name: {{ include "ingress-nginx.admissionWebhooks.fullname" . }}
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -21,14 +21,13 @@ rules:
       - get
       - update
 {{- if .Values.podSecurityPolicy.enabled }}
-  - apiGroups: ['extensions']
-    resources: ['podsecuritypolicies']
-    verbs:     ['use']
-    resourceNames:
+  - apiGroups:      [{{ template "podSecurityPolicy.apiGroup" . }}]
+    resources:      ['podsecuritypolicies']
+    verbs:          ['use']
     {{- with .Values.controller.admissionWebhooks.existingPsp }}
-    - {{ . }}
+    resourceNames:  [{{ . }}]
     {{- else }}
-    - {{ include "ingress-nginx.fullname" . }}-admission
+    resourceNames:  [{{ include "ingress-nginx.admissionWebhooks.fullname" . }}]
     {{- end }}
 {{- end }}
 {{- end }}

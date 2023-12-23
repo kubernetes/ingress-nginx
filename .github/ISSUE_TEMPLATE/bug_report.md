@@ -60,7 +60,7 @@ kubectl exec -it $POD_NAME -n $POD_NAMESPACE -- /nginx-ingress-controller --vers
 
 - **How was the ingress-nginx-controller installed**:
   - If helm was used then please show output of `helm ls -A | grep -i ingress`
-  - If helm was used then please show output of `helm -n <ingresscontrollernamepspace> get values <helmreleasename>`
+  - If helm was used then please show output of `helm -n <ingresscontrollernamespace> get values <helmreleasename>`
   - If helm was not used, then copy/paste the complete precise command used to install the controller, along with the flags and options used
   - if you have more than one instance of the ingress-nginx-controller installed in the same cluster, please provide details for all the instances
 
@@ -71,7 +71,7 @@ kubectl exec -it $POD_NAME -n $POD_NAMESPACE -- /nginx-ingress-controller --vers
   - `kubectl -n <ingresscontrollernamespace> describe svc <ingresscontrollerservicename>`
 
 - **Current state of ingress object, if applicable**:
-  - `kubectl -n <appnnamespace> get all,ing -o wide`
+  - `kubectl -n <appnamespace> get all,ing -o wide`
   - `kubectl -n <appnamespace> describe ing <ingressname>`
   - If applicable, then, your complete and exact curl/grpcurl command (redacted if required) and the reponse to the curl/grpcurl command with the -v flag
 
