@@ -125,4 +125,6 @@ RUN pip install "yamllint==$YAML_LINT_VERSION"
 # Install Yamale YAML schema validator
 RUN pip install "yamale==$YAMALE_VERSION"
 
+LABEL org.opencontainers.image.source=https://github.com/kubernetes/ingress-nginx
+
 WORKDIR $GOPATH
