@@ -8,7 +8,7 @@
 <span class=w>             </span><span class="p p-Indicator">-</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">/nginx-ingress-controller</span>
 <span class=w>             </span><span class="p p-Indicator">-</span><span class=w> </span><span class=s>&#39;--election-id=ingress-controller-leader&#39;</span>
 <span class=w>             </span><span class="p p-Indicator">-</span><span class=w> </span><span class=s>&#39;--controller-class=k8s.io/internal-ingress-nginx&#39;</span>
-<span class=w>             </span><span class="p p-Indicator">-</span><span class=w> </span><span class=s>&#39;--ingress-class=k8s.io/internal-nginx&#39;</span>
+<span class=w>             </span><span class="p p-Indicator">-</span><span class=w> </span><span class=s>&#39;--ingress-class=internal-nginx&#39;</span>
 <span class=w>           </span><span class="w w-Error"> </span><span class="l l-Scalar l-Scalar-Plain">...</span>
 </code></pre></div> <p>Then use the same value in the IngressClass:</p> <div class=highlight><pre><span></span><code><span class=c1># ingress-nginx IngressClass</span>
 <span class=nt>apiVersion</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">networking.k8s.io/v1</span>
