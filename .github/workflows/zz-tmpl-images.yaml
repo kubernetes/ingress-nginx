@@ -1,0 +1,36 @@
+#### THIS IS A TEMPLATE ####
+# This workflow is created to be a template for every time an e2e teest is required,
+
+on:
+  workflow_call:
+    inputs:
+      name:
+        required: true
+        type: string
+      platforms-test:
+        type: string
+        default: linux/amd64
+      platforms-publish:
+        type: string
+        default: linux/amd64
+
+env:
+  PLATFORMS: ${{ inputs.platforms-test }}
+
+permissions:
+  contents: read
+
+jobs:
+  image-build:
+    name: Build ${{ inputs.name }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Build
+        run: |
+          cd images/${{ inputs.name }} && make build
+
+
