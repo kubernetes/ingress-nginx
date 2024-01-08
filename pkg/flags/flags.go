@@ -227,9 +227,13 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 	flags.StringVar(&nginx.MaxmindMirror, "maxmind-mirror", "", `Maxmind mirror url (example: http://geoip.local/databases.`)
 	flags.StringVar(&nginx.MaxmindLicenseKey, "maxmind-license-key", "", `Maxmind license key to download GeoLite2 Databases.
 https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases .`)
+	flags.IntVar(&nginx.MaxmindAccountID, "maxmind-account-id", 0, "Maxmind account id to download GeoLite2 Databases.")
 	flags.StringVar(&nginx.MaxmindEditionIDs, "maxmind-edition-ids", "GeoLite2-City,GeoLite2-ASN", `Maxmind edition ids to download GeoLite2 Databases.`)
 	flags.IntVar(&nginx.MaxmindRetriesCount, "maxmind-retries-count", 1, "Number of attempts to download the GeoIP DB.")
 	flags.DurationVar(&nginx.MaxmindRetriesTimeout, "maxmind-retries-timeout", time.Second*0, "Maxmind downloading delay between 1st and 2nd attempt, 0s - do not retry to download if something went wrong.")
+	flags.BoolVar(&nginx.MaxmindEnableSync, "maxmind-enable-sync", false, "Enable periodic sync of maxmind databases.")
+	flags.DurationVar(&nginx.MaxmindSyncPeriod, "maxmind-sync-period", time.Hour*24, "Maxmind databases sync period.")
+	flags.StringVar(&nginx.MaxmindURL, "maxmind-url", "https://updates.maxmind.com", "Maxmind URL to download GeoLite2 Databases.")
 
 	flags.AddGoFlagSet(flag.CommandLine)
 	if err := flags.Parse(os.Args); err != nil {
@@ -311,6 +315,10 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		}
 	}
 
+	if nginx.MaxmindEnableSync && nginx.MaxmindSyncPeriod < time.Second*60 {
+		return false, nil, fmt.Errorf("maxmind-sync-period must be at least 60 seconds")
+	}
+
 	histogramBuckets := &collectors.HistogramBuckets{
 		TimeBuckets:   *timeBuckets,
 		LengthBuckets: *lengthBuckets,
@@ -387,6 +395,9 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 			klog.InfoS("downloading maxmind GeoIP2 databases")
 			if err = nginx.DownloadGeoLite2DB(nginx.MaxmindRetriesCount, nginx.MaxmindRetriesTimeout); err != nil {
 				klog.ErrorS(err, "unexpected error downloading GeoIP2 database")
+			}
+			if nginx.MaxmindEnableSync {
+				nginx.DownloadGeoLite2DBPeriodically(nginx.MaxmindSyncPeriod)
 			}
 		}
 		config.MaxmindEditionFiles = &nginx.MaxmindEditionFiles

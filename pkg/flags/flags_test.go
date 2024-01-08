@@ -109,3 +109,7 @@ func TestMaxmindRetryDownload(t *testing.T) {
 		t.Fatalf("Expected an error parsing flags but none returned")
 	}
 }
+
+func TestMaxmindSyncPeriod(t *testing.T) {
+	ResetForTesting()
+}
