@@ -45,7 +45,7 @@ rules:
       - list
       - watch
   # Omit Ingress status permissions if `--update-status` is disabled.
-  {{- if ne (index .Values.controller.extraArgs "update-status") "false" }}
+  {{- if ne (index .Values.controller.extraArgs "update-status" | default "") "false" }}
   - apiGroups:
       - networking.k8s.io
     resources:
