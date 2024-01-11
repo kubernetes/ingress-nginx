@@ -14,7 +14,8 @@ on:
       - 'images/**'
 
 permissions:
-  contents: read
+  contents: write
+  packages: write
 
 env:
   PLATFORMS: linux/amd64
@@ -29,7 +30,7 @@ jobs:
       custom-error-pages: ${{ steps.filter.outputs.custom-error-pages }}
       cfssl: ${{ steps.filter.outputs.cfssl }}
       fastcgi-helloserver: ${{ steps.filter.outputs.fastcgi-helloserver }}
-      echo: ${{ steps.filter.outputs.echo }}
+      e2e-test-echo: ${{ steps.filter.outputs.e2e-test-echo }}
       go-grpc-greeter-server: ${{ steps.filter.outputs.go-grpc-greeter-server }}
       httpbun: ${{ steps.filter.outputs.httpbun }}
       kube-webhook-certgen: ${{ steps.filter.outputs.kube-webhook-certgen }}
@@ -50,8 +51,8 @@ jobs:
               - 'images/cfssl/**'
             fastcgi-helloserver:
               - 'images/fastcgi-helloserver/**'
-            echo:
-              - 'images/echo/**'
+            e2e-test-echo:
+              - 'images/e2e-test-echo/**'
             go-grpc-greeter-server:
               - 'images/go-grpc-greeter-server/**'
             httpbun:
@@ -80,13 +81,13 @@ jobs:
     with:
       name: custom-error-pages
 
-  echo:
+  e2e-test-echo:
     needs: changes
     if: |
-      (needs.changes.outputs.echo == 'true')
+      (needs.changes.outputs.e2e-test-echo == 'true')
     uses: ./.github/workflows/zz-tmpl-images.yaml
     with:
-      name: echo
+      name: e2e-test-echo
 
   ext-auth-example-authsvc:
     needs: changes
@@ -96,13 +97,13 @@ jobs:
     with:
       name: ext-auth-example-authsvc
 
-  fastcfgi-helloserver:
+  fastcgi-helloserver:
     needs: changes
     if: |
-      (needs.changes.outputs.fastcfgi-helloserver == 'true')
+      (needs.changes.outputs.fastcgi-helloserver == 'true')
     uses: ./.github/workflows/zz-tmpl-images.yaml
     with:
-      name: fastcfgi-helloserver
+      name: fastcgi-helloserver
 
   go-grpc-greeter-server:
     needs: changes
@@ -139,14 +140,14 @@ jobs:
         check-latest: true
     - name: image build
       run: |
-        cd images/kube-webhook-certgen && make build
+        cd images/ && make NAME=kube-webhook-certgen build
     - name: Create Kubernetes cluster
       id: kind
       run: |
         kind create cluster --image=kindest/node:${{ matrix.k8s }}
     - name: image test
       run: |
-        cd images/kube-webhook-certgen && make test test-e2e
+        cd images/ && make NAME=kube-webhook-certgen test test-e2e
 
   nginx:
     runs-on: ubuntu-latest

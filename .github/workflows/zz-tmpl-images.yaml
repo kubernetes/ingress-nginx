@@ -18,12 +18,33 @@ env:
   PLATFORMS: ${{ inputs.platforms-test }}
 
 permissions:
-  contents: read
+  contents: write
+  packages: write
 
 jobs:
-  image-build:
-    name: Build ${{ inputs.name }}
+  changestag:
+    permissions:
+      contents: read  # for dorny/paths-filter to fetch a list of changed files
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.filter.outputs.tag }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
+        id: filter
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          filters: |
+            tag:
+              - 'images/**/TAG'
+
+  image-build:
+    name: Build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout
@@ -31,6 +52,31 @@ jobs:
 
       - name: Build
         run: |
-          cd images/${{ inputs.name }} && make build
+          cd images/ && make NAME=${{ inputs.name }} build
 
+  image-push:
+    name: Push
+    needs: changestag
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'kubernetes/ingress-nginx' && needs.changestag.outputs.tag == 'true')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    env:
+      PLATFORMS: ${{ inputs.platforms-publish }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Push
+      run: |
+          cd images/ && make REGISTRY=ghcr.io/kubernetes/ingress-nginx NAME=${{ inputs.name }} push
 
