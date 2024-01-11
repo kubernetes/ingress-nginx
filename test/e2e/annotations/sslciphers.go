@@ -54,4 +54,27 @@ var _ = framework.DescribeAnnotation("ssl-ciphers", func() {
 			Expect().
 			Status(http.StatusOK)
 	})
+
+	ginkgo.It("should keep ssl ciphers", func() {
+		host := "ciphers.foo.com"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/ssl-ciphers":               "ALL:!aNULL:!EXPORT56:RC4+RSA@STRENGTH:+HIGH@SECLEVEL=0:+MEDIUM:+LOW:+SSLv2:+EXP",
+			"nginx.ingress.kubernetes.io/ssl-prefer-server-ciphers": "true",
+		}
+
+		ing := framework.NewSingleIngress(host, "/something", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "ssl_ciphers ALL:!aNULL:!EXPORT56:RC4+RSA@STRENGTH:+HIGH@SECLEVEL=0:+MEDIUM:+LOW:+SSLv2:+EXP;") &&
+					strings.Contains(server, "ssl_prefer_server_ciphers on;")
+			})
+		f.HTTPTestClient().
+			GET("/something").
+			WithURL(f.GetURL(framework.HTTPS)).
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
+	})
 })

@@ -32,6 +32,8 @@ COPY --from=builder /usr/local /usr/local
 COPY --from=builder /opt /opt
 COPY --from=builder /etc/nginx /etc/nginx
 
+LABEL org.opencontainers.image.source=https://github.com/kubernetes/ingress-nginx
+
 RUN apk update \
   && apk upgrade \
   && apk add -U --no-cache \
