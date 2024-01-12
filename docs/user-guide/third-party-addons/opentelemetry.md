@@ -282,7 +282,7 @@ for common annotations and configurations:
 | Legacy                                           | OpenTelemetry                                    |
 |--------------------------------------------------|--------------------------------------------------|
 | `nginx.ingress.kubernetes.io/enable-opentracing` | `nginx.ingress.kubernetes.io/enable-opentelemetry` |
-| `opentracing-trust-incoming-span`                | `opentracing-trust-incoming-span`                  |
+| `opentracing-trust-incoming-span`                | `opentelemetry-trust-incoming-span`                  |
 
 ### Configs
 
