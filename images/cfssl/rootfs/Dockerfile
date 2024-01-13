@@ -14,7 +14,6 @@
 
 FROM alpine:3.19.0
 
-
 RUN echo "@testing http://nl.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
 RUN apk update \
     && apk upgrade &&  \

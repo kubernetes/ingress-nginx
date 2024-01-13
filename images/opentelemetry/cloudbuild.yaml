@@ -16,4 +16,4 @@ steps:
     - -c
     - |
       gcloud auth configure-docker \
-      && cd images/opentelemetry && make push
+      && cd images/ && make NAME=opentelemetry push
