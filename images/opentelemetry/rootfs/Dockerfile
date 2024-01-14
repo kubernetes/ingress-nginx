@@ -42,9 +42,10 @@ RUN bash /opt/third_party/build.sh -o v1.11.0
 
 # install otel_ngx_module.so
 FROM base as nginx
+ARG NGINX_VERSION
 COPY --from=grpc /opt/third_party/install/ /usr
 COPY --from=otel-cpp /opt/third_party/install/ /usr
-RUN bash /opt/third_party/build.sh -n
+RUN bash /opt/third_party/build.sh -n ${NGINX_VERSION}
 
 FROM cgr.dev/chainguard/go:latest as build-init
 

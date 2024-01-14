@@ -1,0 +1,88 @@
+name: Opentelemetry Images
+
+on:
+  pull_request:
+    branches:
+      - "*"
+    paths:
+      - 'images/opentelemetry/**'
+  push:
+    branches:
+    - main
+    paths:
+    - 'images/opentelemetry/**'
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  PLATFORMS: linux/amd64
+
+jobs:
+  changes:
+    permissions:
+      contents: read  # for dorny/paths-filter to fetch a list of changed files
+      pull-requests: read  # for dorny/paths-filter to read pull requests
+    runs-on: ubuntu-latest
+    outputs:
+      opentelemetry: ${{ steps.filter.outputs.opentelemetry }}
+      tag: ${{ steps.filter.outputs.opentelemetry }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
+        id: filter
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          filters: |
+            opentelemetry:
+              - 'images/opentelemetry/**'
+            tag:
+              - 'images/opentelemetry/TAG'
+
+  build:
+    runs-on: ubuntu-latest
+    needs: changes
+    if: |
+      (needs.changes.outputs.opentelemetry == 'true')
+    strategy:
+      matrix:
+        nginxversion: ["1.21.6", "1.25.3"]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+    - name: Build
+      env:
+        PLATFORMS: linux/amd64
+      run: |
+        cd images/opentelemetry && make NAME=opentelemetry NGINX_VERSION=${{ matrix.nginxversion }} build
+  
+  push:
+    name: Push
+    needs: changes
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'kubernetes/ingress-nginx' && needs.changes.outputs.tag == 'true')
+    strategy:
+        matrix:
+          nginxversion: ["1.21.6", "1.25.3"]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    env:
+      PLATFORMS: linux/amd64,linux/arm,linux/arm64,linux/s390x
+    steps:
+    - name: Checkout
+      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1    
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}        
+    - name: Push
+      run: |
+        cd images/opentelemetry && make NAME=opentelemetry NGINX_VERSION=${{ matrix.nginxversion }} build
+        

@@ -18,10 +18,12 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export GRPC_GIT_TAG=${GRPC_GIT_TAG:="v1.43.2"}
+export GRPC_GIT_TAG=${GRPC_GIT_TAG:="v1.60.0"}
+export NGINX_VERSION=${NGINX_VERSION:="1.21.6"}
+
 # Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp/compare/v1.2.0...main
-export OPENTELEMETRY_CPP_VERSION=${OPENTELEMETRY_CPP_VERSION:="1.2.0"}
-export ABSL_CPP_VERSION=${ABSL_CPP_VERSION:="20230802.0"}
+export OPENTELEMETRY_CPP_VERSION=${OPENTELEMETRY_CPP_VERSION:="1.13.0"}
+export ABSL_CPP_VERSION=${ABSL_CPP_VERSION:="20230802.1"}
 export INSTAL_DIR=/opt/third_party/install
 # improve compilation times
 CORES=$(($(grep -c ^processor /proc/cpuinfo) - 1))
@@ -148,7 +150,6 @@ get_src()
 
 install_nginx()
 {
-  export NGINX_VERSION=1.21.6
 
   # Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp-contrib/compare/2656a4...main
   export OPENTELEMETRY_CONTRIB_COMMIT=aaa51e2297bcb34297f3c7aa44fa790497d2f7f3
@@ -197,6 +198,7 @@ while getopts ":pha:g:o:n" option; do
         prepare
         exit;;
     n) # install nginx
+        NGINX_VERSION=${OPTARG}
         install_nginx
         exit;;
     a) # install abseil
