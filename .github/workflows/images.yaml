@@ -72,6 +72,7 @@ jobs:
     uses: ./.github/workflows/zz-tmpl-images.yaml
     with:
       name: cfssl
+    secrets: inherit
 
   custom-error-pages:
     needs: changes
@@ -80,6 +81,8 @@ jobs:
     uses: ./.github/workflows/zz-tmpl-images.yaml
     with:
       name: custom-error-pages
+    secrets: inherit
+
 
   e2e-test-echo:
     needs: changes
@@ -88,6 +91,7 @@ jobs:
     uses: ./.github/workflows/zz-tmpl-images.yaml
     with:
       name: e2e-test-echo
+    secrets: inherit
 
   ext-auth-example-authsvc:
     needs: changes
@@ -96,6 +100,7 @@ jobs:
     uses: ./.github/workflows/zz-tmpl-images.yaml
     with:
       name: ext-auth-example-authsvc
+    secrets: inherit
 
   fastcgi-helloserver:
     needs: changes
@@ -104,6 +109,7 @@ jobs:
     uses: ./.github/workflows/zz-tmpl-images.yaml
     with:
       name: fastcgi-helloserver
+    secrets: inherit
 
   go-grpc-greeter-server:
     needs: changes
@@ -112,6 +118,7 @@ jobs:
     uses: ./.github/workflows/zz-tmpl-images.yaml
     with:
       name: go-grpc-greeter-server
+    secrets: inherit
 
   httpbun:
     needs: changes
@@ -120,6 +127,7 @@ jobs:
     uses: ./.github/workflows/zz-tmpl-images.yaml
     with:
       name: httpbun
+    secrets: inherit
 
   kube-webhook-certgen:
     runs-on: ubuntu-latest
