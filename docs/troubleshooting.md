@@ -8,6 +8,43 @@ Do not move it without providing redirects.
 
 # Troubleshooting
 
+## A simple test of the basic ingress controller routing
+- Install the ingress-nginx controller as per documentation
+- Deploy the httpbun example echoserver application
+  ```console
+  $ kubectl create deploy httpbun --image registry.k8s.io/ingress-nginx/e2e-test-httpbun:v20231011-8b53cabe0
+  ```
+- Create a service of --type ClusterIP for httpbun
+  ```console
+  $ kubectl expose deploy httpbun --port 80
+  ```
+- Create a ingress for httpbun (This command assumes the ingressClass name to be _**nginx**_. Change the ingressClass name below, if you are using a different ingressClass name)
+  ```console
+  $ kubectl create ingress httpbun --class nginx --rule httpbun.foo.com/"*"=httpbun:80
+  ```
+- Get the name of the ingress-nginx-controller pod (This command assumes that the ingress-nginx-controller was installed in the namespace called **_ingress-nginx_**)
+  ```console
+  $ kubectl -n ingress-nginx get po
+  ```
+- Open a terminal to tail the logs of the ingress-nginx-controller pod
+  ```console
+  $ kubectl -n ingress-nginx logs -f <ingress-nginx-controller-podname>
+  ```
+- Note the last line of log messages. Hit the return/enter key a couple of times to get some blank lines. Makes it easier to mark newer log lines from your next step
+- Open a second terminal, to send a request to httpbun (replace the external-ip or LB name as needed)
+  ```console
+  $ curl -v --resolve httpbun.foo.com:80:<external-ip> httpbun.foo.com/get
+  ```
+- Check if there were new log messages related to your curl command
+- Provide all info and the log messages in the issue you create or in the slack chat thread, formatted as a code-snippet
+  - kubectl get  po,svc -n ingress-nginx
+  - kubectl get po,svc,ing | grep -i httpbun
+  - kubectl describe svc httpbun
+  - kubectl describe ing httpbun
+  - Entire curl command as is and its output 
+  - log messages of the ingress-nginx-controller pod
+
+
 ## Ingress-Controller Logs and Events
 
 There are many ways to troubleshoot the ingress-controller. The following are basic troubleshooting
