@@ -51,7 +51,7 @@ image:
 		--build-arg LUAROCKS_VERSION=3.8.0 \
 		--build-arg LUAROCKS_SHA=ab6612ca9ab87c6984871d2712d05525775e8b50172701a0a1cabddf76de2be7 \
 		--build-arg CHART_TESTING_VERSION=3.8.0 \
-		--build-arg YAML_LINT_VERSION=1.27.1 \
+		--build-arg YAML_LINT_VERSION=1.33.0 \
 		--build-arg YAMALE_VERSION=4.0.4 \
 		--build-arg HELM_VERSION=3.11.2 \
 		--build-arg GINKGO_VERSION=2.14.0 \
@@ -72,7 +72,7 @@ build: ensure-buildx
 		--build-arg LUAROCKS_VERSION=3.8.0 \
 		--build-arg LUAROCKS_SHA=ab6612ca9ab87c6984871d2712d05525775e8b50172701a0a1cabddf76de2be7 \
 		--build-arg CHART_TESTING_VERSION=3.8.0 \
-		--build-arg YAML_LINT_VERSION=1.27.1 \
+		--build-arg YAML_LINT_VERSION=1.33.0 \
 		--build-arg YAMALE_VERSION=4.0.4 \
 		--build-arg HELM_VERSION=3.11.2 \
 		--build-arg GINKGO_VERSION=2.14.0 \
