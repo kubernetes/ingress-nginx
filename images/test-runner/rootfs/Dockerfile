@@ -120,10 +120,10 @@ RUN wget -qO /tmp/helm.tgz \
   && rm -rf /tmp/*
 
 # Install a YAML Linter
-RUN pip install "yamllint==$YAML_LINT_VERSION"
+RUN pip install --user "yamllint==$YAML_LINT_VERSION"
 
 # Install Yamale YAML schema validator
-RUN pip install "yamale==$YAMALE_VERSION"
+RUN pip install --user "yamale==$YAMALE_VERSION"
 
 LABEL org.opencontainers.image.source=https://github.com/kubernetes/ingress-nginx
 
