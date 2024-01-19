@@ -10,7 +10,9 @@ But, when user has deployed with `scope.enabled`, then the ingress class resourc
 
 If all ingress controllers respect IngressClasses (e.g. multiple instances of ingress-nginx v1.0), you can deploy two Ingress controllers by granting them control over two different IngressClasses, then selecting one of the two IngressClasses with `ingressClassName`.
 
-First, ensure the `--controller-class=` and `--ingress-class` are set to something different on each ingress controller, If your additional ingress controller is to be installed in a namespace, where there is/are one/more-than-one ingress-nginx-controller(s) already installed, then you need to specify a different unique `--election-id` for the new instance of the controller.
+First, ensure the `--controller-class=` and `--ingress-class` are set to something different on each ingress controller, If your additional ingress controller is to be installed in a namespace, where there is/are one/more-than-one ingress-nginx-controller(s) already installed, then you need to specify a different unique `--election-id` for the new instance of the controller. 
+
+In addition, you need to specify `--ingress-class-by-name=true` in the controller args list. The `--ingress-class-by-name`	arg defines if Ingress Controller should watch for Ingress Class by Name together with Controller Class. (default false).
 
 ```yaml
 # ingress-nginx Deployment/Statefulset
@@ -24,6 +26,7 @@ spec:
              - '--election-id=ingress-controller-leader'
              - '--controller-class=k8s.io/internal-ingress-nginx'
              - '--ingress-class=internal-nginx'
+             - '--ingress-class-by-name=true'
             ...
 ```
 
