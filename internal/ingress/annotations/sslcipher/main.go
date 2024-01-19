@@ -32,7 +32,8 @@ const (
 )
 
 // Should cover something like "ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP"
-var regexValidSSLCipher = regexp.MustCompile(`^[A-Za-z0-9!:+\-]*$`)
+// (?:@STRENGTH) is included twice so it can appear before or after @SECLEVEL=n
+var regexValidSSLCipher = regexp.MustCompile(`^(?:(?:[A-Za-z0-9!:+\-])*(?:@STRENGTH)*(?:@SECLEVEL=[0-5])*(?:@STRENGTH)*)*$`)
 
 var sslCipherAnnotations = parser.Annotation{
 	Group: "backend",
