@@ -12,7 +12,7 @@ If all ingress controllers respect IngressClasses (e.g. multiple instances of in
 
 First, ensure the `--controller-class=` and `--ingress-class` are set to something different on each ingress controller, If your additional ingress controller is to be installed in a namespace, where there is/are one/more-than-one ingress-nginx-controller(s) already installed, then you need to specify a different unique `--election-id` for the new instance of the controller. 
 
-In addition, you need to specify `--ingress-class-by-name=true` in the controller args list. The `--ingress-class-by-name`	arg defines if Ingress Controller should watch for Ingress Class by Name together with Controller Class. (default false).
+In addition, you need to specify `--ingress-class-by-name=true` in the controller args list. The `--ingress-class-by-name` defines if Ingress Controller should watch for Ingress Class by Name together with Controller Class. (default false).
 
 ```yaml
 # ingress-nginx Deployment/Statefulset
