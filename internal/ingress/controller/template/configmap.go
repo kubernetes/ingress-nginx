@@ -67,6 +67,7 @@ const (
 	luaSharedDictsKey             = "lua-shared-dicts"
 	plugins                       = "plugins"
 	debugConnections              = "debug-connections"
+	concurrentlyReloadWorkers     = "concurrently-reload-worker-processes"
 )
 
 var (
@@ -383,6 +384,17 @@ func ReadConfig(src map[string]string) config.Configuration {
 		}
 
 		delete(conf, workerProcesses)
+	}
+
+	if val, ok := conf[concurrentlyReloadWorkers]; ok {
+		boolVal, err := strconv.ParseBool(val)
+		if err != nil {
+			to.ConcurrentlyReloadWorkers = true
+			klog.Warningf("failed to parse concurrently-reload-worker-processes setting, valid values are true or false, found %s", val)
+		} else {
+			to.ConcurrentlyReloadWorkers = boolVal
+		}
+		delete(conf, concurrentlyReloadWorkers)
 	}
 
 	if val, ok := conf[plugins]; ok {
