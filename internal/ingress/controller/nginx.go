@@ -674,7 +674,6 @@ Error: %v
 func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	concurrentlyReloadWorkers := n.store.GetBackendConfiguration().ConcurrentlyReloadWorkers
 	if !concurrentlyReloadWorkers && n.workersReloading {
-		klog.InfoS("worker reload already in progress, requeuing reload")
 		return errors.New("worker reload already in progress, requeuing reload")
 	}
 
@@ -763,7 +762,7 @@ func (n *NGINXController) awaitWorkersReload() {
 		time.Sleep(time.Second)
 		o, err := exec.Command("/bin/sh", "-c", "pgrep worker | wc -l").Output()
 		if err != nil {
-			klog.ErrorS(err, string(numWorkers))
+			klog.ErrorS(err, numWorkers)
 			return
 		}
 		// cleanup any non-printable chars from shell output
