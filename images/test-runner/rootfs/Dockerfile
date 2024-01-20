@@ -126,7 +126,13 @@ RUN apk update -U \
     apk add yamllint
 
 # Install Yamale YAML schema validator
-RUN pip install --user "yamale==$YAMALE_VERSION"
+# Commenting pip install yamale because broken cloudbuild https://github.com/kubernetes/ingress-nginx/pull/10885
+# RUN pip install --user "yamale==$YAMALE_VERSION"
+RUN wget https://github.com/23andMe/Yamale/archive/master.zip \
+    && unzip -d /tmp master.zip \
+    && cd /tmp/Yamale-master \
+    && python setup.py install \
+    && yamale -V
 
 LABEL org.opencontainers.image.source=https://github.com/kubernetes/ingress-nginx
 
