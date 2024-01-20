@@ -120,7 +120,10 @@ RUN wget -qO /tmp/helm.tgz \
   && rm -rf /tmp/*
 
 # Install a YAML Linter
-RUN pip install --user "yamllint==$YAML_LINT_VERSION"
+# Pip not working. Check PR https://github.com/kubernetes/ingress-nginx/pull/10874
+# RUN pip install --user "yamllint==$YAML_LINT_VERSION"
+RUN apk update -U \
+    apk add yamllint
 
 # Install Yamale YAML schema validator
 RUN pip install --user "yamale==$YAMALE_VERSION"
