@@ -36,6 +36,7 @@ jobs:
       kube-webhook-certgen: ${{ steps.filter.outputs.kube-webhook-certgen }}
       ext-auth-example-authsvc: ${{ steps.filter.outputs.ext-auth-example-authsvc }}
       nginx: ${{ steps.filter.outputs.nginx }}
+      opentelemetry: ${{ steps.filter.outputs.opentelemetry }}
 
     steps:
       - name: Checkout
@@ -63,6 +64,8 @@ jobs:
               - 'images/ext-auth-example-authsvc/**'
             nginx:
               - 'images/nginx/**'
+            opentelemetry:
+              - 'images/opentelemetry/**'
  
   #### TODO: Make the below jobs 'less dumb' and use the job name as parameter (the github.job context does not work here)
   cfssl:
@@ -179,3 +182,20 @@ jobs:
       uses: github/codeql-action/upload-sarif@v3.23.1
       with:
         sarif_file: 'trivy-results.sarif'
+
+  opentelemetry:
+    runs-on: ubuntu-latest
+    env:
+      PLATFORMS: linux/amd64,linux/arm,linux/arm64,linux/s390x
+    needs: changes
+    if: |
+      (needs.changes.outputs.opentelemetry == 'true')
+    strategy:
+      matrix:
+        nginx: ['1.25.3', '1.21.6']
+    steps:
+    - name: Checkout
+      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+    - name: image build
+      run: |
+        cd images/opentelemetry && make NGINX_VERSION=${{ matrix.nginx }} build
