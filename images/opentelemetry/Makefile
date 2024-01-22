@@ -32,7 +32,7 @@ IMAGE = $(REGISTRY)/opentelemetry
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
 # build with buildx
-PLATFORMS?=linux/amd64,linux/arm,linux/arm64,linux/s390x
+PLATFORMS?=linux/amd64,linux/arm,linux/arm64
 OUTPUT=
 PROGRESS=plain
 
@@ -48,7 +48,7 @@ build: precheck ensure-buildx
 		--label=org.opencontainers.image.description="Ingress NGINX Opentelemetry image" \
 		--platform=${PLATFORMS} $(OUTPUT) \
 		--progress=$(PROGRESS) \
-		--build-arg=$(NGINX_VERSION) \
+		--build-arg=NGINX_VERSION=$(NGINX_VERSION) \
 		--pull \
 		--tag $(IMAGE)-$(NGINX_VERSION):$(TAG) rootfs
 

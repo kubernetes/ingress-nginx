@@ -26,7 +26,7 @@ TAG ?=v$(shell date +%Y%m%d)-$(SHORT_SHA)
 
 REGISTRY ?= gcr.io/k8s-staging-ingress-nginx
 
-IMAGE = $(REGISTRY)/nginx
+IMAGE = $(REGISTRY)/nginx-1.25
 
 # required to enable buildx
 export DOCKER_CLI_EXPERIMENTAL=enabled

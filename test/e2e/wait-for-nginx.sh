@@ -24,7 +24,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export NAMESPACE=$1
 export NAMESPACE_OVERLAY=$2
 export IS_CHROOT=$3
-export ENABLE_VALIDATIONS=$4
+export ENABLE_VALIDATIONS=$4 
 
 echo "deploying NGINX Ingress controller in namespace $NAMESPACE"
 
@@ -47,16 +47,6 @@ metadata:
   namespace: $NAMESPACE
 
 EOF
-
-OTEL_MODULE=$(cat <<EOF
-  opentelemetry:
-    enabled: true
-EOF
-)
-
-if [[ "$NAMESPACE_OVERLAY" != "enable-opentelemetry" ]]; then
-  OTEL_MODULE=""
-fi
 
 # Use the namespace overlay if it was requested
 if [[ ! -z "$NAMESPACE_OVERLAY" && -d "$DIR/namespace-overlays/$NAMESPACE_OVERLAY" ]]; then

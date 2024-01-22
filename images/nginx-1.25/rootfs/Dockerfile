@@ -32,7 +32,8 @@ COPY --from=builder /usr/local /usr/local
 COPY --from=builder /opt /opt
 COPY --from=builder /etc/nginx /etc/nginx
 
-RUN apk update \
+RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories \ 
+  && apk update \
   && apk upgrade \
   && apk add -U --no-cache \
   bash \
@@ -48,6 +49,10 @@ RUN apk update \
   yaml-cpp \
   dumb-init \
   tzdata \
+  grpc-cpp \
+  libprotobuf \
+  opentelemetry-cpp-exporter-otlp-common \
+  opentelemetry-cpp-exporter-otlp-grpc \
   && ln -s /usr/local/nginx/sbin/nginx /sbin/nginx \
   && adduser -S -D -H -u 101 -h /usr/local/nginx \
   -s /sbin/nologin -G www-data -g www-data www-data \
