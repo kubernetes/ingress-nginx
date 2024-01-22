@@ -672,8 +672,8 @@ Error: %v
 //
 //nolint:gocritic // the cfg shouldn't be changed, and shouldn't be mutated by other processes while being rendered.
 func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
-	concurrentlyReloadWorkers := n.store.GetBackendConfiguration().ConcurrentlyReloadWorkers
-	if !concurrentlyReloadWorkers && n.workersReloading {
+	workerSerialReloads := n.store.GetBackendConfiguration().WorkerSerialReloads
+	if workerSerialReloads && n.workersReloading {
 		return errors.New("worker reload already in progress, requeuing reload")
 	}
 
@@ -743,7 +743,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	}
 
 	// Reload status checking runs in a separate goroutine to avoid blocking the sync queue
-	if !concurrentlyReloadWorkers {
+	if workerSerialReloads {
 		go n.awaitWorkersReload()
 	}
 

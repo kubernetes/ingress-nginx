@@ -479,7 +479,7 @@ type Configuration struct {
 	// With this setting on false, configuration changes in the queue will be re-queued with an exponential backoff, until the number of worker process is the expected value.
 	// By default new worker processes are spawned every time there's a change that cannot be applied dynamically with no upper limit to the number of running workers
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_processes
-	ConcurrentlyReloadWorkers bool `json:"concurrently-reload-worker-processes,omitempty"`
+	WorkerSerialReloads bool `json:"enable-serial-reloads,omitempty"`
 
 	// Defines a timeout for a graceful shutdown of worker processes
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout
@@ -849,7 +849,7 @@ func NewDefault() Configuration {
 		UseGzip:                          false,
 		UseGeoIP2:                        false,
 		WorkerProcesses:                  strconv.Itoa(runtime.NumCPU()),
-		ConcurrentlyReloadWorkers:        true,
+		WorkerSerialReloads:              false,
 		WorkerShutdownTimeout:            "240s",
 		VariablesHashBucketSize:          256,
 		VariablesHashMaxSize:             2048,

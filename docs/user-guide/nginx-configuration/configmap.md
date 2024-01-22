@@ -114,7 +114,7 @@ The following table shows a configuration option's name, type, and the default v
 |[worker-processes](#worker-processes)|string|`<Number of CPUs>`||
 |[worker-cpu-affinity](#worker-cpu-affinity)|string|""||
 |[worker-shutdown-timeout](#worker-shutdown-timeout)|string|"240s"||
-|[concurrently-reload-worker-processes](#concurrently-reload-worker-processes)|bool|"true"||
+|[enable-serial-reloads](#enable-serial-reloads)|bool|"false"||
 |[load-balance](#load-balance)|string|"round_robin"||
 |[variables-hash-bucket-size](#variables-hash-bucket-size)|int|128||
 |[variables-hash-max-size](#variables-hash-max-size)|int|2048||
