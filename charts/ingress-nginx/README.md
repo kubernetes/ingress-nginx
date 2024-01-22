@@ -298,6 +298,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.electionID | string | `""` | Election ID to use for status update, by default it uses the controller name combined with a suffix of 'leader' |
 | controller.enableAnnotationValidations | bool | `false` |  |
 | controller.enableMimalloc | bool | `true` | Enable mimalloc as a drop-in replacement for malloc. # ref: https://github.com/microsoft/mimalloc # |
+| controller.enableSerialReloads | bool | `false` | This configuration defines if NGINX workers should reload serially instead of concurrently when multiple changes that require reloads are queued |
 | controller.enableTopologyAwareRouting | bool | `false` | This configuration enables Topology Aware Routing feature, used together with service annotation service.kubernetes.io/topology-mode="auto" Defaults to false |
 | controller.existingPsp | string | `""` | Use an existing PSP instead of creating one |
 | controller.extraArgs | object | `{}` | Additional command line arguments to pass to Ingress-Nginx Controller E.g. to specify the default SSL certificate you can use |
