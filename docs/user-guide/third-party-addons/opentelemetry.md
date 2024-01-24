@@ -152,9 +152,6 @@ To install the example and collectors run:
     ```yaml
       opentelemetry:
         enabled: true
-        image: registry.k8s.io/ingress-nginx/opentelemetry:v20230527@sha256:fd7ec835f31b7b37187238eb4fdad4438806e69f413a203796263131f4f02ed0
-        containerSecurityContext:
-        allowPrivilegeEscalation: false
     ```
 
 2. Enable OpenTelemetry and set the otlp-collector-host:
@@ -165,7 +162,6 @@ To install the example and collectors run:
       kind: ConfigMap
       data:
         enable-opentelemetry: "true"
-        opentelemetry-config: "/etc/ingress-controller/telemetry/opentelemetry.toml"
         opentelemetry-operation-name: "HTTP $request_method $service_name $uri"
         opentelemetry-trust-incoming-span: "true"
         otlp-collector-host: "otel-coll-collector.otel.svc"
@@ -174,7 +170,7 @@ To install the example and collectors run:
         otel-schedule-delay-millis: "5000"
         otel-max-export-batch-size: "512"
         otel-service-name: "nginx-proxy" # Opentelemetry resource name
-        otel-sampler: "AlwaysOn" # Also: AlwaysOff, TraceIdRatioBased
+        otel-sampler: "AlwaysOn" # Also: AlwaysOff, TraceIdRatioBased.
         otel-sampler-ratio: "1.0"
         otel-sampler-parent-based: "false"
       metadata:
