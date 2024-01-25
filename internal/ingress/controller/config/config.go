@@ -891,7 +891,7 @@ func NewDefault() Configuration {
 		OpentelemetryConfig:                    "/etc/nginx/opentelemetry.toml",
 		OtlpCollectorPort:                      "4317",
 		OtelServiceName:                        "nginx",
-		OtelSampler:                            "AlwaysOff",
+		OtelSampler:                            "AlwaysOn",
 		OtelSamplerRatio:                       0.01,
 		OtelSamplerParentBased:                 true,
 		OtelScheduleDelayMillis:                5000,

@@ -1115,9 +1115,9 @@ Specifies sample rate for any traces created. _**default:**_ 0.01
 
 ## otel-sampler
 
-Specifies the sampler to be used when sampling traces. The available samplers are: AlwaysOff, AlwaysOn, TraceIdRatioBased, remote. _**default:**_ AlwaysOff
+Specifies the sampler to be used when sampling traces. The available samplers are: AlwaysOff, AlwaysOn, TraceIdRatioBased, remote. _**default:**_ AlwaysOn
 
-AlwaysOn is equivalent to setting [otel-sampler-ratio](#otel-sampler-ratio) to "1" and otel-sampler to "TraceIdRatioBased".
+"AlwaysOn" is equivalent to setting [otel-sampler-ratio](#otel-sampler-ratio) to "1" and otel-sampler to "TraceIdRatioBased".
 
 ## main-snippet
 
