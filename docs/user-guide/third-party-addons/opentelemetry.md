@@ -163,15 +163,10 @@ To install the example and collectors run:
       data:
         enable-opentelemetry: "true"
         opentelemetry-operation-name: "HTTP $request_method $service_name $uri"
-        opentelemetry-trust-incoming-span: "true"
         otlp-collector-host: "otel-coll-collector.otel.svc"
-        otlp-collector-port: "4317"
-        otel-max-queuesize: "2048"
-        otel-schedule-delay-millis: "5000"
-        otel-max-export-batch-size: "512"
         otel-service-name: "nginx-proxy" # Opentelemetry resource name
-        otel-sampler: "AlwaysOn" # Also: AlwaysOff, TraceIdRatioBased.
-        otel-sampler-ratio: "1.0"
+        otel-sampler: "TraceIdRatioBased" # Also: AlwaysOff, TraceIdRatioBased.
+        otel-sampler-ratio: "0.5"
         otel-sampler-parent-based: "false"
       metadata:
         name: ingress-nginx-controller
