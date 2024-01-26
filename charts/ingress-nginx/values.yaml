@@ -44,6 +44,7 @@ controller:
   # -- Configures the ports that the nginx-controller listens on
   containerPort:
     http: 80
+    h2c: 81
     https: 443
   # -- Will add custom configuration options to Nginx https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/
   config: {}
@@ -100,6 +101,8 @@ controller:
     ports:
       # -- 'hostPort' http port
       http: 80
+      # -- 'h2cPort' h2c port
+      h2c: 81
       # -- 'hostPort' https port
       https: 443
   # NetworkPolicy for controller component.
@@ -495,11 +498,15 @@ controller:
       - IPv4
     # -- Enable the HTTP listener on both controller services or not.
     enableHttp: true
+    # -- Enable the H2C listener on both controller services or not.
+    enableH2c: true
     # -- Enable the HTTPS listener on both controller services or not.
     enableHttps: true
     ports:
       # -- Port the external HTTP listener is published with.
       http: 80
+      # -- Port the external H2C listener is published with.
+      h2c: 81
       # -- Port the external HTTPS listener is published with.
       https: 443
     targetPorts:
@@ -577,6 +584,9 @@ controller:
       # -- Port the internal HTTP listener is published with.
       # Defaults to the value of `controller.service.ports.http`.
       # http: 80
+      # -- Port the internal H2C listener is published with.
+      # Defaults to the value of `controller.service.ports.h2c`.
+      # h2c: 81
       # -- Port the internal HTTPS listener is published with.
       # Defaults to the value of `controller.service.ports.https`.
       # https: 443

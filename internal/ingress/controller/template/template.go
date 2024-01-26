@@ -275,6 +275,7 @@ var funcMap = text_template.FuncMap{
 	"buildCustomErrorLocationsPerServer": buildCustomErrorLocationsPerServer,
 	"shouldLoadModSecurityModule":        shouldLoadModSecurityModule,
 	"buildHTTPListener":                  buildHTTPListener,
+	"buildH2CListener":                   buildH2CListener,
 	"buildHTTPSListener":                 buildHTTPSListener,
 	"buildOpentelemetryForLocation":      buildOpentelemetryForLocation,
 	"shouldLoadOpentelemetryModule":      shouldLoadOpentelemetryModule,
@@ -1398,6 +1399,44 @@ func buildHTTPListener(t, s interface{}) string {
 	return strings.Join(out, "\n")
 }
 
+func buildH2CListener(t, s interface{}) string {
+	var out []string
+
+	tc, ok := t.(config.TemplateConfig)
+	if !ok {
+		klog.Errorf("expected a 'config.TemplateConfig' type but %T was returned", t)
+		return ""
+	}
+
+	hostname, ok := s.(string)
+	if !ok {
+		klog.Errorf("expected a 'string' type but %T was returned", s)
+		return ""
+	}
+
+	addrV4 := []string{""}
+	if len(tc.Cfg.BindAddressIpv4) > 0 {
+		addrV4 = tc.Cfg.BindAddressIpv4
+	}
+
+	co := commonListenOptions(&tc, hostname)
+
+	out = append(out, h2cListener(addrV4, co, &tc)...)
+
+	if !tc.IsIPV6Enabled {
+		return strings.Join(out, "\n")
+	}
+
+	addrV6 := []string{"[::]"}
+	if len(tc.Cfg.BindAddressIpv6) > 0 {
+		addrV6 = tc.Cfg.BindAddressIpv6
+	}
+
+	out = append(out, h2cListener(addrV6, co, &tc)...)
+
+	return strings.Join(out, "\n")
+}
+
 func buildHTTPSListener(t, s interface{}) string {
 	var out []string
 
@@ -1472,6 +1511,24 @@ func httpListener(addresses []string, co string, tc *config.TemplateConfig) []st
 		}
 
 		lo = append(lo, co, ";")
+		out = append(out, strings.Join(lo, " "))
+	}
+
+	return out
+}
+
+func h2cListener(addresses []string, co string, tc *config.TemplateConfig) []string {
+	out := make([]string, 0)
+	for _, address := range addresses {
+		lo := []string{"listen"}
+
+		if address == "" {
+			lo = append(lo, fmt.Sprintf("%v", tc.ListenPorts.H2C))
+		} else {
+			lo = append(lo, fmt.Sprintf("%v:%v", address, tc.ListenPorts.H2C))
+		}
+
+		lo = append(lo, co, " http2;")
 		out = append(out, strings.Join(lo, " "))
 	}
 

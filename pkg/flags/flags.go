@@ -181,6 +181,7 @@ Requires the update-status parameter.`)
 		monitorMaxBatchSize  = flags.Int("monitor-max-batch-size", 10000, "Max batch size of NGINX metrics.")
 
 		httpPort  = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
+		h2cPort   = flags.Int("h2c-port", 81, `Port to use for servicing H2c traffic.`)
 		httpsPort = flags.Int("https-port", 443, `Port to use for servicing HTTPS traffic.`)
 
 		sslProxyPort  = flags.Int("ssl-passthrough-proxy-port", 442, `Port to use internally for SSL Passthrough.`)
@@ -257,6 +258,10 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 	// check port collisions
 	if !ing_net.IsPortAvailable(*httpPort) {
 		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --http-port", *httpPort)
+	}
+
+	if !ing_net.IsPortAvailable(*h2cPort) {
+		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --h2c-port", *h2cPort)
 	}
 
 	if !ing_net.IsPortAvailable(*httpsPort) {
@@ -357,6 +362,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 			Default:  *defServerPort,
 			Health:   *healthzPort,
 			HTTP:     *httpPort,
+			H2C:      *h2cPort,
 			HTTPS:    *httpsPort,
 			SSLProxy: *sslProxyPort,
 		},

@@ -587,6 +587,7 @@ http {
         server_name {{ $redirect.From }};
 
         {{ buildHTTPListener  $all $redirect.From }}
+        {{ buildH2CListener  $all $redirect.From }}
         {{ buildHTTPSListener $all $redirect.From }}
 
         ssl_certificate_by_lua_block {
@@ -975,6 +976,7 @@ stream {
         {{ $server := .Second }}
 
         {{ buildHTTPListener  $all $server.Hostname }}
+        {{ buildH2CListener  $all $server.Hostname }}
         {{ buildHTTPSListener $all $server.Hostname }}
 
         set $proxy_upstream_name "-";

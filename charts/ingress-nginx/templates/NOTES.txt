@@ -8,6 +8,11 @@ Get the application URL by running these commands:
 {{- else }}
   export HTTP_NODE_PORT=$(kubectl get service --namespace {{ include "ingress-nginx.namespace" . }} {{ include "ingress-nginx.controller.fullname" . }} --output jsonpath="{.spec.ports[0].nodePort}")
 {{- end }}
+{{- if (not (empty .Values.controller.service.nodePorts.h2c)) }}
+  export H2C_NODE_PORT={{ .Values.controller.service.nodePorts.h2c }}
+{{- else }}
+  export H2C_NODE_PORT=$(kubectl get service --namespace {{ include "ingress-nginx.namespace" . }} {{ include "ingress-nginx.controller.fullname" . }} --output jsonpath="{.spec.ports[0].nodePort}")
+{{- end }}
 {{- if (not (empty .Values.controller.service.nodePorts.https)) }}
   export HTTPS_NODE_PORT={{ .Values.controller.service.nodePorts.https }}
 {{- else }}
@@ -16,6 +21,7 @@ Get the application URL by running these commands:
   export NODE_IP="$(kubectl get nodes --output jsonpath="{.items[0].status.addresses[1].address}")"
 
   echo "Visit http://${NODE_IP}:${HTTP_NODE_PORT} to access your application via HTTP."
+  echo "Visit http://${NODE_IP}:${H2C_NODE_PORT} to access your application via h2c."
   echo "Visit https://${NODE_IP}:${HTTPS_NODE_PORT} to access your application via HTTPS."
 {{- else if contains "LoadBalancer" .Values.controller.service.type }}
 It may take a few minutes for the load balancer IP to be available.

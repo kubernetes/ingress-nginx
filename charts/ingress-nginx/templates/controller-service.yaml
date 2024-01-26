@@ -65,6 +65,18 @@ spec:
       nodePort: {{ .Values.controller.service.nodePorts.http }}
     {{- end }}
   {{- end }}
+  {{- if .Values.controller.service.enableH2c }}
+    - name: h2c
+      port: {{ .Values.controller.service.ports.h2c }}
+      protocol: TCP
+      targetPort: {{ .Values.controller.service.targetPorts.h2c }}
+    {{- if and (semverCompare ">=1.20" .Capabilities.KubeVersion.Version) (.Values.controller.service.appProtocol) }}
+      appProtocol: kubernetes.io/h2c
+    {{- end }}
+    {{- if (and $setNodePorts (not (empty .Values.controller.service.nodePorts.h2c))) }}
+      nodePort: {{ .Values.controller.service.nodePorts.h2c }}
+    {{- end }}
+  {{- end }}
   {{- if .Values.controller.service.enableHttps }}
     - name: https
       port: {{ .Values.controller.service.ports.https }}

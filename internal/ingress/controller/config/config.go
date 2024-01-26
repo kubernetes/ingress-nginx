@@ -954,6 +954,7 @@ type TemplateConfig struct {
 // NGINX Ingress controller
 type ListenPorts struct {
 	HTTP     int `json:"HTTP"`
+	H2C      int `json:"H2C"`
 	HTTPS    int `json:"HTTPS"`
 	Health   int `json:"Health"`
 	Default  int `json:"Default"`

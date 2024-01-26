@@ -109,6 +109,7 @@ controller:
   service:
     targetPorts:
       http: http
+      h2c: h2c
       https: http
     annotations:
       service.beta.kubernetes.io/aws-load-balancer-ssl-cert: arn:aws:acm:XX-XXXX-X:XXXXXXXXX:certificate/XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXX

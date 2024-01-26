@@ -68,6 +68,6 @@ RUN apk update \
   chown -R www-data.www-data ${dir}; \
   done'
 
-EXPOSE 80 443
+EXPOSE 80 81 443
 
 CMD ["nginx", "-g", "daemon off;"]

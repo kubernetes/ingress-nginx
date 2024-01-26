@@ -289,7 +289,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.configAnnotations | object | `{}` | Annotations to be added to the controller config configuration configmap. |
 | controller.configMapNamespace | string | `""` | Allows customization of the configmap / nginx-configmap namespace; defaults to $(POD_NAMESPACE) |
 | controller.containerName | string | `"controller"` | Configures the controller container name |
-| controller.containerPort | object | `{"http":80,"https":443}` | Configures the ports that the nginx-controller listens on |
+| controller.containerPort | object | `{"http":80,"h2c":81,"https":443}` | Configures the ports that the nginx-controller listens on |
 | controller.containerSecurityContext | object | `{}` | Security context for controller containers |
 | controller.customTemplate.configMapKey | string | `""` |  |
 | controller.customTemplate.configMapName | string | `""` |  |
@@ -313,6 +313,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.hostNetwork | bool | `false` | Required for use with CNI based kubernetes installations (such as ones set up by kubeadm), since CNI and hostport don't mix yet. Can be deprecated once https://github.com/kubernetes/kubernetes/issues/23920 is merged |
 | controller.hostPort.enabled | bool | `false` | Enable 'hostPort' or not |
 | controller.hostPort.ports.http | int | `80` | 'hostPort' http port |
+| controller.hostPort.ports.h2c | int | `81` | 'hostPort' h2c port |
 | controller.hostPort.ports.https | int | `443` | 'hostPort' https port |
 | controller.hostname | object | `{}` | Optionally customize the pod hostname. |
 | controller.image.allowPrivilegeEscalation | bool | `false` |  |
@@ -458,6 +459,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.service.nodePorts.tcp | object | `{}` | Node port mapping for external TCP listeners. If left empty, the service controller allocates them from the configured node port range. Example: tcp:   8080: 30080 |
 | controller.service.nodePorts.udp | object | `{}` | Node port mapping for external UDP listeners. If left empty, the service controller allocates them from the configured node port range. Example: udp:   53: 30053 |
 | controller.service.ports.http | int | `80` | Port the external HTTP listener is published with. |
+| controller.service.ports.h2c | int | `81` | Port the external HTTP listener is published with. |
 | controller.service.ports.https | int | `443` | Port the external HTTPS listener is published with. |
 | controller.service.sessionAffinity | string | `""` | Session affinity of the external controller service. Must be either "None" or "ClientIP" if set. Defaults to "None". Ref: https://kubernetes.io/docs/reference/networking/virtual-ips/#session-affinity |
 | controller.service.targetPorts.http | string | `"http"` | Port of the ingress controller the external HTTP listener is mapped to. |

@@ -118,7 +118,7 @@ RUN mkdir -p /chroot/modules_mount \
 
 USER www-data
 
-EXPOSE 80 443
+EXPOSE 80 81 443
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
