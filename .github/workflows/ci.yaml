@@ -164,7 +164,7 @@ jobs:
       - changes
       - build
     if: |
-      (needs.changes.outputs.charts == 'true')
+      (needs.changes.outputs.charts == 'true') || (needs.changes.outputs.baseimage == 'true')
 
     strategy:
       matrix:
@@ -236,6 +236,7 @@ jobs:
           KIND_CLUSTER_NAME: kind
           SKIP_CLUSTER_CREATION: true
           SKIP_IMAGE_CREATION: true
+          SKIP_INGRESS_IMAGE_CREATION: true
         run: |
           kind get kubeconfig > $HOME/.kube/kind-config-kind
           make kind-e2e-chart-tests
@@ -246,7 +247,7 @@ jobs:
       - changes
       - build
     if: |
-      (needs.changes.outputs.go == 'true')
+      (needs.changes.outputs.go == 'true') || (needs.changes.outputs.baseimage == 'true')
     strategy:
       matrix:
         k8s: [v1.26.6, v1.27.3, v1.28.0, v1.29.0]
@@ -260,7 +261,7 @@ jobs:
       - changes
       - build
     if: |
-      (needs.changes.outputs.go == 'true')
+      (needs.changes.outputs.go == 'true') || (needs.changes.outputs.baseimage == 'true')
     strategy:
       matrix:
         k8s: [v1.26.6, v1.27.3, v1.28.0, v1.29.0]
@@ -275,7 +276,7 @@ jobs:
       - changes
       - build
     if: |
-      (needs.changes.outputs.go == 'true')
+      (needs.changes.outputs.go == 'true') || (needs.changes.outputs.baseimage == 'true')
     strategy:
       matrix:
         k8s: [v1.26.6, v1.27.3, v1.28.0, v1.29.0]

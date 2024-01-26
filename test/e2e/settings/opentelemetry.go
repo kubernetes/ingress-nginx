@@ -39,12 +39,6 @@ const (
 var _ = framework.IngressNginxDescribe("Configure Opentelemetry", func() {
 	f := framework.NewDefaultFramework("enable-opentelemetry")
 
-	/*shouldSkip := false
-	skip, ok := os.LookupEnv("SKIP_OPENTELEMETRY_TESTS")
-	if ok && skip == enable {
-		shouldSkip = true
-	}*/
-
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
 	})
@@ -53,9 +47,6 @@ var _ = framework.IngressNginxDescribe("Configure Opentelemetry", func() {
 	})
 
 	ginkgo.It("should not exists opentelemetry directive", func() {
-		/*if shouldSkip {
-			ginkgo.Skip("skipped")
-		}*/
 		config := map[string]string{}
 		config[enableOpentelemetry] = disable
 		f.SetNginxConfigMapData(config)
@@ -69,9 +60,6 @@ var _ = framework.IngressNginxDescribe("Configure Opentelemetry", func() {
 	})
 
 	ginkgo.It("should exists opentelemetry directive when is enabled", func() {
-		/*if shouldSkip {
-			ginkgo.Skip("skipped")
-		}*/
 		config := map[string]string{}
 		config[enableOpentelemetry] = enable
 		config[opentelemetryConfig] = opentelemetryConfigPath
@@ -86,9 +74,6 @@ var _ = framework.IngressNginxDescribe("Configure Opentelemetry", func() {
 	})
 
 	ginkgo.It("should include opentelemetry_trust_incoming_spans on directive when enabled", func() {
-		/*if shouldSkip {
-			ginkgo.Skip("skipped")
-		}*/
 		config := map[string]string{}
 		config[enableOpentelemetry] = enable
 		config[opentelemetryConfig] = opentelemetryConfigPath
@@ -104,9 +89,6 @@ var _ = framework.IngressNginxDescribe("Configure Opentelemetry", func() {
 	})
 
 	ginkgo.It("should not exists opentelemetry_operation_name directive when is empty", func() {
-		/*if shouldSkip {
-			ginkgo.Skip("skipped")
-		}*/
 		config := map[string]string{}
 		config[enableOpentelemetry] = enable
 		config[opentelemetryConfig] = opentelemetryConfigPath
@@ -122,9 +104,6 @@ var _ = framework.IngressNginxDescribe("Configure Opentelemetry", func() {
 	})
 
 	ginkgo.It("should exists opentelemetry_operation_name directive when is configured", func() {
-		/*if shouldSkip {
-			ginkgo.Skip("skipped")
-		}*/
 		config := map[string]string{}
 		config[enableOpentelemetry] = enable
 		config[opentelemetryConfig] = opentelemetryConfigPath

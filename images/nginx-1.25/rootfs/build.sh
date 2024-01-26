@@ -491,8 +491,6 @@ make
 make modules
 make install
 
-
-# TODO: Ricardo Move to the right place
 export OPENTELEMETRY_CONTRIB_COMMIT=aaa51e2297bcb34297f3c7aa44fa790497d2f7f3
 cd "$BUILD_PATH"
 
