@@ -658,6 +658,10 @@ http {
     server {
         server_name {{ buildServerName $server.Hostname }} {{range $server.Aliases }}{{ . }} {{ end }};
 
+        {{ if $cfg.UseHTTP2 }}
+            http2 on;
+        {{ end }}
+
         {{ if gt (len $cfg.BlockUserAgents) 0 }}
         if ($block_ua) {
            return 403;
