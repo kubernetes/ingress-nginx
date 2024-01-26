@@ -123,7 +123,8 @@ RUN wget -qO /tmp/helm.tgz \
 # Pip not working. Check PR https://github.com/kubernetes/ingress-nginx/pull/10874
 # RUN pip install --user "yamllint==$YAML_LINT_VERSION"
 RUN apk update -U \
-    apk add yamllint
+    && apk add yamllint \
+    && yamllint --version
 
 # Install Yamale YAML schema validator
 # Commenting pip install yamale because broken cloudbuild https://github.com/kubernetes/ingress-nginx/pull/10885
