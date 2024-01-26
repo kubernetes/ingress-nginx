@@ -1415,11 +1415,11 @@ func buildH2CListener(t, s interface{}) string {
 	}
 
 	addrV4 := []string{""}
+	co := commonListenOptions(&tc, hostname)
+
 	if len(tc.Cfg.BindAddressIpv4) > 0 {
 		addrV4 = tc.Cfg.BindAddressIpv4
 	}
-
-	co := commonListenOptions(&tc, hostname)
 
 	out = append(out, h2cListener(addrV4, co, &tc)...)
 
