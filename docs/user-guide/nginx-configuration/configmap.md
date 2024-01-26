@@ -164,16 +164,16 @@ The following table shows a configuration option's name, type, and the default v
 |[enable-opentelemetry](#enable-opentelemetry)|bool|"false"||
 |[opentelemetry-trust-incoming-span](#opentelemetry-trust-incoming-span)|bool|"true"||
 |[opentelemetry-operation-name](#opentelemetry-operation-name)|string|""||
-|[opentelemetry-config](#/etc/ingress-controller/telemetry/opentelemetry.toml)|string|"/etc/ingress-controller/telemetry/opentelemetry.toml"||
+|[opentelemetry-config](#/etc/nginx/opentelemetry.toml)|string|"/etc/nginx/opentelemetry.toml"||
 |[otlp-collector-host](#otlp-collector-host)|string|""||
 |[otlp-collector-port](#otlp-collector-port)|int|4317||
-|[otel-max-queuesize](#otel-max-queuesize)|int|||
-|[otel-schedule-delay-millis](#otel-schedule-delay-millis)|int|||
-|[otel-max-export-batch-size](#otel-max-export-batch-size)|int|||
-|[otel-service-name](#otel-service-name)|string|"nginx"||
-|[otel-sampler](#otel-sampler)|string|"AlwaysOff"||
+|[otel-max-export-batch-size](#otel-max-export-batch-size)|int|512||
+|[otel-max-queuesize](#otel-max-queuesize)|int|2048||
 |[otel-sampler-parent-based](#otel-sampler-parent-based)|bool|"false"||
 |[otel-sampler-ratio](#otel-sampler-ratio)|float|0.01||
+|[otel-sampler](#otel-sampler)|string|"AlwaysOn"||
+|[otel-schedule-delay-millis](#otel-schedule-delay-millis)|int|5000||
+|[otel-service-name](#otel-service-name)|string|"nginx"||
 |[main-snippet](#main-snippet)|string|""||
 |[http-snippet](#http-snippet)|string|""||
 |[server-snippet](#server-snippet)|string|""||
@@ -1089,10 +1089,23 @@ Specifies the port to use when uploading traces. _**default:**_ 4317
 
 Specifies the service name to use for any traces created. _**default:**_ nginx
 
-##  opentelemetry-trust-incoming-span: "true"
+## opentelemetry-trust-incoming-span:
+
 Enables or disables using spans from incoming requests as parent for created ones. _**default:**_ true
 
-##  otel-sampler-parent-based
+## otel-max-export-batch-size
+
+The maximum batch size. Must be equal or smaller than [otel-max-export-batch-size](#otel-max-export-batch-size). _**default:**_ 512
+
+## otel-schedule-delay-millis
+
+The interval, in milliseconds, between two consecutive exports. _**default:**_ 5000
+
+## otel-max-queuesize
+
+The maximum queue size. _**default:**_ 2048
+
+## otel-sampler-parent-based
 
 Uses sampler implementation which by default will take a sample if parent Activity is sampled. _**default:**_ false
 
@@ -1102,7 +1115,9 @@ Specifies sample rate for any traces created. _**default:**_ 0.01
 
 ## otel-sampler
 
-Specifies the sampler to be used when sampling traces. The available samplers are: AlwaysOff, AlwaysOn, TraceIdRatioBased, remote. _**default:**_ AlwaysOff
+Specifies the sampler to be used when sampling traces. The available samplers are: AlwaysOff, AlwaysOn, TraceIdRatioBased, remote. _**default:**_ AlwaysOn
+
+"AlwaysOn" is equivalent to setting [otel-sampler-ratio](#otel-sampler-ratio) to "1" and otel-sampler to "TraceIdRatioBased".
 
 ## main-snippet
 

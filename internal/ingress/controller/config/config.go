@@ -888,7 +888,7 @@ func NewDefault() Configuration {
 		BindAddressIpv4:                        defBindAddress,
 		BindAddressIpv6:                        defBindAddress,
 		OpentelemetryTrustIncomingSpan:         true,
-		OpentelemetryConfig:                    "/etc/ingress-controller/telemetry/opentelemetry.toml",
+		OpentelemetryConfig:                    "/etc/nginx/opentelemetry.toml",
 		OtlpCollectorPort:                      "4317",
 		OtelServiceName:                        "nginx",
 		OtelSampler:                            "AlwaysOn",
