@@ -1501,8 +1501,7 @@ func httpsListener(addresses []string, co string, tc *config.TemplateConfig) []s
 			}
 		}
 
-		lo = append(lo, co, "ssl")
-		lo = append(lo, ";")
+		lo = append(lo, co, "ssl;")
 
 		out = append(out, strings.Join(lo, " "))
 	}

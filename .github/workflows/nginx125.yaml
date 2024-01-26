@@ -3,7 +3,7 @@ name: NGINX v1.25 Image
 on:
   pull_request:
     branches:
-    - "*"
+    - "kdsajdoiasjdoasijads"
     paths:
     - 'images/nginx-1.25/**'
   push:
