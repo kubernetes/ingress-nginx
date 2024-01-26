@@ -23,7 +23,7 @@ RUN apk update \
   && apk upgrade \
   && /chroot.sh
 
-FROM alpine:3.19.0 as builder
+FROM alpine:3.19.0 
 
 ARG TARGETARCH
 ARG VERSION
@@ -116,12 +116,9 @@ RUN mkdir -p /chroot/modules_mount \
   && mkdir -p modules_mount \
   && ln -s /modules_mount /chroot/modules_mount
 
-FROM scratch
-
 USER www-data
 
 EXPOSE 80 443
-COPY --from=builder / /
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
 CMD ["/nginx-ingress-controller"]
