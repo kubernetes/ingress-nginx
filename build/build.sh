@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Copyright 2018 The Kubernetes Authors.
 #
@@ -25,24 +25,15 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-declare -a mandatory
-mandatory=(
-  PKG
-  ARCH
-  COMMIT_SHA
-  REPO_INFO
-  TAG
-)
 
-for var in "${mandatory[@]}"; do
-  if [[ -z "${!var:-}" ]]; then
-    echo "Environment variable $var must be set"
-    exit 1
-  fi
-done
+if [ -z "$PKG" ] || [ -z "$ARCH" ] || [ -z "$COMMIT_SHA" ] || [ -z "$REPO_INFO" ] || [ -z "$TAG" ]; then
+  echo "Environments PKG, ARCH, COMMIT_SHA, REPO_INFO and TAG are required"
+  exit 1 
+fi
+
 
 export CGO_ENABLED=0
-export GOARCH=${ARCH}
+export GOARCH="${ARCH}"
 
 TARGETS_DIR="rootfs/bin/${ARCH}"
 echo "Building targets for ${ARCH}, generated targets in ${TARGETS_DIR} directory."
