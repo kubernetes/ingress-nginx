@@ -50,7 +50,6 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
 |[nginx.ingress.kubernetes.io/configuration-snippet](#configuration-snippet)|string|
 |[nginx.ingress.kubernetes.io/custom-http-errors](#custom-http-errors)|[]int|
-|[nginx.ingress.kubernetes.io/disable-proxy-intercept-errors](#disable-proxy-intercept-errors)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/default-backend](#default-backend)|string|
 |[nginx.ingress.kubernetes.io/enable-cors](#enable-cors)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/cors-allow-origin](#enable-cors)|string|
@@ -317,8 +316,7 @@ nginx.ingress.kubernetes.io/configuration-snippet: |
   more_set_headers "Request-Id: $req_id";
 ```
 
-!!! attention
-Since version 1.9.0, `"configuration-snippet"` annotation is disabled by default and has to be explicitly enabled, see [allow-snippet-annotations](./configmap.md#allow-snippet-annotations). Enabling it can be dangerous in multi-tenant clusters, as it can lead to people with otherwise limited permissions being able to retrieve all secrets on the cluster. See CVE-2021-25742 and the [related issue on github](https://github.com/kubernetes/ingress-nginx/issues/7837) for more information.
+Be aware this can be dangerous in multi-tenant clusters, as it can lead to people with otherwise limited permissions being able to retrieve all secrets on the cluster. The recommended mitigation for this threat is to disable this feature, so it may not work for you. See CVE-2021-25742 and the [related issue on github](https://github.com/kubernetes/ingress-nginx/issues/7837) for more information.
 
 ### Custom HTTP Errors
 
@@ -329,17 +327,6 @@ If `custom-http-errors` is also specified globally, the error values specified i
 Example usage:
 ```
 nginx.ingress.kubernetes.io/custom-http-errors: "404,415"
-```
-
-## Disable Proxy intercept Errors
-
-Like the [`disable-proxy-intercept-errors`](./configmap.md#disable-proxy-intercept-errors) value in the ConfigMap, this annotation allows to disable NGINX `proxy-intercept-errors` when `custom-http-errors` are set, but only for the NGINX location associated with this ingress. If a [default backend annotation](#default-backend) is specified on the ingress, the errors will be routed to that annotation's default backend service (instead of the global default backend).
-Different ingresses can specify different sets of errors codes and there are UseCases where NGINX shall not intercept all errors returned from upstream.
-If `disable-proxy-intercept-errors` is also specified globally, the annotation will override the global value for the given ingress' hostname and path.
-
-Example usage:
-```
-nginx.ingress.kubernetes.io/disable-proxy-intercept-errors: "false"
 ```
 
 ### Default Backend
@@ -442,9 +429,6 @@ metadata:
 ```
 
 !!! attention
-Since version 1.9.0, `"server-snippet"` annotation is disabled by default and has to be explicitly enabled, see [allow-snippet-annotations](./configmap.md#allow-snippet-annotations). Enabling it can be dangerous in multi-tenant clusters, as it can lead to people with otherwise limited permissions being able to retrieve all secrets on the cluster. See CVE-2021-25742 and the [related issue on github](https://github.com/kubernetes/ingress-nginx/issues/7837) for more information.
-
-!!! attention
     This annotation can be used only once per host.
 
 ### Client Body Buffer Size
@@ -521,15 +505,12 @@ nginx.ingress.kubernetes.io/auth-snippet: |
 ```
 > Note: `nginx.ingress.kubernetes.io/auth-snippet` is an optional annotation. However, it may only be used in conjunction with `nginx.ingress.kubernetes.io/auth-url` and will be ignored if `nginx.ingress.kubernetes.io/auth-url` is not set
 
-!!! attention
-Since version 1.9.0, `"auth-snippet"` annotation is disabled by default and has to be explicitly enabled, see [allow-snippet-annotations](./configmap.md#allow-snippet-annotations). Enabling it can be dangerous in multi-tenant clusters, as it can lead to people with otherwise limited permissions being able to retrieve all secrets on the cluster. See CVE-2021-25742 and the [related issue on github](https://github.com/kubernetes/ingress-nginx/issues/7837) for more information.
-
 !!! example
     Please check the [external-auth](../../examples/auth/external-auth/README.md) example.
 
 #### Global External Authentication
 
-By default the controller redirects all requests to an existing service that provides authentication if `global-auth-url` is set in the NGINX ConfigMap. If you want to disable this behavior for a specific ingress, you can use the annotation `nginx.ingress.kubernetes.io/enable-global-auth: "false"`.
+By default the controller redirects all requests to an existing service that provides authentication if `global-auth-url` is set in the NGINX ConfigMap. If you want to disable this behavior for that ingress, you can use `enable-global-auth: "false"` in the NGINX ConfigMap.
 `nginx.ingress.kubernetes.io/enable-global-auth`:
    indicates if GlobalExternalAuth configuration should be applied or not to this Ingress rule. Default values is set to `"true"`.
 
@@ -914,9 +895,6 @@ nginx.ingress.kubernetes.io/modsecurity-snippet: |
 Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
 ```
 
-!!! attention
-Since version 1.9.0, `"modsecurity-snippet"` annotation is disabled by default and has to be explicitly enabled, see [allow-snippet-annotations](./configmap.md#allow-snippet-annotations). Enabling it can be dangerous in multi-tenant clusters, as it can lead to people with otherwise limited permissions being able to retrieve all secrets on the cluster. See CVE-2021-25742 and the [related issue on github](https://github.com/kubernetes/ingress-nginx/issues/7837) for more information.
-
 ### Backend Protocol
 
 Using `backend-protocol` annotations is possible to indicate how NGINX should communicate with the backend service. (Replaces `secure-backends` in older versions)
@@ -1006,6 +984,3 @@ metadata:
         proxy_pass 127.0.0.1:80;
       }
 ```
-
-!!! attention
-Since version 1.9.0, `"stream-snippet"` annotation is disabled by default and has to be explicitly enabled, see [allow-snippet-annotations](./configmap.md#allow-snippet-annotations). Enabling it can be dangerous in multi-tenant clusters, as it can lead to people with otherwise limited permissions being able to retrieve all secrets on the cluster. See CVE-2021-25742 and the [related issue on github](https://github.com/kubernetes/ingress-nginx/issues/7837) for more information.
