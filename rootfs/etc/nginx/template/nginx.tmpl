@@ -30,7 +30,7 @@ load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
 {{ end }}
 
 {{ if (shouldLoadOpentelemetryModule $cfg $servers) }}
-load_module /modules_mount/etc/nginx/modules/otel/otel_ngx_module.so;
+load_module /etc/nginx/modules/otel_ngx_module.so;
 {{ end }}
 
 daemon off;
@@ -657,6 +657,10 @@ http {
     ## start server {{ $server.Hostname }}
     server {
         server_name {{ buildServerName $server.Hostname }} {{range $server.Aliases }}{{ . }} {{ end }};
+
+        {{ if $cfg.UseHTTP2 }}
+            http2 on;
+        {{ end }}
 
         {{ if gt (len $cfg.BlockUserAgents) 0 }}
         if ($block_ua) {

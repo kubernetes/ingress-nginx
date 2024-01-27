@@ -22,11 +22,11 @@ INIT_BUILDX=$(DIR)/../../hack/init-buildx.sh
 
 # 0.0.0 shouldn't clobber any released builds
 SHORT_SHA ?=$(shell git rev-parse --short HEAD)
-TAG ?=$(shell cat TAG)
+TAG ?=v$(shell date +%Y%m%d)-$(SHORT_SHA)
 
 REGISTRY ?= gcr.io/k8s-staging-ingress-nginx
 
-IMAGE = $(REGISTRY)/nginx-1.25
+IMAGE = $(REGISTRY)/opentelemetry
 
 # required to enable buildx
 export DOCKER_CLI_EXPERIMENTAL=enabled
@@ -35,12 +35,22 @@ export DOCKER_CLI_EXPERIMENTAL=enabled
 PLATFORMS?=linux/amd64,linux/arm,linux/arm64
 OUTPUT=
 PROGRESS=plain
-build: ensure-buildx
+
+precheck:
+ifndef NGINX_VERSION
+	$(error NGINX_VERSION variable is required)
+endif
+
+build: precheck ensure-buildx
 	docker buildx build \
+		--label=org.opencontainers.image.source=https://github.com/kubernetes/ingress-nginx \
+		--label=org.opencontainers.image.licenses=Apache-2.0 \
+		--label=org.opencontainers.image.description="Ingress NGINX Opentelemetry image" \
 		--platform=${PLATFORMS} $(OUTPUT) \
 		--progress=$(PROGRESS) \
+		--build-arg=NGINX_VERSION=$(NGINX_VERSION) \
 		--pull \
-		--tag $(IMAGE):$(TAG) rootfs
+		--tag $(IMAGE)-$(NGINX_VERSION):$(TAG) rootfs
 
 # push the cross built image
 push: OUTPUT=--push
@@ -56,4 +66,4 @@ else
 endif
 	@echo "done"
 
-.PHONY: build push ensure-buildx
+.PHONY: build precheck push ensure-buildx

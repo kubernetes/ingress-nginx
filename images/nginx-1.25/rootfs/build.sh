@@ -129,6 +129,7 @@ get_src()
 }
 
 # install required packages to build
+# Dependencies from "ninja" and below are OTEL dependencies
 apk add \
   bash \
   gcc \
@@ -165,7 +166,22 @@ apk add \
   unzip \
   dos2unix \
   yaml-cpp \
-  coreutils
+  coreutils \
+  ninja \
+  gtest-dev \
+  git \
+  build-base \
+  pkgconfig \
+  c-ares-dev \
+  re2-dev \
+  grpc-dev \
+  protobuf-dev 
+
+apk add -X http://dl-cdn.alpinelinux.org/alpine/edge/testing opentelemetry-cpp-dev
+
+# There is some bug with some platforms and git, so force HTTP/1.1
+git config --global http.version HTTP/1.1
+git config --global http.postBuffer 157286400
 
 mkdir -p /etc/nginx
 
@@ -471,6 +487,33 @@ WITH_MODULES=" \
 make
 make modules
 make install
+
+export OPENTELEMETRY_CONTRIB_COMMIT=aaa51e2297bcb34297f3c7aa44fa790497d2f7f3
+cd "$BUILD_PATH"
+
+git clone https://github.com/open-telemetry/opentelemetry-cpp-contrib.git opentelemetry-cpp-contrib-${OPENTELEMETRY_CONTRIB_COMMIT}
+
+cd ${BUILD_PATH}/opentelemetry-cpp-contrib-${OPENTELEMETRY_CONTRIB_COMMIT}
+git reset --hard ${OPENTELEMETRY_CONTRIB_COMMIT}
+
+export OTEL_TEMP_INSTALL=/tmp/otel
+mkdir -p ${OTEL_TEMP_INSTALL}
+
+cd ${BUILD_PATH}/opentelemetry-cpp-contrib-${OPENTELEMETRY_CONTRIB_COMMIT}/instrumentation/nginx
+mkdir -p build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release \
+        -G Ninja \
+        -DCMAKE_CXX_STANDARD=17 \
+        -DCMAKE_INSTALL_PREFIX=${OTEL_TEMP_INSTALL} \
+        -DBUILD_SHARED_LIBS=ON \
+        -DNGINX_VERSION=${NGINX_VERSION} \
+        ..
+cmake --build . -j ${CORES} --target install
+
+mkdir -p /etc/nginx/modules
+cp ${OTEL_TEMP_INSTALL}/otel_ngx_module.so /etc/nginx/modules/otel_ngx_module.so
+
 
 cd "$BUILD_PATH/lua-resty-core"
 make install
