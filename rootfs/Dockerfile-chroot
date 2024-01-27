@@ -119,7 +119,6 @@ RUN mkdir -p /chroot/modules_mount \
 USER www-data
 
 EXPOSE 80 443
-
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
 CMD ["/nginx-ingress-controller"]

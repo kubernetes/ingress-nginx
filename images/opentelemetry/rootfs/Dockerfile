@@ -26,23 +26,12 @@ RUN apk update \
 
 ENV NINJA_STATUS "[%p/%f/%t] "
 
-# install gRPC
-FROM base as grpc
-RUN bash /opt/third_party/build.sh -g v1.60.0
-
-
-# install OpenTelemetry-cpp
-FROM base as otel-cpp
-COPY --from=grpc /opt/third_party/install/ /usr
-RUN bash /opt/third_party/build.sh -o v1.11.0
-
 # install otel_ngx_module.so
 FROM base as nginx
-COPY --from=grpc /opt/third_party/install/ /usr
-COPY --from=otel-cpp /opt/third_party/install/ /usr
-RUN bash /opt/third_party/build.sh -n
+ARG NGINX_VERSION=1.25.3
+RUN bash /opt/third_party/build.sh -n ${NGINX_VERSION}
 
-FROM cgr.dev/chainguard/go:latest as build-init
+FROM golang:1.21.6-bullseye as build-init
 
 WORKDIR /go/src/app
 COPY . .
