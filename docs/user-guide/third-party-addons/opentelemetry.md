@@ -165,7 +165,7 @@ To install the example and collectors run:
       kind: ConfigMap
       data:
         enable-opentelemetry: "true"
-        opentelemetry-config: "/etc/ingress-controller/telemetry/opentelemetry.toml"
+        opentelemetry-config: "/etc/nginx/opentelemetry.toml"
         opentelemetry-operation-name: "HTTP $request_method $service_name $uri"
         opentelemetry-trust-incoming-span: "true"
         otlp-collector-host: "otel-coll-collector.otel.svc"
@@ -282,7 +282,7 @@ for common annotations and configurations:
 | Legacy                                           | OpenTelemetry                                    |
 |--------------------------------------------------|--------------------------------------------------|
 | `nginx.ingress.kubernetes.io/enable-opentracing` | `nginx.ingress.kubernetes.io/enable-opentelemetry` |
-| `opentracing-trust-incoming-span`                | `opentelemetry-trust-incoming-span`                  |
+| `opentracing-trust-incoming-span`                | `opentracing-trust-incoming-span`                  |
 
 ### Configs
 
