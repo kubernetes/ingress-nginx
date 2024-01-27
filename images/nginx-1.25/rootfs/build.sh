@@ -128,9 +128,6 @@ get_src()
   rm -rf "$f"
 }
 
-# Enable testing/edge repo for OTEL
-echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
-
 # install required packages to build
 # Dependencies from "ninja" and below are OTEL dependencies
 apk add \
@@ -178,9 +175,9 @@ apk add \
   c-ares-dev \
   re2-dev \
   grpc-dev \
-  protobuf-dev \
-  opentelemetry-cpp-dev
+  protobuf-dev 
 
+apk add -X http://dl-cdn.alpinelinux.org/alpine/edge/testing opentelemetry-cpp-dev
 
 # There is some bug with some platforms and git, so force HTTP/1.1
 git config --global http.version HTTP/1.1

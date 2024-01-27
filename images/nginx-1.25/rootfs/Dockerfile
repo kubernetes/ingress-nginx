@@ -32,8 +32,7 @@ COPY --from=builder /usr/local /usr/local
 COPY --from=builder /opt /opt
 COPY --from=builder /etc/nginx /etc/nginx
 
-RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories \ 
-  && apk update \
+RUN apk update \
   && apk upgrade \
   && apk add -U --no-cache \
   bash \
@@ -51,8 +50,7 @@ RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/reposit
   tzdata \
   grpc-cpp \
   libprotobuf \
-  opentelemetry-cpp-exporter-otlp-common \
-  opentelemetry-cpp-exporter-otlp-grpc \
+  && apk add -X http://dl-cdn.alpinelinux.org/alpine/edge/testing opentelemetry-cpp-exporter-otlp-common opentelemetry-cpp-exporter-otlp-grpc \
   && ln -s /usr/local/nginx/sbin/nginx /sbin/nginx \
   && adduser -S -D -H -u 101 -h /usr/local/nginx \
   -s /sbin/nologin -G www-data -g www-data www-data \
