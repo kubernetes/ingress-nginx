@@ -27,7 +27,10 @@ IMAGE = $(REGISTRY)/e2e-test-runner
 
 NGINX_BASE_IMAGE ?= $(shell cat $(DIR)/../../NGINX_BASE)
 
-GOLANG_VERSION ?= $(shell cat $(DIR)/../../GOLANG_VERSION)
+# The env below is called GO_VERSION and not GOLANG_VERSION because 
+# the gcb image we use to build already defines GOLANG_VERSION and is a 
+# really old version
+GO_VERSION ?= $(shell cat $(DIR)/../../GOLANG_VERSION)
 
 # required to enable buildx
 export DOCKER_CLI_EXPERIMENTAL=enabled
@@ -45,7 +48,7 @@ image:
 		--pull \
 		--push \
 		--build-arg BASE_IMAGE=${NGINX_BASE_IMAGE} \
-		--build-arg GOLANG_VERSION=${GOLANG_VERSION} \
+		--build-arg GOLANG_VERSION=${GO_VERSION} \
 		--build-arg ETCD_VERSION=3.4.3-0 \
 		--build-arg K8S_RELEASE=v1.26.0 \
 		--build-arg RESTY_CLI_VERSION=0.27 \
@@ -66,7 +69,7 @@ build: ensure-buildx
 		--progress=${PROGRESS} \
 		--pull \
 		--build-arg BASE_IMAGE=${NGINX_BASE_IMAGE} \
-		--build-arg GOLANG_VERSION=${GOLANG_VERSION} \
+		--build-arg GOLANG_VERSION=${GO_VERSION} \
 		--build-arg ETCD_VERSION=3.4.3-0 \
 		--build-arg K8S_RELEASE=v1.26.0 \
 		--build-arg RESTY_CLI_VERSION=0.27 \
