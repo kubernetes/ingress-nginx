@@ -210,8 +210,9 @@ live-docs: ## Build and launch a local copy of the documentation website in http
 	@docker run ${PLATFORM_FLAG} ${PLATFORM} --rm -it \
 		-p 8000:8000 \
 		-v ${PWD}:/docs \
-		--entrypoint mkdocs \
-		ingress-nginx-docs serve --dev-addr=0.0.0.0:8000
+		--entrypoint /bin/bash   \
+		ingress-nginx-docs \
+		-c "pip install -r /docs/docs/requirements.txt && mkdocs serve --dev-addr=0.0.0.0:8000"
 
 .PHONY: misspell
 misspell:  ## Check for spelling errors.
