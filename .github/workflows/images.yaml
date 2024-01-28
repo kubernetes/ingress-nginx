@@ -236,6 +236,6 @@ jobs:
       - name: build-image
         run: |
           export TAG=$(cat images/nginx-1.25/TAG)
-          cd images/nginx-1.25/rootfs && docker buildx build --platform=${{ env.PLATFORMS }} --push --load -t ingressnginx/nginx-1.25:${TAG} .
+          cd images/nginx-1.25/rootfs && docker buildx build --platform=${{ env.PLATFORMS }} --push -t ingressnginx/nginx-1.25:${TAG} .
     
     
