@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k8s-app: vouch-proxy
+  name: vouch-proxy
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: vouch-proxy
+  template:
+    metadata:
+      labels:
+        k8s-app: vouch-proxy
+    spec:
+      containers:
+      - env:
+        - name: VOUCH_ALLOWALLUSERS
+          value: true
+        # Recommended: remove VOUCH_ALLOWALLUSERS and set an allowlist
+        # - name: VOUCH_WHITELIST
+        #   value: alice,bob
+        - name: VOUCH_COOKIE_DOMAIN
+          value: <Ingress Host>
+        - name: VOUCH_LISTEN
+          value: 0.0.0.0
+        - name: VOUCH_DOCUMENT_ROOT
+          value: oauth2
+        # See https://github.com/vouch/vouch-proxy/tree/master/config for different provider examples
+        - name: OAUTH_PROVIDER
+          value: github
+        - name: OAUTH_CLIENT_ID
+          value: <Client ID>
+        - name: OAUTH_CLIENT_SECRET
+          value: <Client Secret>
+        image: quay.io/vouch/vouch-proxy:latest
+        imagePullPolicy: Always
+        name: vouch-proxy
+        ports:
+        - containerPort: 9090
+          protocol: TCP
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k8s-app: vouch-proxy
+  name: vouch-proxy
+  namespace: kube-system
+spec:
+  ports:
+  - name: http
+    port: 9090
+    protocol: TCP
+    targetPort: 9090
+  selector:
+    k8s-app: vouch-proxy
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vouch-proxy
+  namespace: kube-system
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: __INGRESS_HOST__
+    http:
+      paths:
+      - path: /oauth2
+        pathType: Prefix
+        backend:
+          service:
+            name: vouch-proxy
+            port:
+              number: 9090
+  tls:
+  - hosts:
+    - __INGRESS_HOST__
+    secretName: __INGRESS_SECRET__
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/validate"
+    nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/login?url=$scheme://$http_host$request_uri"
+  name: external-auth-oauth2
+  namespace: kube-system
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: __INGRESS_HOST__
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kubernetes-dashboard
+            port:
+              number: 80
