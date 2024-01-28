@@ -23,6 +23,8 @@ INIT_BUILDX=$(DIR)/../hack/init-buildx.sh
 
 BASE_IMAGE = $(shell cat $(DIR)/../NGINX_BASE)
 
+GOLANG_VERSION = $(shell cat $(DIR)/../GOLANG_VERSION)
+
 REGISTRY ?= local
 NAME ?=
 
@@ -52,6 +54,7 @@ build: precheck ensure-buildx
 		--label=org.opencontainers.image.licenses=Apache-2.0 \
 		--label=org.opencontainers.image.description="Ingress NGINX $(NAME) image" \
 		--build-arg BASE_IMAGE=$(BASE_IMAGE) \
+		--build-arg GOLANG_VERSION=$(GOLANG_VERSION) \
 		--platform=${PLATFORMS} $(OUTPUT) \
 		--progress=$(PROGRESS) \
 		--pull $(EXTRAARGS) \

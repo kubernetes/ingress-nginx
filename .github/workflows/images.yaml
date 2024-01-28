@@ -142,15 +142,19 @@ jobs:
       (needs.changes.outputs.kube-webhook-certgen == 'true')
     strategy:
       matrix:
-        k8s: [v1.25.11, v1.26.6, v1.27.3, v1.28.0, 1.29.0]
+        k8s: [v1.25.11, v1.26.6, v1.27.3, v1.28.0, v1.29.0]
     steps:
     - name: Checkout
       uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+    - name: Get go version
+      run: echo "GOLANG_VERSION=$(cat GOLANG_VERSION)" >> $GITHUB_ENV
+
     - name: Set up Go
       id: go
       uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
       with:
-        go-version: '1.21.5'
+        go-version: ${{ env.GOLANG_VERSION }}
         check-latest: true
     - name: image build
       run: |
