@@ -1,9 +1,11 @@
 annotations:
   artifacthub.io/changes: |
-     - "Update Ingress-Nginx version controller-v1.8.4"
+     - "Release helm chart on the correct version (#10521)"
+     - "Update Ingress-Nginx version controller-v1.8.5"
+     - "Upgrade Alpine to 3.19.0 (#10903)"
   artifacthub.io/prerelease: "false"
 apiVersion: v2
-appVersion: 1.8.4
+appVersion: 1.8.5
 description: Ingress controller for Kubernetes using NGINX as a reverse proxy and
   load balancer
 engine: gotpl
@@ -20,4 +22,4 @@ maintainers:
 name: ingress-nginx
 sources:
 - https://github.com/kubernetes/ingress-nginx
-version: 4.7.3
+version: 4.7.5
