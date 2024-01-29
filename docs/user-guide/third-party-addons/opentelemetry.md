@@ -191,7 +191,7 @@ To install the example and collectors run:
     helm repo add grafana https://grafana.github.io/helm-charts
     helm repo update
     # deploy cert-manager needed for OpenTelemetry collector operator
-    kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.9.1/cert-manager.yaml
+    kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.3/cert-manager.yaml
     # create observability namespace
     kubectl apply -f https://raw.githubusercontent.com/esigo/nginx-example/main/observability/namespace.yaml
     # install OpenTelemetry collector operator
