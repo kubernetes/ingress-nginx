@@ -34,8 +34,8 @@ controller:
     # www-data -> uid 101
     runAsUser: 101
     allowPrivilegeEscalation: false
-    seccompProfile:
-      type: RuntimeDefault
+    # seccompProfile:
+    #   type: RuntimeDefault
     readOnlyRootFilesystem: false
   # -- Use an existing PSP instead of creating one
   existingPsp: ""
@@ -695,8 +695,8 @@ controller:
       # -- The image's default user, inherited from its base image `cgr.dev/chainguard/static`.
       runAsUser: 65532
       allowPrivilegeEscalation: false
-      seccompProfile:
-        type: RuntimeDefault
+      # seccompProfile:
+      #   type: RuntimeDefault
       capabilities:
         drop:
           - ALL
@@ -746,8 +746,8 @@ controller:
         runAsNonRoot: true
         runAsUser: 65532
         allowPrivilegeEscalation: false
-        seccompProfile:
-          type: RuntimeDefault
+        # seccompProfile:
+        #   type: RuntimeDefault
         capabilities:
           drop:
             - ALL
@@ -766,8 +766,8 @@ controller:
         runAsNonRoot: true
         runAsUser: 65532
         allowPrivilegeEscalation: false
-        seccompProfile:
-          type: RuntimeDefault
+        # seccompProfile:
+        #   type: RuntimeDefault
         capabilities:
           drop:
             - ALL
