@@ -230,6 +230,34 @@ entries:
     version: 4.8.0-beta.0
   - annotations:
       artifacthub.io/changes: |
+        - "Release helm chart on the correct version (#10521)"
+        - "Update Ingress-Nginx version controller-v1.8.5"
+        - "Upgrade Alpine to 3.19.0 (#10903)"
+      artifacthub.io/prerelease: "false"
+    apiVersion: v2
+    appVersion: 1.8.5
+    created: "2024-01-29T14:01:17.963740421Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
+    digest: 894ec8329597f0e541b420124b89102ce94c426bb6e87133ee449c343cea64aa
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.20.0-0'
+    maintainers:
+    - name: rikatz
+    - name: strongjz
+    - name: tao12345666333
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-4.7.5/ingress-nginx-4.7.5.tgz
+    version: 4.7.5
+  - annotations:
+      artifacthub.io/changes: |
         - "Update Ingress-Nginx version controller-v1.8.4"
       artifacthub.io/prerelease: "false"
     apiVersion: v2
@@ -3209,4 +3237,4 @@ entries:
     urls:
     - https://github.com/kubernetes/ingress-nginx/releases/download/ingress-nginx-2.0.0/ingress-nginx-2.0.0.tgz
     version: 2.0.0
-generated: "2024-01-27T07:46:15.322825076Z"
+generated: "2024-01-29T14:01:17.964052112Z"
