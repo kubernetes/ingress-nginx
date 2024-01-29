@@ -106,12 +106,13 @@ if [ "${SKIP_CERT_MANAGER_CREATION:-false}" = "false" ]; then
 fi
 
 echo "[dev-env] running helm chart e2e tests..."
-docker run --rm --interactive --network host \
-    --name ct \
-    --volume $KUBECONFIG:/root/.kube/config \
-    --volume "${DIR}/../../":/workdir \
-    --workdir /workdir \
-    registry.k8s.io/ingress-nginx/e2e-test-runner:v20240829-2c421762@sha256:5b7809bfe9cbd9cd6bcb8033ca27576ca704f05ce729fe4dcb574810f7a25785 \
-        ct install \
-        --charts charts/ingress-nginx \
-        --helm-extra-args "--timeout 60s"
+docker run \
+  --name ct \
+  --volume "${KUBECONFIG}:/root/.kube/config:ro" \
+  --volume "${DIR}/../../:/workdir" \
+  --network host \
+  --workdir /workdir \
+  --entrypoint ct \
+  --rm \
+  registry.k8s.io/ingress-nginx/e2e-test-runner:v20240829-2c421762@sha256:5b7809bfe9cbd9cd6bcb8033ca27576ca704f05ce729fe4dcb574810f7a25785 \
+    install --charts charts/ingress-nginx
