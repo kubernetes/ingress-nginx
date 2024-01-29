@@ -188,16 +188,19 @@ jobs:
       - name: Set up Helm Chart Testing
         uses: helm/chart-testing-action@e6669bcd63d7cb57cb4380c33043eebe5d111992 # v2.6.1
 
-      - name: Run helm-docs
+      - name: Set up Helm Docs
+        uses: gabe565/setup-helm-docs-action@79a4cfe8dc7ae51c1113e3f3a1ae45e601d0c963 # v1.0.3
+
+      - name: Generate docs
         run: |
-          GOBIN=$PWD GO111MODULE=on go install github.com/norwoodj/helm-docs/cmd/helm-docs@v1.11.0
-          ./helm-docs --chart-search-root=${GITHUB_WORKSPACE}/charts
-          DIFF=$(git diff ${GITHUB_WORKSPACE}/charts/ingress-nginx/README.md)
-          if [ ! -z "$DIFF" ]; then
-            echo "Please use helm-docs in your clone, of your fork, of the project, and commit a updated README.md for the chart. https://github.com/kubernetes/ingress-nginx/blob/main/RELEASE.md#d-edit-the-valuesyaml-and-run-helm-docs"
+          helm-docs --chart-search-root charts
+
+          if ! git diff --exit-code charts/ingress-nginx/README.md
+          then
+            echo "Please use helm-docs in your fork of the project and commit an updated README.md for the chart."
+            echo "https://github.com/kubernetes/ingress-nginx/blob/main/MANUAL_RELEASE.md#d-edit-the-valuesyaml-and-run-helm-docs"
+            exit 1
           fi
-          git diff --exit-code
-          rm -f ./helm-docs
 
       - name: Lint chart
         run: |
