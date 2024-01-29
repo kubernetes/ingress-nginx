@@ -234,6 +234,9 @@ jobs:
           echo "0e430493521ce387ca04d79b26646a86f92886dbcceb44985bb71082a9530ca5  /tmp/ah.tar.gz" | shasum --check
           sudo tar --extract --file /tmp/ah.tar.gz --directory /usr/local/bin ah
 
+      - name: Set up Helm Docs
+        uses: gabe565/setup-helm-docs-action@d5c35bdc9133cfbea3b671acadf50a29029e87c2 # v1.0.4
+
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
@@ -252,16 +255,10 @@ jobs:
           ct lint --config .ct.yaml
           ah lint --path charts/ingress-nginx
 
-      - name: Run helm-docs
+      - name: Check docs
         run: |
-          GOBIN=$PWD GO111MODULE=on go install github.com/norwoodj/helm-docs/cmd/helm-docs@v1.11.0
-          ./helm-docs --chart-search-root=${GITHUB_WORKSPACE}/charts
-          DIFF=$(git diff ${GITHUB_WORKSPACE}/charts/ingress-nginx/README.md)
-          if [ ! -z "$DIFF" ]; then
-            echo "Please use helm-docs in your clone, of your fork, of the project, and commit a updated README.md for the chart. https://github.com/kubernetes/ingress-nginx/blob/main/RELEASE.md#d-edit-the-valuesyaml-and-run-helm-docs"
-          fi
-          git diff --exit-code
-          rm -f ./helm-docs
+          helm-docs --chart-search-root charts
+          git diff --exit-code charts/ingress-nginx/README.md
 
   chart-test:
     name: Chart / Test
@@ -280,12 +277,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-
-      - name: Setup Go
-        uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
-        with:
-          go-version: ${{ needs.build.outputs.golangversion }}
-          check-latest: true
 
       - name: cache
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
