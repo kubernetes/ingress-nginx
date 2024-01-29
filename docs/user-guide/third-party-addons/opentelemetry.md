@@ -65,7 +65,7 @@ otel-max-queuesize
 
 # The delay interval in milliseconds between two consecutive exports.
 otel-schedule-delay-millis
-        
+
 # How long the export can run before it is cancelled.
 otel-schedule-delay-millis
 
@@ -112,7 +112,7 @@ graph TB
     end
 
     subgraph otel
-        otc["Otel Collector"] 
+        otc["Otel Collector"]
     end
 
     subgraph observability
