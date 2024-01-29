@@ -80,7 +80,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/proxy-next-upstream](#custom-timeouts)|string|
 |[nginx.ingress.kubernetes.io/proxy-next-upstream-timeout](#custom-timeouts)|number|
 |[nginx.ingress.kubernetes.io/proxy-next-upstream-tries](#custom-timeouts)|number|
-|[nginx.ingress.kubernetes.io/proxy-request-buffering](#custom-timeouts)|string|
+|[nginx.ingress.kubernetes.io/proxy-request-buffering](#custom-timeouts)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/proxy-redirect-from](#proxy-redirect)|string|
 |[nginx.ingress.kubernetes.io/proxy-redirect-to](#proxy-redirect)|string|
 |[nginx.ingress.kubernetes.io/proxy-http-version](#proxy-http-version)|"1.0" or "1.1"|
