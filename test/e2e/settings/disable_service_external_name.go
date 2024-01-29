@@ -33,7 +33,10 @@ import (
 )
 
 var _ = framework.IngressNginxDescribe("[Flag] disable-service-external-name", func() {
-	f := framework.NewDefaultFramework("disabled-service-external-name")
+	f := framework.NewDefaultFramework(
+		"disabled-service-external-name",
+		framework.WithHTTPBunEnabled(),
+	)
 
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment(framework.WithDeploymentReplicas(2))
@@ -50,21 +53,22 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-service-external-name", f
 	})
 
 	ginkgo.It("should ignore services of external-name type", func() {
-
 		nonexternalhost := "echo-svc.com"
 
 		externalhost := "echo-external-svc.com"
-		svcexternal := &corev1.Service{
+
+		f.EnsureService(framework.BuildNIPExternalNameService(f, f.HTTPBunIP, "echo"))
+
+		f.EnsureService(&corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "external",
 				Namespace: f.Namespace,
 			},
 			Spec: corev1.ServiceSpec{
-				ExternalName: "httpbin.org",
+				ExternalName: f.GetNIPHost(),
 				Type:         corev1.ServiceTypeExternalName,
 			},
-		}
-		f.EnsureService(svcexternal)
+		})
 
 		ingexternal := framework.NewSingleIngress(externalhost, "/", externalhost, f.Namespace, "external", 80, nil)
 		f.EnsureIngress(ingexternal)
@@ -91,6 +95,5 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-service-external-name", f
 			WithHeader("Host", externalhost).
 			Expect().
 			StatusRange(httpexpect.Status5xx)
-
 	})
 })

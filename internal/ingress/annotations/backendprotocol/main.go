@@ -17,49 +17,70 @@ limitations under the License.
 package backendprotocol
 
 import (
-	"regexp"
-	"strings"
-
 	networking "k8s.io/api/networking/v1"
 	"k8s.io/klog/v2"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
+	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-// HTTP protocol
-const HTTP = "HTTP"
+var validProtocols = []string{"auto_http", "http", "https", "grpc", "grpcs", "fcgi"}
 
-var (
-	validProtocols = regexp.MustCompile(`^(AUTO_HTTP|HTTP|HTTPS|AJP|GRPC|GRPCS|FCGI)$`)
+const (
+	http                      = "HTTP"
+	backendProtocolAnnotation = "backend-protocol"
 )
 
+var backendProtocolConfig = parser.Annotation{
+	Group: "backend",
+	Annotations: parser.AnnotationFields{
+		backendProtocolAnnotation: {
+			Validator: parser.ValidateOptions(validProtocols, false, true),
+			Scope:     parser.AnnotationScopeLocation,
+			Risk:      parser.AnnotationRiskLow, // Low, as it allows just a set of options
+			Documentation: `this annotation can be used to define which protocol should 
+			be used to communicate with backends`,
+		},
+	},
+}
+
 type backendProtocol struct {
-	r resolver.Resolver
+	r                resolver.Resolver
+	annotationConfig parser.Annotation
 }
 
 // NewParser creates a new backend protocol annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return backendProtocol{r}
+	return backendProtocol{
+		r:                r,
+		annotationConfig: backendProtocolConfig,
+	}
+}
+
+func (a backendProtocol) GetDocumentation() parser.AnnotationFields {
+	return a.annotationConfig.Annotations
 }
 
 // ParseAnnotations parses the annotations contained in the ingress
 // rule used to indicate the backend protocol.
 func (a backendProtocol) Parse(ing *networking.Ingress) (interface{}, error) {
 	if ing.GetAnnotations() == nil {
-		return HTTP, nil
+		return http, nil
 	}
 
-	proto, err := parser.GetStringAnnotation("backend-protocol", ing)
+	proto, err := parser.GetStringAnnotation(backendProtocolAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
-		return HTTP, nil
-	}
-
-	proto = strings.TrimSpace(strings.ToUpper(proto))
-	if !validProtocols.MatchString(proto) {
-		klog.Warningf("Protocol %v is not a valid value for the backend-protocol annotation. Using HTTP as protocol", proto)
-		return HTTP, nil
+		if errors.IsValidationError(err) {
+			klog.Warningf("validation error %s. Using HTTP as protocol", err)
+		}
+		return http, nil
 	}
 
 	return proto, nil
+}
+
+func (a backendProtocol) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+	return parser.CheckAnnotationRisk(anns, maxrisk, backendProtocolConfig.Annotations)
 }

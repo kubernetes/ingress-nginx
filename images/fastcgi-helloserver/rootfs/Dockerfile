@@ -11,8 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+ARG GOLANG_VERSION
 
-FROM golang:1.19.4-alpine3.17 as builder
+FROM golang:${GOLANG_VERSION}-alpine3.18 as builder
 
 WORKDIR /go/src/k8s.io/ingress-nginx/images/fastcgi
 

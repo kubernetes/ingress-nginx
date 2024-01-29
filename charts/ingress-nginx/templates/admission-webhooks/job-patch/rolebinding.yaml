@@ -2,8 +2,8 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ include "ingress-nginx.fullname" . }}-admission
-  namespace: {{ .Release.Namespace }}
+  name: {{ include "ingress-nginx.admissionWebhooks.fullname" . }}
+  namespace: {{ include "ingress-nginx.namespace" . }}
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -16,9 +16,9 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: {{ include "ingress-nginx.fullname" . }}-admission
+  name: {{ include "ingress-nginx.admissionWebhooks.fullname" . }}
 subjects:
   - kind: ServiceAccount
-    name: {{ include "ingress-nginx.fullname" . }}-admission
-    namespace: {{ .Release.Namespace | quote }}
+    name: {{ include "ingress-nginx.admissionWebhooks.fullname" . }}
+    namespace: {{ include "ingress-nginx.namespace" . }}
 {{- end }}

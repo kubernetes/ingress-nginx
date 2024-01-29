@@ -23,9 +23,21 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
-      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
+      - name: Run Artifact Hub lint
+        run: |
+          wget https://github.com/artifacthub/hub/releases/download/v1.5.0/ah_1.5.0_linux_amd64.tar.gz
+          echo 'ad0e44c6ea058ab6b85dbf582e88bad9fdbc64ded0d1dd4edbac65133e5c87da *ah_1.5.0_linux_amd64.tar.gz' | shasum -c
+          tar -xzvf ah_1.5.0_linux_amd64.tar.gz ah
+          ./ah lint -p charts/ingress-nginx || exit 1
+          rm -f ./ah ./ah_1.5.0_linux_amd64.tar.gz
+
+      - name: Lint
+        run: |
+          ./build/run-in-docker.sh ./hack/verify-chart-lint.sh
+
+      - uses: dorny/paths-filter@0bc4621a3135347011ad047f9ecf449bf72ce2bd # v3.0.0
         id: filter
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -49,7 +61,7 @@ jobs:
 
     steps:
       - name: Checkout master
-        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           # Fetch entire history. Required for chart-releaser; see https://github.com/helm/chart-releaser-action/issues/13#issuecomment-602063896
           fetch-depth: 0
@@ -61,9 +73,9 @@ jobs:
           git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
       - name: Helm Chart Releaser
-        uses: helm/chart-releaser-action@98bccfd32b0f76149d188912ac8e45ddd3f8695f # v1.4.1
+        uses: helm/chart-releaser-action@a917fd15b20e8b64b94d9158ad54cd6345335584 # v1.6.0
         env:
-          CR_SKIP_EXISTING: "false"
+          CR_SKIP_EXISTING: true
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
           CR_RELEASE_NAME_TEMPLATE: "helm-chart-{{ .Version }}"
         with:

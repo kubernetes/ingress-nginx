@@ -21,10 +21,6 @@ load_module /etc/nginx/modules/ngx_http_brotli_filter_module.so;
 load_module /etc/nginx/modules/ngx_http_brotli_static_module.so;
 {{ end }}
 
-{{ if (shouldLoadInfluxDBModule $servers) }}
-load_module /etc/nginx/modules/ngx_http_influxdb_module.so;
-{{ end }}
-
 {{ if (shouldLoadAuthDigestModule $servers) }}
 load_module /etc/nginx/modules/ngx_http_auth_digest_module.so;
 {{ end }}
@@ -33,8 +29,8 @@ load_module /etc/nginx/modules/ngx_http_auth_digest_module.so;
 load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
 {{ end }}
 
-{{ if (shouldLoadOpentracingModule $cfg $servers) }}
-load_module /etc/nginx/modules/ngx_http_opentracing_module.so;
+{{ if (shouldLoadOpentelemetryModule $cfg $servers) }}
+load_module /etc/nginx/modules/otel_ngx_module.so;
 {{ end }}
 
 daemon off;
@@ -64,6 +60,10 @@ events {
 }
 
 http {
+    {{ if (shouldLoadOpentelemetryModule $cfg $servers) }}
+    opentelemetry_config {{ $cfg.OpentelemetryConfig }};
+    {{ end }}
+
     lua_package_path "/etc/nginx/lua/?.lua;;";
 
     {{ buildLuaSharedDictionaries $cfg $servers }}
@@ -136,7 +136,7 @@ http {
 
     {{/* Enable the real_ip module only if we use either X-Forwarded headers or Proxy Protocol. */}}
     {{/* we use the value of the real IP for the geo_ip module */}}
-    {{ if or (or $cfg.UseForwardedHeaders $cfg.UseProxyProtocol) $cfg.EnableRealIp }}
+    {{ if or (or $cfg.UseForwardedHeaders $cfg.UseProxyProtocol) $cfg.EnableRealIP }}
     {{ if $cfg.UseProxyProtocol }}
     real_ip_header      proxy_protocol;
     {{ else }}
@@ -166,43 +166,39 @@ http {
 
     {{ end }}
 
-    {{ if $cfg.UseGeoIP }}
-    {{/* databases used to determine the country depending on the client IP address */}}
-    {{/* http://nginx.org/en/docs/http/ngx_http_geoip_module.html */}}
-    {{/* this is require to calculate traffic for individual country using GeoIP in the status page */}}
-    geoip_country       /etc/nginx/geoip/GeoIP.dat;
-    geoip_city          /etc/nginx/geoip/GeoLiteCity.dat;
-    geoip_org           /etc/nginx/geoip/GeoIPASNum.dat;
-    geoip_proxy_recursive on;
-    {{ end }}
-
     {{ if $cfg.UseGeoIP2 }}
     # https://github.com/leev/ngx_http_geoip2_module#example-usage
 
     {{ range $index, $file := $all.MaxmindEditionFiles }}
     {{ if eq $file "GeoLite2-Country.mmdb" }}
-    geoip2 /etc/nginx/geoip/GeoLite2-Country.mmdb {
+    geoip2 /etc/ingress-controller/geoip/GeoLite2-Country.mmdb {
         $geoip2_country_code source=$remote_addr country iso_code;
         $geoip2_country_name source=$remote_addr country names en;
+        $geoip2_country_geoname_id source=$remote_addr country geoname_id;
         $geoip2_continent_code source=$remote_addr continent code;
         $geoip2_continent_name source=$remote_addr continent names en;
+        $geoip2_continent_geoname_id source=$remote_addr continent geoname_id;
     }
     {{ end }}
 
     {{ if eq $file "GeoIP2-Country.mmdb" }}
-    geoip2 /etc/nginx/geoip/GeoIP2-Country.mmdb {
+    geoip2 /etc/ingress-controller/geoip/GeoIP2-Country.mmdb {
         $geoip2_country_code source=$remote_addr country iso_code;
         $geoip2_country_name source=$remote_addr country names en;
+        $geoip2_country_geoname_id source=$remote_addr country geoname_id;
         $geoip2_continent_code source=$remote_addr continent code;
         $geoip2_continent_name source=$remote_addr continent names en;
+        $geoip2_continent_geoname_id source=$remote_addr continent geoname_id;
     }
     {{ end }}
 
     {{ if eq $file "GeoLite2-City.mmdb" }}
-    geoip2 /etc/nginx/geoip/GeoLite2-City.mmdb {
+    geoip2 /etc/ingress-controller/geoip/GeoLite2-City.mmdb {
         $geoip2_city_country_code source=$remote_addr country iso_code;
         $geoip2_city_country_name source=$remote_addr country names en;
+        $geoip2_city_country_geoname_id source=$remote_addr country geoname_id;
         $geoip2_city source=$remote_addr city names en;
+        $geoip2_city_geoname_id source=$remote_addr city geoname_id;
         $geoip2_postal_code source=$remote_addr postal code;
         $geoip2_dma_code source=$remote_addr location metro_code;
         $geoip2_latitude source=$remote_addr location latitude;
@@ -210,16 +206,22 @@ http {
         $geoip2_time_zone source=$remote_addr location time_zone;
         $geoip2_region_code source=$remote_addr subdivisions 0 iso_code;
         $geoip2_region_name source=$remote_addr subdivisions 0 names en;
+        $geoip2_region_geoname_id source=$remote_addr subdivisions 0 geoname_id;
         $geoip2_subregion_code source=$remote_addr subdivisions 1 iso_code;
         $geoip2_subregion_name source=$remote_addr subdivisions 1 names en;
+        $geoip2_subregion_geoname_id source=$remote_addr subdivisions 1 geoname_id;
+        $geoip2_city_continent_code source=$remote_addr continent code;
+        $geoip2_city_continent_name source=$remote_addr continent names en;
     }
     {{ end }}
 
     {{ if eq $file "GeoIP2-City.mmdb" }}
-    geoip2 /etc/nginx/geoip/GeoIP2-City.mmdb {
+    geoip2 /etc/ingress-controller/geoip/GeoIP2-City.mmdb {
         $geoip2_city_country_code source=$remote_addr country iso_code;
         $geoip2_city_country_name source=$remote_addr country names en;
+        $geoip2_city_country_geoname_id source=$remote_addr country geoname_id;
         $geoip2_city source=$remote_addr city names en;
+        $geoip2_city_geoname_id source=$remote_addr city geoname_id;
         $geoip2_postal_code source=$remote_addr postal code;
         $geoip2_dma_code source=$remote_addr location metro_code;
         $geoip2_latitude source=$remote_addr location latitude;
@@ -227,27 +229,31 @@ http {
         $geoip2_time_zone source=$remote_addr location time_zone;
         $geoip2_region_code source=$remote_addr subdivisions 0 iso_code;
         $geoip2_region_name source=$remote_addr subdivisions 0 names en;
+        $geoip2_region_geoname_id source=$remote_addr subdivisions 0 geoname_id;
         $geoip2_subregion_code source=$remote_addr subdivisions 1 iso_code;
         $geoip2_subregion_name source=$remote_addr subdivisions 1 names en;
+        $geoip2_subregion_geoname_id source=$remote_addr subdivisions 1 geoname_id;
+        $geoip2_city_continent_code source=$remote_addr continent code;
+        $geoip2_city_continent_name source=$remote_addr continent names en;
     }
     {{ end }}
 
     {{ if eq $file "GeoLite2-ASN.mmdb" }}
-    geoip2 /etc/nginx/geoip/GeoLite2-ASN.mmdb {
+    geoip2 /etc/ingress-controller/geoip/GeoLite2-ASN.mmdb {
         $geoip2_asn source=$remote_addr autonomous_system_number;
         $geoip2_org source=$remote_addr autonomous_system_organization;
     }
     {{ end }}
 
     {{ if eq $file "GeoIP2-ASN.mmdb" }}
-    geoip2 /etc/nginx/geoip/GeoIP2-ASN.mmdb {
+    geoip2 /etc/ingress-controller/geoip/GeoIP2-ASN.mmdb {
         $geoip2_asn source=$remote_addr autonomous_system_number;
         $geoip2_org source=$remote_addr autonomous_system_organization;
     }
     {{ end }}
 
     {{ if eq $file "GeoIP2-ISP.mmdb" }}
-    geoip2 /etc/nginx/geoip/GeoIP2-ISP.mmdb {
+    geoip2 /etc/ingress-controller/geoip/GeoIP2-ISP.mmdb {
         $geoip2_isp source=$remote_addr isp;
         $geoip2_isp_org source=$remote_addr organization;
         $geoip2_asn source=$remote_addr default=0 autonomous_system_number;
@@ -255,13 +261,13 @@ http {
     {{ end }}
 
     {{ if eq $file "GeoIP2-Connection-Type.mmdb" }}
-    geoip2 /etc/nginx/geoip/GeoIP2-Connection-Type.mmdb {
+    geoip2 /etc/ingress-controller/geoip/GeoIP2-Connection-Type.mmdb {
         $geoip2_connection_type connection_type;
     }
     {{ end }}
 
     {{ if eq $file "GeoIP2-Anonymous-IP.mmdb" }}
-    geoip2 /etc/nginx/geoip/GeoIP2-Anonymous-IP.mmdb {
+    geoip2 /etc/ingress-controller/geoip/GeoIP2-Anonymous-IP.mmdb {
         $geoip2_is_anon source=$remote_addr is_anonymous;
         $geoip2_is_anonymous source=$remote_addr default=0 is_anonymous;
         $geoip2_is_anonymous_vpn source=$remote_addr default=0 is_anonymous_vpn;
@@ -276,7 +282,10 @@ http {
     {{ end }}
 
     aio                 threads;
+
+    {{ if $cfg.EnableAioWrite }}
     aio_write           on;
+    {{ end }}
 
     tcp_nopush          on;
     tcp_nodelay         on;
@@ -291,7 +300,6 @@ http {
     client_body_temp_path           /tmp/nginx/client-body;
     fastcgi_temp_path               /tmp/nginx/fastcgi-temp;
     proxy_temp_path                 /tmp/nginx/proxy-temp;
-    ajp_temp_path                   /tmp/nginx/ajp-temp;
 
     client_header_buffer_size       {{ $cfg.ClientHeaderBufferSize }};
     client_header_timeout           {{ $cfg.ClientHeaderTimeout }}s;
@@ -299,9 +307,15 @@ http {
     client_body_buffer_size         {{ $cfg.ClientBodyBufferSize }};
     client_body_timeout             {{ $cfg.ClientBodyTimeout }}s;
 
+    {{ if and (ne $cfg.HTTP2MaxHeaderSize "") (ne $cfg.HTTP2MaxFieldSize "") }}
     http2_max_field_size            {{ $cfg.HTTP2MaxFieldSize }};
     http2_max_header_size           {{ $cfg.HTTP2MaxHeaderSize }};
+    {{ end }}
+
+    {{ if (gt $cfg.HTTP2MaxRequests 0) }}
     http2_max_requests              {{ $cfg.HTTP2MaxRequests }};
+    {{ end }}
+
     http2_max_concurrent_streams    {{ $cfg.HTTP2MaxConcurrentStreams }};
 
     types_hash_max_size             2048;
@@ -321,7 +335,7 @@ http {
     limit_req_status                {{ $cfg.LimitReqStatusCode }};
     limit_conn_status               {{ $cfg.LimitConnStatusCode }};
 
-    {{ buildOpentracing $cfg $servers }}
+    {{ buildOpentelemetry $cfg $servers }}
 
     include /etc/nginx/mime.types;
     default_type {{ $cfg.DefaultType }};
@@ -336,6 +350,9 @@ http {
     {{ if $cfg.UseGzip }}
     gzip on;
     gzip_comp_level {{ $cfg.GzipLevel }};
+    {{- if $cfg.GzipDisable }}
+    gzip_disable "{{ $cfg.GzipDisable }}";
+    {{- end }}
     gzip_http_version 1.1;
     gzip_min_length {{ $cfg.GzipMinLength}};
     gzip_types {{ $cfg.GzipTypes }};
@@ -377,7 +394,7 @@ http {
     {{ if $cfg.EnableSyslog }}
     access_log syslog:server={{ $cfg.SyslogHost }}:{{ $cfg.SyslogPort }} upstreaminfo if=$loggable;
     {{ else }}
-    access_log {{ or $cfg.HttpAccessLogPath $cfg.AccessLogPath }} upstreaminfo {{ $cfg.AccessLogParams }} if=$loggable;
+    access_log {{ or $cfg.HTTPAccessLogPath $cfg.AccessLogPath }} upstreaminfo {{ $cfg.AccessLogParams }} if=$loggable;
     {{ end }}
     {{ end }}
 
@@ -447,7 +464,7 @@ http {
     ssl_session_tickets {{ if $cfg.SSLSessionTickets }}on{{ else }}off{{ end }};
 
     {{ if not (empty $cfg.SSLSessionTicketKey ) }}
-    ssl_session_ticket_key /etc/nginx/tickets.key;
+    ssl_session_ticket_key /etc/ingress-controller/tickets.key;
     {{ end }}
 
     # slightly reduce the time-to-first-byte
@@ -470,7 +487,7 @@ http {
     ssl_certificate     {{ $cfg.DefaultSSLCertificate.PemFileName }};
     ssl_certificate_key {{ $cfg.DefaultSSLCertificate.PemFileName }};
 
-    {{ if gt (len $cfg.CustomHTTPErrors) 0 }}
+    {{ if and $cfg.CustomHTTPErrors (not $cfg.DisableProxyInterceptErrors) }}
     proxy_intercept_errors on;
     {{ end }}
 
@@ -519,14 +536,14 @@ http {
 
     {{ range $rl := (filterRateLimits $servers ) }}
     # Ratelimit {{ $rl.Name }}
-    geo $remote_addr $whitelist_{{ $rl.ID }} {
+    geo $remote_addr $allowlist_{{ $rl.ID }} {
         default 0;
-        {{ range $ip := $rl.Whitelist }}
+        {{ range $ip := $rl.Allowlist }}
         {{ $ip }} 1;{{ end }}
     }
 
     # Ratelimit {{ $rl.Name }}
-    map $whitelist_{{ $rl.ID }} $limit_{{ $rl.ID }} {
+    map $allowlist_{{ $rl.ID }} $limit_{{ $rl.ID }} {
         0 {{ $cfg.LimitConnZoneVariable }};
         1 "";
     }
@@ -641,6 +658,10 @@ http {
     server {
         server_name {{ buildServerName $server.Hostname }} {{range $server.Aliases }}{{ . }} {{ end }};
 
+        {{ if $cfg.UseHTTP2 }}
+            http2 on;
+        {{ end }}
+
         {{ if gt (len $cfg.BlockUserAgents) 0 }}
         if ($block_ua) {
            return 403;
@@ -680,6 +701,11 @@ http {
 
     # default server, used for NGINX healthcheck and access to nginx stats
     server {
+        # Ensure that modsecurity will not run on an internal location as this is not accessible from outside
+        {{ if $all.Cfg.EnableModsecurity }}
+        modsecurity off;
+        {{ end }}
+
         listen 127.0.0.1:{{ .StatusPort }};
         set $proxy_upstream_name "internal";
 
@@ -688,10 +714,9 @@ http {
 
         access_log off;
 
-        {{ if $cfg.EnableOpentracing }}
-        opentracing off;
+        {{ if $cfg.EnableOpentelemetry }}
+        opentelemetry off;
         {{ end }}
-
         location {{ $healthzURI }} {
             return 200;
         }
@@ -736,6 +761,8 @@ stream {
     lua_package_path "/etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/?.lua;;";
 
     lua_shared_dict tcp_udp_configuration_data 5M;
+    
+    {{ buildResolvers $cfg.Resolver $cfg.DisableIpv6DNS }}
 
     init_by_lua_block {
         collectgarbage("collect")
@@ -783,7 +810,7 @@ stream {
 
 
     error_log  {{ $cfg.ErrorLogPath }} {{ $cfg.ErrorLogLevel }};
-    {{ if $cfg.EnableRealIp }}
+    {{ if $cfg.EnableRealIP }}
     {{ range $trusted_ip := $cfg.ProxyRealIPCIDR }}
     set_real_ip_from    {{ $trusted_ip }};
     {{ end }}
@@ -1053,9 +1080,13 @@ stream {
         location = {{ $authPath }} {
             internal;
 
-            {{ if (or $all.Cfg.EnableOpentracing $location.Opentracing.Enabled) }}
-            opentracing on;
-            opentracing_propagate_context;
+            {{ if (or $all.Cfg.EnableOpentelemetry $location.Opentelemetry.Enabled) }}
+            opentelemetry on;
+            opentelemetry_propagate;
+            {{ end }}
+
+            {{ if not $all.Cfg.EnableAuthAccessLog }}
+            access_log off;
             {{ end }}
 
             # Ensure that modsecurity will not run on an internal location as this is not accessible from outside
@@ -1173,6 +1204,10 @@ stream {
 
             add_header Set-Cookie $auth_cookie;
 
+            {{ if $location.CorsConfig.CorsEnabled }}
+            {{ template "CORS" $location }}
+            {{ end }}
+
             # Ensure that modsecurity will not run on an internal location as this is not accessible from outside
             {{ if $all.Cfg.EnableModsecurity }}
             modsecurity off;
@@ -1192,7 +1227,7 @@ stream {
             set $location_path  {{ $ing.Path | escapeLiteralDollar | quote }};
             set $global_rate_limit_exceeding n;
 
-            {{ buildOpentracingForLocation $all.Cfg.EnableOpentracing $all.Cfg.OpentracingTrustIncomingSpan $location }}
+            {{ buildOpentelemetryForLocation $all.Cfg.EnableOpentelemetry $all.Cfg.OpentelemetryTrustIncomingSpan $location }}
 
             {{ if $location.Mirror.Source }}
             mirror {{ $location.Mirror.Source }};
@@ -1262,8 +1297,12 @@ stream {
             {{ buildModSecurityForLocation $all.Cfg $location }}
 
             {{ if isLocationAllowed $location }}
-            {{ if gt (len $location.Whitelist.CIDR) 0 }}
-            {{ range $ip := $location.Whitelist.CIDR }}
+            {{ if gt (len $location.Denylist.CIDR) 0 }}
+            {{ range $ip := $location.Denylist.CIDR }}
+            deny {{ $ip }};{{ end }}
+            {{ end }}
+            {{ if gt (len $location.Allowlist.CIDR) 0 }}
+            {{ range $ip := $location.Allowlist.CIDR }}
             allow {{ $ip }};{{ end }}
             deny all;
             {{ end }}
@@ -1284,7 +1323,7 @@ stream {
             # `auth_request` module does not support HTTP keepalives in upstream block:
             # https://trac.nginx.org/nginx/ticket/1579
             access_by_lua_block {
-                local res = ngx.location.capture('{{ $authPath }}', { method = ngx.HTTP_GET, body = '' })
+                local res = ngx.location.capture('{{ $authPath }}', { method = ngx.HTTP_GET, body = '', share_all_vars = {{ $externalAuth.KeepaliveShareVars }} })
                 if res.status == ngx.HTTP_OK then
                     ngx.var.auth_cookie = res.header['Set-Cookie']
                     {{- range $line := buildAuthUpstreamLuaHeaders $externalAuth.ResponseHeaders }}
@@ -1333,8 +1372,6 @@ stream {
             {{ range $limit := $limits }}
             {{ $limit }}{{ end }}
 
-            {{ buildInfluxDB $location.InfluxDB }}
-
             {{ if isValidByteSize $location.Proxy.BodySize true }}
             client_max_body_size                    {{ $location.Proxy.BodySize }};
             {{ end }}
@@ -1343,12 +1380,10 @@ stream {
             {{ end }}
 
             {{/* By default use vhost as Host to upstream, but allow overrides */}}
-            {{ if not (eq $proxySetHeader "grpc_set_header") }}
             {{ if not (empty $location.UpstreamVhost) }}
             {{ $proxySetHeader }} Host                   {{ $location.UpstreamVhost | quote }};
             {{ else }}
             {{ $proxySetHeader }} Host                   $best_http_host;
-            {{ end }}
             {{ end }}
 
             # Pass the extracted client certificate to the backend
@@ -1442,7 +1477,7 @@ stream {
             {{ end }}
 
             {{/* if a location-specific error override is set, add the proxy_intercept here */}}
-            {{ if $location.CustomHTTPErrors }}
+            {{ if and $location.CustomHTTPErrors (not $location.DisableProxyInterceptErrors) }}
             # Custom error pages per ingress
             proxy_intercept_errors on;
             {{ end }}
@@ -1501,8 +1536,9 @@ stream {
         {{ if eq $server.Hostname "_" }}
         # health checks in cloud providers require the use of port {{ $all.ListenPorts.HTTP }}
         location {{ $all.HealthzURI }} {
-            {{ if $all.Cfg.EnableOpentracing }}
-            opentracing off;
+
+            {{ if $all.Cfg.EnableOpentelemetry }}
+            opentelemetry off;
             {{ end }}
 
             access_log off;
@@ -1512,8 +1548,9 @@ stream {
         # this is required to avoid error if nginx is being monitored
         # with an external software (like sysdig)
         location /nginx_status {
-            {{ if $all.Cfg.EnableOpentracing }}
-            opentracing off;
+
+            {{ if $all.Cfg.EnableOpentelemetry }}
+            opentelemetry off;
             {{ end }}
 
             {{ range $v := $all.NginxStatusIpv4Whitelist }}

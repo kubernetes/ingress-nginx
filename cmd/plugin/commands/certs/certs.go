@@ -18,6 +18,7 @@ package certs
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 
@@ -30,7 +31,7 @@ import (
 
 // CreateCommand creates and returns this cobra subcommand
 func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
-	var pod, deployment, selector *string
+	var pod, deployment, selector, container *string
 	cmd := &cobra.Command{
 		Use:   "certs",
 		Short: "Output the certificate data stored in an ingress-nginx pod",
@@ -40,21 +41,25 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 				return err
 			}
 
-			util.PrintError(certs(flags, *pod, *deployment, *selector, host))
+			util.PrintError(certs(flags, *pod, *deployment, *selector, *container, host))
 			return nil
 		},
 	}
 
 	cmd.Flags().String("host", "", "Get the cert for this hostname")
-	cobra.MarkFlagRequired(cmd.Flags(), "host")
+	if err := cobra.MarkFlagRequired(cmd.Flags(), "host"); err != nil {
+		util.PrintError(err)
+		os.Exit(1)
+	}
 	pod = util.AddPodFlag(cmd)
 	deployment = util.AddDeploymentFlag(cmd)
 	selector = util.AddSelectorFlag(cmd)
+	container = util.AddContainerFlag(cmd)
 
 	return cmd
 }
 
-func certs(flags *genericclioptions.ConfigFlags, podName string, deployment string, selector string, host string) error {
+func certs(flags *genericclioptions.ConfigFlags, podName, deployment, selector, container, host string) error {
 	command := []string{"/dbg", "certs", "get", host}
 
 	pod, err := request.ChoosePod(flags, podName, deployment, selector)
@@ -62,7 +67,7 @@ func certs(flags *genericclioptions.ConfigFlags, podName string, deployment stri
 		return err
 	}
 
-	out, err := kubectl.PodExecString(flags, &pod, command)
+	out, err := kubectl.PodExecString(flags, &pod, container, command)
 	if err != nil {
 		return err
 	}

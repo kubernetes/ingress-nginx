@@ -23,7 +23,7 @@ RUN apk update \
   && apk upgrade \
   && /chroot.sh
 
-FROM alpine:3.17.0
+FROM alpine:3.19.1
 
 ARG TARGETARCH
 ARG VERSION
@@ -49,7 +49,6 @@ RUN apk update \
   && apk upgrade \
   && apk add -U --no-cache \
      bash \
-     curl \
      openssl \
      ca-certificates \
      dumb-init \
@@ -120,7 +119,6 @@ RUN mkdir -p /chroot/modules_mount \
 USER www-data
 
 EXPOSE 80 443
-
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
 CMD ["/nginx-ingress-controller"]

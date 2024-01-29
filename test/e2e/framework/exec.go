@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -65,6 +66,7 @@ func (f *Framework) ExecCommand(pod *corev1.Pod, command string) (string, error)
 		execErr bytes.Buffer
 	)
 
+	//nolint:gosec // Ignore G204 error
 	cmd := exec.Command("/bin/bash", "-c", fmt.Sprintf("%v exec --namespace %s %s --container controller -- %s", KubectlPath, pod.Namespace, pod.Name, command))
 	cmd.Stdout = &execOut
 	cmd.Stderr = &execErr
@@ -72,7 +74,6 @@ func (f *Framework) ExecCommand(pod *corev1.Pod, command string) (string, error)
 	err := cmd.Run()
 	if err != nil {
 		return "", fmt.Errorf("could not execute '%s %s': %v", cmd.Path, cmd.Args, err)
-
 	}
 
 	if execErr.Len() > 0 {
@@ -90,6 +91,7 @@ func (f *Framework) NamespaceContent() (string, error) {
 		execErr bytes.Buffer
 	)
 
+	//nolint:gosec // Ignore G204 error
 	cmd := exec.Command("/bin/bash", "-c", fmt.Sprintf("%v get pods,services,endpoints,deployments --namespace %s", KubectlPath, f.Namespace))
 	cmd.Stdout = &execOut
 	cmd.Stderr = &execErr
@@ -97,7 +99,6 @@ func (f *Framework) NamespaceContent() (string, error) {
 	err := cmd.Run()
 	if err != nil {
 		return "", fmt.Errorf("could not execute '%s %s': %v", cmd.Path, cmd.Args, err)
-
 	}
 
 	eout := strings.TrimSpace(execErr.String())
@@ -109,9 +110,18 @@ func (f *Framework) NamespaceContent() (string, error) {
 }
 
 // newIngressController deploys a new NGINX Ingress controller in a namespace
-func (f *Framework) newIngressController(namespace string, namespaceOverlay string) error {
+func (f *Framework) newIngressController(namespace, namespaceOverlay string) error {
 	// Creates an nginx deployment
-	cmd := exec.Command("./wait-for-nginx.sh", namespace, namespaceOverlay)
+	isChroot, ok := os.LookupEnv("IS_CHROOT")
+	if !ok {
+		isChroot = "false"
+	}
+
+	enableAnnotationValidations, ok := os.LookupEnv("ENABLE_VALIDATIONS")
+	if !ok {
+		enableAnnotationValidations = "false"
+	}
+	cmd := exec.Command("./wait-for-nginx.sh", namespace, namespaceOverlay, isChroot, enableAnnotationValidations)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("unexpected error waiting for ingress controller deployment: %v.\nLogs:\n%v", err, string(out))
@@ -120,12 +130,11 @@ func (f *Framework) newIngressController(namespace string, namespaceOverlay stri
 	return nil
 }
 
-var (
-	proxyRegexp = regexp.MustCompile("Starting to serve on .*:([0-9]+)")
-)
+var proxyRegexp = regexp.MustCompile(`Starting to serve on .*:(\d+)`)
 
 // KubectlProxy creates a proxy to kubernetes apiserver
 func (f *Framework) KubectlProxy(port int) (int, *exec.Cmd, error) {
+	//nolint:gosec // Ignore G204 error
 	cmd := exec.Command("/bin/bash", "-c", fmt.Sprintf("%s proxy --accept-hosts=.* --address=0.0.0.0 --port=%d", KubectlPath, port))
 	stdout, stderr, err := startCmdAndStreamOutput(cmd)
 	if err != nil {
@@ -150,6 +159,17 @@ func (f *Framework) KubectlProxy(port int) (int, *exec.Cmd, error) {
 	}
 
 	return -1, cmd, fmt.Errorf("failed to parse port from proxy stdout: %s", output)
+}
+
+func (f *Framework) UninstallChart() error {
+	//nolint:gosec //Ignore G204 error
+	cmd := exec.Command("helm", "uninstall", "--namespace", f.Namespace, "nginx-ingress")
+	_, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("unexpected error uninstalling ingress-nginx release: %v", err)
+	}
+
+	return nil
 }
 
 func startCmdAndStreamOutput(cmd *exec.Cmd) (stdout, stderr io.ReadCloser, err error) {

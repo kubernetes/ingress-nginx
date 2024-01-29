@@ -27,14 +27,14 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("[Flag] watch namespace selector", func() {
+var _ = framework.IngressNginxDescribeSerial("[Flag] watch namespace selector", func() {
 	f := framework.NewDefaultFramework("namespace-selector")
-	notMatchedHost, matchedHost := "bar", "foo"
+	notMatchedHost, matchedHost := barHost, fooHost
 	var notMatchedNs string
 	var matchedNs string
 
 	// create a test namespace, under which create an ingress and backend deployment
-	prepareTestIngress := func(baseName string, host string, labels map[string]string) string {
+	prepareTestIngress := func(host string, labels map[string]string) string {
 		ns, err := framework.CreateKubeNamespaceWithLabel(f.BaseName, labels, f.KubeClientSet)
 		assert.Nil(ginkgo.GinkgoT(), err, "creating test namespace")
 		f.NewEchoDeployment(framework.WithDeploymentNamespace(ns))
@@ -45,30 +45,21 @@ var _ = framework.IngressNginxDescribe("[Flag] watch namespace selector", func()
 
 	cleanupNamespace := func(ns string) {
 		err := framework.DeleteKubeNamespace(f.KubeClientSet, ns)
-		assert.Nil(ginkgo.GinkgoT(), err, "deleting temporarily crated namespace")
+		assert.Nil(ginkgo.GinkgoT(), err, "deleting temporarily created namespace")
 	}
 
 	ginkgo.BeforeEach(func() {
-		notMatchedNs = prepareTestIngress(notMatchedHost, notMatchedHost, nil) // create namespace without label "foo=bar"
-		matchedNs = prepareTestIngress(matchedHost, matchedHost, map[string]string{"foo": "bar"})
+		notMatchedNs = prepareTestIngress(notMatchedHost, nil) // create namespace without label "foo=bar"
+		matchedNs = prepareTestIngress(matchedHost, map[string]string{fooHost: barHost})
 	})
 
 	ginkgo.AfterEach(func() {
 		cleanupNamespace(notMatchedNs)
 		cleanupNamespace(matchedNs)
-
-		// cleanup clusterrole/clusterrolebinding created by installing chart with controller.scope.enabled=false
-		err := f.KubeClientSet.RbacV1().ClusterRoles().Delete(context.TODO(), "nginx-ingress", metav1.DeleteOptions{})
-		assert.Nil(ginkgo.GinkgoT(), err, "deleting clusterrole nginx-ingress")
-
-		err = f.KubeClientSet.RbacV1().ClusterRoleBindings().Delete(context.TODO(), "nginx-ingress", metav1.DeleteOptions{})
-		assert.Nil(ginkgo.GinkgoT(), err, "deleting clusterrolebinging nginx-ingress")
 	})
 
 	ginkgo.Context("With specific watch-namespace-selector flags", func() {
-
-		ginkgo.It("should ingore Ingress of namespace without label foo=bar and accept those of namespace with label foo=bar", func() {
-
+		ginkgo.It("should ignore Ingress of namespace without label foo=bar and accept those of namespace with label foo=bar", func() {
 			f.WaitForNginxConfiguration(func(cfg string) bool {
 				return !strings.Contains(cfg, "server_name bar") &&
 					strings.Contains(cfg, "server_name foo")
@@ -93,7 +84,7 @@ var _ = framework.IngressNginxDescribe("[Flag] watch namespace selector", func()
 			if ns.Labels == nil {
 				ns.Labels = make(map[string]string)
 			}
-			ns.Labels["foo"] = "bar"
+			ns.Labels[fooHost] = barHost
 
 			_, err = f.KubeClientSet.CoreV1().Namespaces().Update(context.TODO(), ns, metav1.UpdateOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err, "labeling not matched namespace")
@@ -104,7 +95,7 @@ var _ = framework.IngressNginxDescribe("[Flag] watch namespace selector", func()
 			if ing.Labels == nil {
 				ing.Labels = make(map[string]string)
 			}
-			ing.Labels["foo"] = "bar"
+			ing.Labels[fooHost] = barHost
 
 			_, err = f.KubeClientSet.NetworkingV1().Ingresses(notMatchedNs).Update(context.TODO(), ing, metav1.UpdateOptions{})
 			assert.Nil(ginkgo.GinkgoT(), err, "updating ingress")

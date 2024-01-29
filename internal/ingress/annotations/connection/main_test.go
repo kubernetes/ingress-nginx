@@ -37,10 +37,12 @@ func TestParse(t *testing.T) {
 	testCases := []struct {
 		annotations map[string]string
 		expected    *Config
+		expectErr   bool
 	}{
-		{map[string]string{annotation: "keep-alive"}, &Config{Enabled: true, Header: "keep-alive"}},
-		{map[string]string{}, &Config{Enabled: false}},
-		{nil, &Config{Enabled: false}},
+		{map[string]string{annotation: "keep-alive"}, &Config{Enabled: true, Header: "keep-alive"}, false},
+		{map[string]string{annotation: "not-allowed-value"}, &Config{Enabled: false}, true},
+		{map[string]string{}, &Config{Enabled: false}, true},
+		{nil, &Config{Enabled: false}, true},
 	}
 
 	ing := &networking.Ingress{
@@ -53,9 +55,14 @@ func TestParse(t *testing.T) {
 
 	for _, testCase := range testCases {
 		ing.SetAnnotations(testCase.annotations)
-		i, _ := ap.Parse(ing)
-		p, _ := i.(*Config)
-
+		i, err := ap.Parse(ing)
+		if (err != nil) != testCase.expectErr {
+			t.Fatalf("expected error: %t got error: %t err value: %s. %+v", testCase.expectErr, err != nil, err, testCase.annotations)
+		}
+		p, ok := i.(*Config)
+		if !ok {
+			t.Fatalf("expected a Config type")
+		}
 		if !p.Equal(testCase.expected) {
 			t.Errorf("expected %v but returned %v, annotations: %s", testCase.expected, p, testCase.annotations)
 		}

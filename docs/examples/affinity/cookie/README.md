@@ -67,7 +67,7 @@ Accept-Ranges: bytes
 ```
 
 In the example above, you can see that the response contains a `Set-Cookie` header with the settings we have defined.
-This cookie is created by the NGINX Ingress Controller, it contains a randomly generated key corresponding to the upstream used for that request (selected using [consistent hashing][consistent-hashing]) and has an `Expires` directive.
+This cookie is created by the Ingress-Nginx Controller, it contains a randomly generated key corresponding to the upstream used for that request (selected using [consistent hashing][consistent-hashing]) and has an `Expires` directive.
 If a client sends a cookie that doesn't correspond to an upstream, NGINX selects an upstream and creates a corresponding cookie.
 
 If the backend pool grows NGINX will keep sending the requests through the same server of the first request, even if it's overloaded.
