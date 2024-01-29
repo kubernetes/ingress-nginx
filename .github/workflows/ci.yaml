@@ -191,16 +191,22 @@ jobs:
           go-version: ${{ needs.build.outputs.golangversion }}
           check-latest: true
 
-      - name: Run helm-docs
+      - name: Generate docs
         run: |
-          GOBIN=$PWD GO111MODULE=on go install github.com/norwoodj/helm-docs/cmd/helm-docs@v1.11.0
-          ./helm-docs --chart-search-root=${GITHUB_WORKSPACE}/charts
-          DIFF=$(git diff ${GITHUB_WORKSPACE}/charts/ingress-nginx/README.md)
-          if [ ! -z "$DIFF" ]; then
-            echo "Please use helm-docs in your clone, of your fork, of the project, and commit a updated README.md for the chart. https://github.com/kubernetes/ingress-nginx/blob/main/RELEASE.md#d-edit-the-valuesyaml-and-run-helm-docs"
+          curl --silent --show-error --fail --location https://github.com/norwoodj/helm-docs/releases/download/v1.11.3/helm-docs_1.11.3_Linux_x86_64.tar.gz --remote-name
+          echo "07efe78fd56de173e29f15ea5be2aa6f425d346bcd480aa229840b5405661cb2  helm-docs_1.11.3_Linux_x86_64.tar.gz" | shasum --check
+          tar xzf helm-docs_1.11.3_Linux_x86_64.tar.gz helm-docs
+
+          ./helm-docs --chart-search-root charts
+
+          if ! git diff --exit-code charts/ingress-nginx/README.md
+          then
+            echo "Please use helm-docs in your fork of the project and commit an updated README.md for the chart."
+            echo "https://github.com/kubernetes/ingress-nginx/blob/main/MANUAL_RELEASE.md#d-edit-the-valuesyaml-and-run-helm-docs"
+            exit 1
           fi
-          git diff --exit-code
-          rm -f ./helm-docs
+
+          rm helm-docs_1.11.3_Linux_x86_64.tar.gz helm-docs
 
       - name: Lint chart
         run: |
