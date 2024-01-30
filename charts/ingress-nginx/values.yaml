@@ -913,6 +913,21 @@ controller:
 revisionHistoryLimit: 10
 ## Default 404 backend
 ##
+
+# -- Array of extra K8s manifests to deploy
+## Note: Supports use of custom Helm templates
+extraObjects: []
+  # - apiVersion: logging.banzaicloud.io/v1beta1
+  #   kind: Flow
+  #   metadata:
+  #     name: ingress-nginx
+  #     namespace: ingress
+  #   spec:
+  #     filters:
+  #     - tag_normaliser: {}
+  #     globalOutputRefs:
+  #     - logging
+
 defaultBackend:
   ##
   enabled: false
