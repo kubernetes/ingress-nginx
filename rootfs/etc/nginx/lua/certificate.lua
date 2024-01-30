@@ -225,7 +225,7 @@ end
 
 function _M.set_cache_size(size)
   local cache, err = lrucache.new(size)
-  if not cache then
+  if err then
     ngx.log(ngx.ERR, string.format("failed to create the certificate cache: %s", err))
   end
   certificate_cache = cache
@@ -257,19 +257,21 @@ function _M.call()
     return
   end
 
+  local pem_cert = certificate_data:get(pem_cert_uid)
+  if not pem_cert then
+    ngx.log(ngx.ERR, "certificate not found, falling back to fake certificate for hostname: "
+      .. tostring(hostname))
+    return
+  end
+
+  local cert_crc32 = ngx.crc32_long(pem_cert)
+
   local cached_entry = certificate_cache:get(pem_cert_uid)
-  if cached_entry then
+  if cached_entry and cached_entry.crc32 == cert_crc32 then
     cert = cached_entry.cert
     priv_key = cached_entry.priv_key
     der_cert = cached_entry.der_cert
   else
-    local pem_cert = certificate_data:get(pem_cert_uid)
-    if not pem_cert then
-      ngx.log(ngx.ERR, "certificate not found, falling back to fake certificate for hostname: "
-        .. tostring(hostname))
-      return
-    end
-
     der_cert, der_cert_err = ssl.cert_pem_to_der(pem_cert)
     if not der_cert then
       ngx.log(ngx.ERR, "failed to convert certificate chain from PEM to DER: " .. der_cert_err)
@@ -282,7 +284,13 @@ function _M.call()
       return ngx.exit(ngx.ERROR)
     end
 
-    certificate_cache:set(pem_cert_uid, { cert = cert, priv_key = priv_key, der_cert = der_cert })
+    cached_entry = {
+      cert = cert,
+      priv_key = priv_key,
+      der_cert = der_cert,
+      crc32 = cert_crc32
+    }
+    certificate_cache:set(pem_cert_uid, cached_entry)
   end
 
   local clear_ok, clear_err = ssl.clear_certs()

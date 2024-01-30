@@ -94,6 +94,29 @@ describe("Certificate", function()
       assert_certificate_is_set(EXAMPLE_CERT)
     end)
 
+    it("parses certificate and key once when cache hits", function()
+      spy.on(ssl, "parse_pem_cert")
+
+      set_certificate("hostname", EXAMPLE_CERT, UUID)
+      assert_certificate_is_set(EXAMPLE_CERT)
+
+      assert_certificate_is_set(EXAMPLE_CERT)
+
+      assert.spy(ssl.parse_pem_cert).was.called(1)
+    end)
+
+    it("parses certificate and key again when cache hits but cert content changes", function()
+      spy.on(ssl, "parse_pem_cert")
+
+      set_certificate("hostname", EXAMPLE_CERT, UUID)
+      assert_certificate_is_set(EXAMPLE_CERT)
+
+      set_certificate("hostname", DEFAULT_CERT, UUID)
+      assert_certificate_is_set(DEFAULT_CERT)
+
+      assert.spy(ssl.parse_pem_cert).was.called(2)
+    end)
+
     it("sets certificate and key for wildcard cert", function()
       ssl.server_name = function() return "sub.hostname", nil end
       set_certificate("*.hostname", EXAMPLE_CERT, UUID)
