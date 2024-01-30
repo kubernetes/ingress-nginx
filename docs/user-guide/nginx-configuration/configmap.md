@@ -706,7 +706,7 @@ _References:_
 
 Sets the size of cache that stores parsed SSL certificate objects.
 
-The cache helps reduce memory consumption of SSL context per connection. Increase the value if you have huge amount of certificates.
+The cache avoids duplicate copies of parsed SSL certificate objects among connections. It can help reduce memory consumption of SSL context per connection. Recommend a value larger than the number of certificates in use.
 
 _**default:**_ is 1000.
 
