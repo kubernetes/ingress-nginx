@@ -1,0 +1,48 @@
+name: build images
+
+on:
+  workflow_call:
+  push:
+    branches: [ "*", "**/*" ]
+
+jobs:
+
+  buildImages:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v3
+      with:
+        go-version: '^1.21'
+  
+    - name: Set up Docker context for Buildx
+      id: buildx-context
+      run: |
+        docker context create builders
+    - name: Set up Docker Buildx
+      id: buildx
+      uses: docker/setup-buildx-action@v2
+      with:
+        version: latest
+        endpoint: builders
+
+    - run: go mod vendor
+
+    - name: Login to Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build images
+      id: buildimages
+      run: |
+        img=ghcr.io/${{github.repository}}:${{github.sha}}
+        echo "::set-output name=IMAGE_NAME::${img}"
+        docker pull ${img} || (
+          docker buildx build --push --cache-to type=gha,mode=max --cache-from type=gha --progress plain --platform linux/arm64/v8,linux/amd64 --build-arg BUILDKIT_INLINE_CACHE=1 -t ${img}  .
+        )
