@@ -9,10 +9,10 @@ on:
         type: string
       platforms-test:
         type: string
-        default: linux/amd64
+        default: linux/amd64,linux/arm64
       platforms-publish:
         type: string
-        default: linux/amd64
+        default: linux/amd64,linux/arm64
 
 env:
   PLATFORMS: ${{ inputs.platforms-test }}
