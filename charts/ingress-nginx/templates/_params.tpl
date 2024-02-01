@@ -29,7 +29,7 @@
 - --watch-namespace={{ default "$(POD_NAMESPACE)" .Values.controller.scope.namespace }}
 {{- end }}
 {{- if and (not .Values.controller.scope.enabled) .Values.controller.scope.namespaceSelector }}
-- --watch-namespace-selector={{ default "" .Values.controller.scope.namespaceSelector }}
+- --watch-namespace-selector={{ .Values.controller.scope.namespaceSelector }}
 {{- end }}
 {{- if and .Values.controller.reportNodeInternalIp .Values.controller.hostNetwork }}
 - --report-node-internal-ip-address={{ .Values.controller.reportNodeInternalIp }}
