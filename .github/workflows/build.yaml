@@ -44,5 +44,5 @@ jobs:
         img=ghcr.io/${{github.repository}}:${{github.sha}}
         make build
         make REGISTRY=ghcr.io/${{github.repository}} TAG=${{github.sha}} image-chroot
-        docker push ghcr.io/${{github.repository}}:${{github.sha}}
+        docker push ghcr.io/${{github.repository}}/controller-chroot:${{github.sha}}
        
