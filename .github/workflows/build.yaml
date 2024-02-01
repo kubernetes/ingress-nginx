@@ -42,6 +42,6 @@ jobs:
       id: buildimages
       run: |
         img=ghcr.io/${{github.repository}}:${{github.sha}}
-        make REGISTRY=ghcr.io/${{github.repository}} image-chroot
-        docker push ghcr.io/${{github.repository}}:v1.5.1
+        make REGISTRY=ghcr.io/${{github.repository}} TAG=${{github.sha}} image-chroot
+        docker push ghcr.io/${{github.repository}}:${{github.sha}}
        
