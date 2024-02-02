@@ -89,6 +89,8 @@ controller:
   terminationGracePeriodSeconds: 1
   admissionWebhooks:
     enabled: false
+  metrics:
+    enabled: true
 
   # ulimit -c unlimited
   # mkdir -p /tmp/coredump
