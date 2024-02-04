@@ -276,10 +276,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
-      - name: cache
+      - name: Download cache
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           name: docker.tar.gz
+
+      - name: Load cache
+        run: gzip --decompress --stdout docker.tar.gz | docker load
 
       - name: fix permissions
         run: |
@@ -290,11 +293,6 @@ jobs:
         id: kind
         run: |
           kind create cluster --image=kindest/node:${{ matrix.k8s }}
-
-      - name: Load images from cache
-        run: |
-          echo "loading docker images..."
-          gzip -dc docker.tar.gz | docker load
 
       - name: Test
         env:
