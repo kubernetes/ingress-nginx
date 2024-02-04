@@ -191,14 +191,6 @@ jobs:
           go-version: ${{ needs.build.outputs.golangversion }}
           check-latest: true
 
-      - name: Install Helm Unit Test Plugin
-        run: |
-          helm plugin install https://github.com/helm-unittest/helm-unittest
-
-      - name: Run Helm Unit Tests
-        run: |
-          helm unittest charts/ingress-nginx -d
-
       - name: cache
         uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
@@ -226,6 +218,11 @@ jobs:
           tar -xzvf ah_1.5.0_linux_amd64.tar.gz ah
           ./ah lint -p charts/ingress-nginx || exit 1
           rm -f ./ah ./ah_1.5.0_linux_amd64.tar.gz
+
+      - name: Run unit tests
+        run: |
+          helm plugin install https://github.com/helm-unittest/helm-unittest
+          helm unittest charts/ingress-nginx
 
       - name: fix permissions
         run: |
