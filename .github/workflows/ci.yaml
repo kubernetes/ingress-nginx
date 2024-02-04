@@ -168,14 +168,14 @@ jobs:
           name: docker.tar.gz
           path: docker.tar.gz
           retention-days: 5
-  helm:
-    name: Helm chart
+
+  chart:
+    name: Chart
     runs-on: ubuntu-latest
     needs:
       - changes
       - build
-    if: |
-      (needs.changes.outputs.charts == 'true') || (needs.changes.outputs.baseimage == 'true')
+    if: (needs.changes.outputs.charts == 'true') || (needs.changes.outputs.baseimage == 'true')
 
     strategy:
       matrix:
