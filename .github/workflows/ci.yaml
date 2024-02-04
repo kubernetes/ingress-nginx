@@ -238,10 +238,13 @@ jobs:
           go-version: ${{ needs.build.outputs.golangversion }}
           check-latest: true
 
-      - name: cache
+      - name: Download cache
         uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: docker.tar.gz
+
+      - name: Load cache
+        run: gzip --decompress --stdout docker.tar.gz | docker load
 
       - name: fix permissions
         run: |
@@ -252,11 +255,6 @@ jobs:
         id: kind
         run: |
           kind create cluster --image=kindest/node:${{ matrix.k8s }}
-
-      - name: Load images from cache
-        run: |
-          echo "loading docker images..."
-          gzip -dc docker.tar.gz | docker load
 
       - name: Test
         env:
