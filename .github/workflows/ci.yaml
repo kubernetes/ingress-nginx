@@ -237,18 +237,13 @@ jobs:
       - name: Set up Helm Docs
         uses: gabe565/setup-helm-docs-action@d5c35bdc9133cfbea3b671acadf50a29029e87c2 # v1.0.4
 
+      - name: Set up Helm Unit Test
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest
+
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           fetch-depth: 0
-
-      - name: Install Helm Unit Test Plugin
-        run: |
-          helm plugin install https://github.com/helm-unittest/helm-unittest
-
-      - name: Run Helm Unit Tests
-        run: |
-          helm unittest charts/ingress-nginx -d
 
       - name: Lint chart
         run: |
@@ -259,6 +254,9 @@ jobs:
         run: |
           helm-docs --chart-search-root charts
           git diff --exit-code charts/ingress-nginx/README.md
+
+      - name: Run tests
+        run: helm unittest charts/ingress-nginx
 
   chart-test:
     name: Chart / Test
