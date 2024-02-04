@@ -188,14 +188,6 @@ jobs:
       - name: Set up chart-testing
         uses: helm/chart-testing-action@e6669bcd63d7cb57cb4380c33043eebe5d111992 # v2.6.1
 
-      - name: Install Helm Unit Test Plugin
-        run: |
-          helm plugin install https://github.com/helm-unittest/helm-unittest
-
-      - name: Run Helm Unit Tests
-        run: |
-          helm unittest charts/ingress-nginx -d
-
       - name: Run chart-testing (lint)
         run: ct lint --config ./.ct.yaml
 
@@ -217,6 +209,11 @@ jobs:
           tar -xzvf ah_1.5.0_linux_amd64.tar.gz ah
           ./ah lint -p charts/ingress-nginx || exit 1
           rm -f ./ah ./ah_1.5.0_linux_amd64.tar.gz
+
+      - name: Run unit tests
+        run: |
+          helm plugin install https://github.com/helm-unittest/helm-unittest
+          helm unittest charts/ingress-nginx
 
   chart-test:
     name: Chart / Test
