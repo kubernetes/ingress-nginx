@@ -256,15 +256,13 @@ jobs:
           sudo chmod 777 "${HOME}/.kube"
           kind create cluster --image kindest/node:${{ matrix.k8s }} --kubeconfig "${HOME}/.kube/kind-config-kind"
 
-      - name: Test
+      - name: Run E2E tests
         env:
           KIND_CLUSTER_NAME: kind
           SKIP_CLUSTER_CREATION: true
           SKIP_IMAGE_CREATION: true
           SKIP_INGRESS_IMAGE_CREATION: true
-        run: |
-          kind get kubeconfig > $HOME/.kube/kind-config-kind
-          make kind-e2e-chart-tests
+        run: make kind-e2e-chart-tests
 
   kubernetes:
     name: Kubernetes
