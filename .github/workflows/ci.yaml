@@ -191,10 +191,6 @@ jobs:
           go-version: ${{ needs.build.outputs.golangversion }}
           check-latest: true
 
-      - name: Lint
-        run: |
-          ./build/run-in-docker.sh ./hack/verify-chart-lint.sh
-
       - name: Run helm-docs
         run: |
           GOBIN=$PWD GO111MODULE=on go install github.com/norwoodj/helm-docs/cmd/helm-docs@v1.11.0
@@ -206,13 +202,17 @@ jobs:
           git diff --exit-code
           rm -f ./helm-docs
 
-      - name: Run Artifact Hub lint
+      - name: Lint chart
         run: |
-          wget https://github.com/artifacthub/hub/releases/download/v1.5.0/ah_1.5.0_linux_amd64.tar.gz
-          echo 'ad0e44c6ea058ab6b85dbf582e88bad9fdbc64ded0d1dd4edbac65133e5c87da *ah_1.5.0_linux_amd64.tar.gz' | shasum -c
-          tar -xzvf ah_1.5.0_linux_amd64.tar.gz ah
-          ./ah lint -p charts/ingress-nginx || exit 1
-          rm -f ./ah ./ah_1.5.0_linux_amd64.tar.gz
+          build/run-in-docker.sh hack/verify-chart-lint.sh
+
+          curl --silent --show-error --fail --location https://github.com/artifacthub/hub/releases/download/v1.17.0/ah_1.17.0_linux_amd64.tar.gz --remote-name
+          echo "57c184b71a9a5c59192c2158fc08bdddca5c340fb1deeed0158383a665b38bf1  ah_1.17.0_linux_amd64.tar.gz" | shasum --check
+          tar xzf ah_1.17.0_linux_amd64.tar.gz ah
+
+          ./ah lint --path charts/ingress-nginx
+
+          rm ah_1.17.0_linux_amd64.tar.gz ah
 
       - name: Run unit tests
         run: |
