@@ -225,15 +225,11 @@ jobs:
           helm plugin install https://github.com/helm-unittest/helm-unittest
           helm unittest charts/ingress-nginx
 
-      - name: fix permissions
-        run: |
-          sudo mkdir -p $HOME/.kube
-          sudo chmod -R 777 $HOME/.kube
-
-      - name: Create Kubernetes ${{ matrix.k8s }} cluster
+      - name: Create cluster
         id: kind
         run: |
-          kind create cluster --image=kindest/node:${{ matrix.k8s }}
+          sudo chmod 777 "${HOME}/.kube"
+          kind create cluster --image kindest/node:${{ matrix.k8s }} --kubeconfig "${HOME}/.kube/kind-config-kind"
 
       - name: Download cache
         uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
