@@ -186,7 +186,7 @@ jobs:
         ignore-unfixed: true
         output: 'trivy-results.sarif'
     - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v3.23.2
+      uses: github/codeql-action/upload-sarif@v3.24.0
       with:
         sarif_file: 'trivy-results.sarif'
 
