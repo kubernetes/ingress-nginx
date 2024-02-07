@@ -43,16 +43,20 @@ var (
 	annotationAffinityCookieName     = parser.GetAnnotationWithPrefix("session-cookie-name")
 	annotationUpstreamHashBy         = parser.GetAnnotationWithPrefix("upstream-hash-by")
 	annotationCustomHTTPErrors       = parser.GetAnnotationWithPrefix("custom-http-errors")
+	annotationCustomHeaders          = parser.GetAnnotationWithPrefix("custom-headers")
 )
 
 type mockCfg struct {
 	resolver.Mock
-	MockSecrets  map[string]*apiv1.Secret
-	MockServices map[string]*apiv1.Service
+	MockSecrets    map[string]*apiv1.Secret
+	MockServices   map[string]*apiv1.Service
+	MockConfigMaps map[string]*apiv1.ConfigMap
 }
 
 func (m mockCfg) GetDefaultBackend() defaults.Backend {
-	return defaults.Backend{}
+	return defaults.Backend{
+		AllowedResponseHeaders: []string{"Content-Type"},
+	}
 }
 
 func (m mockCfg) GetSecret(name string) (*apiv1.Secret, error) {
@@ -61,6 +65,10 @@ func (m mockCfg) GetSecret(name string) (*apiv1.Secret, error) {
 
 func (m mockCfg) GetService(name string) (*apiv1.Service, error) {
 	return m.MockServices[name], nil
+}
+
+func (m mockCfg) GetConfigMap(name string) (*apiv1.ConfigMap, error) {
+	return m.MockConfigMaps[name], nil
 }
 
 func (m mockCfg) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error) {
@@ -313,6 +321,47 @@ func TestCustomHTTPErrors(t *testing.T) {
 		for i := range r {
 			if r[i] != foo.er[i] {
 				t.Errorf("Returned %v but expected %v", r, foo.er)
+			}
+		}
+	}
+}
+
+func TestCustomResponseHeaders(t *testing.T) {
+	mockObj := mockCfg{}
+	mockObj.MockConfigMaps = map[string]*apiv1.ConfigMap{}
+	mockObj.MockConfigMaps["custom-headers"] = &apiv1.ConfigMap{Data: map[string]string{"Content-Type": "application/json"}}
+	mockObj.MockConfigMaps["empty-custom-headers"] = &apiv1.ConfigMap{Data: map[string]string{}}
+
+	ec := NewAnnotationExtractor(mockObj)
+	ing := buildIngress()
+	fooAnns := []struct {
+		annotations map[string]string
+		headers     map[string]string
+	}{
+		{map[string]string{annotationCustomHeaders: "custom-headers"}, map[string]string{"Content-Type": "application/json"}},
+		{map[string]string{annotationCustomHeaders: "empty-custom-headers"}, map[string]string{}},
+		{nil, map[string]string{}},
+	}
+
+	for _, foo := range fooAnns {
+		ing.SetAnnotations(foo.annotations)
+		rann, err := ec.Extract(ing)
+		if err != nil {
+			t.Errorf("error should be null: %v", err)
+		}
+		r := rann.CustomHeaders.Headers
+
+		// Check that expected headers were created
+		for i := range foo.headers {
+			if r[i] != foo.headers[i] {
+				t.Errorf("Returned %v but expected %v", r, foo.headers)
+			}
+		}
+
+		// Check that no unexpected headers were created
+		for i := range r {
+			if r[i] != foo.headers[i] {
+				t.Errorf("Returned %v but expected %v", r, foo.headers)
 			}
 		}
 	}

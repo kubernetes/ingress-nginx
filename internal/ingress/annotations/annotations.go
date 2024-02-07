@@ -20,6 +20,7 @@ import (
 	"dario.cat/mergo"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/customheaders"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/disableproxyintercepterrors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/opentelemetry"
@@ -82,6 +83,7 @@ type Ingress struct {
 	Canary                      canary.Config
 	CertificateAuth             authtls.Config
 	ClientBodyBufferSize        string
+	CustomHeaders               customheaders.Config
 	ConfigurationSnippet        string
 	Connection                  connection.Config
 	CorsConfig                  cors.Config
@@ -133,6 +135,7 @@ func NewAnnotationExtractor(cfg resolver.Resolver) Extractor {
 			"Canary":                      canary.NewParser(cfg),
 			"CertificateAuth":             authtls.NewParser(cfg),
 			"ClientBodyBufferSize":        clientbodybuffersize.NewParser(cfg),
+			"CustomHeaders":               customheaders.NewParser(cfg),
 			"ConfigurationSnippet":        snippet.NewParser(cfg),
 			"Connection":                  connection.NewParser(cfg),
 			"CorsConfig":                  cors.NewParser(cfg),

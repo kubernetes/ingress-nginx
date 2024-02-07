@@ -81,12 +81,14 @@ cloud.google.com/go/filestore v1.7.1/go.mod h1:y10jsorq40JJnjR/lQ8AfFbbcGlw3g+Dp
 cloud.google.com/go/firestore v1.11.0/go.mod h1:b38dKhgzlmNNGTNZZwe7ZRFEuRab1Hay3/DBsIGKKy4=
 cloud.google.com/go/firestore v1.13.0/go.mod h1:QojqqOh8IntInDUSTAh0c8ZsPYAr68Ma8c5DWOy8xb8=
 cloud.google.com/go/functions v1.15.1/go.mod h1:P5yNWUTkyU+LvW/S9O6V+V423VZooALQlqoXdoPz5AE=
+cloud.google.com/go/gaming v1.10.1/go.mod h1:XQQvtfP8Rb9Rxnxm5wFVpAp9zCQkJi2bLIb7iHGwB3s=
 cloud.google.com/go/gkebackup v0.4.0/go.mod h1:byAyBGUwYGEEww7xsbnUTBHIYcOPy/PgUWUtOeRm9Vg=
 cloud.google.com/go/gkebackup v1.3.1/go.mod h1:vUDOu++N0U5qs4IhG1pcOnD1Mac79xWy6GoBFlWCWBU=
 cloud.google.com/go/gkeconnect v0.8.1/go.mod h1:KWiK1g9sDLZqhxB2xEuPV8V9NYzrqTUmQR9shJHpOZw=
 cloud.google.com/go/gkehub v0.14.1/go.mod h1:VEXKIJZ2avzrbd7u+zeMtW00Y8ddk/4V9511C9CQGTY=
 cloud.google.com/go/gkemulticloud v0.6.1/go.mod h1:kbZ3HKyTsiwqKX7Yw56+wUGwwNZViRnxWK2DVknXWfw=
 cloud.google.com/go/gkemulticloud v1.0.0/go.mod h1:kbZ3HKyTsiwqKX7Yw56+wUGwwNZViRnxWK2DVknXWfw=
+cloud.google.com/go/grafeas v0.3.0/go.mod h1:P7hgN24EyONOTMyeJH6DxG4zD7fwiYa5Q6GUgyFSOU8=
 cloud.google.com/go/gsuiteaddons v1.6.1/go.mod h1:CodrdOqRZcLp5WOwejHWYBjZvfY0kOphkAKpF/3qdZY=
 cloud.google.com/go/iam v0.13.0/go.mod h1:ljOg+rcNfzZ5d6f1nAUJ8ZIxOaZUVoS14bKCtaLZ/D0=
 cloud.google.com/go/iam v1.1.1/go.mod h1:A5avdyVL2tCppe4unb0951eI9jreack+RJ0/d+KUZOU=
