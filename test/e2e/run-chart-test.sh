@@ -96,9 +96,10 @@ if [ "${SKIP_CERT_MANAGER_CREATION:-false}" = "false" ]; then
   # Get OS and platform for downloading cmctl.
   os="$(uname -o | tr "[:upper:]" "[:lower:]")"
   platform="$(uname -m | sed "s/aarch64/arm64/;s/x86_64/amd64/")"
+  echo "OS: ${os} | Platform: ${platform}"
 
   # Download cmctl. Cannot validate checksum since OS and platform may vary.
-  curl --silent --show-error --fail --location "https://github.com/cert-manager/cert-manager/releases/download/v1.13.3/cmctl-${os}-${platform}.tar.gz" | tar xz cmctl
+  curl --verbose --silent --show-error --fail --location "https://github.com/cert-manager/cert-manager/releases/download/v1.13.3/cmctl-${os}-${platform}.tar.gz" | tar xz cmctl
 
   # Deploy cert-manager.
   kubectl create --filename https://github.com/cert-manager/cert-manager/releases/download/v1.13.3/cert-manager.yaml
