@@ -233,7 +233,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 	flags.DurationVar(&nginx.MaxmindRetriesTimeout, "maxmind-retries-timeout", time.Second*0, "Maxmind downloading delay between 1st and 2nd attempt, 0s - do not retry to download if something went wrong.")
 	flags.BoolVar(&nginx.MaxmindEnableSync, "maxmind-enable-sync", false, "Enable periodic sync of maxmind databases.")
 	flags.DurationVar(&nginx.MaxmindSyncPeriod, "maxmind-sync-period", time.Hour*24, "Maxmind databases sync period.")
-	flags.StringVar(&nginx.MaxmindURL, "maxmind-url", "https://updates.maxmind.com", "Maxmind URL to download GeoLite2 Databases.")
+	flags.StringVar(&nginx.MaxmindURL, "maxmind-url", "https://updates.maxmind.com", "Maxmind url to download GeoLite2 Databases.")
 
 	flags.AddGoFlagSet(flag.CommandLine)
 	if err := flags.Parse(os.Args); err != nil {

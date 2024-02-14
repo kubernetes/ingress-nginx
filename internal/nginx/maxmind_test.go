@@ -141,7 +141,7 @@ func TestRequestDatabase(t *testing.T) {
 
 			MaxmindURL = server.URL
 
-			result, err := requestDatabase(test.requestEdition, test.requestHash)
+			result, err := fetchDatabaseIfUpdated(test.requestEdition, test.requestHash)
 			test.checkErr(t, err)
 			if err == nil {
 				require.Equal(t, result.EditionID, test.result.EditionID)

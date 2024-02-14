@@ -137,7 +137,7 @@ func DownloadGeoLite2DB(attempts int, period time.Duration) error {
 	lastErr = wait.ExponentialBackoff(defaultRetry, func() (bool, error) {
 		var dlError error
 		for _, editionID := range strings.Split(MaxmindEditionIDs, ",") {
-			dlError = fetchDatabase(editionID)
+			dlError = downloadDatabase(editionID)
 			if dlError != nil {
 				break
 			}
@@ -164,32 +164,25 @@ func DownloadGeoLite2DB(attempts int, period time.Duration) error {
 	return lastErr
 }
 
-func createURL(mirror, editionID, hash string) string {
-	if len(mirror) > 0 {
-		return fmt.Sprintf("%s/%s.tar.gz", mirror, editionID)
-	}
-	return fmt.Sprintf(maxmindURLFormat, MaxmindURL, editionID, hash)
-}
-
-func fetchDatabase(editionID string) error {
-	md5hash := getMD5Hash(editionID)
+func downloadDatabase(editionID string) error {
 	mmdbFile := editionID + dbExtension
 
-	for {
-		result, err := requestDatabase(editionID, md5hash)
-		if err != nil {
-			return err
+	result, err := fetchDatabase(editionID)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if result.Reader != nil {
+			result.Reader.Close()
 		}
-		defer func() {
-			if result.Reader != nil {
-				result.Reader.Close()
-			}
-		}()
-		if strings.EqualFold(result.OldHash, result.NewHash) {
-			return nil
-		}
+	}()
 
-		tarReader := tar.NewReader(result.Reader)
+	if len(MaxmindMirror) == 0 && strings.EqualFold(result.OldHash, result.NewHash) {
+		return nil
+	}
+
+	tarReader := tar.NewReader(result.Reader)
+	for {
 		header, err := tarReader.Next()
 		if err == io.EOF {
 			break
@@ -219,12 +212,49 @@ func fetchDatabase(editionID string) error {
 		}
 	}
 
-	return fmt.Errorf("the URL %v does not contains the database %v", createURL(MaxmindMirror, editionID, md5hash), mmdbFile)
+	return fmt.Errorf("no %s file in the db archive", mmdbFile)
 }
 
-func requestDatabase(editionID, md5hash string) (*FetchResult, error) {
-	newURL := createURL(MaxmindMirror, editionID, md5hash)
-	req, err := http.NewRequest(http.MethodGet, newURL, http.NoBody)
+func fetchDatabase(editionID string) (*FetchResult, error) {
+	if len(MaxmindMirror) > 0 {
+		return fetchDatabaseFromMirror(editionID)
+	}
+	return fetchDatabaseIfUpdated(editionID, calculateMD5Hash(editionID))
+}
+
+// backwards compatibility support - fetch directly from mirror without checking md5
+// without md5 check and no auth
+func fetchDatabaseFromMirror(editionID string) (result *FetchResult, err error) {
+	mirrorUrl := fmt.Sprintf("%s/%s.tar.gz", MaxmindMirror, editionID)
+	resp, err := http.Get(mirrorUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		if err != nil {
+			resp.Body.Close()
+		}
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %v", resp.Status)
+	}
+
+	archive, err := gzip.NewReader(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return &FetchResult{
+		Reader:    archive,
+		EditionID: editionID,
+	}, nil
+}
+
+func fetchDatabaseIfUpdated(editionID, md5hash string) (result *FetchResult, err error) {
+	updateDbUrl := fmt.Sprintf(maxmindURLFormat, MaxmindURL, editionID, md5hash)
+	req, err := http.NewRequest(http.MethodGet, updateDbUrl, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("create request: %w", err)
 	}
@@ -237,7 +267,7 @@ func requestDatabase(editionID, md5hash string) (*FetchResult, error) {
 	}
 
 	defer func() {
-		if resp.Body != nil {
+		if err != nil {
 			resp.Body.Close()
 		}
 	}()
@@ -280,10 +310,9 @@ func requestDatabase(editionID, md5hash string) (*FetchResult, error) {
 	}, nil
 }
 
-func getMD5Hash(editionID string) string {
+func calculateMD5Hash(editionID string) string {
 	file, err := os.Open(path.Join(geoIPPath, editionID+dbExtension))
 	if err != nil {
-		klog.ErrorS(err, "error opening file", "file", editionID+dbExtension)
 		return ""
 	}
 

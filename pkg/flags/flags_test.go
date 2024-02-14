@@ -111,5 +111,14 @@ func TestMaxmindRetryDownload(t *testing.T) {
 }
 
 func TestMaxmindSyncPeriod(t *testing.T) {
-	ResetForTesting()
+	ResetForTesting(func() { t.Fatal("Parsing failed") })
+
+	oldArgs := os.Args
+	defer func() { os.Args = oldArgs }()
+	os.Args = []string{"cmd", "--publish-service", "namespace/test", "--http-port", "0", "--https-port", "0", "--maxmind-enable-sync", "--maxmind-sync-period", "30s"}
+
+	_, _, err := ParseFlags()
+	if err == nil {
+		t.Fatalf("Expected an error parsing flags but none returned")
+	}
 }
