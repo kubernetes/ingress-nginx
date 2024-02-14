@@ -110,22 +110,23 @@ func main() {
 		metricsPort = os.Getenv(MetricsPortVar)
 	}
 
-	var mux *http.ServeMux
+	var errorsMux, metricsMux *http.ServeMux
 	if isExportMetrics {
 		if metricsPort == CustomErrorPagesPort {
-			mux = http.DefaultServeMux
-			mux.Handle("/metrics", promhttp.Handler())
-			mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+			errorsMux = http.DefaultServeMux
+			errorsMux.Handle("/metrics", promhttp.Handler())
+			errorsMux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusOK)
 			})
 		} else {
-			mux = http.NewServeMux()
-			http.Handle("/metrics", promhttp.Handler())
-			http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+			errorsMux = http.NewServeMux()
+			metricsMux = http.DefaultServeMux
+			metricsMux.Handle("/metrics", promhttp.Handler())
+			metricsMux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusOK)
 			})
 			go func() {
-				err := http.ListenAndServe(fmt.Sprintf(":%s", metricsPort), nil)
+				err := http.ListenAndServe(fmt.Sprintf(":%s", metricsPort), metricsMux)
 				if err != nil {
 					panic(err)
 				}
@@ -134,11 +135,11 @@ func main() {
 	} else {
 		// Use a new ServerMux because expvar HTTP handler registers itself against DefaultServerMux
 		// as a consequence of importing it in client_golang/prometheus.
-		mux = http.NewServeMux()
+		errorsMux = http.NewServeMux()
 	}
 
-	mux.HandleFunc("/", errorHandler(errFilesPath, defaultFormat))
-	err := http.ListenAndServe(fmt.Sprintf(":%s", CustomErrorPagesPort), mux)
+	errorsMux.HandleFunc("/", errorHandler(errFilesPath, defaultFormat))
+	err := http.ListenAndServe(fmt.Sprintf(":%s", CustomErrorPagesPort), errorsMux)
 	if err != nil {
 		panic(err)
 	}
