@@ -68,6 +68,10 @@ const (
 	// client does not specify an Accept header, or the Accept header provided
 	// cannot be mapped to a file extension.
 	DefaultFormatVar = "DEFAULT_RESPONSE_FORMAT"
+
+	// IsExposeSignalsVar is the name of the environment variable indicating
+	// whether or not to expose signals such as /metrics and /healthz.
+	IsExposeSignalsVar = "IS_EXPOSE_SIGNALS"
 )
 
 func init() {
@@ -86,15 +90,32 @@ func main() {
 		defaultFormat = os.Getenv(DefaultFormatVar)
 	}
 
-	http.HandleFunc("/", errorHandler(errFilesPath, defaultFormat))
+	isExposeSignals := true
+	if os.Getenv(IsExposeSignalsVar) != "" {
+		val, err := strconv.ParseBool(os.Getenv(IsExposeSignalsVar))
+		if err == nil {
+			isExposeSignals = val
+		}
+	}
 
-	http.Handle("/metrics", promhttp.Handler())
+	var mux *http.ServeMux
+	if isExposeSignals {
+		mux = http.DefaultServeMux
+		mux.Handle("/metrics", promhttp.Handler())
+		mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		})
+	} else {
+		// Use a new ServerMux because expvar HTTP handler registers itself against DefaultServerMux
+		// as a consequence of importing it in client_golang/prometheus.
+		mux = http.NewServeMux()
+	}
 
-	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
-
-	http.ListenAndServe(fmt.Sprintf(":8080"), nil)
+	mux.HandleFunc("/", errorHandler(errFilesPath, defaultFormat))
+	err := http.ListenAndServe(":8080", mux)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func errorHandler(path, defaultFormat string) func(http.ResponseWriter, *http.Request) {
