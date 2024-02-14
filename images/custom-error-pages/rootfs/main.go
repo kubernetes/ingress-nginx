@@ -71,11 +71,11 @@ const (
 	DefaultFormatVar = "DEFAULT_RESPONSE_FORMAT"
 
 	// IsExportMetricsVar is the name of the environment variable indicating
-	// whether or not to export /metrics and /healthz.
+	// whether or not to export /metrics and /debug/vars.
 	IsExportMetricsVar = "IS_EXPORT_METRICS"
 
 	// MetricsPortVar is the name of the environment variable indicating
-	// the port on which to export /metrics and /healthz.
+	// the port on which to export /metrics and /debug/vars.
 	MetricsPortVar = "METRICS_PORT"
 
 	// CustomErrorPagesPort is the port on which to listen to serve custom error pages.
@@ -123,6 +123,9 @@ func createListeners() []Listener {
 	if !isExportMetrics {
 		mux := http.NewServeMux()
 		mux.HandleFunc("/", errorHandler(errFilesPath, defaultFormat))
+		mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		})
 		listeners = append(listeners, Listener{mux, CustomErrorPagesPort})
 		return listeners
 	}
@@ -132,10 +135,10 @@ func createListeners() []Listener {
 	if metricsPort == CustomErrorPagesPort {
 		mux := http.DefaultServeMux
 		mux.Handle("/metrics", promhttp.Handler())
+		mux.HandleFunc("/", errorHandler(errFilesPath, defaultFormat))
 		mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 		})
-		mux.HandleFunc("/", errorHandler(errFilesPath, defaultFormat))
 		listeners = append(listeners, Listener{mux, CustomErrorPagesPort})
 		return listeners
 	}
@@ -145,11 +148,13 @@ func createListeners() []Listener {
 	// against DefaultServerMux.
 	metricsMux := http.DefaultServeMux
 	metricsMux.Handle("/metrics", promhttp.Handler())
-	metricsMux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
+
 	errorsMux := http.NewServeMux()
 	errorsMux.HandleFunc("/", errorHandler(errFilesPath, defaultFormat))
+	errorsMux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
 	listeners = append(listeners, Listener{metricsMux, metricsPort}, Listener{errorsMux, CustomErrorPagesPort})
 	return listeners
 }
