@@ -25,6 +25,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -87,6 +88,11 @@ func init() {
 }
 
 func main() {
+	listeners := createListeners()
+	startListeners(listeners)
+}
+
+func createListeners() []Listener {
 	errFilesPath := "/www"
 	if os.Getenv(ErrFilesPathVar) != "" {
 		errFilesPath = os.Getenv(ErrFilesPathVar)
@@ -110,39 +116,64 @@ func main() {
 		metricsPort = os.Getenv(MetricsPortVar)
 	}
 
-	var errorsMux, metricsMux *http.ServeMux
-	if isExportMetrics {
-		if metricsPort == CustomErrorPagesPort {
-			errorsMux = http.DefaultServeMux
-			errorsMux.Handle("/metrics", promhttp.Handler())
-			errorsMux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			})
-		} else {
-			errorsMux = http.NewServeMux()
-			metricsMux = http.DefaultServeMux
-			metricsMux.Handle("/metrics", promhttp.Handler())
-			metricsMux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			})
-			go func() {
-				err := http.ListenAndServe(fmt.Sprintf(":%s", metricsPort), metricsMux)
-				if err != nil {
-					panic(err)
-				}
-			}()
-		}
-	} else {
-		// Use a new ServerMux because expvar HTTP handler registers itself against DefaultServerMux
-		// as a consequence of importing it in client_golang/prometheus.
-		errorsMux = http.NewServeMux()
+	var listeners []Listener
+
+	// MUST use NewServerMux when not exporting /metrics because expvar HTTP handler registers
+	// against DefaultServerMux as a consequence of importing it in client_golang/prometheus.
+	if !isExportMetrics {
+		mux := http.NewServeMux()
+		mux.HandleFunc("/", errorHandler(errFilesPath, defaultFormat))
+		listeners = append(listeners, Listener{mux, CustomErrorPagesPort})
+		return listeners
 	}
 
-	errorsMux.HandleFunc("/", errorHandler(errFilesPath, defaultFormat))
-	err := http.ListenAndServe(fmt.Sprintf(":%s", CustomErrorPagesPort), errorsMux)
-	if err != nil {
-		panic(err)
+	// MUST use DefaultServerMux when exporting /metrics to the public because /debug/vars is
+	// only available with DefaultServerMux.
+	if metricsPort == CustomErrorPagesPort {
+		mux := http.DefaultServeMux
+		mux.Handle("/metrics", promhttp.Handler())
+		mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		})
+		mux.HandleFunc("/", errorHandler(errFilesPath, defaultFormat))
+		listeners = append(listeners, Listener{mux, CustomErrorPagesPort})
+		return listeners
 	}
+
+	// MUST use DefaultServerMux for /metrics and NewServerMux for custom error pages when you
+	// wish to expose /metrics only to internal services, because expvar HTTP handler registers
+	// against DefaultServerMux.
+	metricsMux := http.DefaultServeMux
+	metricsMux.Handle("/metrics", promhttp.Handler())
+	metricsMux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	errorsMux := http.NewServeMux()
+	errorsMux.HandleFunc("/", errorHandler(errFilesPath, defaultFormat))
+	listeners = append(listeners, Listener{metricsMux, metricsPort}, Listener{errorsMux, CustomErrorPagesPort})
+	return listeners
+}
+
+func startListeners(listeners []Listener) {
+	var wg sync.WaitGroup
+
+	for _, listener := range listeners {
+		wg.Add(1)
+		go func(l Listener) {
+			defer wg.Done()
+			err := http.ListenAndServe(fmt.Sprintf(":%s", l.port), l.mux)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}(listener)
+	}
+
+	wg.Wait()
+}
+
+type Listener struct {
+	mux  *http.ServeMux
+	port string
 }
 
 func errorHandler(path, defaultFormat string) func(http.ResponseWriter, *http.Request) {
