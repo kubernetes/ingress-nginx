@@ -72,6 +72,13 @@ const (
 	// IsExposeSignalsVar is the name of the environment variable indicating
 	// whether or not to expose signals such as /metrics and /healthz.
 	IsExposeSignalsVar = "IS_EXPOSE_SIGNALS"
+
+	// ExposeSignalsPortVar is the name of the environment variable indicating
+	// the port on which to expose signals such as /metrics and /healthz.
+	ExposeSignalsPortVar = "EXPOSE_SIGNALS_PORT"
+
+	// CustomErrorPagesPort is the port on which to listen to serve custom error pages.
+	CustomErrorPagesPort = "8080"
 )
 
 func init() {
@@ -98,23 +105,51 @@ func main() {
 		}
 	}
 
+	exposeSignalsPort := "8080"
+	if os.Getenv(ExposeSignalsPortVar) != "" {
+		exposeSignalsPort = os.Getenv(ExposeSignalsPortVar)
+	}
+
 	var mux *http.ServeMux
 	if isExposeSignals {
-		mux = http.DefaultServeMux
-		mux.Handle("/metrics", promhttp.Handler())
-		mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusOK)
-		})
+		if exposeSignalsPort == CustomErrorPagesPort {
+			mux = http.DefaultServeMux
+			mux.HandleFunc("/", errorHandler(errFilesPath, defaultFormat))
+			mux.Handle("/metrics", promhttp.Handler())
+			mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			})
+			err := http.ListenAndServe(fmt.Sprintf(":%s", CustomErrorPagesPort), mux)
+			if err != nil {
+				panic(err)
+			}
+		} else {
+			mux = http.NewServeMux()
+			mux.HandleFunc("/", errorHandler(errFilesPath, defaultFormat))
+			http.Handle("/metrics", promhttp.Handler())
+			http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			})
+			go func() {
+				err := http.ListenAndServe(fmt.Sprintf(":%s", CustomErrorPagesPort), mux)
+				if err != nil {
+					panic(err)
+				}
+			}()
+			err := http.ListenAndServe(fmt.Sprintf(":%s", exposeSignalsPort), nil)
+			if err != nil {
+				panic(err)
+			}
+		}
 	} else {
 		// Use a new ServerMux because expvar HTTP handler registers itself against DefaultServerMux
 		// as a consequence of importing it in client_golang/prometheus.
 		mux = http.NewServeMux()
-	}
-
-	mux.HandleFunc("/", errorHandler(errFilesPath, defaultFormat))
-	err := http.ListenAndServe(":8080", mux)
-	if err != nil {
-		log.Fatal(err)
+		mux.HandleFunc("/", errorHandler(errFilesPath, defaultFormat))
+		err := http.ListenAndServe(fmt.Sprintf(":%s", CustomErrorPagesPort), mux)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
