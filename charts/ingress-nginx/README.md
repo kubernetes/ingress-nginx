@@ -546,6 +546,7 @@ metadata:
 | defaultBackend.service.annotations | object | `{}` |  |
 | defaultBackend.service.clusterIPs | list | `[]` | Pre-defined cluster internal IP addresses of the default backend service. Take care of collisions with existing services. This value is immutable. Set once, it can not be changed without deleting and re-creating the service. Ref: https://kubernetes.io/docs/concepts/services-networking/service/#choosing-your-own-ip-address |
 | defaultBackend.service.externalIPs | list | `[]` | List of IP addresses at which the default backend service is available # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips # |
+| defaultBackend.service.extraPorts | list | `[]` | Additional ports to expose for defaultBackend pods |
 | defaultBackend.service.loadBalancerSourceRanges | list | `[]` |  |
 | defaultBackend.service.servicePort | int | `80` |  |
 | defaultBackend.service.type | string | `"ClusterIP"` |  |
