@@ -93,6 +93,13 @@ spec:
             - name: http
               containerPort: {{ .Values.defaultBackend.port }}
               protocol: TCP
+          {{- if .Values.defaultBackend.service.extraPorts }}
+            {{- range .Values.defaultBackend.service.extraPorts }}
+            - name: {{ .name }}
+              containerPort: {{ .targetPort }}
+              protocol: {{ .protocol }}
+            {{- end }}
+          {{- end }}
         {{- if .Values.defaultBackend.extraVolumeMounts }}
           volumeMounts: {{- toYaml .Values.defaultBackend.extraVolumeMounts | nindent 12 }}
         {{- end }}
