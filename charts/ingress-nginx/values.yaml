@@ -1181,7 +1181,7 @@ defaultBackend:
     extraPorts: []
     #  - name: metrics
     #    port: 9090
-    #    protocol: HTTP
+    #    protocol: TCP
     #    targetPort: 9090
   priorityClassName: ""
   # -- Labels to be added to the default backend resources
