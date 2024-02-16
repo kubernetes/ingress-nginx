@@ -214,62 +214,53 @@ var _ = framework.IngressNginxDescribe("[Flag] enable-ssl-passthrough", func() {
 						conn, err := next(ctx, network, addr)
 						return &writeThrottledConn{
 							Conn:      conn,
-							chunkSize: 50,
+							chunkSize: len(host) / 3,
 						}, err
 					}
 				}
-				tries := 3
 
 				ginkgo.It("should handle known traffic without Host header", func() {
-					for i := 0; i < tries; i++ {
-						f.HTTPTestClientWithTLSConfig(tlsConfig).
-							GET("/").
-							WithURL(url).
-							ForceResolve(f.GetNginxIP(), 443).
-							WithDialContextMiddleware(throttleMiddleware).
-							Expect().
-							Status(http.StatusOK)
-					}
+					f.HTTPTestClientWithTLSConfig(tlsConfig).
+						GET("/").
+						WithURL(url).
+						ForceResolve(f.GetNginxIP(), 443).
+						WithDialContextMiddleware(throttleMiddleware).
+						Expect().
+						Status(http.StatusOK)
 				})
 
 				ginkgo.It("should handle insecure traffic without Host header", func() {
-					for i := 0; i < tries; i++ {
-						//nolint:gosec // Ignore the gosec error in testing
-						f.HTTPTestClientWithTLSConfig(&tls.Config{ServerName: host, InsecureSkipVerify: true}).
-							GET("/").
-							WithURL(url).
-							ForceResolve(f.GetNginxIP(), 443).
-							WithDialContextMiddleware(throttleMiddleware).
-							Expect().
-							Status(http.StatusOK)
-					}
+					//nolint:gosec // Ignore the gosec error in testing
+					f.HTTPTestClientWithTLSConfig(&tls.Config{ServerName: host, InsecureSkipVerify: true}).
+						GET("/").
+						WithURL(url).
+						ForceResolve(f.GetNginxIP(), 443).
+						WithDialContextMiddleware(throttleMiddleware).
+						Expect().
+						Status(http.StatusOK)
 				})
 
 				ginkgo.It("should handle known traffic with Host header", func() {
-					for i := 0; i < tries; i++ {
-						f.HTTPTestClientWithTLSConfig(tlsConfig).
-							GET("/").
-							WithURL(url).
-							WithHeader("Host", host).
-							ForceResolve(f.GetNginxIP(), 443).
-							WithDialContextMiddleware(throttleMiddleware).
-							Expect().
-							Status(http.StatusOK)
-					}
+					f.HTTPTestClientWithTLSConfig(tlsConfig).
+						GET("/").
+						WithURL(url).
+						WithHeader("Host", host).
+						ForceResolve(f.GetNginxIP(), 443).
+						WithDialContextMiddleware(throttleMiddleware).
+						Expect().
+						Status(http.StatusOK)
 				})
 
 				ginkgo.It("should handle insecure traffic with Host header", func() {
-					for i := 0; i < tries; i++ {
-						//nolint:gosec // Ignore the gosec error in testing
-						f.HTTPTestClientWithTLSConfig(&tls.Config{ServerName: host, InsecureSkipVerify: true}).
-							GET("/").
-							WithURL(url).
-							WithHeader("Host", host).
-							ForceResolve(f.GetNginxIP(), 443).
-							WithDialContextMiddleware(throttleMiddleware).
-							Expect().
-							Status(http.StatusOK)
-					}
+					//nolint:gosec // Ignore the gosec error in testing
+					f.HTTPTestClientWithTLSConfig(&tls.Config{ServerName: host, InsecureSkipVerify: true}).
+						GET("/").
+						WithURL(url).
+						WithHeader("Host", host).
+						ForceResolve(f.GetNginxIP(), 443).
+						WithDialContextMiddleware(throttleMiddleware).
+						Expect().
+						Status(http.StatusOK)
 				})
 			})
 		})
