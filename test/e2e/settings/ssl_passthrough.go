@@ -78,6 +78,7 @@ var _ = framework.IngressNginxDescribe("[Flag] enable-ssl-passthrough", func() {
 		ginkgo.Context("when handling traffic", func() {
 			var tlsConfig *tls.Config
 			host := "testpassthrough.com"
+			url := "https://" + net.JoinHostPort(host, "443")
 			echoName := "echopass"
 			secretName := host
 
@@ -153,6 +154,7 @@ var _ = framework.IngressNginxDescribe("[Flag] enable-ssl-passthrough", func() {
 			ginkgo.It("should pass unknown traffic to default backend and handle known traffic", func() {
 				/* This one should not receive traffic as it does not contain passthrough annotation */
 				hostBad := "noannotationnopassthrough.com"
+				urlBad := "https://" + net.JoinHostPort(hostBad, "443")
 				ingBad := f.EnsureIngress(framework.NewSingleIngressWithTLS(hostBad,
 					"/",
 					hostBad,
@@ -173,34 +175,30 @@ var _ = framework.IngressNginxDescribe("[Flag] enable-ssl-passthrough", func() {
 						return strings.Contains(server, "listen 442")
 					})
 
-				//nolint:gosec // Ignore the gosec error in testing
 				f.HTTPTestClientWithTLSConfig(&tls.Config{ServerName: host, InsecureSkipVerify: true}).
 					GET("/").
-					WithURL("https://"+net.JoinHostPort(host, "443")).
+					WithURL(url).
 					ForceResolve(f.GetNginxIP(), 443).
 					Expect().
 					Status(http.StatusOK)
 
-				//nolint:gosec // Ignore the gosec error in testing
 				f.HTTPTestClientWithTLSConfig(&tls.Config{ServerName: hostBad, InsecureSkipVerify: true}).
 					GET("/").
-					WithURL("https://"+net.JoinHostPort(hostBad, "443")).
+					WithURL(urlBad).
 					ForceResolve(f.GetNginxIP(), 443).
 					Expect().
 					Status(http.StatusNotFound)
 
-				//nolint:gosec // Ignore the gosec error in testing
 				f.HTTPTestClientWithTLSConfig(tlsConfig).
 					GET("/").
-					WithURL("https://"+net.JoinHostPort(host, "443")).
+					WithURL(url).
 					ForceResolve(f.GetNginxIP(), 443).
 					Expect().
 					Status(http.StatusOK)
 
-				//nolint:gosec // Ignore the gosec error in testing
 				f.HTTPTestClientWithTLSConfig(tlsConfigBad).
 					GET("/").
-					WithURL("https://"+net.JoinHostPort(hostBad, "443")).
+					WithURL(urlBad).
 					ForceResolve(f.GetNginxIP(), 443).
 					Expect().
 					Status(http.StatusNotFound)
@@ -222,10 +220,9 @@ var _ = framework.IngressNginxDescribe("[Flag] enable-ssl-passthrough", func() {
 
 				ginkgo.It("should handle known traffic without Host header", func() {
 					for i := 0; i < tries; i++ {
-						//nolint:gosec // Ignore the gosec error in testing
 						f.HTTPTestClientWithTLSConfig(&tls.Config{ServerName: host, InsecureSkipVerify: true}).
 							GET("/").
-							WithURL("https://"+net.JoinHostPort(host, "443")).
+							WithURL(url).
 							ForceResolve(f.GetNginxIP(), 443).
 							WithDialContextMiddleware(throttleMiddleware).
 							Expect().
@@ -235,10 +232,9 @@ var _ = framework.IngressNginxDescribe("[Flag] enable-ssl-passthrough", func() {
 
 				ginkgo.It("should handle known traffic with Host header", func() {
 					for i := 0; i < tries; i++ {
-						//nolint:gosec // Ignore the gosec error in testing
 						f.HTTPTestClientWithTLSConfig(tlsConfig).
 							GET("/").
-							WithURL("https://"+net.JoinHostPort(host, "443")).
+							WithURL(url).
 							WithHeader("Host", host).
 							ForceResolve(f.GetNginxIP(), 443).
 							WithDialContextMiddleware(throttleMiddleware).
@@ -249,10 +245,9 @@ var _ = framework.IngressNginxDescribe("[Flag] enable-ssl-passthrough", func() {
 
 				ginkgo.It("should handle insecure traffic with Host header", func() {
 					for i := 0; i < tries; i++ {
-						//nolint:gosec // Ignore the gosec error in testing
 						f.HTTPTestClientWithTLSConfig(&tls.Config{ServerName: host, InsecureSkipVerify: true}).
 							GET("/").
-							WithURL("https://"+net.JoinHostPort(host, "443")).
+							WithURL(url).
 							WithHeader("Host", host).
 							ForceResolve(f.GetNginxIP(), 443).
 							WithDialContextMiddleware(throttleMiddleware).
