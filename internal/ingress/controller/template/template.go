@@ -879,9 +879,7 @@ func buildRateLimit(input interface{}) []string {
 	if loc.RateLimit.RPS.Limit > 0 {
 		limit := fmt.Sprintf("limit_req zone=%v", loc.RateLimit.RPS.Name)
 
-		if loc.RateLimit.RPS.Burst == 0 {
-			limit = fmt.Sprintf("%v", limit)
-		} else {
+		if loc.RateLimit.RPS.Burst > 0 {
 			limit = fmt.Sprintf("%v burst=%v", limit, loc.RateLimit.RPS.Burst)
 		}
 
@@ -897,9 +895,7 @@ func buildRateLimit(input interface{}) []string {
 	if loc.RateLimit.RPM.Limit > 0 {
 		limit := fmt.Sprintf("limit_req zone=%v", loc.RateLimit.RPM.Name)
 
-		if loc.RateLimit.RPM.Burst == 0 {
-			limit = fmt.Sprintf("%v", limit)
-		} else {
+		if loc.RateLimit.RPM.Burst > 0 {
 			limit = fmt.Sprintf("%v burst=%v", limit, loc.RateLimit.RPM.Burst)
 		}
 

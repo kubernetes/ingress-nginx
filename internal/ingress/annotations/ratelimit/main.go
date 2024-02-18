@@ -262,6 +262,7 @@ func (a ratelimit) Parse(ing *networking.Ingress) (interface{}, error) {
 		burstMultiplier = defBurst
 	}
 
+	//nolint:errcheck // No need to check err here
 	noburst, _ := parser.GetBoolAnnotation(limitRateNoBurstAnnotation, ing, a.annotationConfig.Annotations)
 	if noburst {
 		burstMultiplier = 0

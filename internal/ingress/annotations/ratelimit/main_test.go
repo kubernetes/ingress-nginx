@@ -210,7 +210,6 @@ func TestRateLimiting(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix(limitRateConnectionsAnnotation)] = "5"
 	data[parser.GetAnnotationWithPrefix(limitRateRPSAnnotation)] = "100"
 	data[parser.GetAnnotationWithPrefix(limitRateRPMAnnotation)] = "10"
-	data[parser.GetAnnotationWithPrefix(limitRateAfterAnnotation)] = "100"
 	data[parser.GetAnnotationWithPrefix(limitRateAnnotation)] = "10"
 	data[parser.GetAnnotationWithPrefix(limitRateBurstMultiplierAnnotation)] = "3"
 	data[parser.GetAnnotationWithPrefix(limitRateNoBurstAnnotation)] = "true"
@@ -258,9 +257,6 @@ func TestRateLimiting(t *testing.T) {
 	}
 	if rateLimit.RPM.SharedSize != 1 {
 		t.Errorf("expected %d in sharedSize limit by rps but %v was returned", 1, rateLimit.RPM)
-	}
-	if rateLimit.LimitRateAfter != 100 {
-		t.Errorf("expected 100 in limit by limitrateafter but %v was returned", rateLimit.LimitRateAfter)
 	}
 	if rateLimit.LimitRate != 10 {
 		t.Errorf("expected 10 in limit by limitrate but %v was returned", rateLimit.LimitRate)

@@ -1012,19 +1012,19 @@ func TestBuildRateLimit(t *testing.T) {
 
 	loc = &ingress.Location{}
 
-	loc.RateLimit.RPS.Name = "rps"
+	loc.RateLimit.RPS.Name = "rps_nodelay"
 	loc.RateLimit.RPS.Limit = 1
 	loc.RateLimit.RPS.Burst = 0
 	loc.RateLimit.RPS.Delay = -1
 
-	loc.RateLimit.RPM.Name = "rpm"
+	loc.RateLimit.RPM.Name = "rpm_nodelay"
 	loc.RateLimit.RPM.Limit = 2
 	loc.RateLimit.RPM.Burst = 0
 	loc.RateLimit.RPM.Delay = -1
 
 	validLimits = []string{
-		"limit_req zone=rps nodelay;",
-		"limit_req zone=rpm nodelay;",
+		"limit_req zone=rps_nodelay nodelay;",
+		"limit_req zone=rpm_nodelay nodelay;",
 	}
 
 	limits = buildRateLimit(loc)
