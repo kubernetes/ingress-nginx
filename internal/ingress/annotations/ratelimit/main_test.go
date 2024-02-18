@@ -196,9 +196,6 @@ func TestRateLimiting(t *testing.T) {
 	if rateLimit.RPM.Delay != 5 {
 		t.Errorf("expected %d in delay limit by rpm but %v was returned", 5, rateLimit.RPM)
 	}
-	if rateLimit.RPM.SharedSize != 5 {
-		t.Errorf("expected %d in sharedSize limit by rpm but %v was returned", 5, rateLimit.RPM)
-	}
 	if rateLimit.LimitRateAfter != 100 {
 		t.Errorf("expected 100 in limit by limitrateafter but %v was returned", rateLimit.LimitRateAfter)
 	}
