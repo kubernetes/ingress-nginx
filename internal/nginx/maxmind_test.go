@@ -19,13 +19,14 @@ package nginx
 import (
 	"bytes"
 	"compress/gzip"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 func resetForTesting() {
@@ -117,7 +118,7 @@ func TestRequestDatabase(t *testing.T) {
 		t.Run(test.description, func(t *testing.T) {
 			server := httptest.NewServer(
 				http.HandlerFunc(
-					func(w http.ResponseWriter, r *http.Request) {
+					func(w http.ResponseWriter, _ *http.Request) {
 						if test.responseStatus != http.StatusOK {
 							w.WriteHeader(test.responseStatus)
 							return

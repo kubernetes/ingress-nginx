@@ -19,7 +19,7 @@ package nginx
 import (
 	"archive/tar"
 	"compress/gzip"
-	"crypto/md5"
+	"crypto/md5" //nolint:gosec // md5 is used for file integrity check
 	"fmt"
 	"io"
 	"net"
@@ -33,7 +33,7 @@ import (
 	"time"
 
 	"k8s.io/apimachinery/pkg/util/wait"
-	klog "k8s.io/klog/v2"
+	"k8s.io/klog/v2"
 )
 
 // MaxmindURL maxmind download url base
@@ -177,7 +177,7 @@ func downloadDatabase(editionID string) error {
 		}
 	}()
 
-	if len(MaxmindMirror) == 0 && strings.EqualFold(result.OldHash, result.NewHash) {
+	if MaxmindMirror == "" && strings.EqualFold(result.OldHash, result.NewHash) {
 		return nil
 	}
 
@@ -216,7 +216,7 @@ func downloadDatabase(editionID string) error {
 }
 
 func fetchDatabase(editionID string) (*FetchResult, error) {
-	if len(MaxmindMirror) > 0 {
+	if MaxmindMirror != "" {
 		return fetchDatabaseFromMirror(editionID)
 	}
 	return fetchDatabaseIfUpdated(editionID, calculateMD5Hash(editionID))
@@ -225,8 +225,8 @@ func fetchDatabase(editionID string) (*FetchResult, error) {
 // backwards compatibility support - fetch directly from mirror without checking md5
 // without md5 check and no auth
 func fetchDatabaseFromMirror(editionID string) (result *FetchResult, err error) {
-	mirrorUrl := fmt.Sprintf("%s/%s.tar.gz", MaxmindMirror, editionID)
-	resp, err := http.Get(mirrorUrl)
+	mirrorURL := fmt.Sprintf("%s/%s.tar.gz", MaxmindMirror, editionID)
+	resp, err := http.Get(mirrorURL) //nolint:gosec // URL is based on flag value
 	if err != nil {
 		return nil, err
 	}
@@ -253,15 +253,14 @@ func fetchDatabaseFromMirror(editionID string) (result *FetchResult, err error) 
 }
 
 func fetchDatabaseIfUpdated(editionID, md5hash string) (result *FetchResult, err error) {
-	updateDbUrl := fmt.Sprintf(maxmindURLFormat, MaxmindURL, editionID, md5hash)
-	req, err := http.NewRequest(http.MethodGet, updateDbUrl, http.NoBody)
+	updateDatabaseURL := fmt.Sprintf(maxmindURLFormat, MaxmindURL, editionID, md5hash)
+	req, err := http.NewRequest(http.MethodGet, updateDatabaseURL, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("create request: %w", err)
 	}
 
 	req.SetBasicAuth(strconv.Itoa(MaxmindAccountID), MaxmindLicenseKey)
 	resp, err := http.DefaultClient.Do(req)
-
 	if err != nil {
 		return nil, fmt.Errorf("do request to fetch db %v: %w", editionID, err)
 	}
@@ -318,7 +317,7 @@ func calculateMD5Hash(editionID string) string {
 
 	defer file.Close()
 
-	hash := md5.New()
+	hash := md5.New() //nolint:gosec  // md5 is used for file integrity check
 	if _, err := io.Copy(hash, file); err != nil {
 		klog.ErrorS(err, "error calculating md5 hash")
 		return ""
