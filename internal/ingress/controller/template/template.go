@@ -1501,13 +1501,8 @@ func httpsListener(addresses []string, co string, tc *config.TemplateConfig) []s
 			}
 		}
 
-		lo = append(lo, co, "ssl")
+		lo = append(lo, co, "ssl;")
 
-		if tc.Cfg.UseHTTP2 {
-			lo = append(lo, "http2")
-		}
-
-		lo = append(lo, ";")
 		out = append(out, strings.Join(lo, " "))
 	}
 

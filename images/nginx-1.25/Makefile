@@ -1,4 +1,4 @@
-# Copyright 2020 The Kubernetes Authors.
+# Copyright 2024 The Kubernetes Authors. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Docker image for e2e testing.
+.DEFAULT_GOAL:=build
 
 # set default shell
 SHELL=/bin/bash -o pipefail -o errexit
@@ -20,12 +20,13 @@ SHELL=/bin/bash -o pipefail -o errexit
 DIR:=$(strip $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))
 INIT_BUILDX=$(DIR)/../../hack/init-buildx.sh
 
+# 0.0.0 shouldn't clobber any released builds
 SHORT_SHA ?=$(shell git rev-parse --short HEAD)
-TAG ?=v$(shell date +%Y%m%d)-$(SHORT_SHA)
+TAG ?=$(shell cat TAG)
 
-REGISTRY ?= local
+REGISTRY ?= gcr.io/k8s-staging-ingress-nginx
 
-IMAGE = $(REGISTRY)/e2e-test-fastcgi-helloserver
+IMAGE = $(REGISTRY)/nginx-1.25
 
 # required to enable buildx
 export DOCKER_CLI_EXPERIMENTAL=enabled
@@ -34,13 +35,12 @@ export DOCKER_CLI_EXPERIMENTAL=enabled
 PLATFORMS?=linux/amd64,linux/arm,linux/arm64
 OUTPUT=
 PROGRESS=plain
-
 build: ensure-buildx
 	docker buildx build \
 		--platform=${PLATFORMS} $(OUTPUT) \
 		--progress=$(PROGRESS) \
 		--pull \
-		-t $(IMAGE):$(TAG) rootfs
+		--tag $(IMAGE):$(TAG) rootfs
 
 # push the cross built image
 push: OUTPUT=--push

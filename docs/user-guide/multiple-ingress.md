@@ -23,7 +23,7 @@ spec:
              - /nginx-ingress-controller
              - '--election-id=ingress-controller-leader'
              - '--controller-class=k8s.io/internal-ingress-nginx'
-             - '--ingress-class=internal-nginx'
+             - '--ingress-class=k8s.io/internal-nginx'
             ...
 ```
 

@@ -1,4 +1,4 @@
-# Copyright 2020 The Kubernetes Authors.
+# Copyright 2024 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,18 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+.DEFAULT_GOAL:=build
+
 # set default shell
 SHELL=/bin/bash -o pipefail -o errexit
 
 DIR:=$(strip $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))
-INIT_BUILDX=$(DIR)/../../hack/init-buildx.sh
+INIT_BUILDX=$(DIR)/../hack/init-buildx.sh
 
-SHORT_SHA ?=$(shell git rev-parse --short HEAD)
-TAG ?=v$(shell date +%Y%m%d)-$(SHORT_SHA)
+
+BASE_IMAGE = $(shell cat $(DIR)/../NGINX_BASE)
+
+# The env below is called GO_VERSION and not GOLANG_VERSION because 
+# the gcb image we use to build already defines GOLANG_VERSION and is a 
+# really old version
+GO_VERSION = $(shell cat $(DIR)/../GOLANG_VERSION)
 
 REGISTRY ?= local
+NAME ?=
 
-IMAGE = $(REGISTRY)/e2e-test-cfssl
+IMAGE = $(REGISTRY)/$(NAME)
+TAG ?= $(shell cat $(NAME)/TAG)
+
+EXTRAARGS ?= $(shell cat $(NAME)/EXTRAARGS)
+
 
 # required to enable buildx
 export DOCKER_CLI_EXPERIMENTAL=enabled
@@ -33,16 +45,33 @@ PLATFORMS?=linux/amd64,linux/arm,linux/arm64,linux/s390x
 OUTPUT=
 PROGRESS=plain
 
-build: ensure-buildx
+
+precheck:
+ifndef NAME
+	$(error NAME variable is required)
+endif
+
+build: precheck ensure-buildx
 	docker buildx build \
+		--label=org.opencontainers.image.source=https://github.com/kubernetes/ingress-nginx \
+		--label=org.opencontainers.image.licenses=Apache-2.0 \
+		--label=org.opencontainers.image.description="Ingress NGINX $(NAME) image" \
+		--build-arg BASE_IMAGE=$(BASE_IMAGE) \
+		--build-arg GOLANG_VERSION=$(GO_VERSION) \
 		--platform=${PLATFORMS} $(OUTPUT) \
 		--progress=$(PROGRESS) \
-		--pull \
-		-t $(IMAGE):$(TAG) rootfs
+		--pull $(EXTRAARGS) \
+		-t $(IMAGE):$(TAG) $(NAME)/rootfs
 
 # push the cross built image
 push: OUTPUT=--push
 push: build
+
+test: precheck
+	cd $(NAME)/rootfs && go test ./...
+
+test-e2e: precheck
+	cd $(NAME) && ./hack/e2e.sh
 
 # enable buildx
 ensure-buildx:
@@ -54,4 +83,4 @@ else
 endif
 	@echo "done"
 
-.PHONY: build push ensure-buildx
+.PHONY: build push ensure-buildx test test-e2e precheck

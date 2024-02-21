@@ -31,6 +31,9 @@ spec:
         # docker run -ti --rm python:3-alpine python -c 'import secrets,base64; print(base64.b64encode(base64.b64encode(secrets.token_bytes(16))));'
         - name: OAUTH2_PROXY_COOKIE_SECRET
           value: SECRET
+        # Recommended: remove email-domain=* in args and set an allowlist
+        # - name: OAUTH2_PROXY_GITHUB_USERS
+        #   value: alice,bob
         image: quay.io/oauth2-proxy/oauth2-proxy:latest
         imagePullPolicy: Always
         name: oauth2-proxy
@@ -55,3 +58,52 @@ spec:
     targetPort: 4180
   selector:
     k8s-app: oauth2-proxy
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: oauth2-proxy
+  namespace: kube-system
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: __INGRESS_HOST__
+    http:
+      paths:
+      - path: /oauth2
+        pathType: Prefix
+        backend:
+          service:
+            name: oauth2-proxy
+            port:
+              number: 4180
+  tls:
+  - hosts:
+    - __INGRESS_HOST__
+    secretName: __INGRESS_SECRET__
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+    nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+  name: external-auth-oauth2
+  namespace: kube-system
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: __INGRESS_HOST__
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kubernetes-dashboard
+            port:
+              number: 80

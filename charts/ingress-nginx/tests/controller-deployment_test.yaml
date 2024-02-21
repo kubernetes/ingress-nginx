@@ -21,6 +21,22 @@ tests:
           path: spec.replicas
           value: 3
 
+  - it: should create a Deployment with argument `--enable-metrics=false` if `controller.metrics.enabled` is false
+    set:
+      controller.metrics.enabled: false
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --enable-metrics=false
+
+  - it: should create a Deployment without argument `--enable-metrics=false` if `controller.metrics.enabled` is true
+    set:
+      controller.metrics.enabled: true
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: --enable-metrics=false
+
   - it: should create a Deployment with resource limits if `controller.resources.limits` is set
     set:
       controller.resources.limits.cpu: 500m

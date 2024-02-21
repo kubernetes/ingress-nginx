@@ -246,6 +246,7 @@ Do not try to edit it manually.
 - [drops snippet more_set_header in all locations if disabled by admin](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/annotations/snippet.go#L73)
 ### [ssl-ciphers](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/annotations/sslciphers.go#L28)
 - [should change ssl ciphers](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/annotations/sslciphers.go#L35)
+- [should keep ssl ciphers](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/annotations/sslciphers.go#L58)
 ### [stream-snippet](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/annotations/streamsnippet.go#L34)
 - [should add value of stream-snippet to nginx config](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/annotations/streamsnippet.go#L41)
 - [should add stream-snippet and drop annotations per admin config](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/annotations/streamsnippet.go#L94)
