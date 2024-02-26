@@ -26,7 +26,7 @@ export NDK_VERSION=v0.3.3
 # Check for recent changes: https://github.com/openresty/set-misc-nginx-module/compare/v0.33...master
 export SETMISC_VERSION=796f5a3e518748eb29a93bd450324e0ad45b704e
 
-# Check for recent changes: https://github.com/openresty/headers-more-nginx-module/compare/v0.34...master
+# Check for recent changes: https://github.com/openresty/headers-more-nginx-module/compare/v0.37...master
 export MORE_HEADERS_VERSION=v0.37
 
 # Check for recent changes: https://github.com/atomx/nginx-http-auth-digest/compare/v1.0.0...atomx:master
