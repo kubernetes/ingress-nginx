@@ -103,6 +103,7 @@ local function do_ocsp_request(url, ocsp_request)
       ["Host"] = parsed_url[2],
     },
     body = ocsp_request,
+    ssl_server_name = parsed_url[2],
   })
   if not http_response then
     return nil, err
