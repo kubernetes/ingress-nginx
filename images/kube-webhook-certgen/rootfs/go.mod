@@ -3,13 +3,13 @@ module github.com/jet/kube-webhook-certgen
 go 1.21
 
 require (
-	github.com/onrik/logrus v0.9.0
+	github.com/onrik/logrus v0.11.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
 	k8s.io/api v0.29.2
 	k8s.io/apimachinery v0.29.2
 	k8s.io/client-go v0.29.2
-	k8s.io/kube-aggregator v0.22.6
+	k8s.io/kube-aggregator v0.29.2
 )
 
 require (
@@ -38,7 +38,6 @@ require (
 	github.com/onsi/gomega v1.30.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/tidwall/gjson v1.14.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/oauth2 v0.17.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
