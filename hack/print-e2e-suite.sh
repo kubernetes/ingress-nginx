@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [ -n "$DEBUG" ]; then
-	set -x
+if [ "$DEBUG" == "true" ]; then
+  set -x
 fi
 
 set -o errexit
@@ -25,5 +25,6 @@ set -o pipefail
 DIR=$(cd $(dirname "${BASH_SOURCE}")/.. && pwd -P)
 
 $DIR/test/e2e/e2e.test \
-    -ginkgo.noColor \
-    -ginkgo.dryRun | sed "s|$DIR/|File: |g" | sed 's/•//g' | tail -n+5 | head -n-3
+    --ginkgo.no-color \
+    --ginkgo.v \
+    --ginkgo.dry-run | sed "s|$DIR/|File: |g" | sed 's/•//g' | tail -n+5 | head -n-3
