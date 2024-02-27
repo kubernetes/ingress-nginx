@@ -1,0 +1,22 @@
+suite: Controller > Keda > PDB
+templates:
+  - controller-poddisruptionbudget.yaml
+
+tests:
+  - it: should create a PodDisruptionBudget if `controller.kind` is "Deployment" and `controller.keda.enabled` is true
+    set:
+      controller.kind: Deployment
+      controller.keda.enabled: true
+      controller.keda.minReplicas: 2
+      controller.minAvailable: 1
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: PodDisruptionBudget
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-controller
+      - equal:
+          path: spec.minAvailable
+          value: 1
