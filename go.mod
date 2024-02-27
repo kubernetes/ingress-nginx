@@ -83,6 +83,7 @@ require (
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mmarkdown/mmark v2.0.40+incompatible // indirect
 	github.com/moby/sys/mountinfo v0.7.1 // indirect
 	github.com/moby/term v0.5.0 // indirect
