@@ -39,7 +39,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/auth-proxy-set-headers](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-snippet](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/enable-global-auth](#external-authentication)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/backend-protocol](#backend-protocol)|string|HTTP,HTTPS,GRPC,GRPCS|
+|[nginx.ingress.kubernetes.io/backend-protocol](#backend-protocol)|string|
 |[nginx.ingress.kubernetes.io/canary](#canary)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/canary-by-header](#canary)|string|
 |[nginx.ingress.kubernetes.io/canary-by-header-value](#canary)|string|
@@ -907,7 +907,7 @@ Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
 ### Backend Protocol
 
 Using `backend-protocol` annotations is possible to indicate how NGINX should communicate with the backend service. (Replaces `secure-backends` in older versions)
-Valid Values: HTTP, HTTPS, GRPC, GRPCS and FCGI
+Valid Values: HTTP, HTTPS, AUTO_HTTP, GRPC, GRPCS and FCGI
 
 By default NGINX uses `HTTP`.
 
