@@ -35,15 +35,6 @@ export NGINX_DIGEST_AUTH=1.0.0
 # Check for recent changes: https://github.com/yaoweibin/ngx_http_substitutions_filter_module/compare/v0.6.4...master
 export NGINX_SUBSTITUTIONS=b8a71eacc7f986ba091282ab8b1bbbc6ae1807e0
 
-# Check for recent changes: https://github.com/opentracing-contrib/nginx-opentracing/compare/v0.19.0...master
-export NGINX_OPENTRACING_VERSION=0.19.0
-
-#Check for recent changes: https://github.com/opentracing/opentracing-cpp/compare/v1.6.0...master
-export OPENTRACING_CPP_VERSION=f86b33f3d9e7322b1298ba62d5ffa7a9519c4c41
-
-# Check for recent changes: https://github.com/rnburn/zipkin-cpp-opentracing/compare/v0.5.2...master
-export ZIPKIN_CPP_VERSION=f69593138ff84ca2f6bc115992e18ca3d35f344a
-
 # Check for recent changes: https://github.com/jbeder/yaml-cpp/compare/yaml-cpp-0.7.0...master
 export YAML_CPP_VERSION=yaml-cpp-0.7.0
 
@@ -52,9 +43,6 @@ export JAEGER_VERSION=0.7.0
 
 # Check for recent changes: https://github.com/msgpack/msgpack-c/compare/cpp-3.3.0...master
 export MSGPACK_VERSION=3.3.0
-
-# Check for recent changes: https://github.com/DataDog/dd-opentracing-cpp/compare/v1.3.7...master
-export DATADOG_CPP_VERSION=1.3.7
 
 # Check for recent changes: https://github.com/SpiderLabs/ModSecurity-nginx/compare/v1.0.3...master
 export MODSECURITY_VERSION=1.0.3
@@ -213,15 +201,6 @@ get_src f09851e6309560a8ff3e901548405066c83f1f6ff88aa7171e0763bd9514762b \
 get_src a98b48947359166326d58700ccdc27256d2648218072da138ab6b47de47fbd8f \
         "https://github.com/yaoweibin/ngx_http_substitutions_filter_module/archive/$NGINX_SUBSTITUTIONS.tar.gz"
 
-get_src 6f97776ebdf019b105a755c7736b70bdbd7e575c7f0d39db5fe127873c7abf17 \
-        "https://github.com/opentracing-contrib/nginx-opentracing/archive/v$NGINX_OPENTRACING_VERSION.tar.gz"
-
-get_src cbe625cba85291712253db5bc3870d60c709acfad9a8af5a302673d3d201e3ea \
-        "https://github.com/opentracing/opentracing-cpp/archive/$OPENTRACING_CPP_VERSION.tar.gz"
-
-get_src 71de3d0658935db7ccea20e006b35e58ddc7e4c18878b9523f2addc2371e9270 \
-        "https://github.com/rnburn/zipkin-cpp-opentracing/archive/$ZIPKIN_CPP_VERSION.tar.gz"
-
 get_src 32a42256616cc674dca24c8654397390adff15b888b77eb74e0687f023c8751b \
         "https://github.com/SpiderLabs/ModSecurity-nginx/archive/v$MODSECURITY_VERSION.tar.gz"
 
@@ -258,9 +237,6 @@ else
 get_src 77bbcbb24c3c78f51560017288f3118d995fe71240aa379f5818ff6b166712ff \
         "https://github.com/openresty/luajit2/archive/v$LUAJIT_VERSION.tar.gz"
 fi
-
-get_src 8d39c6b23f941a2d11571daaccc04e69539a3fcbcc50a631837560d5861a7b96 \
-        "https://github.com/DataDog/dd-opentracing-cpp/archive/v$DATADOG_CPP_VERSION.tar.gz"
 
 get_src b6c9c09fd43eb34a71e706ad780b2ead26549a9a9f59280fe558f5b7b980b7c6 \
         "https://github.com/leev/ngx_http_geoip2_module/archive/$GEOIP2_VERSION.tar.gz"
@@ -340,21 +316,6 @@ cd "$BUILD_PATH"
 # Git tuning
 git config --global --add core.compression -1
 
-# build opentracing lib
-cd "$BUILD_PATH/opentracing-cpp-$OPENTRACING_CPP_VERSION"
-mkdir .build
-cd .build
-
-cmake -DCMAKE_BUILD_TYPE=Release \
-      -DBUILD_TESTING=OFF \
-      -DBUILD_SHARED_LIBS=OFF \
-      -DBUILD_MOCKTRACER=OFF \
-      -DBUILD_STATIC_LIBS=ON \
-      -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true \
-      ..
-
-make
-make install
 
 # build yaml-cpp
 # TODO @timmysilv: remove this and jaeger sed calls once it is fixed in jaeger-client-cpp
@@ -372,68 +333,6 @@ cmake -DCMAKE_BUILD_TYPE=Release \
 make
 make install
 
-# build jaeger lib
-cd "$BUILD_PATH/jaeger-client-cpp-$JAEGER_VERSION"
-sed -i 's/-Werror/-Wno-psabi/' CMakeLists.txt
-# use the above built yaml-cpp instead until a new version of jaeger-client-cpp fixes the yaml-cpp issue
-# tl;dr new hunter is needed for new yaml-cpp, but new hunter has a conflict with old Thrift and new Boost
-sed -i 's/hunter_add_package(yaml-cpp)/#hunter_add_package(yaml-cpp)/' CMakeLists.txt
-sed -i 's/yaml-cpp::yaml-cpp/yaml-cpp/' CMakeLists.txt
-
-cat <<EOF > export.map
-{
-    global:
-        OpenTracingMakeTracerFactory;
-    local: *;
-};
-EOF
-
-mkdir .build
-cd .build
-
-cmake -DCMAKE_BUILD_TYPE=Release \
-      -DBUILD_TESTING=OFF \
-      -DJAEGERTRACING_BUILD_EXAMPLES=OFF \
-      -DJAEGERTRACING_BUILD_CROSSDOCK=OFF \
-      -DJAEGERTRACING_COVERAGE=OFF \
-      -DJAEGERTRACING_PLUGIN=ON \
-      -DHUNTER_CONFIGURATION_TYPES=Release \
-      -DBUILD_SHARED_LIBS=OFF \
-      -DJAEGERTRACING_WITH_YAML_CPP=ON \
-      -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true \
-      ..
-
-make
-make install
-
-export HUNTER_INSTALL_DIR=$(cat _3rdParty/Hunter/install-root-dir) \
-
-mv libjaegertracing_plugin.so /usr/local/lib/libjaegertracing_plugin.so
-
-
-# build zipkin lib
-cd "$BUILD_PATH/zipkin-cpp-opentracing-$ZIPKIN_CPP_VERSION"
-
-cat <<EOF > export.map
-{
-    global:
-        OpenTracingMakeTracerFactory;
-    local: *;
-};
-EOF
-
-mkdir .build
-cd .build
-
-cmake -DCMAKE_BUILD_TYPE=Release \
-      -DBUILD_SHARED_LIBS=OFF \
-      -DBUILD_PLUGIN=ON \
-      -DBUILD_TESTING=OFF \
-      -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true \
-      ..
-
-make
-make install
 
 # build msgpack lib
 cd "$BUILD_PATH/msgpack-c-cpp-$MSGPACK_VERSION"
@@ -443,20 +342,6 @@ cd .build
 cmake -DCMAKE_BUILD_TYPE=Release \
       -DBUILD_SHARED_LIBS=OFF \
       -DMSGPACK_BUILD_EXAMPLES=OFF \
-      -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true \
-      ..
-
-make
-make install
-
-# build datadog lib
-cd "$BUILD_PATH/dd-opentracing-cpp-$DATADOG_CPP_VERSION"
-
-mkdir .build
-cd .build
-
-cmake -DCMAKE_BUILD_TYPE=Release \
-      -DBUILD_TESTING=OFF \
       -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true \
       ..
 
@@ -626,7 +511,6 @@ WITH_MODULES=" \
   --add-module=$BUILD_PATH/stream-lua-nginx-module-$LUA_STREAM_NGX_VERSION \
   --add-module=$BUILD_PATH/lua-upstream-nginx-module-$LUA_UPSTREAM_VERSION \
   --add-dynamic-module=$BUILD_PATH/nginx-http-auth-digest-$NGINX_DIGEST_AUTH \
-  --add-dynamic-module=$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING_VERSION/opentracing \
   --add-dynamic-module=$BUILD_PATH/ModSecurity-nginx-$MODSECURITY_VERSION \
   --add-dynamic-module=$BUILD_PATH/ngx_http_geoip2_module-${GEOIP2_VERSION} \
   --add-dynamic-module=$BUILD_PATH/ngx_brotli"
