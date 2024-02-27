@@ -33,8 +33,8 @@ var _ = framework.DescribeSetting("gzip", func() {
 	host := "gzip"
 
 	ginkgo.BeforeEach(func() {
-		f.NewHttpbinDeployment()
-		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBinService, 80, nil))
+		f.NewHttpbunDeployment()
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBunService, 80, nil))
 	})
 
 	ginkgo.It("should be disabled by default", func() {
