@@ -167,29 +167,6 @@ jobs:
       run: |
         cd images/ && make NAME=kube-webhook-certgen test test-e2e
 
-  nginx:
-    runs-on: ubuntu-latest
-    needs: changes
-    if: |
-      (needs.changes.outputs.nginx == 'true')
-    steps:
-    - name: Checkout
-      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-    - name: nginx-base-image
-      run: |
-        cd images/nginx/rootfs && docker build -t docker.io/nginx-test-workflow/nginx:${{ github.sha }} .
-    - name: Run Trivy on NGINX Image
-      uses: aquasecurity/trivy-action@master
-      with:
-        image-ref: 'docker.io/nginx-test-workflow/nginx:${{ github.sha }}'
-        format: 'sarif'
-        ignore-unfixed: true
-        output: 'trivy-results.sarif'
-    - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@47b3d888fe66b639e431abf22ebca059152f1eea # v3.24.5
-      with:
-        sarif_file: 'trivy-results.sarif'
-
   opentelemetry:
     runs-on: ubuntu-latest
     env:
