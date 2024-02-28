@@ -795,7 +795,7 @@ func NewDefault() Configuration {
 		ErrorLogLevel:                    errorLevel,
 		UseForwardedHeaders:              false,
 		EnableRealIP:                     false,
-		EnableRealIPRecursive:            true,
+		EnableRealIPRecursive:            false,
 		ForwardedForHeader:               "X-Forwarded-For",
 		ComputeFullForwardedFor:          false,
 		ProxyAddOriginalURIHeader:        false,
