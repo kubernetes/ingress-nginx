@@ -67,6 +67,7 @@ jobs:
               - 'charts/ingress-nginx/**/*'
               - 'NGINX_BASE'
             baseimage:
+              - 'NGINX_BASE'
               - 'images/nginx-1.25/**'
 
   test-go:
@@ -141,7 +142,7 @@ jobs:
           needs.changes.outputs.baseimage == 'true'
         run: |
             export TAG=$(cat images/nginx-1.25/TAG)
-            cd images/nginx-1.25/rootfs && docker buildx build --platform=${{ env.PLATFORMS }} --load -t gcr.io/k8s-staging-ingress-nginx/nginx-1.25:${TAG} .
+            cd images/nginx-1.25/rootfs && docker buildx build --platform=${{ env.PLATFORMS }} --load -t registry.k8s.io/ingress-nginx/nginx-1.25:${TAG} .
     
       - name: Build images
         env:
@@ -151,7 +152,7 @@ jobs:
         run: |
           echo "building images..."
           export TAGNGINX=$(cat images/nginx-1.25/TAG)
-          make BASE_IMAGE=gcr.io/k8s-staging-ingress-nginx/nginx-1.25:${TAGNGINX} clean-image build image image-chroot
+          make BASE_IMAGE=registry.k8s.io/ingress-nginx/nginx-1.25:${TAGNGINX} clean-image build image image-chroot
           make -C test/e2e-image image
 
           echo "creating images cache..."
