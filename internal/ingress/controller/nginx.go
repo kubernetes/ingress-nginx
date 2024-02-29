@@ -362,6 +362,11 @@ func (n *NGINXController) Start() {
 					continue
 				}
 
+				if evt.Type == store.EndpointEvent {
+					n.syncEndpointsQueue.EnqueueTask(evt.Obj)
+					continue
+				}
+
 				n.syncQueue.EnqueueSkippableTask(evt.Obj)
 			} else {
 				klog.Warningf("Unexpected event type received %T", event)
