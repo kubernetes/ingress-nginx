@@ -828,13 +828,13 @@ func (n *NGINXController) configureDynamically(pcfg *ingress.Configuration) erro
 		}
 	}
 
-	// streamConfigurationChanged := !reflect.DeepEqual(n.runningConfig.TCPEndpoints, pcfg.TCPEndpoints) || !reflect.DeepEqual(n.runningConfig.UDPEndpoints, pcfg.UDPEndpoints)
-	// if streamConfigurationChanged {
-	// 	err := updateStreamConfiguration(pcfg.TCPEndpoints, pcfg.UDPEndpoints)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
+	streamConfigurationChanged := !reflect.DeepEqual(n.runningConfig.TCPEndpoints, pcfg.TCPEndpoints) || !reflect.DeepEqual(n.runningConfig.UDPEndpoints, pcfg.UDPEndpoints)
+	if streamConfigurationChanged {
+		err := updateStreamConfiguration(pcfg.TCPEndpoints, pcfg.UDPEndpoints)
+		if err != nil {
+			return err
+		}
+	}
 
 	serversChanged := !reflect.DeepEqual(n.runningConfig.Servers, pcfg.Servers)
 	if serversChanged {

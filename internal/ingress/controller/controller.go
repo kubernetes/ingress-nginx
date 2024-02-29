@@ -254,7 +254,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	rc := utilingress.GetRemovedCertificateSerialNumbers(n.runningConfig, pcfg)
 	n.metricCollector.RemoveMetrics(ri, re, rc)
 
-	n.runningConfig.UpdateWithoutEndpoints(pcfg)
+	n.runningConfig = pcfg
 
 	return nil
 }
@@ -267,11 +267,12 @@ func (n *NGINXController) syncEndpoints(interface{}) error {
 		return nil
 	}
 
-	TCPEndpoints := n.getStreamServices(n.cfg.TCPConfigMapName, apiv1.ProtocolTCP)
-	UDPEndpoints := n.getStreamServices(n.cfg.UDPConfigMapName, apiv1.ProtocolUDP)
+	ings := n.store.ListIngresses()
 
-	if ingress.CompareL4Service(n.runningConfig.TCPEndpoints, TCPEndpoints) && ingress.CompareL4Service(n.runningConfig.UDPEndpoints, UDPEndpoints) {
-		klog.V(3).Infof("No Endpoints change detected, skipping Endpoints reload")
+	_, _, pcfg := n.getConfiguration(ings)
+
+	if n.runningConfig.Equal(pcfg) {
+		klog.V(3).Infof("No configuration change detected, skipping backend reload")
 		return nil
 	}
 
@@ -284,7 +285,7 @@ func (n *NGINXController) syncEndpoints(interface{}) error {
 
 	retriesRemaining := retry.Steps
 	err := wait.ExponentialBackoff(retry, func() (bool, error) {
-		err := updateStreamConfiguration(TCPEndpoints, UDPEndpoints)
+		err := n.configureDynamically(pcfg)
 		if err == nil {
 			klog.V(2).Infof("Endpoints reconfiguration succeeded.")
 			return true, nil
@@ -302,7 +303,7 @@ func (n *NGINXController) syncEndpoints(interface{}) error {
 		return err
 	}
 
-	n.runningConfig.UpdateEndpoints(TCPEndpoints, UDPEndpoints)
+	n.runningConfig = pcfg
 
 	return nil
 }
