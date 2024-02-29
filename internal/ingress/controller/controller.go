@@ -163,7 +163,7 @@ func (n *NGINXController) GetPublishService() *apiv1.Service {
 	return s
 }
 
-// syncIngress collects all the pieces required to assemble the NGINX (without TCP and UPD Endpoints)
+// syncIngress collects all the pieces required to assemble the NGINX
 // configuration file and passes the resulting data structures to the backend
 // (OnUpdate) when a reload is deemed necessary.
 func (n *NGINXController) syncIngress(interface{}) error {
@@ -259,7 +259,8 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	return nil
 }
 
-// syncEndpoints collects and update only TCP and UDP Endpoints for NGINX
+// syncEndpoints collects and update only Dynamic configs
+// Triggered for Endpoints changes
 func (n *NGINXController) syncEndpoints(interface{}) error {
 	n.syncRateLimiter.Accept()
 
