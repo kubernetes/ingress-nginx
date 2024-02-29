@@ -163,7 +163,7 @@ func (n *NGINXController) GetPublishService() *apiv1.Service {
 	return s
 }
 
-// syncIngress collects all the pieces required to assemble the NGINX
+// syncIngress collects all the pieces required to assemble the NGINX (without TCP and UPD Endpoints)
 // configuration file and passes the resulting data structures to the backend
 // (OnUpdate) when a reload is deemed necessary.
 func (n *NGINXController) syncIngress(interface{}) error {
@@ -254,7 +254,33 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	rc := utilingress.GetRemovedCertificateSerialNumbers(n.runningConfig, pcfg)
 	n.metricCollector.RemoveMetrics(ri, re, rc)
 
-	n.runningConfig = pcfg
+	n.runningConfig.UpdateWithoutEndpoints(pcfg)
+
+	return nil
+}
+
+// syncEndpoints collects and update only TCP and UDP Endpoints for NGINX
+func (n *NGINXController) syncEndpoints(interface{}) error {
+	n.syncRateLimiter.Accept()
+
+	if n.syncEndpointsQueue.IsShuttingDown() {
+		return nil
+	}
+
+	TCPEndpoints := n.getStreamServices(n.cfg.TCPConfigMapName, apiv1.ProtocolTCP)
+	UDPEndpoints := n.getStreamServices(n.cfg.UDPConfigMapName, apiv1.ProtocolUDP)
+
+	if ingress.CompareL4Service(n.runningConfig.TCPEndpoints, TCPEndpoints) && ingress.CompareL4Service(n.runningConfig.UDPEndpoints, UDPEndpoints) {
+		klog.V(3).Infof("No configuration change detected, skipping backend reload")
+		return nil
+	}
+
+	err := updateStreamConfiguration(TCPEndpoints, UDPEndpoints)
+	if err != nil {
+		return err
+	}
+
+	n.runningConfig.UpdateEndpoints(TCPEndpoints, UDPEndpoints)
 
 	return nil
 }
