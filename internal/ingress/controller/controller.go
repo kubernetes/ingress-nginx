@@ -271,12 +271,34 @@ func (n *NGINXController) syncEndpoints(interface{}) error {
 	UDPEndpoints := n.getStreamServices(n.cfg.UDPConfigMapName, apiv1.ProtocolUDP)
 
 	if ingress.CompareL4Service(n.runningConfig.TCPEndpoints, TCPEndpoints) && ingress.CompareL4Service(n.runningConfig.UDPEndpoints, UDPEndpoints) {
-		klog.V(3).Infof("No configuration change detected, skipping backend reload")
+		klog.V(3).Infof("No Endpoints change detected, skipping Endpoints reload")
 		return nil
 	}
 
-	err := updateStreamConfiguration(TCPEndpoints, UDPEndpoints)
+	retry := wait.Backoff{
+		Steps:    1 + n.cfg.DynamicConfigurationRetries,
+		Duration: time.Second,
+		Factor:   1.3,
+		Jitter:   0.1,
+	}
+
+	retriesRemaining := retry.Steps
+	err := wait.ExponentialBackoff(retry, func() (bool, error) {
+		err := updateStreamConfiguration(TCPEndpoints, UDPEndpoints)
+		if err == nil {
+			klog.V(2).Infof("Endpoints reconfiguration succeeded.")
+			return true, nil
+		}
+		retriesRemaining--
+		if retriesRemaining > 0 {
+			klog.Warningf("Endpoints reconfiguration failed (retrying; %d retries left): %v", retriesRemaining, err)
+			return false, nil
+		}
+		klog.Warningf("Endpoints reconfiguration failed: %v", err)
+		return false, err
+	})
 	if err != nil {
+		klog.Errorf("Unexpected failure reconfiguring NGINX Endpoints:\n%v", err)
 		return err
 	}
 
