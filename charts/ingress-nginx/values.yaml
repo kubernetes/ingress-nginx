@@ -939,6 +939,9 @@ defaultBackend:
     create: true
     name: ""
     automountServiceAccountToken: true
+  # -- Automount service account token on controller deployment
+  ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+  automountServiceAccountToken: true
   # -- Additional environment variables to set for defaultBackend pods
   extraEnvs: []
   port: 8080
@@ -1068,6 +1071,9 @@ serviceAccount:
   automountServiceAccountToken: true
   # -- Annotations for the controller service account
   annotations: {}
+# -- Automount service account token on controller deployment
+## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+automountServiceAccountToken: true
 # -- Optional array of imagePullSecrets containing private registry credentials
 ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
