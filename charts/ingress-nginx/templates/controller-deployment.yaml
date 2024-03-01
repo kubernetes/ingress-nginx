@@ -45,7 +45,7 @@ spec:
         {{- toYaml .Values.controller.podLabels | nindent 8 }}
       {{- end }}
     spec:
-      automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
+      automountServiceAccountToken: {{ .Values.controller.automountServiceAccountToken }}
     {{- if .Values.controller.dnsConfig }}
       dnsConfig: {{ toYaml .Values.controller.dnsConfig | nindent 8 }}
     {{- end }}

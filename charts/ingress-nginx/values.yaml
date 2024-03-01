@@ -45,6 +45,9 @@ controller:
   containerPort:
     http: 80
     https: 443
+  # -- Automount service account token on controller deployment
+  ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+  automountServiceAccountToken: true
   # -- Will add custom configuration options to Nginx https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/
   config: {}
   # -- Annotations to be added to the controller config configuration configmap.
@@ -1071,9 +1074,6 @@ serviceAccount:
   automountServiceAccountToken: true
   # -- Annotations for the controller service account
   annotations: {}
-# -- Automount service account token on controller deployment
-## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
-automountServiceAccountToken: true
 # -- Optional array of imagePullSecrets containing private registry credentials
 ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
