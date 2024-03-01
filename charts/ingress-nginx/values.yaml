@@ -942,7 +942,7 @@ defaultBackend:
     create: true
     name: ""
     automountServiceAccountToken: true
-  # -- Automount service account token on controller deployment
+  # -- Automount service account token on default backend deployment
   ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
   automountServiceAccountToken: true
   # -- Additional environment variables to set for defaultBackend pods
