@@ -29,6 +29,7 @@ ENV LUA_PATH="/usr/local/share/luajit-2.1.0-beta3/?.lua;/usr/local/share/lua/5.1
 ENV LUA_CPATH="/usr/local/lib/lua/?/?.so;/usr/local/lib/lua/?.so;;"
 
 COPY --from=builder /usr/local /usr/local
+COPY --from=builder /usr/lib/libopentelemetry* /usr/local/lib
 COPY --from=builder /opt /opt
 COPY --from=builder /etc/nginx /etc/nginx
 
@@ -50,7 +51,6 @@ RUN apk update \
   tzdata \
   grpc-cpp \
   libprotobuf \
-  && apk add -X http://dl-cdn.alpinelinux.org/alpine/edge/testing opentelemetry-cpp-exporter-otlp-common opentelemetry-cpp-exporter-otlp-grpc \
   && ln -s /usr/local/nginx/sbin/nginx /sbin/nginx \
   && adduser -S -D -H -u 101 -h /usr/local/nginx \
   -s /sbin/nologin -G www-data -g www-data www-data \

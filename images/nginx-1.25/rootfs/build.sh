@@ -26,7 +26,7 @@ export NDK_VERSION=v0.3.3
 # Check for recent changes: https://github.com/openresty/set-misc-nginx-module/compare/v0.33...master
 export SETMISC_VERSION=796f5a3e518748eb29a93bd450324e0ad45b704e
 
-# Check for recent changes: https://github.com/openresty/headers-more-nginx-module/compare/v0.34...master
+# Check for recent changes: https://github.com/openresty/headers-more-nginx-module/compare/v0.37...master
 export MORE_HEADERS_VERSION=v0.37
 
 # Check for recent changes: https://github.com/atomx/nginx-http-auth-digest/compare/v1.0.0...atomx:master
@@ -39,7 +39,7 @@ export NGINX_SUBSTITUTIONS=e12e965ac1837ca709709f9a26f572a54d83430e
 export MODSECURITY_VERSION=v1.0.3
 
 # Check for recent changes: https://github.com/SpiderLabs/ModSecurity/compare/v3.0.8...v3/master
-export MODSECURITY_LIB_VERSION=v3.0.11
+export MODSECURITY_LIB_VERSION=v3.0.12
 
 # Check for recent changes: https://github.com/coreruleset/coreruleset/compare/v3.3.2...v3.3/master
 export OWASP_MODSECURITY_CRS_VERSION=v3.3.5
@@ -104,6 +104,11 @@ export LUA_RESTY_GLOBAL_THROTTLE_VERSION=v0.2.0
 # Check for recent changes:  https://github.com/microsoft/mimalloc/compare/v1.7.6...master
 export MIMALOC_VERSION=v2.1.2
 
+# Check on https://github.com/open-telemetry/opentelemetry-cpp
+export OPENTELEMETRY_CPP_VERSION="v1.11.0"
+# Check on https://github.com/open-telemetry/opentelemetry-proto
+export OPENTELEMETRY_PROTO_VERSION="v1.1.0"
+
 export BUILD_PATH=/tmp/build
 
 ARCH=$(uname -m)
@@ -119,6 +124,7 @@ get_src()
   echo "Downloading $url"
 
   curl -sSL "$url" -o "$f"
+  # TODO: Reenable checksum verification but make it smarter
   # echo "$hash  $f" | sha256sum -c - || exit 10
   if [ ! -z "$dest" ]; then
         mkdir ${BUILD_PATH}/${dest}
@@ -177,7 +183,7 @@ apk add \
   grpc-dev \
   protobuf-dev 
 
-apk add -X http://dl-cdn.alpinelinux.org/alpine/edge/testing opentelemetry-cpp-dev
+# apk add -X http://dl-cdn.alpinelinux.org/alpine/edge/testing opentelemetry-cpp-dev
 
 # There is some bug with some platforms and git, so force HTTP/1.1
 git config --global http.version HTTP/1.1
@@ -194,6 +200,12 @@ get_src 66dc7081488811e9f925719e34d1b4504c2801c81dee2920e5452a86b11405ae \
 
 get_src aa961eafb8317e0eb8da37eb6e2c9ff42267edd18b56947384e719b85188f58b \
         "https://github.com/vision5/ngx_devel_kit/archive/$NDK_VERSION.tar.gz" "ngx_devel_kit"
+
+get_src abc123 \
+        "https://github.com/open-telemetry/opentelemetry-cpp/archive/$OPENTELEMETRY_CPP_VERSION.tar.gz" "opentelemetry-cpp"
+
+get_src abc123 \
+        "https://github.com/open-telemetry/opentelemetry-proto/archive/$OPENTELEMETRY_PROTO_VERSION.tar.gz" "opentelemetry-proto"
 
 get_src cd5e2cc834bcfa30149e7511f2b5a2183baf0b70dc091af717a89a64e44a2985 \
         "https://github.com/openresty/set-misc-nginx-module/archive/$SETMISC_VERSION.tar.gz" "set-misc-nginx-module"
@@ -288,7 +300,27 @@ make install
 ln -s /usr/local/bin/luajit /usr/local/bin/lua
 ln -s "$LUAJIT_INC" /usr/local/include/lua
 
-cd "$BUILD_PATH"
+cd "$BUILD_PATH/opentelemetry-cpp"
+export CXXFLAGS="-DBENCHMARK_HAS_NO_INLINE_ASSEMBLY"
+cmake -B build -G Ninja -Wno-dev \
+        -DOTELCPP_PROTO_PATH="${BUILD_PATH}/opentelemetry-proto/" \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DBUILD_SHARED_LIBS=ON \
+        -DBUILD_TESTING="OFF" \
+        -DBUILD_W3CTRACECONTEXT_TEST="OFF" \
+        -DCMAKE_BUILD_TYPE=None \
+        -DWITH_ABSEIL=ON \
+        -DWITH_STL=ON \
+        -DWITH_EXAMPLES=OFF \
+        -DWITH_ZPAGES=OFF \
+        -DWITH_OTLP_GRPC=ON \
+        -DWITH_OTLP_HTTP=ON \
+        -DWITH_ZIPKIN=ON \
+        -DWITH_PROMETHEUS=OFF \
+        -DWITH_ASYNC_EXPORT_PREVIEW=OFF \
+        -DWITH_METRICS_EXEMPLAR_PREVIEW=OFF
+      cmake --build build
+      cmake --install build
 
 # Git tuning
 git config --global --add core.compression -1
