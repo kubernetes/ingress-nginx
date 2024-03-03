@@ -942,6 +942,7 @@ stream {
 
 {{/* CORS support from https://michielkalkman.com/snippets/nginx-cors-open-configuration.html */}}
 {{ define "CORS" }}
+     set $cors 'true';
      {{ $cors := .CorsConfig }}
      # Cors Preflight methods needs additional options and different Return Code
      {{ if $cors.CorsAllowOrigin }}
