@@ -146,6 +146,9 @@ Requires the update-status parameter.`)
 		enableSSLPassthrough = flags.Bool("enable-ssl-passthrough", false,
 			`Enable SSL Passthrough.`)
 
+		disableLeaderElection = flags.Bool("disable-leader-election", false,
+			`Disable Leader Election on NGINX Controller.`)
+
 		disableServiceExternalName = flags.Bool("disable-svc-external-name", false,
 			`Disable support for Services of type ExternalName.`)
 
@@ -333,6 +336,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		MonitorMaxBatchSize:         *monitorMaxBatchSize,
 		DisableServiceExternalName:  *disableServiceExternalName,
 		EnableSSLPassthrough:        *enableSSLPassthrough,
+		DisableLeaderElection:       *disableLeaderElection,
 		ResyncPeriod:                *resyncPeriod,
 		DefaultService:              *defaultSvc,
 		Namespace:                   *watchNamespace,

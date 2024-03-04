@@ -293,6 +293,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.containerSecurityContext | object | `{}` | Security context for controller containers |
 | controller.customTemplate.configMapKey | string | `""` |  |
 | controller.customTemplate.configMapName | string | `""` |  |
+| controller.disableLeaderElection | bool | `false` | This configuration disable Nginx Controller Leader Election |
 | controller.dnsConfig | object | `{}` | Optionally customize the pod dnsConfig. |
 | controller.dnsPolicy | string | `"ClusterFirst"` | Optionally change this to ClusterFirstWithHostNet in case you have 'hostNetwork: true'. By default, while using host network, name resolution uses the host's DNS. If you wish nginx-controller to keep resolving names inside the k8s network, use ClusterFirstWithHostNet. |
 | controller.electionID | string | `""` | Election ID to use for status update, by default it uses the controller name combined with a suffix of 'leader' |

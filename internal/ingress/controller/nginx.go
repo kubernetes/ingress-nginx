@@ -271,26 +271,28 @@ func (n *NGINXController) Start() {
 	// TODO: For now, as the the IngressClass logics has changed, is up to the
 	// cluster admin to create different Leader Election IDs.
 	// Should revisit this in a future
-	electionID := n.cfg.ElectionID
 
-	setupLeaderElection(&leaderElectionConfig{
-		Client:     n.cfg.Client,
-		ElectionID: electionID,
-		OnStartedLeading: func(stopCh chan struct{}) {
-			if n.syncStatus != nil {
-				go n.syncStatus.Run(stopCh)
-			}
+	if !n.cfg.DisableLeaderElection {
+		electionID := n.cfg.ElectionID
+		setupLeaderElection(&leaderElectionConfig{
+			Client:     n.cfg.Client,
+			ElectionID: electionID,
+			OnStartedLeading: func(stopCh chan struct{}) {
+				if n.syncStatus != nil {
+					go n.syncStatus.Run(stopCh)
+				}
 
-			n.metricCollector.OnStartedLeading(electionID)
-			// manually update SSL expiration metrics
-			// (to not wait for a reload)
-			n.metricCollector.SetSSLExpireTime(n.runningConfig.Servers)
-			n.metricCollector.SetSSLInfo(n.runningConfig.Servers)
-		},
-		OnStoppedLeading: func() {
-			n.metricCollector.OnStoppedLeading(electionID)
-		},
-	})
+				n.metricCollector.OnStartedLeading(electionID)
+				// manually update SSL expiration metrics
+				// (to not wait for a reload)
+				n.metricCollector.SetSSLExpireTime(n.runningConfig.Servers)
+				n.metricCollector.SetSSLInfo(n.runningConfig.Servers)
+			},
+			OnStoppedLeading: func() {
+				n.metricCollector.OnStoppedLeading(electionID)
+			},
+		})
+	}
 
 	cmd := n.command.ExecCommand()
 
