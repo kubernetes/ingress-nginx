@@ -477,7 +477,7 @@ controller:
     # -- External traffic policy of the external controller service. Set to "Local" to preserve source IP on providers supporting it.
     # Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
     externalTrafficPolicy: ""
-    # Service Internal Traffic Policy enables internal traffic restrictions to only route internal traffic to endpoints within the node the traffic originated from. 
+    # Service Internal Traffic Policy enables internal traffic restrictions to only route internal traffic to endpoints within the node the traffic originated from.
     # Set this to 'Local' to instruct kube-proxy to use only node-local endpoints for handling cluster internal traffic.
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service-traffic-policy
     internalTrafficPolicy: ""
@@ -561,7 +561,7 @@ controller:
       # -- External traffic policy of the internal controller service. Set to "Local" to preserve source IP on providers supporting it.
       # Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
       externalTrafficPolicy: ""
-      # Service Internal Traffic Policy enables internal traffic restrictions to only route internal traffic to endpoints within the node the traffic originated from. 
+      # Service Internal Traffic Policy enables internal traffic restrictions to only route internal traffic to endpoints within the node the traffic originated from.
       # Set this to 'Local' to instruct kube-proxy to use only node-local endpoints for handling cluster internal traffic.
       # Ref: https://kubernetes.io/docs/concepts/services-networking/service-traffic-policy
       internalTrafficPolicy: ""
