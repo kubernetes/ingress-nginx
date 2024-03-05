@@ -39,7 +39,6 @@ The following table shows a configuration option's name, type, and the default v
 |[http-access-log-path](#http-access-log-path)|string|""||
 |[stream-access-log-path](#stream-access-log-path)|string|""||
 |[enable-access-log-for-default-backend](#enable-access-log-for-default-backend)|bool|"false"||
-|[enable-auth-access-log](#enable-auth-access-log)|bool|"false"||
 |[error-log-path](#error-log-path)|string|"/var/log/nginx/error.log"||
 |[enable-modsecurity](#enable-modsecurity)|bool|"false"||
 |[modsecurity-snippet](#modsecurity-snippet)|string|""||
@@ -164,7 +163,7 @@ The following table shows a configuration option's name, type, and the default v
 |[enable-opentelemetry](#enable-opentelemetry)|bool|"false"||
 |[opentelemetry-trust-incoming-span](#opentelemetry-trust-incoming-span)|bool|"true"||
 |[opentelemetry-operation-name](#opentelemetry-operation-name)|string|""||
-|[opentelemetry-config](#/etc/ingress-controller/telemetry/opentelemetry.toml)|string|"/etc/ingress-controller/telemetry/opentelemetry.toml"||
+|[opentelemetry-config](#/etc/nginx/opentelemetry.toml)|string|"/etc/nginx/opentelemetry.toml"||
 |[otlp-collector-host](#otlp-collector-host)|string|""||
 |[otlp-collector-port](#otlp-collector-port)|int|4317||
 |[otel-max-queuesize](#otel-max-queuesize)|int|||
@@ -180,7 +179,6 @@ The following table shows a configuration option's name, type, and the default v
 |[stream-snippet](#stream-snippet)|string|""||
 |[location-snippet](#location-snippet)|string|""||
 |[custom-http-errors](#custom-http-errors)|[]int|[]int{}||
-|[disable-proxy-intercept-errors](#disable-proxy-intercept-errors)|bool|"false"|
 |[proxy-body-size](#proxy-body-size)|string|"1m"||
 |[proxy-connect-timeout](#proxy-connect-timeout)|int|5||
 |[proxy-read-timeout](#proxy-read-timeout)|int|60||
@@ -219,7 +217,6 @@ The following table shows a configuration option's name, type, and the default v
 |[global-auth-snippet](#global-auth-snippet)|string|""||
 |[global-auth-cache-key](#global-auth-cache-key)|string|""||
 |[global-auth-cache-duration](#global-auth-cache-duration)|string|"200 202 401 5m"||
-|[global-auth-always-set-cookie](#global-auth-always-set-cookie)|bool|"false"||
 |[no-auth-locations](#no-auth-locations)|string|"/.well-known/acme-challenge"||
 |[block-cidrs](#block-cidrs)|[]string|""||
 |[block-user-agents](#block-user-agents)|[]string|""||
@@ -266,7 +263,7 @@ Enables Ingress to parse and add *-snippet annotations/directives created by the
 Warning: We recommend enabling this option only if you TRUST users with permission to create Ingress objects, as this
 may allow a user to add restricted configurations to the final nginx.conf file
 
-**This option is defaulted to false since v1.9.0**
+**This option will be defaulted to false in the next major release**
 
 ## annotations-risk-level
 
@@ -328,10 +325,6 @@ __Note:__ If not specified, the `access-log-path` will be used.
 ## enable-access-log-for-default-backend
 
 Enables logging access to default backend. _**default:**_ is disabled.
-
-## enable-auth-access-log
-
-Enables logging access to the authentication endpoint. _**default:**_ is disabled.
 
 ## error-log-path
 
@@ -726,9 +719,6 @@ Enables or disables the directive [aio_write](https://nginx.org/en/docs/http/ngx
 Enables or disables compression of HTTP responses using the ["gzip" module](https://nginx.org/en/docs/http/ngx_http_gzip_module.html). MIME types to compress are controlled by [gzip-types](#gzip-types). _**default:**_ false
 
 ## use-geoip
-
-!!! attention
-   GeoIP is deprecated and removed on v1.10. Users willing to use GeoIP should use GeoIP2
 
 Enables or disables ["geoip" module](https://nginx.org/en/docs/http/ngx_http_geoip_module.html) that creates variables with values depending on the client IP address, using the precompiled MaxMind databases.
 _**default:**_ true
@@ -1130,17 +1120,9 @@ You can not use this to add new locations that proxy to the Kubernetes pods, as 
 
 Enables which HTTP codes should be passed for processing with the [error_page directive](https://nginx.org/en/docs/http/ngx_http_core_module.html#error_page)
 
-Setting at least one code also enables [proxy_intercept_errors](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors) if not disabled with [disable-proxy-intercept-errors](#disable-proxy-intercept-errors).
+Setting at least one code also enables [proxy_intercept_errors](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors) which are required to process error_page.
 
 Example usage: `custom-http-errors: 404,415`
-
-## disable-proxy-intercept-errors
-
-Allows to disable [proxy-intercept-errors](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors).
-
-Disabling [proxy_intercept_errors](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors) allows to pass upstream errors to client even if [custom-http-errors](#custom-http-errors) are set.
-
-Example usage: `disable-proxy-intercept-errors: "true"`
 
 ## proxy-body-size
 
@@ -1299,7 +1281,7 @@ _**default:**_ "/.well-known/acme-challenge"
 
 A url to an existing service that provides authentication for all the locations.
 Similar to the Ingress rule annotation `nginx.ingress.kubernetes.io/auth-url`.
-Locations that should not get authenticated can be listed using `no-auth-locations` See [no-auth-locations](#no-auth-locations). In addition, each service can be excluded from authentication via annotation `nginx.ingress.kubernetes.io/enable-global-auth` set to "false".
+Locations that should not get authenticated can be listed using `no-auth-locations` See [no-auth-locations](#no-auth-locations). In addition, each service can be excluded from authentication via annotation `enable-global-auth` set to "false".
 _**default:**_ ""
 
 _References:_ [https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md#external-authentication](https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md#external-authentication)

@@ -25,6 +25,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework/httpexpect"
 
 	"github.com/onsi/ginkgo/v2"
+	ginkgotypes "github.com/onsi/ginkgo/v2/types"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -178,7 +179,7 @@ func (f *Framework) AfterEach() {
 		assert.Nil(ginkgo.GinkgoT(), err, "deleting IngressClass")
 	}(f.KubeClientSet, f.IngressClass)
 
-	if !ginkgo.CurrentSpecReport().Failed() {
+	if !ginkgo.CurrentSpecReport().Failed() || ginkgo.CurrentSpecReport().State.Is(ginkgotypes.SpecStateInterrupted) {
 		return
 	}
 

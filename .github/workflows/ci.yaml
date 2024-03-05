@@ -8,14 +8,18 @@ on:
       - 'docs/**'
       - 'deploy/**'
       - '**.md'
+      - 'images/**' # Images changes should be tested on their own workflow
+      - '!images/nginx-1.25/**'
 
   push:
     branches:
       - main
+      - release-*
     paths-ignore:
       - 'docs/**'
       - 'deploy/**'
       - '**.md'
+      - 'images/**' # Images changes should be tested on their own workflow
 
   workflow_dispatch:
     inputs:
@@ -38,13 +42,14 @@ jobs:
     outputs:
       go: ${{ steps.filter.outputs.go }}
       charts: ${{ steps.filter.outputs.charts }}
+      baseimage: ${{ steps.filter.outputs.baseimage }}
 
     steps:
 
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
-      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         id: filter
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -61,6 +66,9 @@ jobs:
               - 'charts/ingress-nginx/Chart.yaml'
               - 'charts/ingress-nginx/**/*'
               - 'NGINX_BASE'
+            baseimage:
+              - 'NGINX_BASE'
+              - 'images/nginx-1.25/**'
 
   test-go:
     runs-on: ubuntu-latest
@@ -71,11 +79,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       
+      - name: Get go version
+        run: echo "GOLANG_VERSION=$(cat GOLANG_VERSION)" >> $GITHUB_ENV
+        
       - name: Set up Go
         id: go
         uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
-          go-version: '1.21.5'
+          go-version: ${{ env.GOLANG_VERSION }}
           check-latest: true
 
       - name: Run test
@@ -85,18 +96,27 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     needs: changes
+    outputs:
+      golangversion: ${{ steps.golangversion.outputs.version }}
     if: |
-      (needs.changes.outputs.go == 'true') || (needs.changes.outputs.charts == 'true') || ${{ inputs.run_e2e }}
-
+      (needs.changes.outputs.go == 'true') || (needs.changes.outputs.charts == 'true') || (needs.changes.outputs.baseimage == 'true')
+     
+    env:
+        PLATFORMS: linux/amd64
     steps:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      
+      - name: Get go version
+        id: golangversion
+        run: |
+          echo "version=$(cat GOLANG_VERSION)" >> "$GITHUB_OUTPUT"
 
       - name: Set up Go
         id: go
         uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
-          go-version: '1.21.5'
+          go-version: ${{ steps.golangversion.outputs.version }}
           check-latest: true
 
       - name: Set up QEMU
@@ -104,7 +124,7 @@ jobs:
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
+        uses: docker/setup-buildx-action@0d103c3126aa41d772a8362f6aa67afac040f80c # v3.1.0
         with:
           version: latest
 
@@ -116,7 +136,14 @@ jobs:
           curl -LO https://dl.k8s.io/release/v1.27.3/bin/linux/amd64/kubectl
           chmod +x ./kubectl
           sudo mv ./kubectl /usr/local/bin/kubectl
-
+      
+      - name: Build NGINX Base image
+        if: |
+          needs.changes.outputs.baseimage == 'true'
+        run: |
+            export TAG=$(cat images/nginx-1.25/TAG)
+            cd images/nginx-1.25/rootfs && docker buildx build --platform=${{ env.PLATFORMS }} --load -t registry.k8s.io/ingress-nginx/nginx-1.25:${TAG} .
+    
       - name: Build images
         env:
           TAG: 1.0.0-dev
@@ -124,7 +151,8 @@ jobs:
           REGISTRY: ingress-controller
         run: |
           echo "building images..."
-          make clean-image build image image-chroot
+          export TAGNGINX=$(cat images/nginx-1.25/TAG)
+          make BASE_IMAGE=registry.k8s.io/ingress-nginx/nginx-1.25:${TAGNGINX} clean-image build image image-chroot
           make -C test/e2e-image image
 
           echo "creating images cache..."
@@ -135,7 +163,7 @@ jobs:
             | gzip > docker.tar.gz
 
       - name: cache
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
         with:
           name: docker.tar.gz
           path: docker.tar.gz
@@ -147,11 +175,11 @@ jobs:
       - changes
       - build
     if: |
-      (needs.changes.outputs.charts == 'true') || ${{ inputs.run_e2e }}
+      (needs.changes.outputs.charts == 'true') || (needs.changes.outputs.baseimage == 'true')
 
     strategy:
       matrix:
-        k8s: [v1.25.11, v1.26.6, v1.27.3, v1.28.0]
+        k8s: [v1.26.6, v1.27.3, v1.28.0, v1.29.0]
 
     steps:
       - name: Checkout
@@ -160,7 +188,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
-          go-version: '1.21.5'
+          go-version: ${{ needs.build.outputs.golangversion }}
           check-latest: true
 
       - name: Install Helm Unit Test Plugin
@@ -172,7 +200,7 @@ jobs:
           helm unittest charts/ingress-nginx -d
 
       - name: cache
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: docker.tar.gz
 
@@ -219,302 +247,51 @@ jobs:
           KIND_CLUSTER_NAME: kind
           SKIP_CLUSTER_CREATION: true
           SKIP_IMAGE_CREATION: true
+          SKIP_INGRESS_IMAGE_CREATION: true
         run: |
           kind get kubeconfig > $HOME/.kube/kind-config-kind
           make kind-e2e-chart-tests
 
   kubernetes:
     name: Kubernetes
-    runs-on: ubuntu-latest
     needs:
       - changes
       - build
     if: |
-      (needs.changes.outputs.go == 'true') || ${{ inputs.run_e2e }}
-
+      (needs.changes.outputs.go == 'true') || (needs.changes.outputs.baseimage == 'true')
     strategy:
       matrix:
-        k8s: [v1.25.11, v1.26.6, v1.27.3, v1.28.0]
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-
-      - name: cache
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-        with:
-          name: docker.tar.gz
-
-      - name: Create Kubernetes ${{ matrix.k8s }} cluster
-        id: kind
-        run: |
-          kind create cluster --image=kindest/node:${{ matrix.k8s }} --config test/e2e/kind.yaml
-
-      - name: Load images from cache
-        run: |
-          echo "loading docker images..."
-          gzip -dc docker.tar.gz | docker load
-
-      - name: Run e2e tests
-        env:
-          KIND_CLUSTER_NAME: kind
-          SKIP_CLUSTER_CREATION: true
-          SKIP_IMAGE_CREATION: true
-        run: |
-          kind get kubeconfig > $HOME/.kube/kind-config-kind
-          make kind-e2e-test
-
-      - name: Upload e2e junit-reports
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
-        if: success() || failure()
-        with:
-          name: e2e-test-reports-${{ matrix.k8s }}
-          path: 'test/junitreports/report*.xml'
+        k8s: [v1.26.6, v1.27.3, v1.28.0, v1.29.0]
+    uses: ./.github/workflows/zz-tmpl-k8s-e2e.yaml
+    with:
+      k8s-version: ${{ matrix.k8s }}
 
   kubernetes-validations:
     name: Kubernetes with Validations
-    runs-on: ubuntu-latest
     needs:
       - changes
       - build
     if: |
-      (needs.changes.outputs.go == 'true') || ${{ inputs.run_e2e }}
-
+      (needs.changes.outputs.go == 'true') || (needs.changes.outputs.baseimage == 'true')
     strategy:
       matrix:
-        k8s: [v1.25.11, v1.26.6, v1.27.3, v1.28.0]
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-
-      - name: cache
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-        with:
-          name: docker.tar.gz
-
-      - name: Create Kubernetes ${{ matrix.k8s }} cluster
-        id: kind
-        run: |
-          kind create cluster --image=kindest/node:${{ matrix.k8s }} --config test/e2e/kind.yaml
-
-      - name: Load images from cache
-        run: |
-          echo "loading docker images..."
-          gzip -dc docker.tar.gz | docker load
-
-      - name: Run e2e tests
-        env:
-          KIND_CLUSTER_NAME: kind
-          SKIP_CLUSTER_CREATION: true
-          SKIP_IMAGE_CREATION: true
-          ENABLE_VALIDATIONS: true
-        run: |
-          kind get kubeconfig > $HOME/.kube/kind-config-kind
-          make kind-e2e-test
-
-      - name: Upload e2e junit-reports
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
-        if: success() || failure()
-        with:
-          name: e2e-test-reports-${{ matrix.k8s }}
-          path: 'test/junitreports/report*.xml'
-
+        k8s: [v1.26.6, v1.27.3, v1.28.0, v1.29.0]
+    uses: ./.github/workflows/zz-tmpl-k8s-e2e.yaml
+    with:
+      k8s-version: ${{ matrix.k8s }}
+      variation: "VALIDATIONS"
 
   kubernetes-chroot:
     name: Kubernetes chroot
-    runs-on: ubuntu-latest
     needs:
       - changes
       - build
     if: |
-      (needs.changes.outputs.go == 'true') || ${{ inputs.run_e2e }}
-
+      (needs.changes.outputs.go == 'true') || (needs.changes.outputs.baseimage == 'true')
     strategy:
       matrix:
-        k8s: [v1.25.11, v1.26.6, v1.27.3, v1.28.0]
-
-    steps:
-
-      - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-
-      - name: cache
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-        with:
-          name: docker.tar.gz
-
-      - name: Create Kubernetes ${{ matrix.k8s }} cluster
-        id: kind
-        run: |
-          kind create cluster --image=kindest/node:${{ matrix.k8s }} --config test/e2e/kind.yaml
-
-      - name: Load images from cache
-        run: |
-          echo "loading docker images..."
-          gzip -dc docker.tar.gz | docker load
-
-      - name: Run e2e tests
-        env:
-          KIND_CLUSTER_NAME: kind
-          SKIP_CLUSTER_CREATION: true
-          SKIP_IMAGE_CREATION: true
-          IS_CHROOT: true
-        run: |
-          kind get kubeconfig > $HOME/.kube/kind-config-kind
-          make kind-e2e-test
-
-      - name: Upload e2e junit-reports
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
-        if: success() || failure()
-        with:
-          name: e2e-test-reports-chroot-${{ matrix.k8s }}
-          path: 'test/junitreports/report*.xml'
-
-  test-nginx-image-build:
-    permissions:
-      contents: read  # for dorny/paths-filter to fetch a list of changed files
-      pull-requests: read  # for dorny/paths-filter to read pull requests
-    runs-on: ubuntu-latest
-    env:
-      PLATFORMS: linux/amd64,linux/arm64
-    steps:
-      - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-
-      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
-        id: filter-images
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          filters: |
-            nginx-base:
-              - 'images/nginx/**'
-      - name: nginx-base-image
-        if: ${{ steps.filter-images.outputs.nginx-base == 'true' }}
-        run: |
-          cd images/nginx/rootfs && docker build -t docker.io/nginx-test-workflow/nginx:${{ github.sha }} .
-      - name: Run Trivy on NGINX Image
-        if: ${{ steps.filter-images.outputs.nginx-base == 'true' }}
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'docker.io/nginx-test-workflow/nginx:${{ github.sha }}'
-          format: 'sarif'
-          ignore-unfixed: true
-          output: 'trivy-results.sarif'
-      - name: Upload Trivy scan results to GitHub Security tab
-        if: ${{ steps.filter-images.outputs.nginx-base == 'true' && always() }}
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results.sarif'
-
-
-  test-image-build:
-    permissions:
-      contents: read  # for dorny/paths-filter to fetch a list of changed files
-      pull-requests: read  # for dorny/paths-filter to read pull requests
-    runs-on: ubuntu-latest
-    env:
-      PLATFORMS: linux/amd64,linux/arm64
-    steps:
-      - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-
-      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
-        id: filter-images
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          filters: |
-            custom-error-pages:
-              - 'images/custom-error-pages/**'
-            cfssl:
-              - 'images/cfssl/**'
-            fastcgi-helloserver:
-              - 'images/fastcgi-helloserver/**'
-            echo:
-              - 'images/echo/**'
-            go-grpc-greeter-server:
-              - 'images/go-grpc-greeter-server/**'
-            httpbun:
-              - 'images/httpbun/**'
-            kube-webhook-certgen:
-              - 'images/kube-webhook-certgen/**'
-            ext-auth-example-authsvc:
-              - 'images/ext-auth-example-authsvc/**'
-      - name: custom-error-pages image build
-        if: ${{ steps.filter-images.outputs.custom-error-pages == 'true' }}
-        run: |
-          cd images/custom-error-pages && make build
-      - name: cfssl image build
-        if: ${{ steps.filter-images.outputs.cfssl == 'true' }}
-        run: |
-          cd images/cfssl && make build
-      - name: fastcgi-helloserver
-        if: ${{ steps.filter-images.outputs.fastcgi-helloserver == 'true' }}
-        run: |
-          cd images/fastcgi-helloserver && make build
-      - name: echo image build
-        if: ${{ steps.filter-images.outputs.echo == 'true' }}
-        run: |
-          cd images/echo && make build
-      - name: go-grpc-greeter-server image build
-        if: ${{ steps.filter-images.outputs.go-grpc-greeter-server == 'true' }}
-        run: |
-          cd images/go-grpc-greeter-server && make build
-      - name: httpbun image build
-        if: ${{ steps.filter-images.outputs.httpbin == 'true' }}
-        run: |
-          cd images/httpbun && make build
-      - name: kube-webhook-certgen image build
-        if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
-        run: |
-          cd images/kube-webhook-certgen && make build
-      - name: ext-auth-example-authsvc
-        if: ${{ steps.filter-images.outputs.ext-auth-example-authsvc == 'true' }}
-        run: |
-          cd images/ext-auth-example-authsvc && make build
-
-  test-image:
-    permissions:
-      contents: read  # for dorny/paths-filter to fetch a list of changed files
-      pull-requests: read  # for dorny/paths-filter to read pull requests
-
-    runs-on: ubuntu-latest
-
-    env:
-      PLATFORMS: linux/amd64
-
-    strategy:
-      matrix:
-        k8s: [v1.25.11, v1.26.6, v1.27.3, v1.28.0]
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-
-      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
-        id: filter-images
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          filters: |
-            kube-webhook-certgen:
-              - 'images/kube-webhook-certgen/**'
-
-      - name: Create Kubernetes cluster
-        id: kind
-        if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
-        run: |
-          kind create cluster --image=kindest/node:${{ matrix.k8s }}
-
-      - name: Set up Go
-        id: go
-        if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
-        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
-        with:
-          go-version: '1.21.5'
-          check-latest: true
-
-      - name: kube-webhook-certgen image build
-        if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
-        run: |
-          cd images/kube-webhook-certgen && make test test-e2e
-
+        k8s: [v1.26.6, v1.27.3, v1.28.0, v1.29.0]
+    uses: ./.github/workflows/zz-tmpl-k8s-e2e.yaml
+    with:
+      k8s-version: ${{ matrix.k8s }}
+      variation: "CHROOT"

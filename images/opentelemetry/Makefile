@@ -1,4 +1,4 @@
-# Copyright 2021 The Kubernetes Authors. All rights reserved.
+# Copyright 2024 The Kubernetes Authors. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,15 +32,25 @@ IMAGE = $(REGISTRY)/opentelemetry
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
 # build with buildx
-PLATFORMS?=linux/amd64,linux/arm,linux/arm64,linux/s390x
+PLATFORMS?=linux/amd64,linux/arm,linux/arm64
 OUTPUT=
 PROGRESS=plain
-build: ensure-buildx
+
+precheck:
+ifndef NGINX_VERSION
+	$(error NGINX_VERSION variable is required)
+endif
+
+build: precheck ensure-buildx
 	docker buildx build \
+		--label=org.opencontainers.image.source=https://github.com/kubernetes/ingress-nginx \
+		--label=org.opencontainers.image.licenses=Apache-2.0 \
+		--label=org.opencontainers.image.description="Ingress NGINX Opentelemetry image" \
 		--platform=${PLATFORMS} $(OUTPUT) \
 		--progress=$(PROGRESS) \
+		--build-arg=NGINX_VERSION=$(NGINX_VERSION) \
 		--pull \
-		--tag $(IMAGE):$(TAG) rootfs
+		--tag $(IMAGE)-$(NGINX_VERSION):$(TAG) rootfs
 
 # push the cross built image
 push: OUTPUT=--push
@@ -56,4 +66,4 @@ else
 endif
 	@echo "done"
 
-.PHONY: build push ensure-buildx
+.PHONY: build precheck push ensure-buildx

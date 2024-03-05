@@ -46,7 +46,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export TAG=1.0.0-dev
 export ARCH=${ARCH:-amd64}
 export REGISTRY=ingress-controller
-NGINX_BASE_IMAGE=$(cat "$DIR"/../../NGINX_BASE)
+NGINX_BASE_IMAGE=${NGINX_BASE_IMAGE:-$(cat "$DIR"/../../NGINX_BASE)}
 export NGINX_BASE_IMAGE=$NGINX_BASE_IMAGE
 export DOCKER_CLI_EXPERIMENTAL=enabled
 export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-config-$KIND_CLUSTER_NAME}"
@@ -85,10 +85,10 @@ fi
 if [ "${SKIP_INGRESS_IMAGE_CREATION}" = "false" ]; then
   echo "[dev-env] building image"
   if [ "${IS_CHROOT}" = "true" ]; then
-    make -C "${DIR}"/../../ clean-image build image-chroot
+    make BASE_IMAGE="${NGINX_BASE_IMAGE}" -C "${DIR}"/../../ clean-image build image-chroot
     docker tag ${REGISTRY}/controller-chroot:${TAG} ${REGISTRY}/controller:${TAG}
   else
-    make -C "${DIR}"/../../ clean-image build image
+    make BASE_IMAGE="${NGINX_BASE_IMAGE}" -C "${DIR}"/../../ clean-image build image
   fi
 
   echo "[dev-env] .. done building controller images"
@@ -96,7 +96,7 @@ fi
 
 if [ "${SKIP_E2E_IMAGE_CREATION}" = "false" ]; then
   if ! command -v ginkgo &> /dev/null; then
-    go install github.com/onsi/ginkgo/v2/ginkgo@v2.13.1
+    go install github.com/onsi/ginkgo/v2/ginkgo@v2.15.0
   fi
 
   echo "[dev-env] .. done building controller images"

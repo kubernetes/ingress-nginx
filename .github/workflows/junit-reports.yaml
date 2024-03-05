@@ -9,9 +9,10 @@ jobs:
   report:
     runs-on: ubuntu-latest
     steps:
-      - uses: dorny/test-reporter@afe6793191b75b608954023a46831a3fe10048d4 # v1.7.0
+      - uses: dorny/test-reporter@eaa763f6ffc21c7a37837f56cd5f9737f27fc6c8 # v1.8.0
         with:
           artifact: /e2e-test-reports-(.*)/
           name: JEST Tests $1               # Name of the check run which will be created
           path: 'report*.xml'               # Path to test results (inside artifact .zip)
           reporter: jest-junit              # Format of test results
+          fail-on-empty: 'true'

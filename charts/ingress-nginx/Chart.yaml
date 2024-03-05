@@ -1,13 +1,9 @@
 annotations:
   artifacthub.io/changes: |-
-    - "Add controller.metrics.serviceMonitor.annotations in Helm chart"
-    - "fix(labels): use complete labels variable on default-backend deployment"
-    - "chart: allow setting allocateLoadBalancerNodePorts (#10693)"
-    - "[release-1.9] feat(helm): add documentation about metric args (#10695)"
-    - "Update Ingress-Nginx version controller-v1.9.5"
+    - "Update Ingress-Nginx version controller-v1.10.0"
   artifacthub.io/prerelease: "false"
 apiVersion: v2
-appVersion: 1.9.5
+appVersion: 1.10.0
 description: Ingress controller for Kubernetes using NGINX as a reverse proxy and
   load balancer
 home: https://github.com/kubernetes/ingress-nginx
@@ -17,7 +13,6 @@ keywords:
 - nginx
 kubeVersion: '>=1.20.0-0'
 maintainers:
-- name: Gacko
 - name: rikatz
 - name: strongjz
 - name: tao12345666333
