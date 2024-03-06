@@ -83,6 +83,8 @@ controller:
   # -- This configuration enables Topology Aware Routing feature, used together with service annotation service.kubernetes.io/topology-mode="auto"
   # Defaults to false
   enableTopologyAwareRouting: false
+  # -- This configuration disable Nginx Controller Leader Election
+  disableLeaderElection: false
   # -- This configuration defines if Ingress Controller should allow users to set
   # their own *-snippet annotations, otherwise this is forbidden / dropped
   # when users add those annotations.

@@ -109,3 +109,37 @@ func TestMaxmindRetryDownload(t *testing.T) {
 		t.Fatalf("Expected an error parsing flags but none returned")
 	}
 }
+
+func TestDisableLeaderElectionFlag(t *testing.T) {
+	ResetForTesting(func() { t.Fatal("Parsing failed") })
+
+	oldArgs := os.Args
+	defer func() { os.Args = oldArgs }()
+	os.Args = []string{"cmd", "--disable-leader-election", "--http-port", "80", "--https-port", "443"}
+
+	_, conf, err := ParseFlags()
+	if err != nil {
+		t.Fatalf("Unexpected error parsing default flags: %v", err)
+	}
+
+	if !conf.DisableLeaderElection {
+		t.Fatalf("Expected --disable-leader-election and conf.DisableLeaderElection as true, but found: %v", conf.DisableLeaderElection)
+	}
+}
+
+func TestIfLeaderElectionDisabledFlagIsFalse(t *testing.T) {
+	ResetForTesting(func() { t.Fatal("Parsing failed") })
+
+	oldArgs := os.Args
+	defer func() { os.Args = oldArgs }()
+	os.Args = []string{"cmd", "--http-port", "80", "--https-port", "443"}
+
+	_, conf, err := ParseFlags()
+	if err != nil {
+		t.Fatalf("Unexpected error parsing default flags: %v", err)
+	}
+
+	if conf.DisableLeaderElection {
+		t.Fatalf("Expected --disable-leader-election and conf.DisableLeaderElection as false, but found: %v", conf.DisableLeaderElection)
+	}
+}
