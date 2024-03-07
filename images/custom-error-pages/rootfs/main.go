@@ -60,23 +60,23 @@ const (
 	// RequestId is a unique ID that identifies the request - same as for backend service
 	RequestId = "X-Request-ID"
 
-	// ErrFilesPathVar is the name of the environment variable indicating
+	// ErrFilesPathEnvVar is the name of the environment variable indicating
 	// the location on disk of files served by the handler.
-	ErrFilesPathVar = "ERROR_FILES_PATH"
+	ErrFilesPathEnvVar = "ERROR_FILES_PATH"
 
-	// DefaultFormatVar is the name of the environment variable indicating
+	// DefaultFormatEnvVar is the name of the environment variable indicating
 	// the default error MIME type that should be returned if either the
 	// client does not specify an Accept header, or the Accept header provided
 	// cannot be mapped to a file extension.
-	DefaultFormatVar = "DEFAULT_RESPONSE_FORMAT"
+	DefaultFormatEnvVar = "DEFAULT_RESPONSE_FORMAT"
 
-	// IsExportMetricsVar is the name of the environment variable indicating
+	//  IsMetricsExportEnvVar is the name of the environment variable indicating
 	// whether or not to export /metrics and /debug/vars.
-	IsExportMetricsVar = "IS_EXPORT_METRICS"
+	IsMetricsExportEnvVar = "IS_METRICS_EXPORT"
 
-	// MetricsPortVar is the name of the environment variable indicating
+	// MetricsPortEnvVar is the name of the environment variable indicating
 	// the port on which to export /metrics and /debug/vars.
-	MetricsPortVar = "METRICS_PORT"
+	MetricsPortEnvVar = "METRICS_PORT"
 
 	// CustomErrorPagesPort is the port on which to listen to serve custom error pages.
 	CustomErrorPagesPort = "8080"
@@ -94,26 +94,26 @@ func main() {
 
 func createListeners() []Listener {
 	errFilesPath := "/www"
-	if os.Getenv(ErrFilesPathVar) != "" {
-		errFilesPath = os.Getenv(ErrFilesPathVar)
+	if os.Getenv(ErrFilesPathEnvVar) != "" {
+		errFilesPath = os.Getenv(ErrFilesPathEnvVar)
 	}
 
 	defaultFormat := "text/html"
-	if os.Getenv(DefaultFormatVar) != "" {
-		defaultFormat = os.Getenv(DefaultFormatVar)
+	if os.Getenv(DefaultFormatEnvVar) != "" {
+		defaultFormat = os.Getenv(DefaultFormatEnvVar)
 	}
 
 	isExportMetrics := true
-	if os.Getenv(IsExportMetricsVar) != "" {
-		val, err := strconv.ParseBool(os.Getenv(IsExportMetricsVar))
+	if os.Getenv(IsMetricsExportEnvVar) != "" {
+		val, err := strconv.ParseBool(os.Getenv(IsMetricsExportEnvVar))
 		if err == nil {
 			isExportMetrics = val
 		}
 	}
 
 	metricsPort := "8080"
-	if os.Getenv(MetricsPortVar) != "" {
-		metricsPort = os.Getenv(MetricsPortVar)
+	if os.Getenv(MetricsPortEnvVar) != "" {
+		metricsPort = os.Getenv(MetricsPortEnvVar)
 	}
 
 	var listeners []Listener
