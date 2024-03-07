@@ -78,10 +78,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      
+
       - name: Get go version
         run: echo "GOLANG_VERSION=$(cat GOLANG_VERSION)" >> $GITHUB_ENV
-        
+
       - name: Set up Go
         id: go
         uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
@@ -100,13 +100,13 @@ jobs:
       golangversion: ${{ steps.golangversion.outputs.version }}
     if: |
       (needs.changes.outputs.go == 'true') || (needs.changes.outputs.charts == 'true') || (needs.changes.outputs.baseimage == 'true')
-     
+
     env:
         PLATFORMS: linux/amd64
     steps:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      
+
       - name: Get go version
         id: golangversion
         run: |
@@ -136,14 +136,14 @@ jobs:
           curl -LO https://dl.k8s.io/release/v1.27.3/bin/linux/amd64/kubectl
           chmod +x ./kubectl
           sudo mv ./kubectl /usr/local/bin/kubectl
-      
+
       - name: Build NGINX Base image
         if: |
           needs.changes.outputs.baseimage == 'true'
         run: |
             export TAG=$(cat images/nginx-1.25/TAG)
             cd images/nginx-1.25/rootfs && docker buildx build --platform=${{ env.PLATFORMS }} --load -t registry.k8s.io/ingress-nginx/nginx-1.25:${TAG} .
-    
+
       - name: Build images
         env:
           TAG: 1.0.0-dev
