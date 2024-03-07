@@ -2,10 +2,9 @@ name: golangci-lint
 
 on:
   pull_request:
-    branches:
-      - "*"
     paths:
       - '**/*.go'
+      - '.github/workflows/golangci-lint.yml'
 
 permissions:
   contents: read
