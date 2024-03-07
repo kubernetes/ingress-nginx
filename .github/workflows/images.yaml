@@ -69,7 +69,7 @@ jobs:
               - 'images/opentelemetry/**'
             nginx125:
               - 'images/nginx-1.25/TAG'
- 
+
   #### TODO: Make the below jobs 'less dumb' and use the job name as parameter (the github.job context does not work here)
   cfssl:
     needs: changes
@@ -88,7 +88,6 @@ jobs:
     with:
       name: custom-error-pages
     secrets: inherit
-
 
   e2e-test-echo:
     needs: changes
@@ -214,5 +213,3 @@ jobs:
         run: |
           export TAG=$(cat images/nginx-1.25/TAG)
           cd images/nginx-1.25/rootfs && docker buildx build --platform=${{ env.PLATFORMS }} --push -t ingressnginx/nginx-1.25:${TAG} .
-    
-    
