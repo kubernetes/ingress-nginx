@@ -30,8 +30,7 @@ import (
 func TestNewUDPLogListener(t *testing.T) {
 	var count uint64
 
-	//nolint:unparam // Unused `message` param is required by the handleMessages function
-	fn := func(message []byte) {
+	fn := func(message []byte) { //nolint:unparam,revive // Unused `message` param is required by the handleMessages function
 		atomic.AddUint64(&count, 1)
 	}
 

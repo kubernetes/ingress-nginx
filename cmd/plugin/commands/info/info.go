@@ -32,7 +32,7 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "info",
 		Short: "Show information about the ingress-nginx service",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			service, err := cmd.Flags().GetString("service")
 			if err != nil {
 				return err

@@ -36,7 +36,7 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 		Use:     "ingresses",
 		Aliases: []string{"ingress", "ing"},
 		Short:   "Provide a short summary of all of the ingress definitions",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			host, err := cmd.Flags().GetString("host")
 			if err != nil {
 				return err
@@ -139,14 +139,14 @@ func getIngressRows(ingresses *[]networking.Ingress) []ingressRow {
 		ing := &(*ingresses)[i]
 		address := ""
 		for _, lbIng := range ing.Status.LoadBalancer.Ingress {
-			if len(lbIng.IP) > 0 {
+			if lbIng.IP != "" {
 				address = address + lbIng.IP + ","
 			}
-			if len(lbIng.Hostname) > 0 {
+			if lbIng.Hostname != "" {
 				address = address + lbIng.Hostname + ","
 			}
 		}
-		if len(address) > 0 {
+		if address != "" {
 			address = address[:len(address)-1]
 		}
 
@@ -166,7 +166,7 @@ func getIngressRows(ingresses *[]networking.Ingress) []ingressRow {
 		}
 
 		// Handle catch-all ingress
-		if len(ing.Spec.Rules) == 0 && len(defaultBackendService) > 0 {
+		if len(ing.Spec.Rules) == 0 && defaultBackendService != "" {
 			row := ingressRow{
 				Namespace:   ing.Namespace,
 				IngressName: ing.Name,
