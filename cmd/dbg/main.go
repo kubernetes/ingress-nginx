@@ -47,7 +47,7 @@ func main() {
 	backendsAllCmd := &cobra.Command{
 		Use:   "all",
 		Short: "Output the all dynamic backend information as a JSON array",
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			backendsAll()
 		},
 	}
@@ -56,7 +56,7 @@ func main() {
 	backendsListCmd := &cobra.Command{
 		Use:   "list",
 		Short: "Output a newline-separated list of the backend names",
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			backendsList()
 		},
 	}
@@ -66,7 +66,7 @@ func main() {
 		Use:   "get [backend name]",
 		Short: "Output the backend information only for the backend that has this name",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			backendsGet(args[0])
 		},
 	}
@@ -81,7 +81,7 @@ func main() {
 		Use:   "get [hostname]",
 		Short: "Get the dynamically-loaded certificate information for the given hostname",
 		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			certGet(args[0])
 			return nil
 		},
@@ -93,7 +93,7 @@ func main() {
 	generalCmd := &cobra.Command{
 		Use:   "general",
 		Short: "Output the general dynamic lua state",
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			general()
 		},
 	}
@@ -102,7 +102,7 @@ func main() {
 	confCmd := &cobra.Command{
 		Use:   "conf",
 		Short: "Dump the contents of /etc/nginx/nginx.conf",
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			readNginxConf()
 		},
 	}

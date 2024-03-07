@@ -400,7 +400,6 @@ func getFakeHostSSLCert(host string) (cert, key []byte) {
 	var err error
 
 	priv, err = rsa.GenerateKey(rand.Reader, 2048)
-
 	if err != nil {
 		klog.Fatalf("failed to generate fake private key: %v", err)
 	}

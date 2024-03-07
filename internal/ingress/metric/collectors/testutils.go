@@ -109,7 +109,7 @@ func removeUnusedWhitespace(s string) string {
 	for _, l := range lines {
 		trimmedLine = strings.TrimSpace(l)
 
-		if len(trimmedLine) > 0 {
+		if trimmedLine != "" {
 			trimmedLines = append(trimmedLines, trimmedLine)
 		}
 	}

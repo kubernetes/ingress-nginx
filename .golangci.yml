@@ -200,9 +200,7 @@ linters-settings:
       - stringConcatSimplify
       - stringsCompare
       - switchTrue
-      - timeCmpSimplify
       - timeExprSimplify
-      - todoCommentWithoutDetail
       - tooManyResultsChecker
       - typeAssertChain
       - typeDefFirst

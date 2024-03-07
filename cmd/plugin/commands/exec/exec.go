@@ -34,7 +34,7 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "exec",
 		Short: "Execute a command inside an ingress-nginx pod",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			util.PrintError(exec(flags, *pod, *deployment, *selector, *container, args, opts))
 			return nil
 		},
