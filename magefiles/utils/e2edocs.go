@@ -25,22 +25,19 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"text/template"
-
-	"slices"
 )
 
 //go:embed templates/e2edocs.tpl
 var tplContent embed.FS
 
-var (
-	skipFiles = []string{
-		"test/e2e/framework/framework.go",
-		"test/e2e/e2e.go",
-		"test/e2e/e2e_test.go",
-	}
-)
+var skipFiles = []string{
+	"test/e2e/framework/framework.go",
+	"test/e2e/e2e.go",
+	"test/e2e/e2e_test.go",
+}
 
 const (
 	testDir  = "test/e2e"
@@ -48,9 +45,7 @@ const (
 	URL      = "https://github.com/kubernetes/ingress-nginx/tree/main/"
 )
 
-var (
-	betweenquotes = regexp.MustCompile(`("|\')(?P<TestDescription>.*)("|\')`)
-)
+var betweenquotes = regexp.MustCompile(`("|\')(?P<TestDescription>.*)("|\')`)
 
 type E2ETemplate struct {
 	URL   string
@@ -102,7 +97,7 @@ func (t *E2ETemplate) walkE2eDir(path string, d fs.DirEntry, errAggregated error
 	fileScanner.Split(bufio.ScanLines)
 
 	tests := make([]string, 0)
-	var lineN = 0
+	lineN := 0
 	for fileScanner.Scan() {
 		lineN = lineN + 1
 		if !containsGinkgoTest(fileScanner.Text()) {
@@ -136,5 +131,4 @@ func GenerateE2EDocs() (string, error) {
 		return "", err
 	}
 	return tplBuff.String(), nil
-
 }

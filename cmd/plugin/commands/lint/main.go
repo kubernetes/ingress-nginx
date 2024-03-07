@@ -38,7 +38,7 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "lint",
 		Short: "Inspect kubernetes resources for possible issues",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			err := opts.Validate()
 			if err != nil {
 				return err
@@ -73,7 +73,7 @@ func createSubcommand(flags *genericclioptions.ConfigFlags, names []string, shor
 		Use:     names[0],
 		Aliases: names[1:],
 		Short:   short,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			err := opts.Validate()
 			if err != nil {
 				return err

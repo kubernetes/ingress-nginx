@@ -34,7 +34,7 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "general",
 		Short: "Inspect the other dynamic ingress-nginx information",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			util.PrintError(general(flags, *pod, *deployment, *selector, *container))
 			return nil
 		},

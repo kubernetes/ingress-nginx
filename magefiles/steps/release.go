@@ -215,7 +215,6 @@ func (Release) LatestCommitLogs() {
 }
 
 func commitsBetweenTags(newversion, oldversion string) []string {
-
 	var newTag, oldTag string
 	tags := getAllControllerTags()
 	newTag, oldTag = tags[0], tags[1]
