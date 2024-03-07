@@ -416,7 +416,7 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 		harr := strings.Split(hstr, ",")
 		for _, header := range harr {
 			header = strings.TrimSpace(header)
-			if len(header) > 0 {
+			if header != "" {
 				if !ValidHeader(header) {
 					return nil, ing_errors.NewLocationDenied("invalid headers list")
 				}
@@ -505,7 +505,7 @@ func ParseStringToCacheDurations(input string) ([]string, error) {
 		arr := strings.Split(input, ",")
 		for _, duration := range arr {
 			duration = strings.TrimSpace(duration)
-			if len(duration) > 0 {
+			if duration != "" {
 				if !ValidCacheDuration(duration) {
 					authCacheDuration = []string{DefaultCacheDuration}
 					return authCacheDuration, ing_errors.NewLocationDenied(fmt.Sprintf("invalid cache duration: %s", duration))

@@ -313,7 +313,7 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 			return false, nil
 		}
 
-		if klog.V(10).Enabled() && len(o) > 0 {
+		if klog.V(10).Enabled() && o != "" {
 			klog.InfoS("NGINX", "configuration", o)
 		}
 
@@ -335,7 +335,7 @@ func (f *Framework) matchNginxCustomConditions(from, to string, matcher func(cfg
 			return false, nil
 		}
 
-		if klog.V(10).Enabled() && len(o) > 0 {
+		if klog.V(10).Enabled() && o != "" {
 			klog.InfoS("NGINX", "configuration", o)
 		}
 
@@ -501,7 +501,7 @@ func (f *Framework) newHTTPTestClient(config *tls.Config, setIngressURL bool) *h
 		Transport: &http.Transport{
 			TLSClientConfig: config,
 		},
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
 	}, httpexpect.NewAssertReporter())

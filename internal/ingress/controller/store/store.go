@@ -292,7 +292,7 @@ func New(
 	// the memory consumption of nginx-ingress-controller explode.
 	// In order to avoid that we filter out labels OWNER=TILLER.
 	labelsTweakListOptionsFunc := func(options *metav1.ListOptions) {
-		if len(options.LabelSelector) > 0 {
+		if options.LabelSelector != "" {
 			options.LabelSelector += ",OWNER!=TILLER"
 		} else {
 			options.LabelSelector = "OWNER!=TILLER"
