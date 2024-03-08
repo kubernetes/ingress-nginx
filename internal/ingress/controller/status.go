@@ -59,7 +59,7 @@ func setupLeaderElection(config *leaderElectionConfig) {
 
 	var stopCh chan struct{}
 	callbacks := leaderelection.LeaderCallbacks{
-		OnStartedLeading: func(ctx context.Context) {
+		OnStartedLeading: func(_ context.Context) {
 			klog.V(2).InfoS("I am the new leader")
 			stopCh = make(chan struct{})
 

@@ -74,7 +74,6 @@ func run() error {
 
 		return nil
 	})
-
 	if err != nil {
 		return fmt.Errorf("failed to copy files: %w", err)
 	}

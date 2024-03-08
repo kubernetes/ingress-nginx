@@ -42,7 +42,7 @@ func TestControllerCounters(t *testing.T) {
 	}{
 		{
 			name: "should return not increment in metrics if no operations are invoked",
-			test: func(cm *Controller) {
+			test: func(_ *Controller) {
 			},
 			want: metadata + `
 				nginx_ingress_controller_config_last_reload_successful{controller_class="nginx",controller_namespace="default",controller_pod="pod"} 0

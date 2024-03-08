@@ -74,7 +74,7 @@ func main() {
 		handleFatalInitError(err)
 	}
 
-	if len(conf.DefaultService) > 0 {
+	if conf.DefaultService != "" {
 		err := checkService(conf.DefaultService, kubeClient)
 		if err != nil {
 			klog.Fatal(err)
@@ -83,7 +83,7 @@ func main() {
 		klog.InfoS("Valid default backend", "service", conf.DefaultService)
 	}
 
-	if len(conf.PublishService) > 0 {
+	if conf.PublishService != "" {
 		err := checkService(conf.PublishService, kubeClient)
 		if err != nil {
 			klog.Fatal(err)
@@ -235,7 +235,6 @@ func createApiserverClient(apiserverHost, rootCAFile, kubeConfig string) (*kuber
 		retries++
 		return false, nil
 	})
-
 	// err is returned in case of timeout in the exponential backoff (ErrWaitTimeout)
 	if err != nil {
 		return nil, lastErr
