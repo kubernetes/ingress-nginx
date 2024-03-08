@@ -59,6 +59,8 @@ events {
     {{ end }}
 }
 
+##### AQUI {{ $cfg.GeoIP2AutoReloadMinutes }} - {{ $cfg.UseGeoIP2 }} 
+
 http {
     {{ if (shouldLoadOpentelemetryModule $cfg $servers) }}
     opentelemetry_config {{ $cfg.OpentelemetryConfig }};
@@ -172,6 +174,9 @@ http {
     {{ range $index, $file := $all.MaxmindEditionFiles }}
     {{ if eq $file "GeoLite2-Country.mmdb" }}
     geoip2 /etc/ingress-controller/geoip/GeoLite2-Country.mmdb {
+        {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
+        auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
+        {{ end }}
         $geoip2_country_code source=$remote_addr country iso_code;
         $geoip2_country_name source=$remote_addr country names en;
         $geoip2_country_geoname_id source=$remote_addr country geoname_id;
@@ -183,6 +188,9 @@ http {
 
     {{ if eq $file "GeoIP2-Country.mmdb" }}
     geoip2 /etc/ingress-controller/geoip/GeoIP2-Country.mmdb {
+        {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
+        auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
+        {{ end }}
         $geoip2_country_code source=$remote_addr country iso_code;
         $geoip2_country_name source=$remote_addr country names en;
         $geoip2_country_geoname_id source=$remote_addr country geoname_id;
@@ -194,6 +202,9 @@ http {
 
     {{ if eq $file "GeoLite2-City.mmdb" }}
     geoip2 /etc/ingress-controller/geoip/GeoLite2-City.mmdb {
+        {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
+        auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
+        {{ end }}    
         $geoip2_city_country_code source=$remote_addr country iso_code;
         $geoip2_city_country_name source=$remote_addr country names en;
         $geoip2_city_country_geoname_id source=$remote_addr country geoname_id;
@@ -217,6 +228,9 @@ http {
 
     {{ if eq $file "GeoIP2-City.mmdb" }}
     geoip2 /etc/ingress-controller/geoip/GeoIP2-City.mmdb {
+        {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
+        auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
+        {{ end }}    
         $geoip2_city_country_code source=$remote_addr country iso_code;
         $geoip2_city_country_name source=$remote_addr country names en;
         $geoip2_city_country_geoname_id source=$remote_addr country geoname_id;
@@ -240,6 +254,9 @@ http {
 
     {{ if eq $file "GeoLite2-ASN.mmdb" }}
     geoip2 /etc/ingress-controller/geoip/GeoLite2-ASN.mmdb {
+        {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
+        auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
+        {{ end }}    
         $geoip2_asn source=$remote_addr autonomous_system_number;
         $geoip2_org source=$remote_addr autonomous_system_organization;
     }
@@ -247,6 +264,9 @@ http {
 
     {{ if eq $file "GeoIP2-ASN.mmdb" }}
     geoip2 /etc/ingress-controller/geoip/GeoIP2-ASN.mmdb {
+        {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
+        auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
+        {{ end }}    
         $geoip2_asn source=$remote_addr autonomous_system_number;
         $geoip2_org source=$remote_addr autonomous_system_organization;
     }
@@ -254,6 +274,9 @@ http {
 
     {{ if eq $file "GeoIP2-ISP.mmdb" }}
     geoip2 /etc/ingress-controller/geoip/GeoIP2-ISP.mmdb {
+        {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
+        auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
+        {{ end }}    
         $geoip2_isp source=$remote_addr isp;
         $geoip2_isp_org source=$remote_addr organization;
         $geoip2_asn source=$remote_addr default=0 autonomous_system_number;
@@ -268,6 +291,9 @@ http {
 
     {{ if eq $file "GeoIP2-Anonymous-IP.mmdb" }}
     geoip2 /etc/ingress-controller/geoip/GeoIP2-Anonymous-IP.mmdb {
+        {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
+        auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
+        {{ end }}    
         $geoip2_is_anon source=$remote_addr is_anonymous;
         $geoip2_is_anonymous source=$remote_addr default=0 is_anonymous;
         $geoip2_is_anonymous_vpn source=$remote_addr default=0 is_anonymous_vpn;

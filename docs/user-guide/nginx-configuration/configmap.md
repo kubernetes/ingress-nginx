@@ -101,6 +101,7 @@ The following table shows a configuration option's name, type, and the default v
 |[use-gzip](#use-gzip)|bool|"false"||
 |[use-geoip](#use-geoip)|bool|"true"||
 |[use-geoip2](#use-geoip2)|bool|"false"||
+|[geoip2-autoreload-in-minutes](#geoip2-autoreload-in-minutes)|int|"0"||
 |[enable-brotli](#enable-brotli)|bool|"false"||
 |[brotli-level](#brotli-level)|int|4||
 |[brotli-min-length](#brotli-min-length)|int|20||
@@ -736,6 +737,12 @@ Alternatively, it is possible to use a volume to mount the files `/etc/nginx/geo
     If the feature is enabled but the files are missing, GeoIP2 will not be enabled.
 
 _**default:**_ false
+
+## geoip2-autoreload-in-minutes
+
+Enables the [geoip2 module](https://github.com/leev/ngx_http_geoip2_module) autoreload in MaxMind databases setting the interval in minutes. 
+
+_**default:**_ 0
 
 ## enable-brotli
 
