@@ -329,11 +329,12 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.image.tag | string | `"v1.10.0"` |  |
 | controller.ingressClass | string | `"nginx"` | For backwards compatibility with ingress.class annotation, use ingressClass. Algorithm is as follows, first ingressClassName is considered, if not present, controller looks for ingress.class annotation |
 | controller.ingressClassByName | bool | `false` | Process IngressClass per name (additionally as per spec.controller). |
-| controller.ingressClassResource.controllerValue | string | `"k8s.io/ingress-nginx"` | Controller-value of the controller that is processing this ingressClass |
-| controller.ingressClassResource.default | bool | `false` | Is this the default ingressClass for the cluster |
-| controller.ingressClassResource.enabled | bool | `true` | Is this ingressClass enabled or not |
-| controller.ingressClassResource.name | string | `"nginx"` | Name of the ingressClass |
-| controller.ingressClassResource.parameters | object | `{}` | Parameters is a link to a custom resource containing additional configuration for the controller. This is optional if the controller does not require extra parameters. |
+| controller.ingressClassResource | object | `{"controllerValue":"k8s.io/ingress-nginx","default":false,"enabled":true,"name":"nginx","parameters":{}}` | This section refers to the creation of the IngressClass resource. IngressClasses are immutable and cannot be changed after creation. We do not support namespaced IngressClasses, yet, so a ClusterRole and a ClusterRoleBinding is required. |
+| controller.ingressClassResource.controllerValue | string | `"k8s.io/ingress-nginx"` | Controller of the IngressClass. An Ingress Controller looks for IngressClasses it should reconcile by this value. This value is also being set as the `--controller-class` argument of this Ingress Controller. Ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-class |
+| controller.ingressClassResource.default | bool | `false` | If true, Ingresses without `ingressClassName` get assigned to this IngressClass on creation. Ingress creation gets rejected if there are multiple default IngressClasses. Ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#default-ingress-class |
+| controller.ingressClassResource.enabled | bool | `true` | Create the IngressClass or not |
+| controller.ingressClassResource.name | string | `"nginx"` | Name of the IngressClass |
+| controller.ingressClassResource.parameters | object | `{}` | A link to a custom resource containing additional configuration for the controller. This is optional if the controller consuming this IngressClass does not require additional parameters. Ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-class |
 | controller.keda.apiVersion | string | `"keda.sh/v1alpha1"` |  |
 | controller.keda.behavior | object | `{}` |  |
 | controller.keda.cooldownPeriod | int | `300` |  |
