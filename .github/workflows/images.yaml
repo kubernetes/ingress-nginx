@@ -42,7 +42,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: dorny/paths-filter@ebc4d7e9ebcb0b1eb21480bb8f43113e996ac77a # v3.0.1
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         id: filter
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -69,7 +69,7 @@ jobs:
               - 'images/opentelemetry/**'
             nginx125:
               - 'images/nginx-1.25/TAG'
- 
+
   #### TODO: Make the below jobs 'less dumb' and use the job name as parameter (the github.job context does not work here)
   cfssl:
     needs: changes
@@ -88,7 +88,6 @@ jobs:
     with:
       name: custom-error-pages
     secrets: inherit
-
 
   e2e-test-echo:
     needs: changes
@@ -201,7 +200,7 @@ jobs:
         uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # v3.0.0
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
+        uses: docker/setup-buildx-action@0d103c3126aa41d772a8362f6aa67afac040f80c # v3.1.0
         with:
           version: latest
           platforms: ${{ env.PLATFORMS }}
@@ -214,5 +213,3 @@ jobs:
         run: |
           export TAG=$(cat images/nginx-1.25/TAG)
           cd images/nginx-1.25/rootfs && docker buildx build --platform=${{ env.PLATFORMS }} --push -t ingressnginx/nginx-1.25:${TAG} .
-    
-    

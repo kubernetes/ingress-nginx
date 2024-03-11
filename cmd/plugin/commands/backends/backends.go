@@ -34,7 +34,7 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "backends",
 		Short: "Inspect the dynamic backend information of an ingress-nginx instance",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			backend, err := cmd.Flags().GetString("backend")
 			if err != nil {
 				return err

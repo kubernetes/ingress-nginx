@@ -102,7 +102,7 @@ func (f *Framework) NamespaceContent() (string, error) {
 	}
 
 	eout := strings.TrimSpace(execErr.String())
-	if len(eout) > 0 {
+	if eout != "" {
 		return "", fmt.Errorf("stderr: %v", eout)
 	}
 

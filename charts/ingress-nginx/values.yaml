@@ -26,8 +26,8 @@ controller:
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
-    tag: "v1.9.6"
-    digest: sha256:1405cc613bd95b2c6edd8b2a152510ae91c7e62aea4698500d23b2145960ab9c
+    tag: "v1.10.0"
+    digest: sha256:42b3f0e5d0846876b1791cd3afeb5f1cbbe4259d6f35651dcc1b5c980925379c
     digestChroot: sha256:7eb46ff733429e0e46892903c7394aff149ac6d284d92b3946f3baf7ff26a096
     pullPolicy: IfNotPresent
     runAsNonRoot: true
@@ -1077,13 +1077,13 @@ imagePullSecrets: []
 ## Ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/exposing-tcp-udp-services.md
 ##
 tcp: {}
-#  8080: "default/example-tcp-svc:9000"
+#  "8080": "default/example-tcp-svc:9000"
 
 # -- UDP service key-value pairs
 ## Ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/exposing-tcp-udp-services.md
 ##
 udp: {}
-#  53: "kube-system/kube-dns:53"
+#  "53": "kube-system/kube-dns:53"
 
 # -- Prefix for TCP and UDP ports names in ingress controller service
 ## Some cloud providers, like Yandex Cloud may have a requirements for a port name regex to support cloud load balancer integration
