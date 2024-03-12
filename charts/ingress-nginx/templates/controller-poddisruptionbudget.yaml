@@ -1,7 +1,10 @@
+# PDB is not supported for DaemonSets.
+# https://github.com/kubernetes/kubernetes/issues/108124
+{{- if eq .Values.controller.kind "Deployment" }}
 {{- $replicas := .Values.controller.replicaCount }}
-{{- if .Values.controller.autoscaling.enabled }}
+{{- if and .Values.controller.autoscaling.enabled (not .Values.controller.keda.enabled) }}
 {{- $replicas = .Values.controller.autoscaling.minReplicas }}
-{{- else if .Values.controller.keda.enabled }}
+{{- else if and .Values.controller.keda.enabled (not .Values.controller.autoscaling.enabled) }}
 {{- $replicas = .Values.controller.keda.minReplicas }}
 {{- end }}
 {{- if gt ($replicas | int) 1 }}
@@ -29,4 +32,5 @@ spec:
   {{- else if .Values.controller.maxUnavailable }}
   maxUnavailable: {{ .Values.controller.maxUnavailable }}
   {{- end }}
+{{- end }}
 {{- end }}
