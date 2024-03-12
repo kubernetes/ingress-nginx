@@ -151,7 +151,7 @@ func (am *AdmissionCollector) SetAdmissionMetrics(testedIngressLength, testedIng
 		testedIngressTime,
 		renderingIngressLength,
 		renderingIngressTime,
-		ByteFormat(int64(testedConfigurationSize)),
 		admissionTime,
+		ByteFormat(int64(testedConfigurationSize)),
 	)
 }
