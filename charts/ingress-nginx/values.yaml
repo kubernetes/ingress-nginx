@@ -108,21 +108,30 @@ controller:
     enabled: false
   # -- Election ID to use for status update, by default it uses the controller name combined with a suffix of 'leader'
   electionID: ""
-  ## This section refers to the creation of the IngressClass resource
-  ## IngressClass resources are supported since k8s >= 1.18 and required since k8s >= 1.19
+  # -- This section refers to the creation of the IngressClass resource.
+  # IngressClasses are immutable and cannot be changed after creation.
+  # We do not support namespaced IngressClasses, yet, so a ClusterRole and a ClusterRoleBinding is required.
   ingressClassResource:
-    # -- Name of the ingressClass
+    # -- Name of the IngressClass
     name: nginx
-    # -- Is this ingressClass enabled or not
+    # -- Create the IngressClass or not
     enabled: true
-    # -- Is this the default ingressClass for the cluster
+    # -- If true, Ingresses without `ingressClassName` get assigned to this IngressClass on creation.
+    # Ingress creation gets rejected if there are multiple default IngressClasses.
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#default-ingress-class
     default: false
-    # -- Controller-value of the controller that is processing this ingressClass
-    controllerValue: "k8s.io/ingress-nginx"
-    # -- Parameters is a link to a custom resource containing additional
-    # configuration for the controller. This is optional if the controller
-    # does not require extra parameters.
+    # -- Controller of the IngressClass. An Ingress Controller looks for IngressClasses it should reconcile by this value.
+    # This value is also being set as the `--controller-class` argument of this Ingress Controller.
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-class
+    controllerValue: k8s.io/ingress-nginx
+    # -- A link to a custom resource containing additional configuration for the controller.
+    # This is optional if the controller consuming this IngressClass does not require additional parameters.
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-class
     parameters: {}
+    # parameters:
+    #   apiGroup: k8s.example.com
+    #   kind: IngressParameters
+    #   name: external-lb
   # -- For backwards compatibility with ingress.class annotation, use ingressClass.
   # Algorithm is as follows, first ingressClassName is considered, if not present, controller looks for ingress.class annotation
   ingressClass: nginx

@@ -1,6 +1,4 @@
 {{- if .Values.controller.ingressClassResource.enabled -}}
-# We don't support namespaced ingressClass yet
-# So a ClusterRole and a ClusterRoleBinding is required
 apiVersion: networking.k8s.io/v1
 kind: IngressClass
 metadata:
