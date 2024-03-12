@@ -63,3 +63,11 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+
+  - it: should not create a PodDisruptionBudget if `controller.autoscaling.enabled` is true and `controller.keda.enabled` is true
+    set:
+      controller.autoscaling.enabled: true
+      controller.keda.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
