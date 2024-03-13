@@ -391,7 +391,7 @@ func TestCleanTempNginxCfg(t *testing.T) {
 
 	var files []string
 
-	err = filepath.Walk(tmpDir, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(tmpDir, func(path string, info os.FileInfo, _ error) error {
 		if info.IsDir() && tmpDir != path {
 			return filepath.SkipDir
 		}
