@@ -1095,7 +1095,8 @@ Enables or disables using spans from incoming requests as parent for created one
 
 ## otel-max-export-batch-size
 
-The maximum batch size. Must be equal or smaller than [otel-max-export-batch-size](#otel-max-export-batch-size). _**default:**_ 512
+The maximum number of spans in a single batch.
+(#otel-max-export-batch-size). _**default:**_ 512
 
 ## otel-schedule-delay-millis
 
