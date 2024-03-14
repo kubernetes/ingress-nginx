@@ -84,7 +84,7 @@ export GEOIP2_VERSION=a607a41a8115fecfc05b5c283c81532a3d605425
 export LUAJIT_VERSION=2.1-20230410
 
 # Check for recent changes: https://github.com/openresty/lua-resty-balancer/compare/v0.04...master
-export LUA_RESTY_BALANCER=0.04
+export LUA_RESTY_BALANCER=0.05
 
 # Check for recent changes: https://github.com/openresty/lua-resty-lrucache/compare/v0.13...master
 export LUA_RESTY_CACHE=0.13
