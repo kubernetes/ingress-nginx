@@ -243,16 +243,6 @@ Check the ingress controller version tag is at most three versions behind the la
 {{- end -}}
 
 {{/*
-IngressClass parameters.
-*/}}
-{{- define "ingressClass.parameters" -}}
-  {{- if .Values.controller.ingressClassResource.parameters -}}
-          parameters:
-{{ toYaml .Values.controller.ingressClassResource.parameters | indent 4}}
-  {{ end }}
-{{- end -}}
-
-{{/*
 Extra modules.
 */}}
 {{- define "extraModules" -}}
