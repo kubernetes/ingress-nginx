@@ -59,6 +59,14 @@ tests:
           path: spec.template.spec.containers[0].args
           content: --enable-metrics=false
 
+  - it: should create a Deployment with argument `--controller-class=k8s.io/ingress-nginx-internal` if `controller.ingressClassResource.controllerValue` is "k8s.io/ingress-nginx-internal"
+    set:
+      controller.ingressClassResource.controllerValue: k8s.io/ingress-nginx-internal
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --controller-class=k8s.io/ingress-nginx-internal
+
   - it: should create a Deployment with resource limits if `controller.resources.limits` is set
     set:
       controller.resources.limits.cpu: 500m
