@@ -59,8 +59,6 @@ events {
     {{ end }}
 }
 
-##### AQUI {{ $cfg.GeoIP2AutoReloadMinutes }} - {{ $cfg.UseGeoIP2 }} 
-
 http {
     {{ if (shouldLoadOpentelemetryModule $cfg $servers) }}
     opentelemetry_config {{ $cfg.OpentelemetryConfig }};
