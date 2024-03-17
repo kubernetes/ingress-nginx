@@ -126,6 +126,13 @@ controller:
     # This value is also being set as the `--controller-class` argument of this Ingress Controller.
     # Ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-class
     controllerValue: k8s.io/ingress-nginx
+    # -- Aliases of this IngressClass. Creates copies with identical settings but the respective alias as name.
+    # Useful for development environments with only one Ingress Controller but production-like Ingress resources.
+    # `default` gets enabled on the original IngressClass only.
+    aliases: []
+    # aliases:
+    # - nginx-alias-1
+    # - nginx-alias-2
     # -- A link to a custom resource containing additional configuration for the controller.
     # This is optional if the controller consuming this IngressClass does not require additional parameters.
     # Ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-class
