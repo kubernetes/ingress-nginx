@@ -85,6 +85,8 @@ controller:
   enableTopologyAwareRouting: false
   # -- This configuration disable Nginx Controller Leader Election
   disableLeaderElection: false
+  # -- Duration a leader election is valid before it's getting re-elected. If not set, the default value is 30s.
+  electionTTL: ""
   # -- This configuration defines if Ingress Controller should allow users to set
   # their own *-snippet annotations, otherwise this is forbidden / dropped
   # when users add those annotations.

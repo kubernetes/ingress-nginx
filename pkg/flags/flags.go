@@ -132,6 +132,9 @@ Requires setting the publish-service parameter to a valid Service reference.`)
 		electionID = flags.String("election-id", "ingress-controller-leader",
 			`Election id to use for Ingress status updates.`)
 
+		electionTTL = flags.Duration("election-ttl", 30*time.Second,
+			`Duration a leader election is valid before it's getting re-elected`)
+
 		updateStatusOnShutdown = flags.Bool("update-status-on-shutdown", true,
 			`Update the load-balancer status of Ingress objects when the controller shuts down.
 Requires the update-status parameter.`)
@@ -314,6 +317,10 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		}
 	}
 
+	if *electionTTL <= 0 {
+		*electionTTL = 30 * time.Second
+	}
+
 	histogramBuckets := &collectors.HistogramBuckets{
 		TimeBuckets:   *timeBuckets,
 		LengthBuckets: *lengthBuckets,
@@ -327,6 +334,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		KubeConfigFile:              *kubeConfigFile,
 		UpdateStatus:                *updateStatus,
 		ElectionID:                  *electionID,
+		ElectionTTL:                 *electionTTL,
 		EnableProfiling:             *profiling,
 		EnableMetrics:               *enableMetrics,
 		MetricsPerHost:              *metricsPerHost,
