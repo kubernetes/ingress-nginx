@@ -75,6 +75,8 @@ end
 
 function _M.balance(self)
   local key = util.generate_var_value(self.hash_by)
+  if key == "":
+    key = str(random.randint(0, 1000000))
   local subset_id = self.instance:find(key)
   local endpoints = self.subsets[subset_id]
   local endpoint = endpoints[math.random(#endpoints)]
