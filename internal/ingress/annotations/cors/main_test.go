@@ -203,3 +203,33 @@ func TestIngresCorsConfigAllowOriginWithTrailingComma(t *testing.T) {
 		t.Errorf("expected %v but returned %v", expectedCorsAllowOrigins, nginxCors.CorsAllowOrigin)
 	}
 }
+
+func TestIngressCorsConfigAllowOriginWithNonHttpProtocol(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix(corsEnableAnnotation)] = "true"
+
+	// Include a trailing comma and an empty value between the commas.
+	data[parser.GetAnnotationWithPrefix(corsAllowOriginAnnotation)] = "test://localhost"
+	ing.SetAnnotations(data)
+
+	corst, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("error parsing annotations: %v", err)
+	}
+
+	nginxCors, ok := corst.(*Config)
+	if !ok {
+		t.Errorf("expected a Config type but returned %t", corst)
+	}
+
+	if !nginxCors.CorsEnabled {
+		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix(corsEnableAnnotation)], nginxCors.CorsEnabled)
+	}
+
+	expectedCorsAllowOrigins := []string{"test://localhost"}
+	if !reflect.DeepEqual(nginxCors.CorsAllowOrigin, expectedCorsAllowOrigins) {
+		t.Errorf("expected %v but returned %v", expectedCorsAllowOrigins, nginxCors.CorsAllowOrigin)
+	}
+}
