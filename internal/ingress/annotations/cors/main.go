@@ -43,9 +43,9 @@ var (
 	// * Sets a group that can be (https?://)?*?.something.com:port?
 	// * Allows this to be repeated as much as possible, and separated by comma
 	// Otherwise it should be '*'
-	corsOriginRegexValidator = regexp.MustCompile(`^((((https?://)?(\*\.)?[A-Za-z0-9\-.]*(:\d+)?,?)+)|\*)?$`)
+	corsOriginRegexValidator = regexp.MustCompile(`^(((([a-z]+://)?(\*\.)?[A-Za-z0-9\-.]*(:\d+)?,?)+)|\*)?$`)
 	// corsOriginRegex defines the regex for validation inside Parse
-	corsOriginRegex = regexp.MustCompile(`^(https?://(\*\.)?[A-Za-z0-9\-.]*(:\d+)?|\*)?$`)
+	corsOriginRegex = regexp.MustCompile(`^([a-z]+://(\*\.)?[A-Za-z0-9\-.]*(:\d+)?|\*)?$`)
 	// Method must contain valid methods list (PUT, GET, POST, BLA)
 	// May contain or not spaces between each verb
 	corsMethodsRegex = regexp.MustCompile(`^([A-Za-z]+,?\s?)+$`)
