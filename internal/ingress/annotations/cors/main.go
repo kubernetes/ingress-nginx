@@ -78,8 +78,9 @@ var corsAnnotation = parser.Annotation{
 			Scope:     parser.AnnotationScopeIngress,
 			Risk:      parser.AnnotationRiskMedium,
 			Documentation: `This annotation controls what's the accepted Origin for CORS.
-			This is a multi-valued field, separated by ','. It must follow this format: http(s)://origin-site.com or http(s)://origin-site.com:port
-			It also supports single level wildcard subdomains and follows this format: http(s)://*.foo.bar, http(s)://*.bar.foo:8080 or http(s)://*.abc.bar.foo:9000`,
+			This is a multi-valued field, separated by ','. It must follow this format: protocol://origin-site.com or protocol://origin-site.com:port
+			It also supports single level wildcard subdomains and follows this format: https://*.foo.bar, http://*.bar.foo:8080 or myprotocol://*.abc.bar.foo:9000
+			Protocol can be any lowercase string, like http, https, or mycustomprotocol.`,
 		},
 		corsAllowHeadersAnnotation: {
 			Validator: parser.ValidateRegex(parser.HeadersVariable, true),
