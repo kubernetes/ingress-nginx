@@ -95,7 +95,7 @@ var _ = framework.DescribeSetting("GRPC", func() {
 			),
 		)
 		assert.Nil(ginkgo.GinkgoT(), err, "error creating a connection")
-		defer conn.Close() //nolint:errcheck // Checking the error here is not valuable
+		defer conn.Close()
 
 		client := pb.NewGRPCBinClient(conn)
 		ctx := context.Background()
