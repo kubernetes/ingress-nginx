@@ -17,10 +17,9 @@ limitations under the License.
 package config
 
 import (
+	"k8s.io/klog/v2"
 	"strconv"
 	"time"
-
-	"k8s.io/klog/v2"
 
 	apiv1 "k8s.io/api/core/v1"
 
@@ -752,6 +751,11 @@ type Configuration struct {
 	// alphanumeric chars, "-", "_", "/".In case of additional characters,
 	// like used on Rewrite configurations the user should use pathType as ImplementationSpecific
 	StrictValidatePathType bool `json:"strict-validate-path-type"`
+
+	// GRPCBufferSizeKb Sets the size of the buffer used for reading the response received
+	// from the gRPC server. The response is passed to the client synchronously,
+	// as soon as it is received.
+	GRPCBufferSizeKb int `json:"grpc-buffer-size-kb"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -917,6 +921,7 @@ func NewDefault() Configuration {
 		GlobalRateLimitStatucCode:              429,
 		DebugConnections:                       []string{},
 		StrictValidatePathType:                 false, // TODO: This will be true in future releases
+		GRPCBufferSizeKb:                       0,
 	}
 
 	if klog.V(5).Enabled() {
