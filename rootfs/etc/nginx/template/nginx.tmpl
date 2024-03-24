@@ -331,6 +331,10 @@ http {
     client_body_buffer_size         {{ $cfg.ClientBodyBufferSize }};
     client_body_timeout             {{ $cfg.ClientBodyTimeout }}s;
 
+    {{ if gt $cfg.GRPCBufferSizeKb 0 }}
+    grpc_buffer_size {{ $cfg.GRPCBufferSizeKb }}k;
+    {{ end }}
+
     {{ if and (ne $cfg.HTTP2MaxHeaderSize "") (ne $cfg.HTTP2MaxFieldSize "") }}
     http2_max_field_size            {{ $cfg.HTTP2MaxFieldSize }};
     http2_max_header_size           {{ $cfg.HTTP2MaxHeaderSize }};
