@@ -17,11 +17,11 @@ limitations under the License.
 package config
 
 import (
-	"k8s.io/klog/v2"
 	"strconv"
 	"time"
 
 	apiv1 "k8s.io/api/core/v1"
+	"k8s.io/klog/v2"
 
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
