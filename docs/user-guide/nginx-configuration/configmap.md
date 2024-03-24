@@ -741,7 +741,7 @@ _**default:**_ false
 
 ## geoip2-autoreload-in-minutes
 
-Enables the [geoip2 module](https://github.com/leev/ngx_http_geoip2_module) autoreload in MaxMind databases setting the interval in minutes. 
+Enables the [geoip2 module](https://github.com/leev/ngx_http_geoip2_module) autoreload in MaxMind databases setting the interval in minutes.
 
 _**default:**_ 0
 
