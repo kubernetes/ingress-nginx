@@ -86,7 +86,6 @@ var _ = framework.DescribeSetting("GRPC", func() {
 				return strings.Contains(server, "grpc_pass grpc://upstream_balancer;")
 			})
 
-		//nolint:goconst //string interpolation
 		conn, err := grpc.Dial(f.GetNginxIP()+":443",
 			grpc.WithTransportCredentials(
 				credentials.NewTLS(&tls.Config{
@@ -96,7 +95,7 @@ var _ = framework.DescribeSetting("GRPC", func() {
 			),
 		)
 		assert.Nil(ginkgo.GinkgoT(), err, "error creating a connection")
-		defer conn.Close() //nolint:errcheck
+		defer conn.Close() //nolint:errcheck // Checking the error here is not valuable
 
 		client := pb.NewGRPCBinClient(conn)
 		ctx := context.Background()
