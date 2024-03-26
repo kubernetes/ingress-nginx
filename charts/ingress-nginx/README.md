@@ -237,8 +237,10 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.addHeaders | object | `{}` | Will add custom headers before sending response traffic to the client according to: https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#add-headers |
 | controller.admissionWebhooks.annotations | object | `{}` |  |
 | controller.admissionWebhooks.certManager.admissionCert.duration | string | `""` |  |
+| controller.admissionWebhooks.certManager.admissionCert.extraConfig | object | `{"privateKey":{"algorithm":"ECDSA","size":256}}` | Extra configuration for the admission webhook certificate. Can contain anything a cert-manager's [`CertificateSpec`](https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1.CertificateSpec) can. |
 | controller.admissionWebhooks.certManager.enabled | bool | `false` |  |
 | controller.admissionWebhooks.certManager.rootCert.duration | string | `""` |  |
+| controller.admissionWebhooks.certManager.rootCert.extraConfig | object | `{"privateKey":{"algorithm":"ECDSA","size":256}}` | Extra configuration for the admission webhook CA certificate. Can contain anything a cert-manager's [`CertificateSpec`](https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1.CertificateSpec) can. |
 | controller.admissionWebhooks.certificate | string | `"/usr/local/certificates/cert"` |  |
 | controller.admissionWebhooks.createSecretJob.name | string | `"create"` |  |
 | controller.admissionWebhooks.createSecretJob.resources | object | `{}` |  |
