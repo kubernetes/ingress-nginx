@@ -42,37 +42,43 @@ func ParseNameNS(input string) (ns, name string, err error) {
 	return nsName[0], nsName[1], nil
 }
 
-// GetNodeIPOrName returns the IP address or the name of a node in the cluster
-func GetNodeIPOrName(kubeClient clientset.Interface, name string, useInternalIP bool) string {
+// GetNodeAddresses returns the IP address or name of a node in the cluster.
+// If preferExternal==true AND any non-empty NodeExternalIP addresses exist, they will be returned.
+// Otherwise, the node's non-empty NodeInternalIP addresses will be returned.
+func GetNodeAddresses(kubeClient clientset.Interface, name string, preferExternal bool) []string {
 	node, err := kubeClient.CoreV1().Nodes().Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		klog.ErrorS(err, "Error getting node", "name", name)
-		return ""
+		return nil
 	}
 
-	defaultOrInternalIP := ""
-	for _, address := range node.Status.Addresses {
-		if address.Type == apiv1.NodeInternalIP {
-			if address.Address != "" {
-				defaultOrInternalIP = address.Address
-				break
+	addresses := make([]string, 0)
+	if preferExternal {
+		for _, address := range node.Status.Addresses {
+			if address.Type != apiv1.NodeExternalIP {
+				continue
 			}
+			if address.Address == "" {
+				continue
+			}
+			addresses = append(addresses, address.Address)
+		}
+		if len(addresses) > 0 {
+			return addresses
 		}
 	}
 
-	if useInternalIP {
-		return defaultOrInternalIP
-	}
-
 	for _, address := range node.Status.Addresses {
-		if address.Type == apiv1.NodeExternalIP {
-			if address.Address != "" {
-				return address.Address
-			}
+		if address.Type != apiv1.NodeInternalIP {
+			continue
 		}
+		if address.Address == "" {
+			continue
+		}
+		addresses = append(addresses, address.Address)
 	}
 
-	return defaultOrInternalIP
+	return addresses
 }
 
 var (

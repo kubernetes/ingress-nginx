@@ -17,6 +17,7 @@ limitations under the License.
 package k8s
 
 import (
+	"reflect"
 	"testing"
 
 	apiv1 "k8s.io/api/core/v1"
@@ -55,18 +56,19 @@ func TestParseNameNS(t *testing.T) {
 	}
 }
 
-func TestGetNodeIP(t *testing.T) {
+func TestGetNodeAddresses(t *testing.T) {
 	fKNodes := []struct {
-		name          string
-		cs            *testclient.Clientset
-		nodeName      string
-		ea            string
-		useInternalIP bool
+		name           string
+		cs             *testclient.Clientset
+		nodeName       string
+		preferExternal bool
+		ea             []string
 	}{
 		{
 			"empty node list",
 			testclient.NewSimpleClientset(),
-			"demo", "", true,
+			"demo", false,
+			nil,
 		},
 		{
 			"node does not exist",
@@ -82,10 +84,11 @@ func TestGetNodeIP(t *testing.T) {
 						},
 					},
 				},
-			}}}), "notexistnode", "", true,
+			}}}), "notexistnode", false,
+			nil,
 		},
 		{
-			"node exist and only has an internal IP address (useInternalIP=false)",
+			"node exist and only has an internal IP address (preferExternal=true)",
 			testclient.NewSimpleClientset(&apiv1.NodeList{Items: []apiv1.Node{{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "demo",
@@ -98,7 +101,8 @@ func TestGetNodeIP(t *testing.T) {
 						},
 					},
 				},
-			}}}), "demo", "10.0.0.1", false,
+			}}}), "demo", true,
+			[]string{"10.0.0.1"},
 		},
 		{
 			"node exist and only has an internal IP address",
@@ -114,7 +118,8 @@ func TestGetNodeIP(t *testing.T) {
 						},
 					},
 				},
-			}}}), "demo", "10.0.0.1", true,
+			}}}), "demo", false,
+			[]string{"10.0.0.1"},
 		},
 		{
 			"node exist and only has an external IP address",
@@ -130,7 +135,8 @@ func TestGetNodeIP(t *testing.T) {
 						},
 					},
 				},
-			}}}), "demo", "10.0.0.1", false,
+			}}}), "demo", true,
+			[]string{"10.0.0.1"},
 		},
 		{
 			"multiple nodes - choose the right one",
@@ -162,10 +168,11 @@ func TestGetNodeIP(t *testing.T) {
 					},
 				},
 			}}),
-			"demo2", "10.0.0.2", true,
+			"demo2", false,
+			[]string{"10.0.0.2"},
 		},
 		{
-			"node with both IP internal and external IP address - returns external IP",
+			"node with both IP internal and external IP addresses - returns external IPs",
 			testclient.NewSimpleClientset(&apiv1.NodeList{Items: []apiv1.Node{{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "demo",
@@ -175,17 +182,27 @@ func TestGetNodeIP(t *testing.T) {
 						{
 							Type:    apiv1.NodeInternalIP,
 							Address: "10.0.0.1",
-						}, {
+						},
+						{
+							Type:    apiv1.NodeInternalIP,
+							Address: "fe80::1",
+						},
+						{
 							Type:    apiv1.NodeExternalIP,
-							Address: "10.0.0.2",
+							Address: "8.0.0.1",
+						},
+						{
+							Type:    apiv1.NodeExternalIP,
+							Address: "2001::1",
 						},
 					},
 				},
 			}}}),
-			"demo", "10.0.0.2", false,
+			"demo", true,
+			[]string{"8.0.0.1", "2001::1"},
 		},
 		{
-			"node with both IP internal and external IP address - returns internal IP",
+			"node with both IP internal and external IP addresses - returns internal IPs",
 			testclient.NewSimpleClientset(&apiv1.NodeList{Items: []apiv1.Node{{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "demo",
@@ -195,21 +212,27 @@ func TestGetNodeIP(t *testing.T) {
 						{
 							Type:    apiv1.NodeExternalIP,
 							Address: "",
-						}, {
+						},
+						{
 							Type:    apiv1.NodeInternalIP,
-							Address: "10.0.0.2",
+							Address: "10.0.0.1",
+						},
+						{
+							Type:    apiv1.NodeInternalIP,
+							Address: "fe80::1",
 						},
 					},
 				},
 			}}}),
-			"demo", "10.0.0.2", true,
+			"demo", false,
+			[]string{"10.0.0.1", "fe80::1"},
 		},
 	}
 
 	for _, fk := range fKNodes {
-		address := GetNodeIPOrName(fk.cs, fk.nodeName, fk.useInternalIP)
-		if address != fk.ea {
-			t.Errorf("%v - expected %s, but returned %s", fk.name, fk.ea, address)
+		addresses := GetNodeAddresses(fk.cs, fk.nodeName, fk.preferExternal)
+		if !reflect.DeepEqual(addresses, fk.ea) {
+			t.Errorf("%v - expected %v, but returned %v", fk.name, fk.ea, addresses)
 		}
 	}
 }
