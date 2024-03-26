@@ -23,6 +23,9 @@ data:
 {{- if .Values.dhParam }}
   ssl-dh-param: {{ include "ingress-nginx.namespace" . }}/{{ include "ingress-nginx.controller.fullname" . }}
 {{- end }}
-{{- range $key, $value := .Values.controller.config }}
+{{- range $key, $value := merge .Values.controller.config .Values.configmap }}
   {{- $key | nindent 2 }}: {{ $value | quote }}
+{{- end }}
+{{- if and (or (eq .Values.provider "aws") (eq .Values.provider "capa")) (not (index .Values.controller.config "use-proxy-protocol")) }}
+  use-proxy-protocol: "true"
 {{- end }}

@@ -20,7 +20,7 @@ rules:
     verbs:
       - get
       - update
-{{- if .Values.podSecurityPolicy.enabled }}
+{{- if and .Values.podSecurityPolicy.enabled (not .Values.global.podSecurityStandards.enforced) }}
   - apiGroups:      [{{ template "podSecurityPolicy.apiGroup" . }}]
     resources:      ['podsecuritypolicies']
     verbs:          ['use']

@@ -1,4 +1,4 @@
-{{- if and .Values.rbac.create .Values.podSecurityPolicy.enabled .Values.defaultBackend.enabled -}}
+{{- if and .Values.rbac.create .Values.podSecurityPolicy.enabled (not .Values.global.podSecurityStandards.enforced) .Values.defaultBackend.enabled -}}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:

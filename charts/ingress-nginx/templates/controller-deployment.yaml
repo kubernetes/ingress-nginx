@@ -6,6 +6,7 @@ metadata:
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: controller
+    giantswarm.io/monitoring_basic_sli: "true"
     {{- with .Values.controller.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
@@ -79,7 +80,7 @@ spec:
     {{- end }}
       containers:
         - name: {{ .Values.controller.containerName }}
-          {{- with .Values.controller.image }}
+          {{- with (merge .Values.controller.image .Values.image) }}
           image: {{ if .repository }}{{ .repository }}{{ else }}{{ .registry }}/{{ include "ingress-nginx.image" . }}{{ end }}:{{ .tag }}{{ include "ingress-nginx.imageDigest" . }}
           {{- end }}
           imagePullPolicy: {{ .Values.controller.image.pullPolicy }}
@@ -186,13 +187,13 @@ spec:
       {{- if .Values.controller.extraModules }}
         {{- range .Values.controller.extraModules }}
           {{- $containerSecurityContext := .containerSecurityContext | default $.Values.controller.containerSecurityContext }}
-          {{- include "extraModules" (dict "name" .name "image" .image "containerSecurityContext" $containerSecurityContext "resources" .resources) | nindent 8 }}
+          {{- include "extraModules" (dict "name" .name "image" (merge .image $.Values.image) "containerSecurityContext" $containerSecurityContext "resources" .resources) | nindent 8 }}
         {{- end }}
       {{- end }}
       {{- if .Values.controller.opentelemetry.enabled }}
         {{- with .Values.controller.opentelemetry }}
           {{- $containerSecurityContext := .containerSecurityContext | default $.Values.controller.containerSecurityContext }}
-          {{- include "extraModules" (dict "name" .name "image" .image "containerSecurityContext" $containerSecurityContext "resources" .resources) | nindent 8 }}
+          {{- include "extraModules" (dict "name" .name "image" (merge .image $.Values.image) "containerSecurityContext" $containerSecurityContext "resources" .resources) | nindent 8 }}
         {{- end }}
       {{- end }}
     {{- end }}
