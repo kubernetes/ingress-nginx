@@ -12,6 +12,7 @@ aliases:
 
   ingress-nginx-maintainers:
   - cpanato
+  - Gacko
   - puerco
   - rikatz
   - strongjz
@@ -19,17 +20,16 @@ aliases:
 
   ingress-nginx-reviewers:
   - cpanato
+  - Gacko
   - puerco
   - rikatz
   - strongjz
   - tao12345666333
 
   ingress-nginx-helm-maintainers:
-  - Gacko
   - ubergesundheit
 
   ingress-nginx-helm-reviewers:
-  - Gacko
   - ubergesundheit
 
   ingress-nginx-docs-maintainers:
