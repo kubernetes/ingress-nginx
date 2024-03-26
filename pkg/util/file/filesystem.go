@@ -16,5 +16,10 @@ limitations under the License.
 
 package file
 
-// ReadWriteByUser defines linux permission to read and write files for the owner user
-const ReadWriteByUser = 0o700
+import "syscall"
+
+// Linux read/write/execute file permissions for the owner user
+const (
+	ReadWriteByUser        = syscall.S_IRUSR | syscall.S_IWUSR
+	ReadWriteExecuteByUser = syscall.S_IRWXU
+)
