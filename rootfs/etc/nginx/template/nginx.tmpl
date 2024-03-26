@@ -963,6 +963,8 @@ stream {
                 {{ if $enableMetrics }}
                 monitor.call()
                 {{ end }}
+
+                plugins.run()
             }
         }
         {{ end }}
