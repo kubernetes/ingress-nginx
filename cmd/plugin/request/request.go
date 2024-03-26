@@ -23,14 +23,11 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
-	networking "k8s.io/api/networking/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	appsv1client "k8s.io/client-go/kubernetes/typed/apps/v1"
-	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
-	discoveryv1client "k8s.io/client-go/kubernetes/typed/discovery/v1"
-	typednetworking "k8s.io/client-go/kubernetes/typed/networking/v1"
 
+	"k8s.io/ingress-nginx/cmd/plugin/request/k8sclient"
 	"k8s.io/ingress-nginx/cmd/plugin/util"
 )
 
@@ -93,17 +90,8 @@ func GetLabeledPod(flags *genericclioptions.ConfigFlags, label string) (apiv1.Po
 
 // GetDeployments returns an array of Deployments
 func GetDeployments(flags *genericclioptions.ConfigFlags, namespace string) ([]appsv1.Deployment, error) {
-	rawConfig, err := flags.ToRESTConfig()
-	if err != nil {
-		return make([]appsv1.Deployment, 0), err
-	}
-
-	api, err := appsv1client.NewForConfig(rawConfig)
-	if err != nil {
-		return make([]appsv1.Deployment, 0), err
-	}
-
-	deployments, err := api.Deployments(namespace).List(context.TODO(), metav1.ListOptions{})
+	client := k8sclient.GlobalClient(flags)
+	deployments, err := client.AppsV1().Deployments(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return make([]appsv1.Deployment, 0), err
 	}
@@ -112,20 +100,11 @@ func GetDeployments(flags *genericclioptions.ConfigFlags, namespace string) ([]a
 }
 
 // GetIngressDefinitions returns an array of Ingress resource definitions
-func GetIngressDefinitions(flags *genericclioptions.ConfigFlags, namespace string) ([]networking.Ingress, error) {
-	rawConfig, err := flags.ToRESTConfig()
+func GetIngressDefinitions(flags *genericclioptions.ConfigFlags, namespace string) ([]networkingv1.Ingress, error) {
+	client := k8sclient.GlobalClient(flags)
+	pods, err := client.NetworkingV1().Ingresses(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		return make([]networking.Ingress, 0), err
-	}
-
-	api, err := typednetworking.NewForConfig(rawConfig)
-	if err != nil {
-		return make([]networking.Ingress, 0), err
-	}
-
-	pods, err := api.Ingresses(namespace).List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
-		return make([]networking.Ingress, 0), err
+		return make([]networkingv1.Ingress, 0), err
 	}
 
 	return pods.Items, nil
@@ -189,16 +168,8 @@ func getEndpointSlices(flags *genericclioptions.ConfigFlags, namespace string) (
 		return *cachedEndpointSlices, nil
 	}
 
-	rawConfig, err := flags.ToRESTConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	api, err := discoveryv1client.NewForConfig(rawConfig)
-	if err != nil {
-		return nil, err
-	}
-	endpointSlicesList, err := api.EndpointSlices(namespace).List(context.TODO(), metav1.ListOptions{})
+	client := k8sclient.GlobalClient(flags)
+	endpointSlicesList, err := client.DiscoveryV1().EndpointSlices(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -254,18 +225,8 @@ func GetServiceByName(flags *genericclioptions.ConfigFlags, name string, service
 
 func getPods(flags *genericclioptions.ConfigFlags) ([]apiv1.Pod, error) {
 	namespace := util.GetNamespace(flags)
-
-	rawConfig, err := flags.ToRESTConfig()
-	if err != nil {
-		return make([]apiv1.Pod, 0), err
-	}
-
-	api, err := corev1.NewForConfig(rawConfig)
-	if err != nil {
-		return make([]apiv1.Pod, 0), err
-	}
-
-	pods, err := api.Pods(namespace).List(context.TODO(), metav1.ListOptions{})
+	client := k8sclient.GlobalClient(flags)
+	pods, err := client.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return make([]apiv1.Pod, 0), err
 	}
@@ -275,18 +236,8 @@ func getPods(flags *genericclioptions.ConfigFlags) ([]apiv1.Pod, error) {
 
 func getLabeledPods(flags *genericclioptions.ConfigFlags, label string) ([]apiv1.Pod, error) {
 	namespace := util.GetNamespace(flags)
-
-	rawConfig, err := flags.ToRESTConfig()
-	if err != nil {
-		return make([]apiv1.Pod, 0), err
-	}
-
-	api, err := corev1.NewForConfig(rawConfig)
-	if err != nil {
-		return make([]apiv1.Pod, 0), err
-	}
-
-	pods, err := api.Pods(namespace).List(context.TODO(), metav1.ListOptions{
+	client := k8sclient.GlobalClient(flags)
+	pods, err := client.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: label,
 	})
 	if err != nil {
@@ -314,18 +265,8 @@ func getDeploymentPods(flags *genericclioptions.ConfigFlags, deployment string) 
 
 func getServices(flags *genericclioptions.ConfigFlags) ([]apiv1.Service, error) {
 	namespace := util.GetNamespace(flags)
-
-	rawConfig, err := flags.ToRESTConfig()
-	if err != nil {
-		return make([]apiv1.Service, 0), err
-	}
-
-	api, err := corev1.NewForConfig(rawConfig)
-	if err != nil {
-		return make([]apiv1.Service, 0), err
-	}
-
-	services, err := api.Services(namespace).List(context.TODO(), metav1.ListOptions{})
+	client := k8sclient.GlobalClient(flags)
+	services, err := client.CoreV1().Services(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return make([]apiv1.Service, 0), err
 	}
