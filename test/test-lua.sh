@@ -32,6 +32,8 @@ SHDICT_ARGS=(
     "--shdict" "certificate_servers 1M"
     "--shdict" "ocsp_response_cache 1M"
     "--shdict" "balancer_ewma 1M"
+    "--shdict" "balancer_ewma_total 1M"
+    "--shdict" "balancer_ewma_failed 1M"
     "--shdict" "quota_tracker 1M"
     "--shdict" "high_throughput_tracker 1M"
     "--shdict" "balancer_ewma_last_touched_at 1M"
