@@ -120,5 +120,16 @@ var _ = framework.DescribeAnnotation("from-to-www-redirect", func() {
 			Expect().
 			Status(http.StatusOK).
 			Header("ExpectedHost").Equal(fromHost)
+
+		ginkgo.By("responding with an HSTS header")
+		f.HTTPTestClientWithTLSConfig(&tls.Config{
+			InsecureSkipVerify: true, //nolint:gosec // Ignore the gosec error in testing
+			ServerName:         fromHost,
+		}).
+			GET("/").
+			WithURL(f.GetURL(framework.HTTPS)).
+			WithHeader("Host", fromHost).
+			Expect().
+			Headers().ContainsKey("Strict-Transport-Security")
 	})
 })
