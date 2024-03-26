@@ -11,17 +11,17 @@ aliases:
   - strongjz
 
   ingress-nginx-maintainers:
-  - rikatz
-  - strongjz
   - cpanato
   - puerco
+  - rikatz
+  - strongjz
   - tao12345666333
 
   ingress-nginx-reviewers:
+  - cpanato
+  - puerco
   - rikatz
   - strongjz
-  - puerco
-  - cpanato
   - tao12345666333
 
   ingress-nginx-helm-maintainers:
