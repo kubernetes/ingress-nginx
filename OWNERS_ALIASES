@@ -1,4 +1,4 @@
-# See the OWNERS docs: https://git.k8s.io/community/docs/devel/owners.md
+# See the OWNERS docs: https://www.kubernetes.dev/docs/guide/owners
 
 aliases:
   sig-network-leads:
