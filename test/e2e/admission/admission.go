@@ -26,6 +26,7 @@ import (
 
 	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
+	appsv1 "k8s.io/api/apps/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -86,6 +87,48 @@ var _ = framework.IngressNginxDescribeSerial("[Admission] admission controller",
 		secondIngress := framework.NewSingleIngress("second-ingress", "/", host, f.Namespace, framework.EchoService, 80, nil)
 		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), secondIngress, metav1.CreateOptions{})
 		assert.NotNil(ginkgo.GinkgoT(), err, "creating an ingress with the same host and path should return an error")
+	})
+
+	ginkgo.It("should allow path overlaps if disable-path-overlap-validation is enabled", func() {
+		host := admissionTestHost
+
+		err := f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
+			args := deployment.Spec.Template.Spec.Containers[0].Args
+			args = append(args, "--disable-path-overlap-validation")
+			deployment.Spec.Template.Spec.Containers[0].Args = args
+			_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
+			return err
+		})
+		assert.Nil(ginkgo.GinkgoT(), err, "updating deployment")
+		defer func() {
+			err = f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
+				args := []string{}
+
+				for _, v := range deployment.Spec.Template.Spec.Containers[0].Args {
+					if strings.Contains(v, "--disable-path-overlap-validation") {
+						continue
+					}
+
+					args = append(args, v)
+				}
+				deployment.Spec.Template.Spec.Containers[0].Args = args
+				_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
+				return err
+			})
+			assert.Nil(ginkgo.GinkgoT(), err, "restoring deployment")
+		}()
+		oneIngress := framework.NewSingleIngress("a-ingress", "/", host, f.Namespace, framework.EchoService, 80, nil)
+		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), oneIngress, metav1.CreateOptions{})
+		assert.Nil(ginkgo.GinkgoT(), err, "creating ingress")
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("server_name %v", host))
+			})
+
+		anotherIngress := framework.NewSingleIngress("another-ingress", "/", host, f.Namespace, framework.EchoService, 80, nil)
+		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Create(context.TODO(), anotherIngress, metav1.CreateOptions{})
+		assert.Nil(ginkgo.GinkgoT(), err, "creating an ingress with the same host and path should  be allowed when disable-path-overlap-validation is true ")
 	})
 
 	ginkgo.It("should allow overlaps of host and paths with canary annotation", func() {
