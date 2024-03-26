@@ -797,7 +797,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 					// Same paths but different types are allowed
 					// (same type means overlap in the path definition)
 					if !apiequality.Semantic.DeepEqual(loc.PathType, path.PathType) {
-						break
+						continue
 					}
 
 					addLoc = false
