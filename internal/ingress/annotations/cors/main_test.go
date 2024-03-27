@@ -27,6 +27,8 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
+const enableAnnotation = "true"
+
 func buildIngress() *networking.Ingress {
 	defaultBackend := networking.IngressBackend{
 		Service: &networking.IngressServiceBackend{
@@ -76,7 +78,7 @@ func TestIngressCorsConfigValid(t *testing.T) {
 	data := map[string]string{}
 
 	// Valid
-	data[parser.GetAnnotationWithPrefix(corsEnableAnnotation)] = "true"
+	data[parser.GetAnnotationWithPrefix(corsEnableAnnotation)] = enableAnnotation
 	data[parser.GetAnnotationWithPrefix(corsAllowHeadersAnnotation)] = "DNT,X-CustomHeader, Keep-Alive,User-Agent"
 	data[parser.GetAnnotationWithPrefix(corsAllowCredentialsAnnotation)] = "false"
 	data[parser.GetAnnotationWithPrefix(corsAllowMethodsAnnotation)] = "GET, PATCH"
@@ -178,7 +180,7 @@ func TestIngresCorsConfigAllowOriginWithTrailingComma(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix(corsEnableAnnotation)] = "true"
+	data[parser.GetAnnotationWithPrefix(corsEnableAnnotation)] = enableAnnotation
 
 	// Include a trailing comma and an empty value between the commas.
 	data[parser.GetAnnotationWithPrefix(corsAllowOriginAnnotation)] = "https://origin123.test.com:4443,    ,https://origin321.test.com:4443,"
@@ -208,7 +210,7 @@ func TestIngressCorsConfigAllowOriginWithNonHttpProtocol(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
-	data[parser.GetAnnotationWithPrefix(corsEnableAnnotation)] = "true"
+	data[parser.GetAnnotationWithPrefix(corsEnableAnnotation)] = enableAnnotation
 
 	// Include a trailing comma and an empty value between the commas.
 	data[parser.GetAnnotationWithPrefix(corsAllowOriginAnnotation)] = "test://localhost"
