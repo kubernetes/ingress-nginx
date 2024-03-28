@@ -91,25 +91,32 @@ echo "[dev-env] copying docker images to cluster..."
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/controller:${TAG}
 
 if [ "${SKIP_CERT_MANAGER_CREATION:-false}" = "false" ]; then
-  curl -fsSL -o cmctl.tar.gz https://github.com/cert-manager/cert-manager/releases/download/v1.11.1/cmctl-linux-amd64.tar.gz
-  tar xzf cmctl.tar.gz
-  chmod +x cmctl
- ./cmctl help
-  echo "[dev-env] apply cert-manager ..."
-  kubectl apply --wait -f https://github.com/cert-manager/cert-manager/releases/download/v1.11.0/cert-manager.yaml
-  kubectl wait --timeout=30s --for=condition=available deployment/cert-manager -n cert-manager
-  kubectl get validatingwebhookconfigurations cert-manager-webhook -ojson | jq '.webhooks[].clientConfig'
-  kubectl get endpoints -n cert-manager cert-manager-webhook
-  ./cmctl check api --wait=2m
+  echo "[dev-env] deploying cert-manager..."
+
+  # Get OS and platform for downloading cmctl.
+  os="$(uname -o | tr "[:upper:]" "[:lower:]")"
+  platform="$(uname -m | sed "s/aarch64/arm64/;s/x86_64/amd64/")"
+  echo "OS: ${os} | Platform: ${platform}"
+
+  # Download cmctl. Cannot validate checksum since OS and platform may vary.
+  curl --verbose --silent --show-error --fail --location "https://github.com/cert-manager/cert-manager/releases/download/v1.13.3/cmctl-${os}-${platform}.tar.gz" | tar xz cmctl
+
+  # Deploy cert-manager.
+  kubectl create --filename https://github.com/cert-manager/cert-manager/releases/download/v1.13.3/cert-manager.yaml
+  kubectl rollout status deployment --namespace cert-manager cert-manager --timeout 30s
+  ./cmctl check api --wait 2m
 fi
 
 echo "[dev-env] running helm chart e2e tests..."
-docker run --rm --interactive --network host \
-    --name ct \
-    --volume $KUBECONFIG:/root/.kube/config \
-    --volume "${DIR}/../../":/workdir \
-    --workdir /workdir \
-    registry.k8s.io/ingress-nginx/e2e-test-runner:v20240126-760bf8eb@sha256:5e676bf2e5d5d035adfc6e093abee040af08327011e72fef640fa20da73cea2e \
-        ct install \
-        --charts charts/ingress-nginx \
-        --helm-extra-args "--timeout 60s"
+docker run \
+  --name ct \
+  --volume "${KUBECONFIG}:/root/.kube/config:ro" \
+  --volume "${DIR}/../../:/workdir" \
+  --network host \
+  --workdir /workdir \
+  --entrypoint ct \
+  --rm \
+  registry.k8s.io/ingress-nginx/e2e-test-runner:v20240126-760bf8eb@sha256:5e676bf2e5d5d035adfc6e093abee040af08327011e72fef640fa20da73cea2e \
+    install \
+      --charts charts/ingress-nginx \
+      --helm-extra-args "--timeout 60s"

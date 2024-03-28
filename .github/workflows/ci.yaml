@@ -168,14 +168,14 @@ jobs:
           name: docker.tar.gz
           path: docker.tar.gz
           retention-days: 5
-  helm:
-    name: Helm chart
+
+  chart:
+    name: Chart
     runs-on: ubuntu-latest
     needs:
       - changes
       - build
-    if: |
-      (needs.changes.outputs.charts == 'true') || (needs.changes.outputs.baseimage == 'true')
+    if: (needs.changes.outputs.charts == 'true') || (needs.changes.outputs.baseimage == 'true')
 
     strategy:
       matrix:
@@ -191,66 +191,61 @@ jobs:
           go-version: ${{ needs.build.outputs.golangversion }}
           check-latest: true
 
-      - name: Install Helm Unit Test Plugin
+      - name: Generate docs
+        run: |
+          curl --silent --show-error --fail --location https://github.com/norwoodj/helm-docs/releases/download/v1.11.3/helm-docs_1.11.3_Linux_x86_64.tar.gz --remote-name
+          echo "07efe78fd56de173e29f15ea5be2aa6f425d346bcd480aa229840b5405661cb2  helm-docs_1.11.3_Linux_x86_64.tar.gz" | shasum --check
+          tar xzf helm-docs_1.11.3_Linux_x86_64.tar.gz helm-docs
+
+          ./helm-docs --chart-search-root charts
+
+          if ! git diff --exit-code charts/ingress-nginx/README.md
+          then
+            echo "Please use helm-docs in your fork of the project and commit an updated README.md for the chart."
+            echo "https://github.com/kubernetes/ingress-nginx/blob/main/MANUAL_RELEASE.md#d-edit-the-valuesyaml-and-run-helm-docs"
+            exit 1
+          fi
+
+          rm helm-docs_1.11.3_Linux_x86_64.tar.gz helm-docs
+
+      - name: Lint chart
+        run: |
+          build/run-in-docker.sh hack/verify-chart-lint.sh
+
+          curl --silent --show-error --fail --location https://github.com/artifacthub/hub/releases/download/v1.17.0/ah_1.17.0_linux_amd64.tar.gz --remote-name
+          echo "57c184b71a9a5c59192c2158fc08bdddca5c340fb1deeed0158383a665b38bf1  ah_1.17.0_linux_amd64.tar.gz" | shasum --check
+          tar xzf ah_1.17.0_linux_amd64.tar.gz ah
+
+          ./ah lint --path charts/ingress-nginx
+
+          rm ah_1.17.0_linux_amd64.tar.gz ah
+
+      - name: Run unit tests
         run: |
           helm plugin install https://github.com/helm-unittest/helm-unittest
+          helm unittest charts/ingress-nginx
 
-      - name: Run Helm Unit Tests
+      - name: Create cluster
+        id: kind
         run: |
-          helm unittest charts/ingress-nginx -d
+          sudo chmod 777 "${HOME}/.kube"
+          kind create cluster --image kindest/node:${{ matrix.k8s }} --kubeconfig "${HOME}/.kube/kind-config-kind"
 
-      - name: cache
+      - name: Download cache
         uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: docker.tar.gz
 
-      - name: Lint
-        run: |
-          ./build/run-in-docker.sh ./hack/verify-chart-lint.sh
+      - name: Load cache
+        run: gzip --decompress --stdout docker.tar.gz | docker load
 
-      - name: Run helm-docs
-        run: |
-          GOBIN=$PWD GO111MODULE=on go install github.com/norwoodj/helm-docs/cmd/helm-docs@v1.11.0
-          ./helm-docs --chart-search-root=${GITHUB_WORKSPACE}/charts
-          DIFF=$(git diff ${GITHUB_WORKSPACE}/charts/ingress-nginx/README.md)
-          if [ ! -z "$DIFF" ]; then
-            echo "Please use helm-docs in your clone, of your fork, of the project, and commit a updated README.md for the chart. https://github.com/kubernetes/ingress-nginx/blob/main/RELEASE.md#d-edit-the-valuesyaml-and-run-helm-docs"
-          fi
-          git diff --exit-code
-          rm -f ./helm-docs
-
-      - name: Run Artifact Hub lint
-        run: |
-          wget https://github.com/artifacthub/hub/releases/download/v1.5.0/ah_1.5.0_linux_amd64.tar.gz
-          echo 'ad0e44c6ea058ab6b85dbf582e88bad9fdbc64ded0d1dd4edbac65133e5c87da *ah_1.5.0_linux_amd64.tar.gz' | shasum -c
-          tar -xzvf ah_1.5.0_linux_amd64.tar.gz ah
-          ./ah lint -p charts/ingress-nginx || exit 1
-          rm -f ./ah ./ah_1.5.0_linux_amd64.tar.gz
-
-      - name: fix permissions
-        run: |
-          sudo mkdir -p $HOME/.kube
-          sudo chmod -R 777 $HOME/.kube
-
-      - name: Create Kubernetes ${{ matrix.k8s }} cluster
-        id: kind
-        run: |
-          kind create cluster --image=kindest/node:${{ matrix.k8s }}
-
-      - name: Load images from cache
-        run: |
-          echo "loading docker images..."
-          gzip -dc docker.tar.gz | docker load
-
-      - name: Test
+      - name: Run E2E tests
         env:
           KIND_CLUSTER_NAME: kind
           SKIP_CLUSTER_CREATION: true
           SKIP_IMAGE_CREATION: true
           SKIP_INGRESS_IMAGE_CREATION: true
-        run: |
-          kind get kubeconfig > $HOME/.kube/kind-config-kind
-          make kind-e2e-chart-tests
+        run: make kind-e2e-chart-tests
 
   kubernetes:
     name: Kubernetes
