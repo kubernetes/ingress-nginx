@@ -447,6 +447,7 @@ WITH_FLAGS="--with-debug \
   --with-http_gzip_static_module \
   --with-http_sub_module \
   --with-http_v2_module \
+  --with-http_v3_module \
   --with-stream \
   --with-stream_ssl_module \
   --with-stream_realip_module \
