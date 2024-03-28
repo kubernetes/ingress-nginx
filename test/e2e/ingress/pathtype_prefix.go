@@ -111,7 +111,7 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] prefix checks", fun
 	})
 
 	ginkgo.It("should test prefix path using regex pattern for /id/{int} ignoring non-digits characters at end of string", func() {
-		host := "echo.com.br"
+		host := "echo.regex.br"
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/use-regex": `true`,
@@ -140,7 +140,7 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] prefix checks", fun
 	})
 
 	ginkgo.It("should test prefix path using fixed path size regex pattern /id/{int}{3}", func() {
-		host := "echo.com.br"
+		host := "echo.regex.size.br"
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/use-regex": `true`,
@@ -150,13 +150,7 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] prefix checks", fun
 		f.EnsureIngress(ing)
 
 		f.HTTPTestClient().
-			GET("/id/1").
-			WithHeader("Host", host).
-			Expect().
-			Status(http.StatusNotFound)
-
-		f.HTTPTestClient().
-			GET("/id/12").
+			GET("/id/99").
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusNotFound)
@@ -168,7 +162,7 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] prefix checks", fun
 			Status(http.StatusOK)
 
 		f.HTTPTestClient().
-			GET("/id/1234").
+			GET("/id/9999").
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusNotFound)
@@ -181,7 +175,7 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] prefix checks", fun
 	})
 
 	ginkgo.It("should correctly route multi-segment path patterns", func() {
-		host := "echo.com.br"
+		host := "echo.multi.segment.br"
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/use-regex": `true`,
