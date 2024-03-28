@@ -274,8 +274,9 @@ func (n *NGINXController) Start() {
 	if !n.cfg.DisableLeaderElection {
 		electionID := n.cfg.ElectionID
 		setupLeaderElection(&leaderElectionConfig{
-			Client:     n.cfg.Client,
-			ElectionID: electionID,
+			Client:      n.cfg.Client,
+			ElectionID:  electionID,
+			ElectionTTL: n.cfg.ElectionTTL,
 			OnStartedLeading: func(stopCh chan struct{}) {
 				if n.syncStatus != nil {
 					go n.syncStatus.Run(stopCh)
