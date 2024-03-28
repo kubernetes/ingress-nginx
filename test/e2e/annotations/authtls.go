@@ -322,6 +322,49 @@ var _ = framework.DescribeAnnotation("auth-tls-*", func() {
 			Status(http.StatusOK)
 	})
 
+	ginkgo.It("should reload the nginx config when auth-tls-match-cn is updated", func() {
+		host := authTLSFooHost
+		nameSpace := f.Namespace
+
+		clientConfig, err := framework.CreateIngressMASecret(
+			f.KubeClientSet,
+			host,
+			host,
+			nameSpace)
+		assert.Nil(ginkgo.GinkgoT(), err)
+
+		// First add an annotation that forbids our connection
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/auth-tls-secret":        nameSpace + "/" + host,
+			"nginx.ingress.kubernetes.io/auth-tls-verify-client": "on",
+			"nginx.ingress.kubernetes.io/auth-tls-match-cn":      "CN=notvalid",
+		}
+
+		ingress := f.EnsureIngress(framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, nameSpace, framework.EchoService, 80, annotations))
+
+		assertSslClientCertificateConfig(f, host, "on", "1")
+
+		f.HTTPTestClientWithTLSConfig(clientConfig).
+			GET("/").
+			WithURL(f.GetURL(framework.HTTPS)).
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusForbidden)
+
+		// Update the annotation to something that allows the connection
+		ingress.Annotations["nginx.ingress.kubernetes.io/auth-tls-match-cn"] = "CN=authtls"
+		f.UpdateIngress(ingress)
+
+		assertSslClientCertificateConfig(f, host, "on", "1")
+
+		f.HTTPTestClientWithTLSConfig(clientConfig).
+			GET("/").
+			WithURL(f.GetURL(framework.HTTPS)).
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
+	})
+
 	ginkgo.It("should return 200 using auth-tls-match-cn where atleast one of the regex options matches CN from client", func() {
 		host := authTLSFooHost
 		nameSpace := f.Namespace
