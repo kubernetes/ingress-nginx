@@ -333,6 +333,15 @@ func TestEquals(t *testing.T) {
 	}
 	cfg2.PassCertToUpstream = true
 
+	// Different MatchCN
+	cfg1.MatchCN = "CN=(hello-app|goodbye)"
+	cfg2.MatchCN = "CN=(hello-app)"
+	result = cfg1.Equal(cfg2)
+	if result != false {
+		t.Errorf("Expected false")
+	}
+	cfg2.MatchCN = "CN=(hello-app|goodbye)"
+
 	// Equal Configs
 	result = cfg1.Equal(cfg2)
 	if result != true {
