@@ -1,4 +1,4 @@
-# See the OWNERS docs: https://git.k8s.io/community/docs/devel/owners.md
+# See the OWNERS docs: https://www.kubernetes.dev/docs/guide/owners
 
 aliases:
   sig-network-leads:
@@ -11,34 +11,29 @@ aliases:
   - strongjz
 
   ingress-nginx-maintainers:
+  - cpanato
+  - Gacko
+  - puerco
   - rikatz
   - strongjz
-  - cpanato
-  - puerco
   - tao12345666333
 
   ingress-nginx-reviewers:
+  - cpanato
+  - Gacko
+  - puerco
   - rikatz
   - strongjz
-  - puerco
-  - cpanato
   - tao12345666333
 
   ingress-nginx-helm-maintainers:
-  - cpanato
-  - Gacko
-  - strongjz
   - ubergesundheit
 
   ingress-nginx-helm-reviewers:
-  - cpanato
-  - Gacko
-  - strongjz
   - ubergesundheit
 
   ingress-nginx-docs-maintainers:
   - longwuyuan
-  - tao12345666333
 
   ingress-nginx-kube-webhook-certgen-reviewers:
   - invidian

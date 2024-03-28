@@ -1,4 +1,4 @@
-# See the OWNERS docs: https://github.com/kubernetes/community/blob/master/contributors/guide/owners.md
+# See the OWNERS docs: https://www.kubernetes.dev/docs/guide/owners
 
 approvers:
 - ingress-nginx-maintainers
@@ -7,6 +7,6 @@ reviewers:
 - ingress-nginx-reviewers
 
 emeritus_approvers:
-- aledbf  # 2020-04-02
+- aledbf # 2020-04-02
 - bowei # 2022-10-12
 - ElvinEfendi # 2023-04-23

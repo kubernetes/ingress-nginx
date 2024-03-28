@@ -1,4 +1,4 @@
-# See the OWNERS docs: https://github.com/kubernetes/community/blob/master/contributors/guide/owners.md
+# See the OWNERS docs: https://www.kubernetes.dev/docs/guide/owners
 
 approvers:
 - ingress-nginx-helm-maintainers
