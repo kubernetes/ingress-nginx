@@ -361,11 +361,11 @@ func TestCleanTempNginxCfg(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tmpfile, err := os.CreateTemp("", tempNginxPattern)
+	tmpfile1, err := os.CreateTemp(tmpDir, tempNginxPattern)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer tmpfile.Close()
+	defer tmpfile1.Close()
 
 	dur, err := time.ParseDuration("-10m")
 	if err != nil {
@@ -373,16 +373,16 @@ func TestCleanTempNginxCfg(t *testing.T) {
 	}
 
 	oldTime := time.Now().Add(dur)
-	err = os.Chtimes(tmpfile.Name(), oldTime, oldTime)
+	err = os.Chtimes(tmpfile1.Name(), oldTime, oldTime)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	tmpfile, err = os.CreateTemp("", tempNginxPattern)
+	tmpfile2, err := os.CreateTemp(tmpDir, tempNginxPattern)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer tmpfile.Close()
+	defer tmpfile2.Close()
 
 	err = cleanTempNginxCfg()
 	if err != nil {
@@ -391,13 +391,16 @@ func TestCleanTempNginxCfg(t *testing.T) {
 
 	var files []string
 
-	err = filepath.Walk(os.TempDir(), func(path string, info os.FileInfo, _ error) error {
-		if info.IsDir() && os.TempDir() != path {
+	err = filepath.Walk(tmpDir, func(path string, info os.FileInfo, _ error) error {
+		if info.IsDir() && tmpDir != path {
 			return filepath.SkipDir
 		}
 
 		if strings.HasPrefix(info.Name(), tempNginxPattern) {
-			files = append(files, path)
+			switch path {
+			case tmpfile1.Name(), tmpfile2.Name():
+				files = append(files, path)
+			}
 		}
 		return nil
 	})
