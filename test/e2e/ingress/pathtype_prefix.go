@@ -108,7 +108,6 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] prefix checks", fun
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusOK)
-
 	})
 
 	ginkgo.It("should test prefix path using regex pattern for /id/{int} ignoring non-digits characters at end of string", func() {
@@ -138,7 +137,6 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] prefix checks", fun
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusNotFound)
-
 	})
 
 	ginkgo.It("should test prefix path using fixed path size regex pattern /id/{int}{3}", func() {
@@ -180,7 +178,6 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] prefix checks", fun
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusNotFound)
-
 	})
 
 	ginkgo.It("should correctly route multi-segment path patterns", func() {
@@ -210,7 +207,5 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] prefix checks", fun
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusNotFound)
-
 	})
-
 })
