@@ -68,4 +68,138 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] prefix checks", fun
 			Expect().
 			Status(http.StatusOK)
 	})
+
+	ginkgo.It("should test prefix path using simple regex pattern for /id/{int}", func() {
+		host := "echo.com.br"
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/use-regex": `true`,
+		}
+
+		ing := framework.NewSingleIngress(host, "/id/[0-9]+", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.HTTPTestClient().
+			GET("/id/1").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
+
+		f.HTTPTestClient().
+			GET("/id/12").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
+
+		f.HTTPTestClient().
+			GET("/id/123").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
+
+		f.HTTPTestClient().
+			GET("/id/aaa").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusNotFound)
+
+		f.HTTPTestClient().
+			GET("/id/123a").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
+	})
+
+	ginkgo.It("should test prefix path using regex pattern for /id/{int} ignoring non-digits characters at end of string", func() {
+		host := "echo.regex.br"
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/use-regex": `true`,
+		}
+
+		ing := framework.NewSingleIngress(host, "/id/[0-9]+$", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.HTTPTestClient().
+			GET("/id/1").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
+
+		f.HTTPTestClient().
+			GET("/id/aaa").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusNotFound)
+
+		f.HTTPTestClient().
+			GET("/id/123a").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusNotFound)
+	})
+
+	ginkgo.It("should test prefix path using fixed path size regex pattern /id/{int}{3}", func() {
+		host := "echo.regex.size.br"
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/use-regex": `true`,
+		}
+
+		ing := framework.NewSingleIngress(host, "/id/[0-9]{3}$", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.HTTPTestClient().
+			GET("/id/99").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusNotFound)
+
+		f.HTTPTestClient().
+			GET("/id/123").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
+
+		f.HTTPTestClient().
+			GET("/id/9999").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusNotFound)
+
+		f.HTTPTestClient().
+			GET("/id/123a").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusNotFound)
+	})
+
+	ginkgo.It("should correctly route multi-segment path patterns", func() {
+		host := "echo.multi.segment.br"
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/use-regex": `true`,
+		}
+
+		ing := framework.NewSingleIngress(host, "/id/[0-9]+/post/[a-zA-Z]+$", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.HTTPTestClient().
+			GET("/id/123/post/abc").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
+
+		f.HTTPTestClient().
+			GET("/id/123/post/abc123").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusNotFound)
+
+		f.HTTPTestClient().
+			GET("/id/abc/post/abc").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusNotFound)
+	})
 })
