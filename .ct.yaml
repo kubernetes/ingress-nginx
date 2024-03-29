@@ -1,6 +1,4 @@
-#!/bin/bash
-
-# Copyright 2020 The Kubernetes Authors.
+# Copyright 2024 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -o errexit
-set -o nounset
-set -o pipefail
-
-KUBE_ROOT="$( cd "$(dirname "$0")../" >/dev/null 2>&1 ; pwd -P )"
-ct lint --charts ${KUBE_ROOT}/charts/ingress-nginx --validate-maintainers=false
+remote: origin
+validate-maintainers: false
+target-branch: main
+chart-repos:
+  - ingress-nginx=https://kubernetes.github.io/ingress-nginx
+helm-extra-args: --timeout 800s
+chart-dirs:
+  - charts
