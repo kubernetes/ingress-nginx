@@ -111,6 +111,10 @@ func getGitTag() (string, error) {
 	return git("describe", "--tags", "--match", "controller-v*", "--abbrev=0")
 }
 
+func getCommitSHA() (string, error) {
+	return git("rev-parse", "--short", "HEAD")
+}
+
 // ControllerTag Creates a new Git Tag for the ingress controller
 func (Tag) NewControllerTag(version string) {
 	utils.Info("Create Ingress Nginx Controller Tag v%s", version)
