@@ -11,12 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+---
 remote: origin
-validate-maintainers: false
 target-branch: main
+
+validate-maintainers: false
+check-version-increment: false
+
 chart-repos:
   - ingress-nginx=https://kubernetes.github.io/ingress-nginx
 helm-extra-args: --timeout 800s
+
 chart-dirs:
   - charts
