@@ -14,7 +14,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/moul/pb v0.0.0-20220425114252-bca18df4138c
 	github.com/ncabatoff/process-exporter v0.7.10
-	github.com/onsi/ginkgo/v2 v2.16.0
+	github.com/onsi/ginkgo/v2 v2.17.1
 	github.com/opencontainers/runc v1.1.12
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/prometheus/client_golang v1.19.0
@@ -31,12 +31,12 @@ require (
 	gopkg.in/go-playground/pool.v3 v3.1.1
 	gopkg.in/mcuadros/go-syslog.v2 v2.3.0
 	k8s.io/api v0.29.3
-	k8s.io/apiextensions-apiserver v0.29.2
+	k8s.io/apiextensions-apiserver v0.29.3
 	k8s.io/apimachinery v0.29.3
-	k8s.io/apiserver v0.29.2
-	k8s.io/cli-runtime v0.29.2
+	k8s.io/apiserver v0.29.3
+	k8s.io/cli-runtime v0.29.3
 	k8s.io/client-go v0.29.3
-	k8s.io/code-generator v0.29.2
+	k8s.io/code-generator v0.29.3
 	k8s.io/component-base v0.29.3
 	k8s.io/klog/v2 v2.120.1
 	pault.ag/go/sniff v0.0.0-20200207005214-cf7e4d167732
