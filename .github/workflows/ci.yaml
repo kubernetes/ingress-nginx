@@ -213,7 +213,7 @@ jobs:
           helm unittest charts/ingress-nginx -d
 
       - name: Run chart-testing (lint)
-        run: ct lint --config ct.yaml
+        run: ct lint --config ./.ct.yaml
 
       - name: Run helm-docs
         run: |
