@@ -168,28 +168,30 @@ jobs:
           name: docker.tar.gz
           path: docker.tar.gz
           retention-days: 5
-  helm:
-    name: Helm chart
+
+  helm-lint:
+    name: Helm chart lint
     runs-on: ubuntu-latest
     needs:
       - changes
-      - build
     if: |
       (needs.changes.outputs.charts == 'true') || (needs.changes.outputs.baseimage == 'true')
-
-    strategy:
-      matrix:
-        k8s: [v1.26.6, v1.27.3, v1.28.0, v1.29.0]
 
     steps:
       - name: Checkout
         uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
-
-      - name: Setup Go
-        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
-          go-version: ${{ needs.build.outputs.golangversion }}
-          check-latest: true
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@5119fcb9089d432beecbf79bb2c7915207344b78 # v3.5
+
+      - uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.1.0
+        with:
+          python-version: '3.x'
+
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@e6669bcd63d7cb57cb4380c33043eebe5d111992 # v2.6.1
 
       - name: Install Helm Unit Test Plugin
         run: |
@@ -199,14 +201,8 @@ jobs:
         run: |
           helm unittest charts/ingress-nginx -d
 
-      - name: cache
-        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
-        with:
-          name: docker.tar.gz
-
-      - name: Lint
-        run: |
-          ./build/run-in-docker.sh ./hack/verify-chart-lint.sh
+      - name: Run chart-testing (lint)
+        run: ct lint --config ./.ct.yaml
 
       - name: Run helm-docs
         run: |
@@ -226,6 +222,35 @@ jobs:
           tar -xzvf ah_1.5.0_linux_amd64.tar.gz ah
           ./ah lint -p charts/ingress-nginx || exit 1
           rm -f ./ah ./ah_1.5.0_linux_amd64.tar.gz
+
+  helm-test:
+    name: Helm chart testing
+    runs-on: ubuntu-latest
+    needs:
+      - changes
+      - build
+      - helm-lint
+    if: |
+      (needs.changes.outputs.charts == 'true') || (needs.changes.outputs.baseimage == 'true')
+
+    strategy:
+      matrix:
+        k8s: [v1.26.6, v1.27.3, v1.28.0, v1.29.0]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+
+      - name: Setup Go
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version: ${{ needs.build.outputs.golangversion }}
+          check-latest: true
+
+      - name: cache
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
+        with:
+          name: docker.tar.gz
 
       - name: fix permissions
         run: |
