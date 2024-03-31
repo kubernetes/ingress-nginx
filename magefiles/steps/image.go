@@ -18,7 +18,9 @@ package steps
 
 import (
 	"fmt"
+	"os"
 	"runtime"
+
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 	utils "k8s.io/ingress-nginx/magefiles/utils"
@@ -26,7 +28,7 @@ import (
 
 type Image mg.Namespace
 
-var TAG string = "0.0"
+var TAG string = "1.0.0"
 var ARCH string = "arm64"
 var PKG string = "k8s.io/ingress-nginx"
 var PLATFORM string = "arm64"
@@ -39,11 +41,15 @@ var REGISTRY string = "gcr.io/k8s-staging-ingress-nginx"
 // BASE_IMAGE ?= $(shell cat NGINX_BASE)
 var BASE_IMAGE string = "registry.k8s.io/ingress-nginx/nginx-1.25:v0.0.5"
 
-func (Image) Create() error {
+func (Image) Create(tag string) error {
 	if ARCH != runtime.GOARCH {
 		ARCH = runtime.GOARCH
 	}
-	
+
+	if len(tag) > 0 {
+		TAG = tag
+	}
+
 	COMMIT_SHA, err := getCommitSHA()
 	utils.CheckIfError(err, "Error Getting Commit sha")
 
@@ -69,5 +75,32 @@ func (Image) Load() error {
 
 	err = sh.RunV("kind", "load", "docker-image", fmt.Sprintf("--name=%s", KIND_CLUSTER_NAME), fmt.Sprintf("--nodes=%s", workers), fmt.Sprintf("%s/controller:%s", REGISTRY, TAG))
 	utils.CheckIfError(err, "Error Loading controller onto kind cluster")
+	return nil
+}
+
+// Deploy deploys controller image to cluster
+func (Image) Deploy(tag string) error {
+
+	if len(tag) > 0 && tag != TAG {
+		TAG = tag
+	}
+
+	_ = sh.RunV("kubectl", "create", "namespace", "ingress-nginx")
+	//utils.CheckIfError(err, "namespace creation")
+
+	template, err := sh.Output("helm", "template", "ingress-nginx", "charts/ingress-nginx",
+		"--namespace", "ingress-nginx",
+		"--set", "hostPort.enabled=true",
+		"--set", "service.Type=NodePort",
+		"--set", fmt.Sprintf("controller.image.repository=%s/controller", REGISTRY),
+		"--set", fmt.Sprintf("controller.image.tag=%s", TAG))
+	utils.CheckIfError(err, "template helm install")
+
+	err = os.WriteFile("ingress-dev", []byte(template), 0o644)
+	utils.CheckIfError(err, "writing helm template")
+
+	err = sh.RunV("kubectl", "apply", "-n", "ingress-nginx", "-f", "ingress-dev")
+	utils.CheckIfError(err, "kubeclt install template")
+
 	return nil
 }

@@ -37,10 +37,11 @@ func (Test) RunGwAPITest() error {
 	return nil
 }
 
-func (Test) PrepCluster(clusterName, k8sVersion string) {
+func (Test) PrepCluster(clusterName, k8sVersion, tag string) {
 	mg.Deps(mg.F(Kind.CreateCluster, clusterName, k8sVersion))
 	mg.Deps(mg.F(Kind.InstallGatewayCRD))
-	mg.Deps(mg.F(Image.Create))
+	mg.Deps(mg.F(Image.Create, tag))
 	mg.Deps(mg.F(Image.Load))
 	mg.Deps(mg.F(Kind.InstallMetalLB))
+	mg.Deps(mg.F(Image.Deploy, tag))
 }
