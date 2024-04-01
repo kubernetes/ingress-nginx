@@ -13,7 +13,7 @@ tests:
           path: metadata.name
           value: RELEASE-NAME-ingress-nginx-controller
 
-  - it: can template config
+  - it: should create a ConfigMap with templated values if `controller.config` contains templates
     set:
       controller.config:
         global-rate-limit-memcached-host: "memcached.{{ .Release.Namespace }}.svc.kubernetes.local"
