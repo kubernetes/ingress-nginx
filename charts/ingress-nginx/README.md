@@ -285,7 +285,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.autoscaling.targetCPUUtilizationPercentage | int | `50` |  |
 | controller.autoscaling.targetMemoryUtilizationPercentage | int | `50` |  |
 | controller.autoscalingTemplate | list | `[]` |  |
-| controller.config | object | `{}` | Will add custom configuration options to Nginx (passed through tpl) https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/ |
+| controller.config | object | `{}` | Global configuration passed to the ConfigMap consumed by the controller. Values may contain Helm templates. Ref.: https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/ |
 | controller.configAnnotations | object | `{}` | Annotations to be added to the controller config configuration configmap. |
 | controller.configMapNamespace | string | `""` | Allows customization of the configmap / nginx-configmap namespace; defaults to $(POD_NAMESPACE) |
 | controller.containerName | string | `"controller"` | Configures the controller container name |
