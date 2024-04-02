@@ -187,6 +187,9 @@ func (csa1 *CookieSessionAffinity) Equal(csa2 *CookieSessionAffinity) bool {
 	if csa1.ConditionalSameSiteNone != csa2.ConditionalSameSiteNone {
 		return false
 	}
+	if csa1.Partitioned != csa2.Partitioned {
+		return false
+	}
 
 	return true
 }

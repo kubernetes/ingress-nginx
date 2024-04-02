@@ -82,6 +82,7 @@ func TestIngressAffinityCookieConfig(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieSameSite)] = "Strict"
 	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieChangeOnFailure)] = "true"
 	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieSecure)] = "true"
+	data[parser.GetAnnotationWithPrefix(annotationAffinityCookiePartitioned)] = "true"
 	ing.SetAnnotations(data)
 
 	affin, err := NewParser(&resolver.Mock{}).Parse(ing)
@@ -132,5 +133,9 @@ func TestIngressAffinityCookieConfig(t *testing.T) {
 
 	if !nginxAffinity.Cookie.Secure {
 		t.Errorf("expected secure parameter set to true but returned %v", nginxAffinity.Cookie.Secure)
+	}
+
+	if !nginxAffinity.Cookie.Partitioned {
+		t.Errorf("expected partitioned parameter set to true but returned %v", nginxAffinity.Cookie.Partitioned)
 	}
 }

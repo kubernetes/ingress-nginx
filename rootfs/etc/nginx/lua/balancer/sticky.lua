@@ -99,6 +99,7 @@ function _M.set_cookie(self, value)
     httponly = true,
     samesite = cookie_samesite,
     secure = cookie_secure,
+    partitioned = self.cookie_session_affinity.partitioned,
   }
 
   if self.cookie_session_affinity.expires and self.cookie_session_affinity.expires ~= "" then

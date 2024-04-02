@@ -17,6 +17,7 @@ Session affinity can be configured using the following annotations:
 |nginx.ingress.kubernetes.io/session-cookie-domain|Domain that will be set on the cookie|string|
 |nginx.ingress.kubernetes.io/session-cookie-samesite|`SameSite` attribute to apply to the cookie|Browser accepted values are `None`, `Lax`, and `Strict`|
 |nginx.ingress.kubernetes.io/session-cookie-conditional-samesite-none|Will omit `SameSite=None` attribute for older browsers which reject the more-recently defined `SameSite=None` value|`"true"` or `"false"`
+|nginx.ingress.kubernetes.io/session-cookie-partitioned|Will set `Partitioned` attribute on the cookie|`"true"` or `"false"` (defaults to false)|
 |nginx.ingress.kubernetes.io/session-cookie-max-age|Time until the cookie expires, corresponds to the `Max-Age` cookie directive|number of seconds|
 |nginx.ingress.kubernetes.io/session-cookie-expires|Legacy version of the previous annotation for compatibility with older browsers, generates an `Expires` cookie directive by adding the seconds to the current date|number of seconds|
 |nginx.ingress.kubernetes.io/session-cookie-change-on-failure|When set to `false` nginx ingress will send request to upstream pointed by sticky cookie even if previous attempt failed. When set to `true` and previous attempt failed, sticky cookie will be changed to point to another upstream.|`true` or `false` (defaults to `false`)|

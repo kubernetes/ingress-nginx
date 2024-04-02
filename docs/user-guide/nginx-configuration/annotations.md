@@ -104,6 +104,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/session-cookie-path](#cookie-affinity)|string|
 |[nginx.ingress.kubernetes.io/session-cookie-samesite](#cookie-affinity)|string|"None", "Lax" or "Strict"|
 |[nginx.ingress.kubernetes.io/session-cookie-secure](#cookie-affinity)|string|
+|[nginx.ingress.kubernetes.io/session-cookie-partitioned](#cookie-affinity)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/ssl-passthrough](#ssl-passthrough)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/stream-snippet](#stream-snippet)|string|
@@ -191,6 +192,8 @@ The NGINX annotation `nginx.ingress.kubernetes.io/session-cookie-path` defines t
 Use `nginx.ingress.kubernetes.io/session-cookie-domain` to set the `Domain` attribute of the sticky cookie.
 
 Use `nginx.ingress.kubernetes.io/session-cookie-samesite` to apply a `SameSite` attribute to the sticky cookie. Browser accepted values are `None`, `Lax`, and `Strict`. Some browsers reject cookies with `SameSite=None`, including those created before the `SameSite=None` specification (e.g. Chrome 5X). Other browsers mistakenly treat `SameSite=None` cookies as `SameSite=Strict` (e.g. Safari running on OSX 14). To omit `SameSite=None` from browsers with these incompatibilities, add the annotation `nginx.ingress.kubernetes.io/session-cookie-conditional-samesite-none: "true"`.
+
+Use `nginx.ingress.kubernetes.io/session-cookie-partitioned` to apply a `Partitioned` attribute to the sticky cookie.
 
 Use `nginx.ingress.kubernetes.io/session-cookie-expires` to control the cookie expires, its value is a number of seconds until the cookie expires.
 
