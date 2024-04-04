@@ -75,7 +75,7 @@ jobs:
         id: go
         uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
-          go-version: '1.21.5'
+          go-version: '1.22.2'
           check-latest: true
 
       - name: Run test
@@ -96,7 +96,7 @@ jobs:
         id: go
         uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
-          go-version: '1.21.5'
+          go-version: '1.22.2'
           check-latest: true
 
       - name: Set up QEMU
@@ -160,7 +160,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
-          go-version: '1.21.5'
+          go-version: '1.22.2'
           check-latest: true
 
       - name: Install Helm Unit Test Plugin
@@ -475,7 +475,7 @@ jobs:
         if: ${{ steps.filter-images.outputs.kube-webhook-certgen == 'true' }}
         uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
-          go-version: '1.21.5'
+          go-version: '1.22.2'
           check-latest: true
 
       - name: kube-webhook-certgen image build
