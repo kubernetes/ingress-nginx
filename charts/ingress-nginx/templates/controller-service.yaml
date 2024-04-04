@@ -58,7 +58,7 @@ spec:
       port: {{ .Values.controller.service.ports.http }}
       protocol: TCP
       targetPort: {{ .Values.controller.service.targetPorts.http }}
-    {{- if and (semverCompare ">=1.20" .Capabilities.KubeVersion.Version) (.Values.controller.service.appProtocol) }}
+    {{- if and (semverCompare ">=1.20.0-0" .Capabilities.KubeVersion.Version) (.Values.controller.service.appProtocol) }}
       appProtocol: http
     {{- end }}
     {{- if (and $setNodePorts (not (empty .Values.controller.service.nodePorts.http))) }}
@@ -70,7 +70,7 @@ spec:
       port: {{ .Values.controller.service.ports.https }}
       protocol: TCP
       targetPort: {{ .Values.controller.service.targetPorts.https }}
-    {{- if and (semverCompare ">=1.20" .Capabilities.KubeVersion.Version) (.Values.controller.service.appProtocol) }}
+    {{- if and (semverCompare ">=1.20.0-0" .Capabilities.KubeVersion.Version) (.Values.controller.service.appProtocol) }}
       appProtocol: https
     {{- end }}
     {{- if (and $setNodePorts (not (empty .Values.controller.service.nodePorts.https))) }}
