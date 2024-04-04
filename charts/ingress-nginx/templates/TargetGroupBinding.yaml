@@ -1,0 +1,16 @@
+{{- if and (eq .Values.controller.service.type "NodePort") (.Values.controller.service.awsTargetGroupBinding.enabled) }}
+{{- range $key, $value := .Values.controller.service.awsTargetGroupBinding.arnMapping }}
+---
+apiVersion: elbv2.k8s.aws/v1beta1
+kind: TargetGroupBinding
+metadata:
+  name: {{ include "ingress-nginx.controller.fullname" $ }}-{{ $key }}
+  namespace: {{ include "ingress-nginx.namespace" $ }}
+spec:
+  serviceRef:
+    name: {{ include "ingress-nginx.controller.fullname" $ }}
+    port: {{ index $.Values.controller.service.targetPorts $key }}
+  targetType: instance
+  targetGroupARN: {{ $value }}
+{{- end }}
+{{- end }}

@@ -545,6 +545,12 @@ controller:
       # udp:
       #   53: 30053
       udp: {}
+    # -- If want to use an existing AWS LoadBalancer, write the arn of the Target Group.
+    awsTargetGroupBinding:
+      enabled: false
+      arnMapping:
+        http: ""
+        https: ""
     internal:
       # -- Enable the internal controller service or not. Remember to configure `controller.service.internal.annotations` when enabling this.
       enabled: false
