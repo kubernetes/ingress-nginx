@@ -998,6 +998,25 @@ defaultBackend:
   #    effect: "NoSchedule|PreferNoSchedule|NoExecute(1.6 only)"
 
   affinity: {}
+  # -- Topology spread constraints rely on node labels to identify the topology domain(s) that each Node is in.
+  # Ref.: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
+  topologySpreadConstraints: []
+  # - labelSelector:
+  #     matchLabels:
+  #       app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
+  #       app.kubernetes.io/instance: '{{ .Release.Name }}'
+  #       app.kubernetes.io/component: default-backend
+  #   topologyKey: topology.kubernetes.io/zone
+  #   maxSkew: 1
+  #   whenUnsatisfiable: ScheduleAnyway
+  # - labelSelector:
+  #     matchLabels:
+  #       app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
+  #       app.kubernetes.io/instance: '{{ .Release.Name }}'
+  #       app.kubernetes.io/component: default-backend
+  #   topologyKey: kubernetes.io/hostname
+  #   maxSkew: 1
+  #   whenUnsatisfiable: ScheduleAnyway
   # -- Security context for default backend pods
   podSecurityContext: {}
   # -- Security context for default backend containers
