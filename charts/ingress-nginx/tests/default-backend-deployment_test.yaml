@@ -1,0 +1,53 @@
+suite: Default Backend > Deployment
+templates:
+  - default-backend-deployment.yaml
+
+tests:
+  - it: should not create a Deployment if `defaultBackend.enabled` is false
+    set:
+      defaultBackend.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create a Deployment if `defaultBackend.enabled` is true
+    set:
+      defaultBackend.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-defaultbackend
+
+  - it: should create a Deployment with 3 replicas if `defaultBackend.replicaCount` is 3
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.replicaCount: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: should create a Deployment without replicas if `defaultBackend.autoscaling.enabled` is true
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.autoscaling.enabled: true
+    asserts:
+      - notExists:
+          path: spec.replicas
+
+  - it: should create a Deployment with resource limits if `defaultBackend.resources.limits` is set
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.resources.limits.cpu: 500m
+      defaultBackend.resources.limits.memory: 512Mi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: 500m
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 512Mi
