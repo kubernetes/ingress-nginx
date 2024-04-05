@@ -111,7 +111,7 @@ spec:
     {{- end }}
     {{- if .Values.defaultBackend.topologySpreadConstraints }}
       topologySpreadConstraints: {{ tpl (toYaml .Values.defaultBackend.topologySpreadConstraints) $ | nindent 8 }}
-    {{- end }}    
+    {{- end }}
       terminationGracePeriodSeconds: 60
     {{- if .Values.defaultBackend.extraVolumes }}
       volumes: {{ toYaml .Values.defaultBackend.extraVolumes | nindent 8 }}
