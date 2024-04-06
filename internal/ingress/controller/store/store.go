@@ -1049,12 +1049,16 @@ func (s *k8sStore) GetService(key string) (*corev1.Service, error) {
 
 func (s *k8sStore) GetIngressClass(ing *networkingv1.Ingress, icConfig *ingressclass.Configuration) (string, error) {
 	// First we try ingressClassName
-	if !icConfig.IgnoreIngressClass && ing.Spec.IngressClassName != nil {
-		iclass, err := s.listers.IngressClass.ByKey(*ing.Spec.IngressClassName)
-		if err != nil {
-			return "", err
+	if ing.Spec.IngressClassName != nil {
+		if icConfig.IgnoreIngressClass && icConfig.AnnotationValue == *ing.Spec.IngressClassName {
+			return *ing.Spec.IngressClassName, nil
+		} else {
+			iclass, err := s.listers.IngressClass.ByKey(*ing.Spec.IngressClassName)
+			if err != nil {
+				return "", err
+			}
+			return iclass.Name, nil
 		}
-		return iclass.Name, nil
 	}
 
 	// Then we try annotation
