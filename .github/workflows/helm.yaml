@@ -11,12 +11,13 @@ permissions:
 jobs:
 
   changes:
+    runs-on: ubuntu-latest
+
     permissions:
       contents: read  # for dorny/paths-filter to fetch a list of changed files
-      pull-requests: read  # for dorny/paths-filter to read pull requests
-    runs-on: ubuntu-latest
-    if: |
-      (github.repository == 'kubernetes/ingress-nginx')
+
+    if: github.repository == 'kubernetes/ingress-nginx'
+
     outputs:
       docs: ${{ steps.filter.outputs.docs }}
       charts: ${{ steps.filter.outputs.charts }}
@@ -33,9 +34,11 @@ jobs:
           ./ah lint -p charts/ingress-nginx || exit 1
           rm -f ./ah ./ah_1.5.0_linux_amd64.tar.gz
 
-      - name: Lint
-        run: |
-          ./build/run-in-docker.sh ./hack/verify-chart-lint.sh
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@e6669bcd63d7cb57cb4380c33043eebe5d111992 # v2.6.1
+
+      - name: Run chart-testing (lint)
+        run: ct lint --config ./.ct.yaml
 
       - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         id: filter
@@ -55,9 +58,8 @@ jobs:
 
     needs:
       - changes
-    if: |
-      (github.repository == 'kubernetes/ingress-nginx') &&
-      (needs.changes.outputs.charts == 'true')
+
+    if: ${{ needs.changes.outputs.charts == 'true' }}
 
     steps:
       - name: Checkout master
