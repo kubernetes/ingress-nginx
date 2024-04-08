@@ -1050,8 +1050,12 @@ func (s *k8sStore) GetService(key string) (*corev1.Service, error) {
 func (s *k8sStore) GetIngressClass(ing *networkingv1.Ingress, icConfig *ingressclass.Configuration) (string, error) {
 	// First we try ingressClassName
 	if ing.Spec.IngressClassName != nil {
-		if icConfig.IgnoreIngressClass && icConfig.AnnotationValue == *ing.Spec.IngressClassName {
-			return *ing.Spec.IngressClassName, nil
+		if icConfig.IgnoreIngressClass {
+			if icConfig.AnnotationValue == *ing.Spec.IngressClassName {
+				return *ing.Spec.IngressClassName, nil
+			} else {
+				return "", errors.Errorf("Cannot validate ing.Spec.IngressClassName: %s due to lack of permission on cluter resource IngressClass", *ing.Spec.IngressClassName)
+			}
 		}
 		iclass, err := s.listers.IngressClass.ByKey(*ing.Spec.IngressClassName)
 		if err != nil {
