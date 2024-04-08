@@ -647,7 +647,7 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 
 		ginkgo.It("should watch Ingress with matched Ingress.Spec.IngressClassName and CLI parameter --ingress-class", func() {
 			validHost := "validhostnameforingressclassname"
-			testIngressClassName := "test-new-ingress-class"
+			testIngressClassName := "testclass"
 
 			ing := framework.NewSingleIngress(validHost, "/", validHost, f.Namespace, framework.EchoService, 80, nil)
 			ing.Spec.IngressClassName = &testIngressClassName
@@ -666,9 +666,10 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 
 		ginkgo.It("should ignore Ingress with only IngressClassName", func() {
 			invalidHost := "noclassforyou"
+			unmatchedIngressClassName := "testclass-unmatched"
 
 			ing := framework.NewSingleIngress(invalidHost, "/", invalidHost, f.Namespace, framework.EchoService, 80, nil)
-			ing.Spec.IngressClassName = &invalidHost
+			ing.Spec.IngressClassName = &unmatchedIngressClassName
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
