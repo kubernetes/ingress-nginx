@@ -253,9 +253,8 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	}
 
 	ri := utilingress.GetRemovedIngresses(n.runningConfig, pcfg)
-	re := utilingress.GetRemovedHosts(n.runningConfig, pcfg)
 	rc := utilingress.GetRemovedCertificateSerialNumbers(n.runningConfig, pcfg)
-	n.metricCollector.RemoveMetrics(ri, re, rc)
+	n.metricCollector.RemoveMetrics(ri, rc)
 
 	n.runningConfig = pcfg
 
