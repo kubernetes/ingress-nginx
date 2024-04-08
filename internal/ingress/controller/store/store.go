@@ -1054,7 +1054,7 @@ func (s *k8sStore) GetIngressClass(ing *networkingv1.Ingress, icConfig *ingressc
 			if icConfig.AnnotationValue == *ing.Spec.IngressClassName {
 				return *ing.Spec.IngressClassName, nil
 			} else {
-				return "", errors.Errorf("Cannot validate ing.Spec.IngressClassName: %s due to lack of permission on cluter resource IngressClass", *ing.Spec.IngressClassName)
+				return "", errors.Errorf("lack of permission on cluter resource IngressClass: %s", *ing.Spec.IngressClassName)
 			}
 		}
 		iclass, err := s.listers.IngressClass.ByKey(*ing.Spec.IngressClassName)
