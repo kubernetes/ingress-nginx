@@ -1055,7 +1055,7 @@ func (s *k8sStore) GetIngressClass(ing *networkingv1.Ingress, icConfig *ingressc
 				return *ing.Spec.IngressClassName, nil
 			}
 
-			return "", errors.Errorf("lack of permission on cluster resource IngressClass: %s", *ing.Spec.IngressClassName)
+			return "", errors.Errorf("lack of permission on cluster IngressClass: %s, %s", *ing.Spec.IngressClassName, icConfig.AnnotationValue)
 		}
 		iclass, err := s.listers.IngressClass.ByKey(*ing.Spec.IngressClassName)
 		if err != nil {
