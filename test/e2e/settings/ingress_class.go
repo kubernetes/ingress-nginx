@@ -654,7 +654,7 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
-				return !strings.Contains(cfg, "server_name "+validHost)
+				return strings.Contains(cfg, "server_name "+validHost)
 			})
 
 			f.HTTPTestClient().
