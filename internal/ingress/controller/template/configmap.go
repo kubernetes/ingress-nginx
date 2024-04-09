@@ -31,6 +31,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authreq"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/customheaders"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ing_net "k8s.io/ingress-nginx/internal/net"
@@ -54,6 +55,7 @@ const (
 	nginxStatusIpv6Whitelist      = "nginx-status-ipv6-whitelist"
 	proxyHeaderTimeout            = "proxy-protocol-header-timeout"
 	workerProcesses               = "worker-processes"
+	globalAllowedResponseHeaders  = "global-allowed-response-headers"
 	globalAuthURL                 = "global-auth-url"
 	globalAuthMethod              = "global-auth-method"
 	globalAuthSignin              = "global-auth-signin"
@@ -115,6 +117,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	blockUserAgentList := make([]string, 0)
 	blockRefererList := make([]string, 0)
 	responseHeaders := make([]string, 0)
+	allowedResponseHeaders := make([]string, 0)
 	luaSharedDicts := make(map[string]int)
 	debugConnectionsList := make([]string, 0)
 
@@ -245,6 +248,22 @@ func ReadConfig(src map[string]string) config.Configuration {
 		} else {
 			to.GlobalExternalAuth.URL = val
 			to.GlobalExternalAuth.Host = authURL.Hostname()
+		}
+	}
+
+	// Verify that the configured global external authorization response headers are valid. if not, set the default value
+	if val, ok := conf[globalAllowedResponseHeaders]; ok {
+		delete(conf, globalAllowedResponseHeaders)
+
+		if val != "" {
+			harr := splitAndTrimSpace(val, ",")
+			for _, header := range harr {
+				if !customheaders.ValidHeader(header) {
+					klog.Warningf("Global allowed response headers denied - %s.", header)
+				} else {
+					allowedResponseHeaders = append(allowedResponseHeaders, header)
+				}
+			}
 		}
 	}
 
@@ -422,6 +441,7 @@ func ReadConfig(src map[string]string) config.Configuration {
 	to.ProxyStreamResponses = streamResponses
 	to.DisableIpv6DNS = !ing_net.IsIPv6Enabled()
 	to.LuaSharedDicts = luaSharedDicts
+	to.Backend.AllowedResponseHeaders = allowedResponseHeaders
 
 	decoderConfig := &mapstructure.DecoderConfig{
 		Metadata:         nil,

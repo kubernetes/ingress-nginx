@@ -1489,6 +1489,13 @@ stream {
             {{ $all.Cfg.LocationSnippet }}
             {{ end }}
 
+            {{ if $location.CustomHeaders }}
+            # Custom Response Headers
+            {{ range $k, $v := $location.CustomHeaders.Headers }}
+            more_set_headers {{ printf "%s: %s" $k $v | escapeLiteralDollar | quote }};
+            {{ end }}
+            {{ end }}
+
             {{/* if we are sending the request to a custom default backend, we add the required headers */}}
             {{ if (hasPrefix $location.Backend "custom-default-backend-") }}
             proxy_set_header       X-Code             503;

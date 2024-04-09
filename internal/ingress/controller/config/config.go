@@ -888,6 +888,7 @@ func NewDefault() Configuration {
 			ProxyHTTPVersion:            "1.1",
 			ProxyMaxTempFileSize:        "1024m",
 			ServiceUpstream:             false,
+			AllowedResponseHeaders:      []string{},
 		},
 		UpstreamKeepaliveConnections:           320,
 		UpstreamKeepaliveTime:                  "1h",

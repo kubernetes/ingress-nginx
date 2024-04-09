@@ -209,6 +209,7 @@ The following table shows a configuration option's name, type, and the default v
 |[syslog-host](#syslog-host)| string       | ""                                                                                                                                                                                                                                                                                                                                                           ||
 |[syslog-port](#syslog-port)| int          | 514                                                                                                                                                                                                                                                                                                                                                          ||
 |[no-tls-redirect-locations](#no-tls-redirect-locations)| string       | "/.well-known/acme-challenge"                                                                                                                                                                                                                                                                                                                                ||
+|[global-allowed-response-headers](#global-allowed-response-headers)|string|""||
 |[global-auth-url](#global-auth-url)| string       | ""                                                                                                                                                                                                                                                                                                                                                           ||
 |[global-auth-method](#global-auth-method)| string       | ""                                                                                                                                                                                                                                                                                                                                                           ||
 |[global-auth-signin](#global-auth-signin)| string       | ""                                                                                                                                                                                                                                                                                                                                                           ||
@@ -1284,6 +1285,10 @@ Sets the port of syslog server. _**default:**_ 514
 
 A comma-separated list of locations on which http requests will never get redirected to their https counterpart.
 _**default:**_ "/.well-known/acme-challenge"
+
+## global-allowed-response-headers
+
+A comma-separated list of allowed response headers inside the [custom headers annotations](https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md#custom-headers)
 
 ## global-auth-url
 
