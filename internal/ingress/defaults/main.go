@@ -34,6 +34,13 @@ type Backend struct {
 	// toggles whether or not to remove trailing slashes during TLS redirects
 	PreserveTrailingSlash bool `json:"preserve-trailing-slash"`
 
+	// allows usage of CustomHTTPErrors without intercepting service errors
+	// e.g. custom 404 and 503 when service-a does not exist or is not available
+	// but service-a can return 404 and 503 error codes without intercept
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors
+	// By default this is false
+	DisableProxyInterceptErrors bool `json:"disable-proxy-intercept-errors"`
+
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
 	// Sets the maximum allowed size of the client request body
 	ProxyBodySize string `json:"proxy-body-size"`
@@ -169,6 +176,9 @@ type Backend struct {
 	// By default, the NGINX ingress controller uses a list of all endpoints (Pod IP/port) in the NGINX upstream configuration.
 	// It disables that behavior and instead uses a single upstream in NGINX, the service's Cluster IP and port.
 	ServiceUpstream bool `json:"service-upstream"`
+
+	// AllowedResponseHeaders allows to define allow response headers for custom header annotation
+	AllowedResponseHeaders []string `json:"global-allowed-response-headers"`
 }
 
 type SecurityConfiguration struct {

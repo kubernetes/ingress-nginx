@@ -12,7 +12,7 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
   name: {{ include "ingress-nginx.controller.fullname" . }}-admission
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ include "ingress-nginx.namespace" . }}
 spec:
   type: {{ .Values.controller.admissionWebhooks.service.type }}
 {{- if .Values.controller.admissionWebhooks.service.clusterIP }}
@@ -31,7 +31,7 @@ spec:
     - name: https-webhook
       port: 443
       targetPort: webhook
-    {{- if semverCompare ">=1.20" .Capabilities.KubeVersion.Version }}
+    {{- if semverCompare ">=1.20.0-0" .Capabilities.KubeVersion.Version }}
       appProtocol: https
     {{- end }}
   selector:

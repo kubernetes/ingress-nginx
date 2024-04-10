@@ -53,7 +53,7 @@ func TestNginxCheck(t *testing.T) {
 			server := &httptest.Server{
 				Listener: listener,
 				Config: &http.Server{
-					Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					Handler: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 						w.WriteHeader(http.StatusOK)
 						fmt.Fprintf(w, "ok")
 					}),

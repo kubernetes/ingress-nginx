@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.20.5-alpine3.18 as builder
+ARG GOLANG_VERSION
+
+FROM golang:${GOLANG_VERSION}-alpine3.18 as builder
 
 RUN apk update \
     && apk upgrade && apk add git

@@ -234,6 +234,7 @@ func (r *HTTPResponse) checkContentType(expectedType string, expectedCharset ...
 	}
 
 	if mediaType != expectedType {
+		//nolint:goconst //string interpolation
 		r.chain.fail("\nexpected \"Content-Type\" header with %q media type,"+
 			"\nbut got %q", expectedType, mediaType)
 		return false

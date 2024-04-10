@@ -1,0 +1,50 @@
+suite: Default Backend > Extra ConfigMaps
+templates:
+  - default-backend-extra-configmaps.yaml
+
+tests:
+  - it: should not create a ConfigMap if `defaultBackend.extraConfigMaps` is empty
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.extraConfigMaps: []
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create one ConfigMap if `defaultBackend.extraConfigMaps` has one element
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.extraConfigMaps:
+        - name: my-configmap-1
+          data:
+            key1: value1
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: my-configmap-1
+      - equal:
+          path: data.key1
+          value: value1
+
+  - it: should create two ConfigMaps if `defaultBackend.extraConfigMaps` has two elements
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.extraConfigMaps:
+        - name: my-configmap-1
+          data:
+            key1: value1
+        - name: my-configmap-2
+          data:
+            key2: value2
+    asserts:
+      - hasDocuments:
+          count: 2
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: metadata.name
+          pattern: my-configmap-(1|2)

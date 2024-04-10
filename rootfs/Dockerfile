@@ -49,9 +49,10 @@ COPY --chown=www-data:www-data bin/${TARGETARCH}/wait-shutdown /
 # with volumes (custom templates)
 RUN bash -xeu -c ' \
   writeDirs=( \
-    /etc/ingress-controller \
     /etc/ingress-controller/ssl \
     /etc/ingress-controller/auth \
+    /etc/ingress-controller/geoip \
+    /etc/ingress-controller/telemetry \
     /var/log \
     /var/log/nginx \
     /tmp/nginx \
@@ -83,5 +84,4 @@ RUN  ln -sf /dev/stdout /var/log/nginx/access.log \
   && ln -sf /dev/stderr /var/log/nginx/error.log
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-
 CMD ["/nginx-ingress-controller"]

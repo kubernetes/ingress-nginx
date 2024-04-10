@@ -279,10 +279,10 @@ for common annotations and configurations:
 
 ### Annotations
 
-| Legacy                                           | OpenTelemetry                                    |
-|--------------------------------------------------|--------------------------------------------------|
-| `nginx.ingress.kubernetes.io/enable-opentracing` | `nginx.ingress.kubernetes.io/enable-opentelemetry` |
-| `opentracing-trust-incoming-span`                | `opentracing-trust-incoming-span`                  |
+| Legacy                                                        | OpenTelemetry                                                   |
+|---------------------------------------------------------------|-----------------------------------------------------------------|
+| `nginx.ingress.kubernetes.io/enable-opentracing`              | `nginx.ingress.kubernetes.io/enable-opentelemetry`              |
+| `nginx.ingress.kubernetes.io/opentracing-trust-incoming-span` | `nginx.ingress.kubernetes.io/opentelemetry-trust-incoming-span` |
 
 ### Configs
 

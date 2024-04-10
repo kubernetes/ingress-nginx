@@ -29,12 +29,8 @@ load_module /etc/nginx/modules/ngx_http_auth_digest_module.so;
 load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
 {{ end }}
 
-{{ if (shouldLoadOpentracingModule $cfg $servers) }}
-load_module /etc/nginx/modules/ngx_http_opentracing_module.so;
-{{ end }}
-
 {{ if (shouldLoadOpentelemetryModule $cfg $servers) }}
-load_module /modules_mount/etc/nginx/modules/otel/otel_ngx_module.so;
+load_module /etc/nginx/modules/otel_ngx_module.so;
 {{ end }}
 
 daemon off;
@@ -170,22 +166,15 @@ http {
 
     {{ end }}
 
-    {{ if $cfg.UseGeoIP }}
-    {{/* databases used to determine the country depending on the client IP address */}}
-    {{/* http://nginx.org/en/docs/http/ngx_http_geoip_module.html */}}
-    {{/* this is require to calculate traffic for individual country using GeoIP in the status page */}}
-    geoip_country       /etc/nginx/geoip/GeoIP.dat;
-    geoip_city          /etc/nginx/geoip/GeoLiteCity.dat;
-    geoip_org           /etc/nginx/geoip/GeoIPASNum.dat;
-    geoip_proxy_recursive on;
-    {{ end }}
-
     {{ if $cfg.UseGeoIP2 }}
     # https://github.com/leev/ngx_http_geoip2_module#example-usage
 
     {{ range $index, $file := $all.MaxmindEditionFiles }}
     {{ if eq $file "GeoLite2-Country.mmdb" }}
-    geoip2 /etc/nginx/geoip/GeoLite2-Country.mmdb {
+    geoip2 /etc/ingress-controller/geoip/GeoLite2-Country.mmdb {
+        {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
+        auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
+        {{ end }}
         $geoip2_country_code source=$remote_addr country iso_code;
         $geoip2_country_name source=$remote_addr country names en;
         $geoip2_country_geoname_id source=$remote_addr country geoname_id;
@@ -196,7 +185,10 @@ http {
     {{ end }}
 
     {{ if eq $file "GeoIP2-Country.mmdb" }}
-    geoip2 /etc/nginx/geoip/GeoIP2-Country.mmdb {
+    geoip2 /etc/ingress-controller/geoip/GeoIP2-Country.mmdb {
+        {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
+        auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
+        {{ end }}
         $geoip2_country_code source=$remote_addr country iso_code;
         $geoip2_country_name source=$remote_addr country names en;
         $geoip2_country_geoname_id source=$remote_addr country geoname_id;
@@ -207,7 +199,10 @@ http {
     {{ end }}
 
     {{ if eq $file "GeoLite2-City.mmdb" }}
-    geoip2 /etc/nginx/geoip/GeoLite2-City.mmdb {
+    geoip2 /etc/ingress-controller/geoip/GeoLite2-City.mmdb {
+        {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
+        auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
+        {{ end }}
         $geoip2_city_country_code source=$remote_addr country iso_code;
         $geoip2_city_country_name source=$remote_addr country names en;
         $geoip2_city_country_geoname_id source=$remote_addr country geoname_id;
@@ -230,7 +225,10 @@ http {
     {{ end }}
 
     {{ if eq $file "GeoIP2-City.mmdb" }}
-    geoip2 /etc/nginx/geoip/GeoIP2-City.mmdb {
+    geoip2 /etc/ingress-controller/geoip/GeoIP2-City.mmdb {
+        {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
+        auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
+        {{ end }}
         $geoip2_city_country_code source=$remote_addr country iso_code;
         $geoip2_city_country_name source=$remote_addr country names en;
         $geoip2_city_country_geoname_id source=$remote_addr country geoname_id;
@@ -253,21 +251,30 @@ http {
     {{ end }}
 
     {{ if eq $file "GeoLite2-ASN.mmdb" }}
-    geoip2 /etc/nginx/geoip/GeoLite2-ASN.mmdb {
+    geoip2 /etc/ingress-controller/geoip/GeoLite2-ASN.mmdb {
+        {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
+        auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
+        {{ end }}
         $geoip2_asn source=$remote_addr autonomous_system_number;
         $geoip2_org source=$remote_addr autonomous_system_organization;
     }
     {{ end }}
 
     {{ if eq $file "GeoIP2-ASN.mmdb" }}
-    geoip2 /etc/nginx/geoip/GeoIP2-ASN.mmdb {
+    geoip2 /etc/ingress-controller/geoip/GeoIP2-ASN.mmdb {
+        {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
+        auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
+        {{ end }}
         $geoip2_asn source=$remote_addr autonomous_system_number;
         $geoip2_org source=$remote_addr autonomous_system_organization;
     }
     {{ end }}
 
     {{ if eq $file "GeoIP2-ISP.mmdb" }}
-    geoip2 /etc/nginx/geoip/GeoIP2-ISP.mmdb {
+    geoip2 /etc/ingress-controller/geoip/GeoIP2-ISP.mmdb {
+        {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
+        auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
+        {{ end }}
         $geoip2_isp source=$remote_addr isp;
         $geoip2_isp_org source=$remote_addr organization;
         $geoip2_asn source=$remote_addr default=0 autonomous_system_number;
@@ -275,13 +282,16 @@ http {
     {{ end }}
 
     {{ if eq $file "GeoIP2-Connection-Type.mmdb" }}
-    geoip2 /etc/nginx/geoip/GeoIP2-Connection-Type.mmdb {
+    geoip2 /etc/ingress-controller/geoip/GeoIP2-Connection-Type.mmdb {
         $geoip2_connection_type connection_type;
     }
     {{ end }}
 
     {{ if eq $file "GeoIP2-Anonymous-IP.mmdb" }}
-    geoip2 /etc/nginx/geoip/GeoIP2-Anonymous-IP.mmdb {
+    geoip2 /etc/ingress-controller/geoip/GeoIP2-Anonymous-IP.mmdb {
+        {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
+        auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
+        {{ end }}
         $geoip2_is_anon source=$remote_addr is_anonymous;
         $geoip2_is_anonymous source=$remote_addr default=0 is_anonymous;
         $geoip2_is_anonymous_vpn source=$remote_addr default=0 is_anonymous_vpn;
@@ -296,7 +306,10 @@ http {
     {{ end }}
 
     aio                 threads;
+
+    {{ if $cfg.EnableAioWrite }}
     aio_write           on;
+    {{ end }}
 
     tcp_nopush          on;
     tcp_nodelay         on;
@@ -317,6 +330,10 @@ http {
     large_client_header_buffers     {{ $cfg.LargeClientHeaderBuffers }};
     client_body_buffer_size         {{ $cfg.ClientBodyBufferSize }};
     client_body_timeout             {{ $cfg.ClientBodyTimeout }}s;
+
+    {{ if gt $cfg.GRPCBufferSizeKb 0 }}
+    grpc_buffer_size {{ $cfg.GRPCBufferSizeKb }}k;
+    {{ end }}
 
     {{ if and (ne $cfg.HTTP2MaxHeaderSize "") (ne $cfg.HTTP2MaxFieldSize "") }}
     http2_max_field_size            {{ $cfg.HTTP2MaxFieldSize }};
@@ -346,7 +363,6 @@ http {
     limit_req_status                {{ $cfg.LimitReqStatusCode }};
     limit_conn_status               {{ $cfg.LimitConnStatusCode }};
 
-    {{ buildOpentracing $cfg $servers }}
     {{ buildOpentelemetry $cfg $servers }}
 
     include /etc/nginx/mime.types;
@@ -476,7 +492,7 @@ http {
     ssl_session_tickets {{ if $cfg.SSLSessionTickets }}on{{ else }}off{{ end }};
 
     {{ if not (empty $cfg.SSLSessionTicketKey ) }}
-    ssl_session_ticket_key /etc/nginx/tickets.key;
+    ssl_session_ticket_key /etc/ingress-controller/tickets.key;
     {{ end }}
 
     # slightly reduce the time-to-first-byte
@@ -499,7 +515,7 @@ http {
     ssl_certificate     {{ $cfg.DefaultSSLCertificate.PemFileName }};
     ssl_certificate_key {{ $cfg.DefaultSSLCertificate.PemFileName }};
 
-    {{ if gt (len $cfg.CustomHTTPErrors) 0 }}
+    {{ if and $cfg.CustomHTTPErrors (not $cfg.DisableProxyInterceptErrors) }}
     proxy_intercept_errors on;
     {{ end }}
 
@@ -670,6 +686,10 @@ http {
     server {
         server_name {{ buildServerName $server.Hostname }} {{range $server.Aliases }}{{ . }} {{ end }};
 
+        {{ if $cfg.UseHTTP2 }}
+            http2 on;
+        {{ end }}
+
         {{ if gt (len $cfg.BlockUserAgents) 0 }}
         if ($block_ua) {
            return 403;
@@ -721,10 +741,6 @@ http {
         gzip off;
 
         access_log off;
-
-        {{ if $cfg.EnableOpentracing }}
-        opentracing off;
-        {{ end }}
 
         {{ if $cfg.EnableOpentelemetry }}
         opentelemetry off;
@@ -1092,11 +1108,6 @@ stream {
         location = {{ $authPath }} {
             internal;
 
-            {{ if (or $all.Cfg.EnableOpentracing $location.Opentracing.Enabled) }}
-            opentracing on;
-            opentracing_propagate_context;
-            {{ end }}
-
             {{ if (or $all.Cfg.EnableOpentelemetry $location.Opentelemetry.Enabled) }}
             opentelemetry on;
             opentelemetry_propagate;
@@ -1244,7 +1255,6 @@ stream {
             set $location_path  {{ $ing.Path | escapeLiteralDollar | quote }};
             set $global_rate_limit_exceeding n;
 
-            {{ buildOpentracingForLocation $all.Cfg.EnableOpentracing $all.Cfg.OpentracingTrustIncomingSpan $location }}
             {{ buildOpentelemetryForLocation $all.Cfg.EnableOpentelemetry $all.Cfg.OpentelemetryTrustIncomingSpan $location }}
 
             {{ if $location.Mirror.Source }}
@@ -1479,6 +1489,13 @@ stream {
             {{ $all.Cfg.LocationSnippet }}
             {{ end }}
 
+            {{ if $location.CustomHeaders }}
+            # Custom Response Headers
+            {{ range $k, $v := $location.CustomHeaders.Headers }}
+            more_set_headers {{ printf "%s: %s" $k $v | escapeLiteralDollar | quote }};
+            {{ end }}
+            {{ end }}
+
             {{/* if we are sending the request to a custom default backend, we add the required headers */}}
             {{ if (hasPrefix $location.Backend "custom-default-backend-") }}
             proxy_set_header       X-Code             503;
@@ -1495,7 +1512,7 @@ stream {
             {{ end }}
 
             {{/* if a location-specific error override is set, add the proxy_intercept here */}}
-            {{ if $location.CustomHTTPErrors }}
+            {{ if and $location.CustomHTTPErrors (not $location.DisableProxyInterceptErrors) }}
             # Custom error pages per ingress
             proxy_intercept_errors on;
             {{ end }}
@@ -1554,9 +1571,6 @@ stream {
         {{ if eq $server.Hostname "_" }}
         # health checks in cloud providers require the use of port {{ $all.ListenPorts.HTTP }}
         location {{ $all.HealthzURI }} {
-            {{ if $all.Cfg.EnableOpentracing }}
-            opentracing off;
-            {{ end }}
 
             {{ if $all.Cfg.EnableOpentelemetry }}
             opentelemetry off;
@@ -1569,9 +1583,6 @@ stream {
         # this is required to avoid error if nginx is being monitored
         # with an external software (like sysdig)
         location /nginx_status {
-            {{ if $all.Cfg.EnableOpentracing }}
-            opentracing off;
-            {{ end }}
 
             {{ if $all.Cfg.EnableOpentelemetry }}
             opentelemetry off;

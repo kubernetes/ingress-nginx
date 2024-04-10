@@ -42,6 +42,10 @@ func TestParse(t *testing.T) {
 		expectErr   bool
 	}{
 		{map[string]string{annotationSSLCiphers: "ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP"}, Config{"ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP", ""}, false},
+		{map[string]string{annotationSSLCiphers: "ALL:!aNULL:!EXPORT56@SECLEVEL=2:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP"}, Config{"ALL:!aNULL:!EXPORT56@SECLEVEL=2:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP", ""}, false},
+		{map[string]string{annotationSSLCiphers: "ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP@STRENGTH"}, Config{"ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP@STRENGTH", ""}, false},
+		{map[string]string{annotationSSLCiphers: "ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP@STRENGTH@SECLEVEL=3"}, Config{"ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP@STRENGTH@SECLEVEL=3", ""}, false},
+		{map[string]string{annotationSSLCiphers: "ALL:!aNULL:!EXPORT56:RC4+RSA@STRENGTH:+HIGH@SECLEVEL=5:+MEDIUM:+LOW:+SSLv2:+EXP"}, Config{"ALL:!aNULL:!EXPORT56:RC4+RSA@STRENGTH:+HIGH@SECLEVEL=5:+MEDIUM:+LOW:+SSLv2:+EXP", ""}, false},
 		{
 			map[string]string{annotationSSLCiphers: "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256"},
 			Config{"ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256", ""},
@@ -64,13 +68,13 @@ func TestParse(t *testing.T) {
 		Spec: networking.IngressSpec{},
 	}
 
-	for _, testCase := range testCases {
+	for i, testCase := range testCases {
 		ing.SetAnnotations(testCase.annotations)
 		result, err := ap.Parse(ing)
 		if (err != nil) != testCase.expectErr {
 			t.Fatalf("expected error: %t got error: %t err value: %s. %+v", testCase.expectErr, err != nil, err, testCase.annotations)
 		}
-		if !reflect.DeepEqual(result, &testCase.expected) {
+		if !reflect.DeepEqual(result, &testCases[i].expected) {
 			t.Errorf("expected %v but returned %v, annotations: %s", testCase.expected, result, testCase.annotations)
 		}
 	}

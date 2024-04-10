@@ -11,19 +11,20 @@ permissions:
 jobs:
 
   changes:
+    runs-on: ubuntu-latest
+
     permissions:
       contents: read  # for dorny/paths-filter to fetch a list of changed files
-      pull-requests: read  # for dorny/paths-filter to read pull requests
-    runs-on: ubuntu-latest
-    if: |
-      (github.repository == 'kubernetes/ingress-nginx')
+
+    if: github.repository == 'kubernetes/ingress-nginx'
+
     outputs:
       docs: ${{ steps.filter.outputs.docs }}
       charts: ${{ steps.filter.outputs.charts }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
 
       - name: Run Artifact Hub lint
         run: |
@@ -33,11 +34,13 @@ jobs:
           ./ah lint -p charts/ingress-nginx || exit 1
           rm -f ./ah ./ah_1.5.0_linux_amd64.tar.gz
 
-      - name: Lint
-        run: |
-          ./build/run-in-docker.sh ./hack/verify-chart-lint.sh
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@e6669bcd63d7cb57cb4380c33043eebe5d111992 # v2.6.1
 
-      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
+      - name: Run chart-testing (lint)
+        run: ct lint --config ./.ct.yaml
+
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         id: filter
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -55,13 +58,12 @@ jobs:
 
     needs:
       - changes
-    if: |
-      (github.repository == 'kubernetes/ingress-nginx') &&
-      (needs.changes.outputs.charts == 'true')
+
+    if: ${{ needs.changes.outputs.charts == 'true' }}
 
     steps:
       - name: Checkout master
-        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
         with:
           # Fetch entire history. Required for chart-releaser; see https://github.com/helm/chart-releaser-action/issues/13#issuecomment-602063896
           fetch-depth: 0
@@ -73,7 +75,7 @@ jobs:
           git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
       - name: Helm Chart Releaser
-        uses: helm/chart-releaser-action@be16258da8010256c6e82849661221415f031968 # v1.5.0
+        uses: helm/chart-releaser-action@a917fd15b20e8b64b94d9158ad54cd6345335584 # v1.6.0
         env:
           CR_SKIP_EXISTING: true
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

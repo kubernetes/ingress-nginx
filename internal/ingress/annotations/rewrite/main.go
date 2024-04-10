@@ -152,14 +152,14 @@ func (a rewrite) Parse(ing *networking.Ingress) (interface{}, error) {
 	config.SSLRedirect, err = parser.GetBoolAnnotation(sslRedirectAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		if errors.IsValidationError(err) {
-			klog.Warningf("%sis invalid, defaulting to '%s'", sslRedirectAnnotation, a.r.GetDefaultBackend().SSLRedirect)
+			klog.Warningf("%s is invalid, defaulting to '%t'", sslRedirectAnnotation, a.r.GetDefaultBackend().SSLRedirect)
 		}
 		config.SSLRedirect = a.r.GetDefaultBackend().SSLRedirect
 	}
 	config.PreserveTrailingSlash, err = parser.GetBoolAnnotation(preserveTrailingSlashAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		if errors.IsValidationError(err) {
-			klog.Warningf("%sis invalid, defaulting to '%s'", preserveTrailingSlashAnnotation, a.r.GetDefaultBackend().PreserveTrailingSlash)
+			klog.Warningf("%s is invalid, defaulting to '%t'", preserveTrailingSlashAnnotation, a.r.GetDefaultBackend().PreserveTrailingSlash)
 		}
 		config.PreserveTrailingSlash = a.r.GetDefaultBackend().PreserveTrailingSlash
 	}
@@ -167,7 +167,7 @@ func (a rewrite) Parse(ing *networking.Ingress) (interface{}, error) {
 	config.ForceSSLRedirect, err = parser.GetBoolAnnotation(forceSSLRedirectAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		if errors.IsValidationError(err) {
-			klog.Warningf("%sis invalid, defaulting to '%s'", forceSSLRedirectAnnotation, a.r.GetDefaultBackend().ForceSSLRedirect)
+			klog.Warningf("%s is invalid, defaulting to '%t'", forceSSLRedirectAnnotation, a.r.GetDefaultBackend().ForceSSLRedirect)
 		}
 		config.ForceSSLRedirect = a.r.GetDefaultBackend().ForceSSLRedirect
 	}
@@ -175,7 +175,7 @@ func (a rewrite) Parse(ing *networking.Ingress) (interface{}, error) {
 	config.UseRegex, err = parser.GetBoolAnnotation(useRegexAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		if errors.IsValidationError(err) {
-			klog.Warningf("%sis invalid, defaulting to 'false'", useRegexAnnotation)
+			klog.Warningf("%s is invalid, defaulting to 'false'", useRegexAnnotation)
 		}
 		config.UseRegex = false
 	}

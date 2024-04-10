@@ -104,7 +104,7 @@ func Test_checkAnnotation(t *testing.T) {
 				},
 				fields: AnnotationFields{
 					"otherannotation": AnnotationConfig{
-						Validator: func(value string) error { return nil },
+						Validator: func(_ string) error { return nil },
 					},
 				},
 			},
@@ -303,6 +303,62 @@ func TestCheckAnnotationRisk(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := CheckAnnotationRisk(tt.annotations, tt.maxrisk, tt.config); (err != nil) != tt.wantErr {
 				t.Errorf("CheckAnnotationRisk() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestCommonNameAnnotationValidator(t *testing.T) {
+	tests := []struct {
+		name       string
+		annotation string
+		wantErr    bool
+	}{
+		{
+			name:       "correct example",
+			annotation: `CN=(my\.common\.name)`,
+			wantErr:    false,
+		},
+		{
+			name:       "no CN= prefix",
+			annotation: `(my\.common\.name)`,
+			wantErr:    true,
+		},
+		{
+			name:       "invalid prefix",
+			annotation: `CN(my\.common\.name)`,
+			wantErr:    true,
+		},
+		{
+			name:       "invalid regex",
+			annotation: `CN=(my\.common\.name]`,
+			wantErr:    true,
+		},
+		{
+			name:       "wildcard regex",
+			annotation: `CN=(my\..*\.name)`,
+			wantErr:    false,
+		},
+		{
+			name:       "somewhat complex regex",
+			annotation: "CN=(my\\.app\\.dev|.*\\.bbb\\.aaaa\\.tld)",
+			wantErr:    false,
+		},
+		{
+			name:       "another somewhat complex regex",
+			annotation: `CN=(my-app.*\.c\.defg\.net|other.app.com)`,
+			wantErr:    false,
+		},
+		{
+			name:       "nested parenthesis regex",
+			annotation: `CN=(api-one\.(asdf)?qwer\.webpage\.organization\.org)`,
+			wantErr:    false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := CommonNameAnnotationValidator(tt.annotation); (err != nil) != tt.wantErr {
+				t.Errorf("CommonNameAnnotationValidator() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

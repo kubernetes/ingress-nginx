@@ -129,7 +129,7 @@ var sessionAffinityAnnotations = parser.Annotation{
 			Documentation: `This annotation defines the Domain attribute of the sticky cookie.`,
 		},
 		annotationAffinityCookieSameSite: {
-			Validator: parser.ValidateOptions([]string{"None", "Lax", "Strict"}, false, true),
+			Validator: parser.ValidateOptions([]string{"none", "lax", "strict"}, false, true),
 			Scope:     parser.AnnotationScopeIngress,
 			Risk:      parser.AnnotationRiskLow,
 			Documentation: `This annotation is used to apply a SameSite attribute to the sticky cookie. 

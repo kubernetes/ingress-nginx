@@ -277,6 +277,14 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 			"nginx.ingress.kubernetes.io/auth-snippet": `
 				proxy_set_header My-Custom-Header 42;`,
 		}
+		f.SetNginxConfigMapData(map[string]string{
+			"allow-snippet-annotations": "true",
+		})
+		defer func() {
+			f.SetNginxConfigMapData(map[string]string{
+				"allow-snippet-annotations": "false",
+			})
+		}()
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
@@ -289,6 +297,15 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 
 	ginkgo.It(`should not set snippet "proxy_set_header My-Custom-Header 42;" when external auth is not configured`, func() {
 		host := authHost
+
+		f.SetNginxConfigMapData(map[string]string{
+			"allow-snippet-annotations": "true",
+		})
+		defer func() {
+			f.SetNginxConfigMapData(map[string]string{
+				"allow-snippet-annotations": "false",
+			})
+		}()
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-snippet": `
@@ -408,6 +425,7 @@ http {
 			f.EnsureIngress(ing2)
 
 			f.WaitForNginxServer(host, func(server string) bool {
+				//nolint:goconst //server_name is a constant
 				return strings.Contains(server, "server_name "+host)
 			})
 		})

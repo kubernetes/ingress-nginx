@@ -1,0 +1,215 @@
+name: Container Images
+
+on:
+  pull_request:
+    branches:
+      - "*"
+    paths:
+      - 'images/**'
+
+  push:
+    branches:
+      - main
+    paths:
+      - 'images/**'
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  PLATFORMS: linux/amd64
+
+jobs:
+  changes:
+    permissions:
+      contents: read  # for dorny/paths-filter to fetch a list of changed files
+      pull-requests: read  # for dorny/paths-filter to read pull requests
+    runs-on: ubuntu-latest
+    outputs:
+      custom-error-pages: ${{ steps.filter.outputs.custom-error-pages }}
+      cfssl: ${{ steps.filter.outputs.cfssl }}
+      fastcgi-helloserver: ${{ steps.filter.outputs.fastcgi-helloserver }}
+      e2e-test-echo: ${{ steps.filter.outputs.e2e-test-echo }}
+      go-grpc-greeter-server: ${{ steps.filter.outputs.go-grpc-greeter-server }}
+      httpbun: ${{ steps.filter.outputs.httpbun }}
+      kube-webhook-certgen: ${{ steps.filter.outputs.kube-webhook-certgen }}
+      ext-auth-example-authsvc: ${{ steps.filter.outputs.ext-auth-example-authsvc }}
+      nginx: ${{ steps.filter.outputs.nginx }}
+      nginx125: ${{ steps.filter.outputs.nginx125 }}
+      opentelemetry: ${{ steps.filter.outputs.opentelemetry }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: filter
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          filters: |
+            custom-error-pages:
+              - 'images/custom-error-pages/**'
+            cfssl:
+              - 'images/cfssl/**'
+            fastcgi-helloserver:
+              - 'images/fastcgi-helloserver/**'
+            e2e-test-echo:
+              - 'images/e2e-test-echo/**'
+            go-grpc-greeter-server:
+              - 'images/go-grpc-greeter-server/**'
+            httpbun:
+              - 'images/httpbun/**'
+            kube-webhook-certgen:
+              - 'images/kube-webhook-certgen/**'
+            ext-auth-example-authsvc:
+              - 'images/ext-auth-example-authsvc/**'
+            nginx:
+              - 'images/nginx/**'
+            opentelemetry:
+              - 'images/opentelemetry/**'
+            nginx125:
+              - 'images/nginx-1.25/TAG'
+
+  #### TODO: Make the below jobs 'less dumb' and use the job name as parameter (the github.job context does not work here)
+  cfssl:
+    needs: changes
+    if: |
+      (needs.changes.outputs.cfssl == 'true')
+    uses: ./.github/workflows/zz-tmpl-images.yaml
+    with:
+      name: cfssl
+    secrets: inherit
+
+  custom-error-pages:
+    needs: changes
+    if: |
+      (needs.changes.outputs.custom-error-pages == 'true')
+    uses: ./.github/workflows/zz-tmpl-images.yaml
+    with:
+      name: custom-error-pages
+    secrets: inherit
+
+  e2e-test-echo:
+    needs: changes
+    if: |
+      (needs.changes.outputs.e2e-test-echo == 'true')
+    uses: ./.github/workflows/zz-tmpl-images.yaml
+    with:
+      name: e2e-test-echo
+    secrets: inherit
+
+  ext-auth-example-authsvc:
+    needs: changes
+    if: |
+      (needs.changes.outputs.ext-auth-example-authsvc == 'true')
+    uses: ./.github/workflows/zz-tmpl-images.yaml
+    with:
+      name: ext-auth-example-authsvc
+    secrets: inherit
+
+  fastcgi-helloserver:
+    needs: changes
+    if: |
+      (needs.changes.outputs.fastcgi-helloserver == 'true')
+    uses: ./.github/workflows/zz-tmpl-images.yaml
+    with:
+      name: fastcgi-helloserver
+    secrets: inherit
+
+  go-grpc-greeter-server:
+    needs: changes
+    if: |
+      (needs.changes.outputs.go-grpc-greeter-server == 'true')
+    uses: ./.github/workflows/zz-tmpl-images.yaml
+    with:
+      name: go-grpc-greeter-server
+    secrets: inherit
+
+  httpbun:
+    needs: changes
+    if: |
+      (needs.changes.outputs.httpbun == 'true')
+    uses: ./.github/workflows/zz-tmpl-images.yaml
+    with:
+      name: httpbun
+    secrets: inherit
+
+  kube-webhook-certgen:
+    runs-on: ubuntu-latest
+    needs: changes
+    if: |
+      (needs.changes.outputs.kube-webhook-certgen == 'true')
+    strategy:
+      matrix:
+        k8s: [v1.26.14, v1.27.11, v1.28.7, v1.29.2]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+
+    - name: Get go version
+      run: echo "GOLANG_VERSION=$(cat GOLANG_VERSION)" >> $GITHUB_ENV
+
+    - name: Set up Go
+      id: go
+      uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+      with:
+        go-version: ${{ env.GOLANG_VERSION }}
+        check-latest: true
+    - name: image build
+      run: |
+        cd images/ && make NAME=kube-webhook-certgen build
+    - name: Create Kubernetes cluster
+      id: kind
+      run: |
+        kind create cluster --image=kindest/node:${{ matrix.k8s }}
+    - name: image test
+      run: |
+        cd images/ && make NAME=kube-webhook-certgen test test-e2e
+
+  opentelemetry:
+    runs-on: ubuntu-latest
+    env:
+      PLATFORMS: linux/amd64,linux/arm,linux/arm64
+    needs: changes
+    if: |
+      (needs.changes.outputs.opentelemetry == 'true')
+    strategy:
+      matrix:
+        nginx: ['1.25.3', '1.21.6']
+    steps:
+    - name: Checkout
+      uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+    - name: image build
+      run: |
+        cd images/opentelemetry && make NGINX_VERSION=${{ matrix.nginx }} build
+
+  nginx125:
+    permissions:
+      contents: write
+      packages: write
+    runs-on: ubuntu-latest
+    needs: changes
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.nginx125 == 'true')
+    env:
+      PLATFORMS: linux/amd64,linux/arm,linux/arm64,linux/s390x
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # v3.0.0
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@d70bba72b1f3fd22344832f00baa16ece964efeb # v3.3.0
+        with:
+          version: latest
+          platforms: ${{ env.PLATFORMS }}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20 # v3.1.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: build-image
+        run: |
+          export TAG=$(cat images/nginx-1.25/TAG)
+          cd images/nginx-1.25/rootfs && docker buildx build --platform=${{ env.PLATFORMS }} --push -t ingressnginx/nginx-1.25:${TAG} .

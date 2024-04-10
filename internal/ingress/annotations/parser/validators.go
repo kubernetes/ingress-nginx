@@ -49,6 +49,8 @@ var (
 
 // IsValidRegex checks if the tested string can be used as a regex, but without any weird character.
 // It includes regex characters for paths that may contain regexes
+//
+//nolint:goconst //already a constant
 var IsValidRegex = regexp.MustCompile("^[/" + alphaNumericChars + regexEnabledChars + "]*$")
 
 // SizeRegex validates sizes understood by NGINX, like 1000, 100k, 1000M
@@ -71,12 +73,12 @@ var (
 	NGINXVariable = regexp.MustCompile(`^[A-Za-z0-9\-\_\$\{\}]*$`)
 	// RegexPathWithCapture allows entries that SHOULD start with "/" and may contain alphanumeric + capture
 	// character for regex based paths, like /something/$1/anything/$2
-	RegexPathWithCapture = regexp.MustCompile(`^/[` + alphaNumericChars + `\/\$]*$`)
+	RegexPathWithCapture = regexp.MustCompile(`^/?[` + alphaNumericChars + `\/\$]*$`)
 	// HeadersVariable defines a regex that allows headers separated by comma
 	HeadersVariable = regexp.MustCompile(`^[A-Za-z0-9-_, ]*$`)
 	// URLWithNginxVariableRegex defines a url that can contain nginx variables.
 	// It is a risky operation
-	URLWithNginxVariableRegex = regexp.MustCompile("^[" + alphaNumericChars + urlEnabledChars + "$]*$")
+	URLWithNginxVariableRegex = regexp.MustCompile("^[" + extendedAlphaNumeric + urlEnabledChars + "$]*$")
 )
 
 // ValidateArrayOfServerName validates if all fields on a Server name annotation are
@@ -113,6 +115,20 @@ func ValidateRegex(regex *regexp.Regexp, removeSpace bool) AnnotationValidator {
 		}
 		return nil
 	}
+}
+
+// CommonNameAnnotationValidator checks whether the annotation value starts with
+// 'CN=' and is followed by a valid regex.
+func CommonNameAnnotationValidator(s string) error {
+	if !strings.HasPrefix(s, "CN=") {
+		return fmt.Errorf("value %s is not a valid Common Name annotation: missing prefix 'CN='", s)
+	}
+
+	if _, err := regexp.Compile(s[3:]); err != nil {
+		return fmt.Errorf("value %s is not a valid regex: %w", s, err)
+	}
+
+	return nil
 }
 
 // ValidateOptions receives an array of valid options that can be the value of annotation.

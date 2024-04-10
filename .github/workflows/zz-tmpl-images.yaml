@@ -1,0 +1,81 @@
+#### THIS IS A TEMPLATE ####
+# This workflow is created to be a template for every time an e2e teest is required,
+
+on:
+  workflow_call:
+    inputs:
+      name:
+        required: true
+        type: string
+      platforms-test:
+        type: string
+        default: linux/amd64
+      platforms-publish:
+        type: string
+        default: linux/amd64
+
+env:
+  PLATFORMS: ${{ inputs.platforms-test }}
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  changestag:
+    permissions:
+      contents: read  # for dorny/paths-filter to fetch a list of changed files
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.filter.outputs.tag }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: filter
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          filters: |
+            tag:
+              - 'images/**/TAG'
+
+  image-build:
+    name: Build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+
+      - name: Build
+        run: |
+          cd images/ && make NAME=${{ inputs.name }} build
+
+  image-push:
+    name: Push
+    needs: changestag
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'kubernetes/ingress-nginx' && needs.changestag.outputs.tag == 'true')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    env:
+      PLATFORMS: ${{ inputs.platforms-publish }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20 # v3.1.0
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Push
+      run: |
+          cd images/ && make REGISTRY=ingressnginx NAME=${{ inputs.name }} push
+

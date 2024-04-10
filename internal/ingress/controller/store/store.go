@@ -292,7 +292,7 @@ func New(
 	// the memory consumption of nginx-ingress-controller explode.
 	// In order to avoid that we filter out labels OWNER=TILLER.
 	labelsTweakListOptionsFunc := func(options *metav1.ListOptions) {
-		if len(options.LabelSelector) > 0 {
+		if options.LabelSelector != "" {
 			options.LabelSelector += ",OWNER!=TILLER"
 		} else {
 			options.LabelSelector = "OWNER!=TILLER"
@@ -1215,7 +1215,7 @@ func (s *k8sStore) setConfig(cmap *corev1.ConfigMap) {
 		s.backendConfig.UseGeoIP2 = false
 	}
 
-	s.writeSSLSessionTicketKey(cmap, "/etc/nginx/tickets.key")
+	s.writeSSLSessionTicketKey(cmap, "/etc/ingress-controller/tickets.key")
 }
 
 // Run initiates the synchronization of the informers and the initial

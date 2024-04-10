@@ -7,6 +7,9 @@ controller:
     type: ClusterIP
   extraModules:
     - name: opentelemetry
-      image: busybox
+      image:
+        registry: registry.k8s.io
+        image: busybox
+        tag: latest
       containerSecurityContext:
         allowPrivilegeEscalation: false

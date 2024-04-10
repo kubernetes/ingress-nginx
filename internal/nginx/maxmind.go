@@ -56,7 +56,7 @@ var MaxmindRetriesTimeout = time.Second * 0
 const minimumRetriesCount = 1
 
 const (
-	geoIPPath   = "/etc/nginx/geoip"
+	geoIPPath   = "/etc/ingress-controller/geoip"
 	dbExtension = ".mmdb"
 
 	maxmindURL = "https://download.maxmind.com/app/geoip_download?license_key=%v&edition_id=%v&suffix=tar.gz"
@@ -132,7 +132,7 @@ func DownloadGeoLite2DB(attempts int, period time.Duration) error {
 }
 
 func createURL(mirror, licenseKey, dbName string) string {
-	if len(mirror) > 0 {
+	if mirror != "" {
 		return fmt.Sprintf("%s/%s.tar.gz", mirror, dbName)
 	}
 	return fmt.Sprintf(maxmindURL, licenseKey, dbName)
@@ -179,20 +179,19 @@ func downloadDatabase(dbName string) error {
 			if !strings.HasSuffix(header.Name, mmdbFile) {
 				continue
 			}
+			return func() error {
+				outFile, err := os.Create(path.Join(geoIPPath, mmdbFile))
+				if err != nil {
+					return err
+				}
 
-			outFile, err := os.Create(path.Join(geoIPPath, mmdbFile))
-			if err != nil {
-				return err
-			}
+				defer outFile.Close()
 
-			//nolint:gocritic // TODO: will fix it on a followup PR
-			defer outFile.Close()
-
-			if _, err := io.CopyN(outFile, tarReader, header.Size); err != nil {
-				return err
-			}
-
-			return nil
+				if _, err := io.CopyN(outFile, tarReader, header.Size); err != nil {
+					return err
+				}
+				return nil
+			}()
 		}
 	}
 

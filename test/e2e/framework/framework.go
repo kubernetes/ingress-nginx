@@ -25,6 +25,7 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework/httpexpect"
 
 	"github.com/onsi/ginkgo/v2"
+	ginkgotypes "github.com/onsi/ginkgo/v2/types"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -178,7 +179,7 @@ func (f *Framework) AfterEach() {
 		assert.Nil(ginkgo.GinkgoT(), err, "deleting IngressClass")
 	}(f.KubeClientSet, f.IngressClass)
 
-	if !ginkgo.CurrentSpecReport().Failed() {
+	if !ginkgo.CurrentSpecReport().Failed() || ginkgo.CurrentSpecReport().State.Is(ginkgotypes.SpecStateInterrupted) {
 		return
 	}
 
@@ -312,7 +313,7 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 			return false, nil
 		}
 
-		if klog.V(10).Enabled() && len(o) > 0 {
+		if klog.V(10).Enabled() && o != "" {
 			klog.InfoS("NGINX", "configuration", o)
 		}
 
@@ -334,7 +335,7 @@ func (f *Framework) matchNginxCustomConditions(from, to string, matcher func(cfg
 			return false, nil
 		}
 
-		if klog.V(10).Enabled() && len(o) > 0 {
+		if klog.V(10).Enabled() && o != "" {
 			klog.InfoS("NGINX", "configuration", o)
 		}
 
@@ -500,7 +501,7 @@ func (f *Framework) newHTTPTestClient(config *tls.Config, setIngressURL bool) *h
 		Transport: &http.Transport{
 			TLSClientConfig: config,
 		},
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
 	}, httpexpect.NewAssertReporter())

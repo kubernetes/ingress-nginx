@@ -1,0 +1,58 @@
+#### THIS IS A TEMPLATE ####
+# This workflow is created to be a template for every time an e2e teest is required,
+
+on:
+  workflow_call:
+    inputs:
+      k8s-version:
+        required: true
+        type: string
+      variation:
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  kubernetes:
+    name: Kubernetes ${{ inputs.variation }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+
+      - name: cache
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
+        with:
+          name: docker.tar.gz
+
+      - name: Create Kubernetes ${{ inputs.k8s-version }} cluster
+        id: kind
+        run: |
+          kind create cluster --image=kindest/node:${{ inputs.k8s-version }} --config test/e2e/kind.yaml
+
+      - name: Load images from cache
+        run: |
+          echo "loading docker images..."
+          gzip -dc docker.tar.gz | docker load
+
+      - name: Run e2e tests ${{ inputs.variation }}
+        env:
+          KIND_CLUSTER_NAME: kind
+          SKIP_CLUSTER_CREATION: true
+          SKIP_INGRESS_IMAGE_CREATION: true
+          SKIP_E2E_IMAGE_CREATION: true
+          ENABLE_VALIDATIONS: ${{ inputs.variation == 'VALIDATIONS' }}
+          IS_CHROOT: ${{ inputs.variation == 'CHROOT' }}
+        run: |
+          kind get kubeconfig > $HOME/.kube/kind-config-kind
+          make kind-e2e-test
+
+      - name: Upload e2e junit-reports ${{ inputs.variation }}
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        if: success() || failure()
+        with:
+          name: e2e-test-reports-${{ inputs.k8s-version }}${{ inputs.variation }}
+          path: 'test/junitreports/report*.xml'
+

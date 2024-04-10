@@ -1,0 +1,97 @@
+suite: Controller > DaemonSet
+templates:
+  - controller-daemonset.yaml
+
+tests:
+  - it: should create a DaemonSet if `controller.kind` is "DaemonSet"
+    set:
+      controller.kind: DaemonSet
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: DaemonSet
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-controller
+
+  - it: should create a DaemonSet with argument `--enable-metrics=false` if `controller.metrics.enabled` is false
+    set:
+      controller.kind: DaemonSet
+      controller.metrics.enabled: false
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --enable-metrics=false
+
+  - it: should create a DaemonSet without argument `--enable-metrics=false` if `controller.metrics.enabled` is true
+    set:
+      controller.kind: DaemonSet
+      controller.metrics.enabled: true
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: --enable-metrics=false
+
+  - it: should create a DaemonSet with argument `--controller-class=k8s.io/ingress-nginx-internal` if `controller.ingressClassResource.controllerValue` is "k8s.io/ingress-nginx-internal"
+    set:
+      controller.kind: DaemonSet
+      controller.ingressClassResource.controllerValue: k8s.io/ingress-nginx-internal
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --controller-class=k8s.io/ingress-nginx-internal
+
+  - it: should create a DaemonSet with resource limits if `controller.resources.limits` is set
+    set:
+      controller.kind: DaemonSet
+      controller.resources.limits.cpu: 500m
+      controller.resources.limits.memory: 512Mi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: 500m
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 512Mi
+
+  - it: should create a DaemonSet with topology spread constraints if `controller.topologySpreadConstraints` is set
+    set:
+      controller.kind: DaemonSet
+      controller.topologySpreadConstraints:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
+              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/component: controller
+          topologyKey: topology.kubernetes.io/zone
+          maxSkew: 1
+          whenUnsatisfiable: ScheduleAnyway
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
+              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/component: controller
+          topologyKey: kubernetes.io/hostname
+          maxSkew: 1
+          whenUnsatisfiable: ScheduleAnyway
+    asserts:
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints
+          value:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: ingress-nginx
+                  app.kubernetes.io/instance: RELEASE-NAME
+                  app.kubernetes.io/component: controller
+              topologyKey: topology.kubernetes.io/zone
+              maxSkew: 1
+              whenUnsatisfiable: ScheduleAnyway
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: ingress-nginx
+                  app.kubernetes.io/instance: RELEASE-NAME
+                  app.kubernetes.io/component: controller
+              topologyKey: kubernetes.io/hostname
+              maxSkew: 1
+              whenUnsatisfiable: ScheduleAnyway

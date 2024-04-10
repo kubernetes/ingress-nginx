@@ -55,7 +55,7 @@ var FakeSSLCertificateUID = "00000000-0000-0000-0000-000000000000"
 var oidExtensionSubjectAltName = asn1.ObjectIdentifier{2, 5, 29, 17}
 
 const (
-	fakeCertificateName = "default-fake-certificate"
+	fakeCertificateName = "default-fake-certificate" //#nosec G101
 )
 
 // getPemFileName returns absolute file path and file name of pem cert related to given fullSecretName
@@ -400,7 +400,6 @@ func getFakeHostSSLCert(host string) (cert, key []byte) {
 	var err error
 
 	priv, err = rsa.GenerateKey(rand.Reader, 2048)
-
 	if err != nil {
 		klog.Fatalf("failed to generate fake private key: %v", err)
 	}
