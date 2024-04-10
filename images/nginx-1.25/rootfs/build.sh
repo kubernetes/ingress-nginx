@@ -109,6 +109,10 @@ export OPENTELEMETRY_CPP_VERSION="v1.11.0"
 # Check on https://github.com/open-telemetry/opentelemetry-proto
 export OPENTELEMETRY_PROTO_VERSION="v1.1.0"
 
+# http://hg.nginx.org/njs
+export NGINX_NJS_VERSION="0.8.3"
+
+
 export BUILD_PATH=/tmp/build
 
 ARCH=$(uname -m)
@@ -281,6 +285,10 @@ get_src 0fb790e394510e73fdba1492e576aaec0b8ee9ef08e3e821ce253a07719cf7ea \
 
 get_src d74f86ada2329016068bc5a243268f1f555edd620b6a7d6ce89295e7d6cf18da \
         "https://github.com/microsoft/mimalloc/archive/${MIMALOC_VERSION}.tar.gz" "mimalloc"
+
+
+get_src b7afc0e67cf1be8f9ea4b1e6133026e7fb6b8953fafc947d0778ca48a0aa1e64 \
+        "http://hg.nginx.org/njs/archive/${NGINX_NJS_VERSION}.tar.gz"
 
 # improve compilation times
 CORES=$(($(grep -c ^processor /proc/cpuinfo) - 1))
@@ -489,7 +497,8 @@ WITH_MODULES=" \
   --add-dynamic-module=$BUILD_PATH/nginx-http-auth-digest \
   --add-dynamic-module=$BUILD_PATH/ModSecurity-nginx \
   --add-dynamic-module=$BUILD_PATH/ngx_http_geoip2_module \
-  --add-dynamic-module=$BUILD_PATH/ngx_brotli"
+  --add-dynamic-module=$BUILD_PATH/ngx_brotli \
+  --add-module=$BUILD_PATH/njs"
 
 ./configure \
   --prefix=/usr/local/nginx \

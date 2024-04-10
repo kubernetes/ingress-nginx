@@ -33,6 +33,10 @@ load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
 load_module /etc/nginx/modules/otel_ngx_module.so;
 {{ end }}
 
+{{ if $cfg.EnableNJS }}
+load_module /etc/nginx/modules/ngx_http_js_module.so;
+{{ end }} 
+
 daemon off;
 
 worker_processes {{ $cfg.WorkerProcesses }};
