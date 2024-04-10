@@ -120,9 +120,9 @@ RUN wget -qO /tmp/helm.tgz \
   && rm -rf /tmp/*
 
 # Install a YAML Linter
-RUN pip install "yamllint==$YAML_LINT_VERSION"
+RUN pip install --break-system-packages "yamllint==$YAML_LINT_VERSION"
 
 # Install Yamale YAML schema validator
-RUN pip install "yamale==$YAMALE_VERSION"
+RUN pip install --break-system-packages "yamale==$YAMALE_VERSION"
 
 WORKDIR $GOPATH
