@@ -144,7 +144,7 @@ var sessionAffinityAnnotations = parser.Annotation{
 			Risk:          parser.AnnotationRiskLow,
 			Documentation: `This annotation is used to omit SameSite=None from browsers with SameSite attribute incompatibilities`,
 		},
- 		annotationAffinityCookiePartitioned: {
+		annotationAffinityCookiePartitioned: {
 			Validator:     parser.ValidateBool,
 			Scope:         parser.AnnotationScopeIngress,
 			Risk:          parser.AnnotationRiskLow,
