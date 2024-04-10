@@ -127,7 +127,7 @@ get_src()
 
   echo "Downloading $url"
 
-  curl -sSL "$url" -o "$f"
+  curl --retry 5 -sSL "$url" -o "$f"
   # TODO: Reenable checksum verification but make it smarter
   # echo "$hash  $f" | sha256sum -c - || exit 10
   if [ ! -z "$dest" ]; then
@@ -498,7 +498,7 @@ WITH_MODULES=" \
   --add-dynamic-module=$BUILD_PATH/ModSecurity-nginx \
   --add-dynamic-module=$BUILD_PATH/ngx_http_geoip2_module \
   --add-dynamic-module=$BUILD_PATH/ngx_brotli \
-  --add-module=$BUILD_PATH/njs"
+  --add-module=$BUILD_PATH/njs/nginx"
 
 ./configure \
   --prefix=/usr/local/nginx \
