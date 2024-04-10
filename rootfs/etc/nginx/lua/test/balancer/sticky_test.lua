@@ -549,7 +549,7 @@ describe("Sticky", function()
       test_set_cookie_with(sticky_balanced, "/", false, false)
     end)
     it("returns a cookie without Partitioned when user does not specify partitioned", function()
-      test_set_cookie_with(sticky_balanced, "/", nil, false)
+      test_set_cookie_with(sticky_balanced, "/", nil, nil)
     end)
   end)
 
