@@ -17,6 +17,7 @@ limitations under the License.
 package sessionaffinity
 
 import (
+	"strconv"
 	"testing"
 
 	api "k8s.io/api/core/v1"
@@ -70,6 +71,7 @@ func buildIngress() *networking.Ingress {
 }
 
 func TestIngressAffinityCookieConfig(t *testing.T) {
+	trueString := strconv.FormatBool(true)
 	ing := buildIngress()
 	data := map[string]string{}
 	data[parser.GetAnnotationWithPrefix(annotationAffinityType)] = "cookie"
@@ -80,9 +82,9 @@ func TestIngressAffinityCookieConfig(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix(annotationAffinityCookiePath)] = "/foo"
 	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieDomain)] = "foo.bar"
 	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieSameSite)] = "Strict"
-	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieChangeOnFailure)] = "true"
-	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieSecure)] = "true"
-	data[parser.GetAnnotationWithPrefix(annotationAffinityCookiePartitioned)] = "true"
+	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieChangeOnFailure)] = trueString
+	data[parser.GetAnnotationWithPrefix(annotationAffinityCookieSecure)] = trueString
+	data[parser.GetAnnotationWithPrefix(annotationAffinityCookiePartitioned)] = trueString
 	ing.SetAnnotations(data)
 
 	affin, err := NewParser(&resolver.Mock{}).Parse(ing)
