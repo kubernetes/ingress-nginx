@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nginx
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/kubernetes/ingress-nginx.git
+    path: /docs/examples/chashsubset/deployment.yaml
+    targetRevision: HEAD
+  destination: 
+    name: test
+    namespace: default
