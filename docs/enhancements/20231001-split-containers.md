@@ -27,6 +27,29 @@ to start, stop and reload NGINX
   * /test - (POST) Test the configuration of a given file location
     * "config" argument is the location of temporary file that should be tested
 
+## Implementation details
+### Control Plane
+
+This container will have the following functionality:
+* Watch / Map changes on Kubernetes API Server
+* Write the configuration files on the shared directory
+* Call the Openresty endpoint to do the dynamic configuration
+* Trigger reload, when required, on the dataplane container
+
+Open ports:
+* Metrics port
+
+### Data Plane
+This container will have the following functionality
+
+* Provide Access between users and Pods
+ * (TODO): Provide TLS Passthrough
+
+Open ports:
+* HTTP/HTTPs Ports
+* Localhost only - Openresty configuration port
+* (TODO): Metrics port
+
 ### Mounting empty SA on controller container
 
 ```yaml

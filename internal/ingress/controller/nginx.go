@@ -60,6 +60,7 @@ import (
 	"k8s.io/ingress-nginx/internal/task"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 
+	nginxdataplane "k8s.io/ingress-nginx/internal/dataplane/nginx"
 	"k8s.io/ingress-nginx/pkg/util/file"
 	utilingress "k8s.io/ingress-nginx/pkg/util/ingress"
 
@@ -108,7 +109,7 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 
 		metricCollector: mc,
 
-		command: NewNginxCommand(),
+		command: nginxdataplane.NewNginxCommand(),
 	}
 
 	if n.cfg.ValidationWebhook != "" {
@@ -259,7 +260,7 @@ type NGINXController struct {
 
 	validationWebhookServer *http.Server
 
-	command NginxExecTester
+	command nginxdataplane.NginxExecutor
 }
 
 // Start starts a new NGINX master process running in the foreground.
@@ -297,21 +298,12 @@ func (n *NGINXController) Start() {
 		})
 	}
 
-	cmd := n.command.ExecCommand()
-
-	// put NGINX in another process group to prevent it
-	// to receive signals meant for the controller
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Setpgid: true,
-		Pgid:    0,
-	}
-
 	if n.cfg.EnableSSLPassthrough {
 		n.setupSSLProxy()
 	}
 
 	klog.InfoS("Starting NGINX process")
-	n.start(cmd)
+	n.start()
 
 	go n.syncQueue.Run(time.Second, n.stopCh)
 	// force initial sync
@@ -403,13 +395,10 @@ func (n *NGINXController) Stop() error {
 
 	// send stop signal to NGINX
 	klog.InfoS("Stopping NGINX process")
-	cmd := n.command.ExecCommand("-s", "quit")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
+	if err := n.command.Stop(); err != nil {
 		return err
 	}
+	
 
 	// wait for the NGINX process to terminate
 	timer := time.NewTicker(time.Second * 1)
@@ -424,18 +413,8 @@ func (n *NGINXController) Stop() error {
 	return nil
 }
 
-func (n *NGINXController) start(cmd *exec.Cmd) {
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Start(); err != nil {
-		klog.Fatalf("NGINX error: %v", err)
-		n.ngxErrCh <- err
-		return
-	}
-
-	go func() {
-		n.ngxErrCh <- cmd.Wait()
-	}()
+func (n *NGINXController) start() {
+	n.command.Start(n.ngxErrCh)
 }
 
 // DefaultEndpoint returns the default endpoint to be use as default server that returns 404.
@@ -692,11 +671,12 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	}
 
 	if klog.V(2).Enabled() {
-		src, err := os.ReadFile(cfgPath)
+		src, err := os.ReadFile(nginxdataplane.CfgPath)
 		if err != nil {
 			return err
 		}
 		if !bytes.Equal(src, content) {
+			// TODO: This test should run on dataplane side
 			tmpfile, err := os.CreateTemp("", "new-nginx-cfg")
 			if err != nil {
 				return err
@@ -707,7 +687,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 				return err
 			}
 			//nolint:gosec //Ignore G204 error
-			diffOutput, err := exec.Command("diff", "-I", "'# Configuration.*'", "-u", cfgPath, tmpfile.Name()).CombinedOutput()
+			diffOutput, err := exec.Command("diff", "-I", "'# Configuration.*'", "-u", nginxdataplane.CfgPath, tmpfile.Name()).CombinedOutput()
 			if err != nil {
 				if exitError, ok := err.(*exec.ExitError); ok {
 					ws, ok := exitError.Sys().(syscall.WaitStatus)
@@ -728,12 +708,12 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		}
 	}
 
-	err = os.WriteFile(cfgPath, content, file.ReadWriteByUser)
+	err = os.WriteFile(nginxdataplane.CfgPath, content, file.ReadWriteByUser)
 	if err != nil {
 		return err
 	}
 
-	o, err := n.command.ExecCommand("-s", "reload").CombinedOutput()
+	o, err := n.command.Reload()
 	if err != nil {
 		return fmt.Errorf("%v\n%v", err, string(o))
 	}

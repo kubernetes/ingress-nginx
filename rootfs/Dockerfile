@@ -53,6 +53,7 @@ RUN bash -xeu -c ' \
     /etc/ingress-controller/auth \
     /etc/ingress-controller/geoip \
     /etc/ingress-controller/telemetry \
+    /etc/nginx/conf \
     /var/log \
     /var/log/nginx \
     /tmp/nginx \

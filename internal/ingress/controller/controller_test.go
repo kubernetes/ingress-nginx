@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -42,6 +41,7 @@ import (
 
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 
+	nginxdataplane "k8s.io/ingress-nginx/internal/dataplane/nginx"
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipallowlist"
@@ -134,8 +134,17 @@ type testNginxTestCommand struct {
 	err      error
 }
 
-func (ntc testNginxTestCommand) ExecCommand(_ ...string) *exec.Cmd {
-	return nil
+// TODO: Implement tests below and move to dataplane package
+func (ntc testNginxTestCommand) Stop() error {
+	panic("not implemented")
+}
+
+func (ntc testNginxTestCommand) Start(errch chan error) {
+	panic("not implemented")
+}
+
+func (ntc testNginxTestCommand) Reload() ([]byte, error) {
+	panic("not implemented")
 }
 
 func (ntc testNginxTestCommand) Test(cfg string) ([]byte, error) {
@@ -2543,7 +2552,7 @@ func newNGINXController(t *testing.T) *NGINXController {
 	return &NGINXController{
 		store:   storer,
 		cfg:     config,
-		command: NewNginxCommand(),
+		command: nginxdataplane.NewNginxCommand(),
 	}
 }
 
@@ -2608,7 +2617,7 @@ func newDynamicNginxController(t *testing.T, setConfigMap func(string) *corev1.C
 	return &NGINXController{
 		store:           storer,
 		cfg:             config,
-		command:         NewNginxCommand(),
+		command:         nginxdataplane.NewNginxCommand(),
 		metricCollector: metric.DummyCollector{},
 	}
 }

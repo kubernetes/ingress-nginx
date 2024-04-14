@@ -29,9 +29,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/controller"
 	"k8s.io/ingress-nginx/internal/ingress/metric"
 	"k8s.io/ingress-nginx/internal/nginx"
-	ingressflags "k8s.io/ingress-nginx/pkg/flags"
 	"k8s.io/ingress-nginx/pkg/metrics"
-	"k8s.io/ingress-nginx/pkg/util/file"
 	"k8s.io/ingress-nginx/pkg/util/process"
 	"k8s.io/ingress-nginx/version"
 )
@@ -41,19 +39,6 @@ func main() {
 
 	fmt.Println(version.String())
 	var err error
-	showVersion, conf, err := ingressflags.ParseFlags()
-	if showVersion {
-		os.Exit(0)
-	}
-
-	if err != nil {
-		klog.Fatal(err)
-	}
-
-	err = file.CreateRequiredDirectories()
-	if err != nil {
-		klog.Fatal(err)
-	}
 
 	reg := prometheus.NewRegistry()
 
@@ -64,13 +49,7 @@ func main() {
 	}))
 
 	mc := metric.NewDummyCollector()
-	if conf.EnableMetrics {
-		// TODO: Ingress class is not a part of dataplane anymore
-		mc, err = metric.NewCollector(conf.MetricsPerHost, conf.ReportStatusClasses, reg, conf.IngressClassConfiguration.Controller, *conf.MetricsBuckets, conf.ExcludeSocketMetrics)
-		if err != nil {
-			klog.Fatalf("Error creating prometheus collector:  %v", err)
-		}
-	}
+	
 	// Pass the ValidationWebhook status to determine if we need to start the collector
 	// for the admissionWebhook
 	// TODO: Dataplane does not contain validation webhook so the MetricCollector should not receive
