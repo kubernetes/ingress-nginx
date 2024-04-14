@@ -60,8 +60,6 @@ RUN apk update \
   /var/lib/nginx/body \
   /var/lib/nginx/fastcgi \
   /var/lib/nginx/proxy \
-  /var/lib/nginx/scgi \
-  /var/lib/nginx/uwsgi \
   /var/log/audit \
   ); \
   for dir in "${writeDirs[@]}"; do \

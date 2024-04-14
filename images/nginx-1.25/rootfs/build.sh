@@ -625,6 +625,14 @@ done
 
 rm -rf /etc/nginx/owasp-modsecurity-crs/.git
 rm -rf /etc/nginx/owasp-modsecurity-crs/util/regression-tests
+rm -rf /etc/nginx/fastcgi.conf.*
+rm -rf /etc/nginx/koi*
+rm -rf /etc/nginx/mime.types.default
+rm -rf /etc/nginx/nginx.conf.default
+rm -rf /etc/nginx/opentracing.json
+rm -rf /etc/nginx/scgi*
+rm -rf /etc/nginx/uwscgi*
+rm -rf /etc/nginx/win-utf
 
 # remove .a files
 find /usr/local -name "*.a" -print | xargs /bin/rm
