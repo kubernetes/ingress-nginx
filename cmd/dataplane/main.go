@@ -17,59 +17,72 @@ limitations under the License.
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 
 	"k8s.io/klog/v2"
 
-	"k8s.io/ingress-nginx/internal/ingress/controller"
-	"k8s.io/ingress-nginx/internal/ingress/metric"
+	dataplanenginx "k8s.io/ingress-nginx/cmd/dataplane/pkg/nginx"
 	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/pkg/metrics"
-	"k8s.io/ingress-nginx/pkg/util/process"
-	"k8s.io/ingress-nginx/version"
 )
 
 func main() {
 	klog.InitFlags(nil)
 
-	fmt.Println(version.String())
-	var err error
+	//fmt.Println(version.String())
+	//var err error
 
 	reg := prometheus.NewRegistry()
 
 	reg.MustRegister(collectors.NewGoCollector())
+	// TODO: Below is supported just on Linux, do not register if OS is not Linux
 	reg.MustRegister(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{
 		PidFn:        func() (int, error) { return os.Getpid(), nil },
 		ReportErrors: true,
 	}))
 
-	mc := metric.NewDummyCollector()
+	//mc := metric.NewDummyCollector()
+	go metrics.RegisterProfiler(nginx.ProfilerAddress, nginx.ProfilerPort)
 	
-	// Pass the ValidationWebhook status to determine if we need to start the collector
-	// for the admissionWebhook
-	// TODO: Dataplane does not contain validation webhook so the MetricCollector should not receive
-	// this as an argument
-	mc.Start(conf.ValidationWebhook)
-
-	if conf.EnableProfiling {
-		go metrics.RegisterProfiler(nginx.ProfilerAddress, nginx.ProfilerPort)
-	}
-
-	ngx := controller.NewNGINXController(conf, mc)
-
 	mux := http.NewServeMux()
 	metrics.RegisterHealthz(nginx.HealthPath, mux)
 	metrics.RegisterMetrics(reg, mux)
 
-	go metrics.StartHTTPServer(conf.HealthCheckHost, conf.ListenPorts.Health, mux)
-	go ngx.Start()
+	errCh := make(chan error)
+	stopCh := make(chan bool)
 
-	process.HandleSigterm(ngx, conf.PostShutdownGracePeriod, func(code int) {
-		os.Exit(code)
-	})
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGTERM)
+	// TODO: Turn delay configurable
+	n := dataplanenginx.NewNGINXExecutor(mux, 10, errCh, stopCh)
+	//go executor.Start()
+	go metrics.StartHTTPServer("127.0.0.1", 12345, mux)
+
+	// TODO: deal with OS signals
+	select {
+	case err := <- errCh:
+		klog.ErrorS(err, "error executing NGINX")
+		os.Exit(1)
+	
+	case <- stopCh:
+		klog.Warning("received request to stop")
+		os.Exit(0)
+
+	case <- signalChan:
+		klog.InfoS("Received SIGTERM, shutting down")
+		exitCode := 0
+		if err := n.Stop(); err != nil {
+			klog.Warningf("Error during sigterm shutdown: %v", err)
+			exitCode = 1
+		}
+		klog.InfoS("Exiting", "code", exitCode)
+		os.Exit(exitCode)
+	}
+
 }
