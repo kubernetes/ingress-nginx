@@ -1481,8 +1481,8 @@ stream {
             proxy_next_upstream_timeout             {{ $location.Proxy.NextUpstreamTimeout }};
             proxy_next_upstream_tries               {{ $location.Proxy.NextUpstreamTries }};
 
+            {{ if or (eq $location.BackendProtocol "GRPC") (eq $location.BackendProtocol "GRPCS") }}
             # Grpc settings
-            {{ if or (eq $location.BackendProtocol "GRPC") (eq $location.BackendProtocol "GRPCS")}}
             grpc_connect_timeout                    {{ $location.Proxy.ConnectTimeout }}s;
             grpc_send_timeout                       {{ $location.Proxy.SendTimeout }}s;
             grpc_read_timeout                       {{ $location.Proxy.ReadTimeout }}s;

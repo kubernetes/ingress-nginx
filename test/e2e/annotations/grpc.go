@@ -267,7 +267,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 		proxyReadtimeout := "30"
 
 		annotations := make(map[string]string)
-		annotations["nginx.ingress.kubernetes.io/backend-protocol"] = "grpc"
+		annotations["nginx.ingress.kubernetes.io/backend-protocol"] = "GRPC"
 		annotations["nginx.ingress.kubernetes.io/proxy-connect-timeout"] = proxyConnectTimeout
 		annotations["nginx.ingress.kubernetes.io/proxy-send-timeout"] = proxySendTimeout
 		annotations["nginx.ingress.kubernetes.io/proxy-read-timeout"] = proxyReadtimeout
@@ -289,7 +289,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 		proxyReadtimeout := "30"
 
 		annotations := make(map[string]string)
-		annotations["nginx.ingress.kubernetes.io/backend-protocol"] = "grpcs"
+		annotations["nginx.ingress.kubernetes.io/backend-protocol"] = "GRPCS"
 		annotations["nginx.ingress.kubernetes.io/proxy-connect-timeout"] = proxyConnectTimeout
 		annotations["nginx.ingress.kubernetes.io/proxy-send-timeout"] = proxySendTimeout
 		annotations["nginx.ingress.kubernetes.io/proxy-read-timeout"] = proxyReadtimeout
