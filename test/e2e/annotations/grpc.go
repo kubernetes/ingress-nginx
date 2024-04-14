@@ -35,15 +35,16 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-const echoHost = "echo"
+const (
+	echoHost = "echo"
+	host     = "grpc"
+)
 
 var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 	f := framework.NewDefaultFramework("grpc", framework.WithHTTPBunEnabled())
 
 	ginkgo.It("should use grpc_pass in the configuration file", func() {
 		f.NewGRPCFortuneTellerDeployment()
-
-		host := "grpc"
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
@@ -258,5 +259,49 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 
 		metadata := res.GetMetadata()
 		assert.Equal(ginkgo.GinkgoT(), metadata["content-type"].Values[0], "application/grpc")
+	})
+
+	ginkgo.It("should set valid grpc timeouts for grpc", func() {
+		proxyConnectTimeout := "5"
+		proxySendTimeout := "30"
+		proxyReadtimeout := "30"
+
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/backend-protocol"] = "grpc"
+		annotations["nginx.ingress.kubernetes.io/proxy-connect-timeout"] = proxyConnectTimeout
+		annotations["nginx.ingress.kubernetes.io/proxy-send-timeout"] = proxySendTimeout
+		annotations["nginx.ingress.kubernetes.io/proxy-read-timeout"] = proxyReadtimeout
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("grpc_connect_timeout %ss;", proxyConnectTimeout)) &&
+					strings.Contains(server, fmt.Sprintf("grpc_send_timeout %ss;", proxySendTimeout)) &&
+					strings.Contains(server, fmt.Sprintf("grpc_read_timeout %ss;", proxyReadtimeout))
+			})
+	})
+
+	ginkgo.It("should set valid grpc timeouts for grpcs", func() {
+		proxyConnectTimeout := "5"
+		proxySendTimeout := "30"
+		proxyReadtimeout := "30"
+
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/backend-protocol"] = "grpcs"
+		annotations["nginx.ingress.kubernetes.io/proxy-connect-timeout"] = proxyConnectTimeout
+		annotations["nginx.ingress.kubernetes.io/proxy-send-timeout"] = proxySendTimeout
+		annotations["nginx.ingress.kubernetes.io/proxy-read-timeout"] = proxyReadtimeout
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("grpc_connect_timeout %ss;", proxyConnectTimeout)) &&
+					strings.Contains(server, fmt.Sprintf("grpc_send_timeout %ss;", proxySendTimeout)) &&
+					strings.Contains(server, fmt.Sprintf("grpc_read_timeout %ss;", proxyReadtimeout))
+			})
 	})
 })
