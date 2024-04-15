@@ -13,7 +13,7 @@ jobs:
       repository-projects: write
       issues: write
     steps:
-      - uses: actions/add-to-project@2e5cc851ca7162e9eb510e6da6a5c64022e606a7 # v1.0.0
+      - uses: actions/add-to-project@9bfe908f2eaa7ba10340b31e314148fcfe6a2458 # v1.0.1
         with:
           project-url: https://github.com/orgs/kubernetes/projects/104
           github-token: ${{ secrets.PROJECT_WRITER }}
