@@ -54,6 +54,7 @@ RUN bash -xeu -c ' \
     /etc/ingress-controller/ssl \
     /etc/ingress-controller/auth \
     /etc/ingress-controller/geoip \
+    /etc/ingress-controller/tempconf \
     /etc/ingress-controller/telemetry \
     /etc/nginx/conf \
     /var/log \
@@ -71,8 +72,8 @@ RUN bash -xeu -c ' \
   
 
 RUN apk add --no-cache libcap \
-  && setcap    cap_net_bind_service=+ep /nginx-ingress-controller \
-  && setcap -v cap_net_bind_service=+ep /nginx-ingress-controller \
+  && setcap    cap_net_bind_service=+ep /nginx-ingress-dataplane \
+  && setcap -v cap_net_bind_service=+ep /nginx-ingress-dataplane \
   && setcap    cap_net_bind_service=+ep /usr/local/nginx/sbin/nginx \
   && setcap -v cap_net_bind_service=+ep /usr/local/nginx/sbin/nginx \
   && setcap    cap_net_bind_service=+ep /usr/bin/dumb-init \

@@ -3,6 +3,7 @@ package nginx
 import (
 	"fmt"
 	"net/http"
+	"path/filepath"
 
 	nginxdataplane "k8s.io/ingress-nginx/internal/dataplane/nginx"
 	"k8s.io/klog/v2"
@@ -26,8 +27,12 @@ func NewNGINXExecutor(mux *http.ServeMux, stopdelay int, errch chan error, stopc
 	return n
 }
 
-func (n *nginxExecutor) Start() {
-	n.cmd.Start(n.errch)
+func (n *nginxExecutor) Start() error {
+	err := n.cmd.Start(n.errch)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (n *nginxExecutor) Stop() error {
@@ -81,7 +86,10 @@ func (n *nginxExecutor) handleTest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	o, err := n.cmd.Test(testFile)
+	// Avoid transversal path. We will get the final file from /etc/ingress-controller/tempconf
+	tmpFileFinal := filepath.Base(testFile)
+
+	o, err := n.cmd.Test(tmpFileFinal)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error() + "\n"))

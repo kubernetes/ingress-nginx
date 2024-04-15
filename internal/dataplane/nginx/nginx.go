@@ -3,6 +3,7 @@ package nginx
 import (
 	"os"
 	"os/exec"
+	"path/filepath"
 	"syscall"
 
 	"k8s.io/klog/v2"
@@ -11,6 +12,7 @@ import (
 const (
 	defBinary = "/usr/bin/nginx"
 	CfgPath   = "/etc/nginx/conf/nginx.conf"
+	TempDir = "/etc/ingress-controller/tempconf"
 )
 
 // NginxExecTester defines the interface to execute
@@ -19,7 +21,7 @@ type NginxExecutor interface {
 	Reload() ([]byte, error)
 	Test(cfg string) ([]byte, error)
 	Stop() error
-	Start(chan error)
+	Start(chan error) error
 }
 
 // NginxCommand stores context around a given nginx executable path
@@ -57,18 +59,18 @@ func (nc NginxCommand) execCommand(args ...string) *exec.Cmd {
 	return executor
 }
 
-func (nc NginxCommand) Start(errch chan error) {
+func (nc NginxCommand) Start(errch chan error) error {
 	cmd := nc.execCommand()
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Start(); err != nil {
-		klog.Fatalf("NGINX error: %v", err)
-		errch <- err
-		return
+		klog.ErrorS(err, "NGINX error")
+		return err
 	}
 	go func() {
 		errch <- cmd.Wait()
 	}()
+	return nil
 }
 
 func (nc NginxCommand) Reload() ([]byte, error) {
@@ -86,5 +88,6 @@ func (nc NginxCommand) Stop() error {
 // Test checks if config file is a syntax valid nginx configuration
 func (nc NginxCommand) Test(cfg string) ([]byte, error) {
 	//nolint:gosec // Ignore G204 error
+	cfg = filepath.Join(TempDir, cfg)
 	return exec.Command(nc.Binary, "-c", cfg, "-t").CombinedOutput()
 }

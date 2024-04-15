@@ -61,8 +61,11 @@ func main() {
 	signal.Notify(signalChan, syscall.SIGTERM)
 	// TODO: Turn delay configurable
 	n := dataplanenginx.NewNGINXExecutor(mux, 10, errCh, stopCh)
-	//go executor.Start()
-	go metrics.StartHTTPServer("127.0.0.1", 12345, mux)
+	err := n.Start()
+	if err != nil {
+		klog.Fatalf("error starting nginx process: %s", err)
+	}
+	go metrics.StartHTTPServer("0.0.0.0", 12345, mux)
 
 	// TODO: deal with OS signals
 	select {

@@ -109,7 +109,9 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 
 		metricCollector: mc,
 
-		command: nginxdataplane.NewNginxCommand(),
+		command: nginxdataplane.NewNginxRemote("http://127.0.0.1:12345"),
+		//command: nginxdataplane.NewNginxCommand(),
+
 	}
 
 	if n.cfg.ValidationWebhook != "" {
@@ -298,9 +300,12 @@ func (n *NGINXController) Start() {
 		})
 	}
 
+	// TODO: SSLPassthrough is not yet supported on dataplane mode
+	/*
 	if n.cfg.EnableSSLPassthrough {
 		n.setupSSLProxy()
 	}
+	*/
 
 	klog.InfoS("Starting NGINX process")
 	n.start()
@@ -331,6 +336,7 @@ func (n *NGINXController) Start() {
 
 	for {
 		select {
+		// TODO: create a separate error channel for the remote executor
 		case err := <-n.ngxErrCh:
 			if n.isShuttingDown {
 				return
@@ -414,7 +420,11 @@ func (n *NGINXController) Stop() error {
 }
 
 func (n *NGINXController) start() {
-	n.command.Start(n.ngxErrCh)
+	// TODO: do a better retry of start before failing 
+	if err := n.command.Start(n.ngxErrCh); err != nil {
+		n.stopCh <- struct{}{}
+		klog.Fatalf("error starting NGINX: %s", err)
+	}
 }
 
 // DefaultEndpoint returns the default endpoint to be use as default server that returns 404.
@@ -618,7 +628,7 @@ func (n *NGINXController) testTemplate(cfg []byte) error {
 	if len(cfg) == 0 {
 		return fmt.Errorf("invalid NGINX configuration (empty)")
 	}
-	tmpDir := os.TempDir() + "/nginx"
+	tmpDir := nginxdataplane.TempDir
 	tmpfile, err := os.CreateTemp(tmpDir, tempNginxPattern)
 	if err != nil {
 		return err
@@ -628,7 +638,8 @@ func (n *NGINXController) testTemplate(cfg []byte) error {
 	if err != nil {
 		return err
 	}
-	out, err := n.command.Test(tmpfile.Name())
+	tmpfileName := filepath.Base(tmpfile.Name())
+	out, err := n.command.Test(tmpfileName)
 	if err != nil {
 		// this error is different from the rest because it must be clear why nginx is not working
 		oe := fmt.Sprintf(`
@@ -1021,7 +1032,7 @@ func createOpentelemetryCfg(cfg *ngx_config.Configuration) error {
 func cleanTempNginxCfg() error {
 	var files []string
 
-	err := filepath.Walk(os.TempDir(), func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(nginxdataplane.TempDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}

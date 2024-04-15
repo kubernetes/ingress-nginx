@@ -80,6 +80,19 @@ image: clean-image ## Build image for a particular arch.
 		--build-arg BUILD_ID="$(BUILD_ID)" \
 		-t $(REGISTRY)/controller:$(TAG) rootfs
 
+.PHONY: image-dataplane
+image-dataplane: clean-dataplane-image ## Build image for a particular arch.
+	echo "Building docker image dataplane ($(ARCH))..."
+	docker build \
+		${PLATFORM_FLAG} ${PLATFORM} \
+		--no-cache \
+		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
+		--build-arg VERSION="$(TAG)" \
+		--build-arg TARGETARCH="$(ARCH)" \
+		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
+		--build-arg BUILD_ID="$(BUILD_ID)" \
+		-t $(REGISTRY)/dataplane:$(TAG) -f rootfs/Dockerfile.dataplane rootfs
+
 .PHONY: gosec
 gosec:
 	docker run --rm -it -w /source/ -v "$(pwd)"/:/source securego/gosec:2.11.0 -exclude=G109,G601,G104,G204,G304,G306,G307 -tests=false -exclude-dir=test -exclude-dir=images/  -exclude-dir=docs/ /source/...
@@ -101,12 +114,15 @@ clean-image: ## Removes local image
 	echo "removing old image $(REGISTRY)/controller:$(TAG)"
 	@docker rmi -f $(REGISTRY)/controller:$(TAG) || true
 
-
 .PHONY: clean-chroot-image
 clean-chroot-image: ## Removes local image
 	echo "removing old image $(REGISTRY)/controller-chroot:$(TAG)"
 	@docker rmi -f $(REGISTRY)/controller-chroot:$(TAG) || true
 
+.PHONY: clean-dataplane-image
+clean-dataplane-image: ## Removes local image
+	echo "removing old image $(REGISTRY)/dataplane:$(TAG)"
+	@docker rmi -f $(REGISTRY)/dataplane:$(TAG) || true
 
 .PHONY: build
 build:  ## Build ingress controller, debug tool and pre-stop hook.

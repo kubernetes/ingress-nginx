@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG BASE_IMAGE
+#ARG BASE_IMAGE
 
-FROM ${BASE_IMAGE}
+FROM alpine:3.19
 
 ARG TARGETARCH
 ARG VERSION
@@ -31,13 +31,13 @@ LABEL org.opencontainers.image.revision="${COMMIT_SHA}"
 
 LABEL build_id="${BUILD_ID}"
 
-WORKDIR  /etc/nginx
-
 RUN apk update \
   && apk upgrade \
   && apk add --no-cache \
-    diffutils \
-  && rm -rf /var/cache/apk/*
+    diffutils bash \
+  && rm -rf /var/cache/apk/* \
+  && adduser -S -D -H -u 101 -h /usr/local/nginx \
+  -s /sbin/nologin -G www-data -g www-data www-data
 
 COPY --chown=www-data:www-data etc /etc
 
@@ -53,6 +53,7 @@ RUN bash -xeu -c ' \
     /etc/ingress-controller/auth \
     /etc/ingress-controller/geoip \
     /etc/ingress-controller/telemetry \
+    /etc/ingress-controller/tempconf \
     /etc/nginx/conf \
     /var/log \
     /var/log/nginx \
@@ -71,18 +72,11 @@ RUN bash -xeu -c ' \
 RUN apk add --no-cache libcap \
   && setcap    cap_net_bind_service=+ep /nginx-ingress-controller \
   && setcap -v cap_net_bind_service=+ep /nginx-ingress-controller \
-  && setcap    cap_net_bind_service=+ep /usr/local/nginx/sbin/nginx \
-  && setcap -v cap_net_bind_service=+ep /usr/local/nginx/sbin/nginx \
-  && setcap    cap_net_bind_service=+ep /usr/bin/dumb-init \
-  && setcap -v cap_net_bind_service=+ep /usr/bin/dumb-init \
-  && apk del libcap \
-  && ln -sf /usr/local/nginx/sbin/nginx /usr/bin/nginx
-
+  && apk del libcap
 USER www-data
 
 # Create symlinks to redirect nginx logs to stdout and stderr docker log collector
 RUN  ln -sf /dev/stdout /var/log/nginx/access.log \
   && ln -sf /dev/stderr /var/log/nginx/error.log
 
-ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-CMD ["/nginx-ingress-controller"]
+ENTRYPOINT ["/nginx-ingress-controller"]
