@@ -204,7 +204,7 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 	for _, f := range filesToWatch {
 		f := f
 		_, err = file.NewFileWatcher(f, func() {
-			klog.InfoS("File changed detected. Reloading NGINX", "path", f)
+			klog.InfoS("File change detected. Reloading NGINX", "path", f)
 			n.syncQueue.EnqueueTask(task.GetDummyObject("file-change"))
 		})
 		if err != nil {
