@@ -64,6 +64,7 @@ jobs:
               - 'NGINX_BASE'
             charts:
               - 'charts/ingress-nginx/Chart.yaml'
+              - 'charts/ingress-nginx/values.schema.json'
               - 'charts/ingress-nginx/**/*'
               - 'NGINX_BASE'
             baseimage:
@@ -94,7 +95,7 @@ jobs:
       - name: Run test
         run: make test
 
-        
+
   verify-docs:
     name: Verify Doc generation
     runs-on: ubuntu-latest
@@ -227,13 +228,24 @@ jobs:
       - name: Run chart-testing (lint)
         run: ct lint --config ./.ct.yaml
 
+      - name: Run helm-schema
+        run: |
+          GOBIN=$PWD GO111MODULE=on go install github.com/dadav/helm-schema/cmd/helm-schema@0.12.0
+          ./helm-schema --chart-search-root=${GITHUB_WORKSPACE}/charts --skip-auto-generation title,description,required,default,additionalProperties
+          DIFF=$(git diff ${GITHUB_WORKSPACE}/charts/ingress-nginx/values.schema.json)
+          if [ ! -z "$DIFF" ]; then
+            echo "Please use dadav/helm-schema in your clone, of your fork, of the project, and commit a updated values.schema.json for the chart. https://github.com/kubernetes/ingress-nginx/blob/main/MANUAL_RELEASE.md#d-edit-the-valuesyaml-and-run-helm-schema-and-helm-docs"
+          fi
+          git diff --exit-code
+          rm -f ./helm-schema
+
       - name: Run helm-docs
         run: |
           GOBIN=$PWD GO111MODULE=on go install github.com/norwoodj/helm-docs/cmd/helm-docs@v1.11.0
           ./helm-docs --chart-search-root=${GITHUB_WORKSPACE}/charts
           DIFF=$(git diff ${GITHUB_WORKSPACE}/charts/ingress-nginx/README.md)
           if [ ! -z "$DIFF" ]; then
-            echo "Please use helm-docs in your clone, of your fork, of the project, and commit a updated README.md for the chart. https://github.com/kubernetes/ingress-nginx/blob/main/RELEASE.md#d-edit-the-valuesyaml-and-run-helm-docs"
+            echo "Please use helm-docs in your clone, of your fork, of the project, and commit a updated README.md for the chart. https://github.com/kubernetes/ingress-nginx/blob/main/MANUAL_RELEASE.md#d-edit-the-valuesyaml-and-run-helm-schema-and-helm-docs"
           fi
           git diff --exit-code
           rm -f ./helm-docs

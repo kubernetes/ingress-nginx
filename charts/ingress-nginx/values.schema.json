@@ -1,0 +1,1633 @@
+{
+  "properties": {
+    "commonLabels": {
+      "type": "object"
+    },
+    "controller": {
+      "properties": {
+        "addHeaders": {
+          "type": "object"
+        },
+        "admissionWebhooks": {
+          "properties": {
+            "annotations": {
+              "type": "object"
+            },
+            "certManager": {
+              "properties": {
+                "admissionCert": {
+                  "properties": {
+                    "duration": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "enabled": {
+                  "type": "boolean"
+                },
+                "rootCert": {
+                  "properties": {
+                    "duration": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "certificate": {
+              "type": "string"
+            },
+            "createSecretJob": {
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "resources": {
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "(^limits$)|(^requests$)": {
+                      "additionalProperties": false,
+                      "patternProperties": {
+                        "(^cpu$)|(^memory$)|(ephemeral-storage$)|(hugepages-.+$)": {
+                          "type": [
+                            "string",
+                            "integer"
+                          ]
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                },
+                "securityContext": {
+                  "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.SecurityContext"
+                }
+              },
+              "type": "object"
+            },
+            "enabled": {
+              "type": "boolean"
+            },
+            "existingPsp": {
+              "type": "string"
+            },
+            "extraEnvs": {
+              "items": {
+                "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.EnvVar"
+              },
+              "type": "array"
+            },
+            "failurePolicy": {
+              "enum": [
+                "Fail",
+                "Ignore"
+              ]
+            },
+            "key": {
+              "type": "string"
+            },
+            "labels": {
+              "type": "object"
+            },
+            "name": {
+              "type": "string"
+            },
+            "namespaceSelector": {
+              "anyOf": [
+                {
+                  "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelector"
+                },
+                {
+                  "additionalProperties": false,
+                  "type": "object"
+                }
+              ]
+            },
+            "objectSelector": {
+              "anyOf": [
+                {
+                  "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelector"
+                },
+                {
+                  "additionalProperties": false,
+                  "type": "object"
+                }
+              ]
+            },
+            "patch": {
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                },
+                "image": {
+                  "properties": {
+                    "digest": {
+                      "type": "string"
+                    },
+                    "image": {
+                      "type": "string"
+                    },
+                    "pullPolicy": {
+                      "enum": [
+                        "IfNotPresent",
+                        "Always",
+                        "Never"
+                      ]
+                    },
+                    "registry": {
+                      "type": "string"
+                    },
+                    "tag": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "labels": {
+                  "type": "object"
+                },
+                "networkPolicy": {
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean"
+                    }
+                  },
+                  "type": "object"
+                },
+                "nodeSelector": {
+                  "properties": {
+                    "kubernetes.io/os": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "podAnnotations": {
+                  "type": "object"
+                },
+                "priorityClassName": {
+                  "type": "string"
+                },
+                "rbac": {
+                  "properties": {
+                    "create": {
+                      "type": "boolean"
+                    }
+                  },
+                  "type": "object"
+                },
+                "securityContext": {
+                  "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.SecurityContext"
+                },
+                "serviceAccount": {
+                  "properties": {
+                    "automountServiceAccountToken": {
+                      "type": "boolean"
+                    },
+                    "create": {
+                      "type": "boolean"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "tolerations": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "effect": {
+                        "enum": [
+                          "NoSchedule",
+                          "PreferNoSchedule",
+                          "NoExecute"
+                        ]
+                      },
+                      "key": {
+                        "type": "string"
+                      },
+                      "operator": {
+                        "enum": [
+                          "Equal",
+                          "Exists"
+                        ]
+                      },
+                      "tolerationSeconds": {
+                        "type": "integer"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "patchWebhookJob": {
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "resources": {
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "(^limits$)|(^requests$)": {
+                      "additionalProperties": false,
+                      "patternProperties": {
+                        "(^cpu$)|(^memory$)|(ephemeral-storage$)|(hugepages-.+$)": {
+                          "type": [
+                            "string",
+                            "integer"
+                          ]
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                },
+                "securityContext": {
+                  "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.SecurityContext"
+                }
+              },
+              "type": "object"
+            },
+            "port": {
+              "type": "integer"
+            },
+            "service": {
+              "properties": {
+                "annotations": {
+                  "type": "object"
+                },
+                "externalIPs": {
+                  "items": {},
+                  "type": "array"
+                },
+                "loadBalancerSourceRanges": {
+                  "items": {},
+                  "type": "array"
+                },
+                "servicePort": {
+                  "type": "integer"
+                },
+                "type": {
+                  "enum": [
+                    "ClusterIP",
+                    "NodePort",
+                    "LoadBalancer"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "affinity": {
+          "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.Affinity"
+        },
+        "allowSnippetAnnotations": {
+          "type": "boolean"
+        },
+        "annotations": {
+          "type": "object"
+        },
+        "autoscaling": {
+          "properties": {
+            "annotations": {
+              "type": "object"
+            },
+            "behavior": {
+              "type": "object"
+            },
+            "enabled": {
+              "type": "boolean"
+            },
+            "maxReplicas": {
+              "type": "integer"
+            },
+            "minReplicas": {
+              "type": "integer"
+            },
+            "targetCPUUtilizationPercentage": {
+              "type": "integer"
+            },
+            "targetMemoryUtilizationPercentage": {
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
+        "autoscalingTemplate": {
+          "items": {},
+          "type": "array"
+        },
+        "config": {
+          "type": "object"
+        },
+        "configAnnotations": {
+          "type": "object"
+        },
+        "configMapNamespace": {
+          "type": "string"
+        },
+        "containerName": {
+          "type": "string"
+        },
+        "containerPort": {
+          "properties": {
+            "http": {
+              "type": "integer"
+            },
+            "https": {
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
+        "containerSecurityContext": {
+          "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.SecurityContext"
+        },
+        "customTemplate": {
+          "properties": {
+            "configMapKey": {
+              "type": "string"
+            },
+            "configMapName": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "disableLeaderElection": {
+          "type": "boolean"
+        },
+        "dnsConfig": {
+          "type": "object"
+        },
+        "dnsPolicy": {
+          "enum": [
+            "ClusterFirst",
+            "ClusterFirstWithHostNet",
+            "Default",
+            "None"
+          ]
+        },
+        "electionID": {
+          "type": "string"
+        },
+        "electionTTL": {
+          "type": "string"
+        },
+        "enableAnnotationValidations": {
+          "type": "boolean"
+        },
+        "enableMimalloc": {
+          "type": "boolean"
+        },
+        "enableTopologyAwareRouting": {
+          "type": "boolean"
+        },
+        "existingPsp": {
+          "type": "string"
+        },
+        "extraArgs": {
+          "type": "object"
+        },
+        "extraContainers": {
+          "items": {
+            "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.Container"
+          },
+          "type": "array"
+        },
+        "extraEnvs": {
+          "items": {
+            "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.EnvVar"
+          },
+          "type": "array"
+        },
+        "extraInitContainers": {
+          "items": {
+            "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.Container"
+          },
+          "type": "array"
+        },
+        "extraModules": {
+          "items": {},
+          "type": "array"
+        },
+        "extraVolumeMounts": {
+          "items": {},
+          "type": "array"
+        },
+        "extraVolumes": {
+          "items": {},
+          "type": "array"
+        },
+        "healthCheckHost": {
+          "type": "string"
+        },
+        "healthCheckPath": {
+          "type": "string"
+        },
+        "hostAliases": {
+          "items": {
+            "properties": {
+              "hostnames": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "ip": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "hostNetwork": {
+          "type": "boolean"
+        },
+        "hostPort": {
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "ports": {
+              "properties": {
+                "http": {
+                  "type": "integer"
+                },
+                "https": {
+                  "type": "integer"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "hostname": {
+          "type": "string"
+        },
+        "image": {
+          "properties": {
+            "allowPrivilegeEscalation": {
+              "type": "boolean"
+            },
+            "chroot": {
+              "type": "boolean"
+            },
+            "digest": {
+              "type": "string"
+            },
+            "digestChroot": {
+              "type": "string"
+            },
+            "image": {
+              "type": "string"
+            },
+            "pullPolicy": {
+              "enum": [
+                "IfNotPresent",
+                "Always",
+                "Never"
+              ]
+            },
+            "readOnlyRootFilesystem": {
+              "type": "boolean"
+            },
+            "registry": {
+              "type": "string"
+            },
+            "runAsGroup": {
+              "type": "integer"
+            },
+            "runAsNonRoot": {
+              "type": "boolean"
+            },
+            "runAsUser": {
+              "type": "integer"
+            },
+            "seccompProfile": {
+              "properties": {
+                "type": {
+                  "enum": [
+                    "RuntimeDefault",
+                    "Localhost",
+                    "Unconfined"
+                  ]
+                }
+              },
+              "type": "object"
+            },
+            "tag": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "ingressClass": {
+          "type": "string"
+        },
+        "ingressClassByName": {
+          "type": "boolean"
+        },
+        "ingressClassResource": {
+          "properties": {
+            "aliases": {
+              "items": {},
+              "type": "array"
+            },
+            "annotations": {
+              "type": "object"
+            },
+            "controllerValue": {
+              "type": "string"
+            },
+            "default": {
+              "type": "boolean"
+            },
+            "enabled": {
+              "type": "boolean"
+            },
+            "name": {
+              "type": "string"
+            },
+            "parameters": {
+              "additionalProperties": false,
+              "properties": {
+                "apiGroup": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "keda": {
+          "properties": {
+            "apiVersion": {
+              "type": "string"
+            },
+            "behavior": {
+              "type": "object"
+            },
+            "cooldownPeriod": {
+              "type": "integer"
+            },
+            "enabled": {
+              "type": "boolean"
+            },
+            "maxReplicas": {
+              "type": "integer"
+            },
+            "minReplicas": {
+              "type": "integer"
+            },
+            "pollingInterval": {
+              "type": "integer"
+            },
+            "restoreToOriginalReplicaCount": {
+              "type": "boolean"
+            },
+            "scaledObject": {
+              "properties": {
+                "annotations": {
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "triggers": {
+              "items": {},
+              "type": "array"
+            }
+          },
+          "type": "object"
+        },
+        "kind": {
+          "enum": [
+            "Deployment",
+            "DaemonSet"
+          ]
+        },
+        "labels": {
+          "type": "object"
+        },
+        "lifecycle": {
+          "properties": {
+            "preStop": {
+              "properties": {
+                "exec": {
+                  "properties": {
+                    "command": {
+                      "items": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "livenessProbe": {
+          "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.Probe"
+        },
+        "maxmindLicenseKey": {
+          "type": "string"
+        },
+        "metrics": {
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "port": {
+              "type": "integer"
+            },
+            "portName": {
+              "type": "string"
+            },
+            "prometheusRule": {
+              "properties": {
+                "additionalLabels": {
+                  "type": "object"
+                },
+                "enabled": {
+                  "type": "boolean"
+                },
+                "rules": {
+                  "items": {},
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "service": {
+              "properties": {
+                "annotations": {
+                  "type": "object"
+                },
+                "externalIPs": {
+                  "items": {},
+                  "type": "array"
+                },
+                "labels": {
+                  "type": "object"
+                },
+                "loadBalancerSourceRanges": {
+                  "items": {},
+                  "type": "array"
+                },
+                "servicePort": {
+                  "type": "integer"
+                },
+                "type": {
+                  "enum": [
+                    "ClusterIP",
+                    "NodePort",
+                    "LoadBalancer"
+                  ]
+                }
+              },
+              "type": "object"
+            },
+            "serviceMonitor": {
+              "properties": {
+                "additionalLabels": {
+                  "type": "object"
+                },
+                "annotations": {
+                  "type": "object"
+                },
+                "enabled": {
+                  "type": "boolean"
+                },
+                "metricRelabelings": {
+                  "items": {},
+                  "type": "array"
+                },
+                "namespace": {
+                  "type": "string"
+                },
+                "namespaceSelector": {
+                  "type": "object"
+                },
+                "relabelings": {
+                  "items": {},
+                  "type": "array"
+                },
+                "scrapeInterval": {
+                  "type": "string"
+                },
+                "targetLabels": {
+                  "items": {},
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "minAvailable": {
+          "type": "integer"
+        },
+        "minReadySeconds": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "networkPolicy": {
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            }
+          },
+          "type": "object"
+        },
+        "nodeSelector": {
+          "properties": {
+            "kubernetes.io/os": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "opentelemetry": {
+          "properties": {
+            "containerSecurityContext": {
+              "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.SecurityContext"
+            },
+            "enabled": {
+              "type": "boolean"
+            },
+            "image": {
+              "properties": {
+                "digest": {
+                  "type": "string"
+                },
+                "distroless": {
+                  "type": "boolean"
+                },
+                "image": {
+                  "type": "string"
+                },
+                "registry": {
+                  "type": "string"
+                },
+                "tag": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": {
+              "type": "string"
+            },
+            "resources": {
+              "additionalProperties": false,
+              "patternProperties": {
+                "(^limits$)|(^requests$)": {
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "(^cpu$)|(^memory$)|(ephemeral-storage$)|(hugepages-.+$)": {
+                      "type": [
+                        "string",
+                        "integer"
+                      ]
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "podAnnotations": {
+          "type": "object"
+        },
+        "podLabels": {
+          "type": "object"
+        },
+        "podSecurityContext": {
+          "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.PodSecurityContext"
+        },
+        "priorityClassName": {
+          "type": "string"
+        },
+        "proxySetHeaders": {
+          "type": "object"
+        },
+        "publishService": {
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "pathOverride": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "readinessProbe": {
+          "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.Probe"
+        },
+        "replicaCount": {
+          "type": "integer"
+        },
+        "reportNodeInternalIp": {
+          "type": "boolean"
+        },
+        "resources": {
+          "additionalProperties": false,
+          "patternProperties": {
+            "(^limits$)|(^requests$)": {
+              "additionalProperties": false,
+              "patternProperties": {
+                "(^cpu$)|(^memory$)|(ephemeral-storage$)|(hugepages-.+$)": {
+                  "type": [
+                    "string",
+                    "integer"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "scope": {
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "namespace": {
+              "type": "string"
+            },
+            "namespaceSelector": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "service": {
+          "properties": {
+            "annotations": {
+              "type": "object"
+            },
+            "appProtocol": {
+              "type": "boolean"
+            },
+            "clusterIP": {
+              "type": "string"
+            },
+            "enableHttp": {
+              "type": "boolean"
+            },
+            "enableHttps": {
+              "type": "boolean"
+            },
+            "enabled": {
+              "type": "boolean"
+            },
+            "external": {
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                }
+              },
+              "type": "object"
+            },
+            "externalIPs": {
+              "items": {},
+              "type": "array"
+            },
+            "externalTrafficPolicy": {
+              "enum": [
+                "Cluster",
+                "Local",
+                ""
+              ]
+            },
+            "internal": {
+              "properties": {
+                "annotations": {
+                  "type": "object"
+                },
+                "appProtocol": {
+                  "type": "boolean"
+                },
+                "clusterIP": {
+                  "type": "string"
+                },
+                "enabled": {
+                  "type": "boolean"
+                },
+                "externalIPs": {
+                  "items": {},
+                  "type": "array"
+                },
+                "externalTrafficPolicy": {
+                  "enum": [
+                    "Cluster",
+                    "Local",
+                    ""
+                  ]
+                },
+                "ipFamilies": {
+                  "items": {
+                    "enum": [
+                      "IPv4",
+                      "IPv6"
+                    ]
+                  },
+                  "type": "array"
+                },
+                "ipFamilyPolicy": {
+                  "enum": [
+                    "SingleStack",
+                    "PreferDualStack",
+                    "RequireDualStack"
+                  ]
+                },
+                "loadBalancerClass": {
+                  "type": "string"
+                },
+                "loadBalancerIP": {
+                  "type": "string"
+                },
+                "loadBalancerSourceRanges": {
+                  "items": {},
+                  "type": "array"
+                },
+                "nodePorts": {
+                  "properties": {
+                    "http": {
+                      "type": "integer"
+                    },
+                    "https": {
+                      "type": "integer"
+                    },
+                    "tcp": {
+                      "type": "object"
+                    },
+                    "udp": {
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                },
+                "ports": {
+                  "properties": {
+                    "http": {
+                      "type": "integer"
+                    },
+                    "https": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                },
+                "sessionAffinity": {
+                  "enum": [
+                    "ClientIP",
+                    "None",
+                    ""
+                  ]
+                },
+                "targetPorts": {
+                  "properties": {
+                    "http": {
+                      "type": [
+                        "integer",
+                        "string"
+                      ]
+                    },
+                    "https": {
+                      "type": [
+                        "integer",
+                        "string"
+                      ]
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": {
+                  "enum": [
+                    "ClusterIP",
+                    "NodePort",
+                    "LoadBalancer",
+                    ""
+                  ]
+                }
+              },
+              "type": "object"
+            },
+            "ipFamilies": {
+              "items": {
+                "enum": [
+                  "IPv4",
+                  "IPv6"
+                ]
+              },
+              "type": "array"
+            },
+            "ipFamilyPolicy": {
+              "enum": [
+                "SingleStack",
+                "PreferDualStack",
+                "RequireDualStack"
+              ]
+            },
+            "labels": {
+              "type": "object"
+            },
+            "loadBalancerClass": {
+              "type": "string"
+            },
+            "loadBalancerIP": {
+              "type": "string"
+            },
+            "loadBalancerSourceRanges": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "nodePorts": {
+              "properties": {
+                "http": {
+                  "type": "integer"
+                },
+                "https": {
+                  "type": "integer"
+                },
+                "tcp": {
+                  "type": "object"
+                },
+                "udp": {
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "ports": {
+              "properties": {
+                "http": {
+                  "type": "integer"
+                },
+                "https": {
+                  "type": "integer"
+                }
+              },
+              "type": "object"
+            },
+            "sessionAffinity": {
+              "enum": [
+                "ClientIP",
+                "None"
+              ]
+            },
+            "targetPorts": {
+              "properties": {
+                "http": {
+                  "type": [
+                    "integer",
+                    "string"
+                  ]
+                },
+                "https": {
+                  "type": [
+                    "integer",
+                    "string"
+                  ]
+                }
+              },
+              "type": "object"
+            },
+            "type": {
+              "enum": [
+                "ClusterIP",
+                "NodePort",
+                "LoadBalancer"
+              ]
+            }
+          },
+          "type": "object"
+        },
+        "shareProcessNamespace": {
+          "type": "boolean"
+        },
+        "sysctls": {
+          "type": "object"
+        },
+        "tcp": {
+          "properties": {
+            "annotations": {
+              "type": "object"
+            },
+            "configMapNamespace": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "terminationGracePeriodSeconds": {
+          "type": "integer"
+        },
+        "tolerations": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "effect": {
+                "enum": [
+                  "NoSchedule",
+                  "PreferNoSchedule",
+                  "NoExecute"
+                ]
+              },
+              "key": {
+                "type": "string"
+              },
+              "operator": {
+                "enum": [
+                  "Equal",
+                  "Exists"
+                ]
+              },
+              "tolerationSeconds": {
+                "type": "integer"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "topologySpreadConstraints": {
+          "items": {
+            "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.TopologySpreadConstraint"
+          },
+          "type": "array"
+        },
+        "udp": {
+          "properties": {
+            "annotations": {
+              "type": "object"
+            },
+            "configMapNamespace": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "updateStrategy": {
+          "additionalProperties": false,
+          "properties": {
+            "rollingUpdate": {
+              "additionalProperties": false,
+              "properties": {
+                "maxSurge": {
+                  "type": [
+                    "string",
+                    "integer"
+                  ]
+                },
+                "maxUnavailable": {
+                  "type": [
+                    "string",
+                    "integer"
+                  ]
+                }
+              },
+              "type": "object"
+            },
+            "type": {
+              "enum": [
+                "Recreate",
+                "RollingUpdate",
+                "OnDelete"
+              ]
+            }
+          },
+          "type": "object"
+        },
+        "watchIngressWithoutClass": {
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "defaultBackend": {
+      "properties": {
+        "affinity": {
+          "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.Affinity"
+        },
+        "autoscaling": {
+          "properties": {
+            "annotations": {
+              "type": "object"
+            },
+            "enabled": {
+              "type": "boolean"
+            },
+            "maxReplicas": {
+              "type": "integer"
+            },
+            "minReplicas": {
+              "type": "integer"
+            },
+            "targetCPUUtilizationPercentage": {
+              "type": "integer"
+            },
+            "targetMemoryUtilizationPercentage": {
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
+        "containerSecurityContext": {
+          "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.SecurityContext"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "existingPsp": {
+          "type": "string"
+        },
+        "extraArgs": {
+          "type": "object"
+        },
+        "extraConfigMaps": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "data": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              "labels": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "extraEnvs": {
+          "items": {
+            "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.EnvVar"
+          },
+          "type": "array"
+        },
+        "extraVolumeMounts": {
+          "items": {
+            "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.VolumeMount"
+          },
+          "type": "array"
+        },
+        "extraVolumes": {
+          "items": {
+            "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.Volume"
+          },
+          "type": "array"
+        },
+        "image": {
+          "properties": {
+            "allowPrivilegeEscalation": {
+              "type": "boolean"
+            },
+            "image": {
+              "type": "string"
+            },
+            "pullPolicy": {
+              "enum": [
+                "IfNotPresent",
+                "Always",
+                "Never"
+              ]
+            },
+            "readOnlyRootFilesystem": {
+              "type": "boolean"
+            },
+            "registry": {
+              "type": "string"
+            },
+            "runAsGroup": {
+              "type": "integer"
+            },
+            "runAsNonRoot": {
+              "type": "boolean"
+            },
+            "runAsUser": {
+              "type": "integer"
+            },
+            "seccompProfile": {
+              "properties": {
+                "type": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "tag": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "labels": {
+          "type": "object"
+        },
+        "livenessProbe": {
+          "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.Probe"
+        },
+        "minAvailable": {
+          "type": "integer"
+        },
+        "minReadySeconds": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "networkPolicy": {
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            }
+          },
+          "type": "object"
+        },
+        "nodeSelector": {
+          "properties": {
+            "kubernetes.io/os": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "podAnnotations": {
+          "type": "object"
+        },
+        "podLabels": {
+          "type": "object"
+        },
+        "podSecurityContext": {
+          "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.PodSecurityContext"
+        },
+        "port": {
+          "type": "integer"
+        },
+        "priorityClassName": {
+          "type": "string"
+        },
+        "readinessProbe": {
+          "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.Probe"
+        },
+        "replicaCount": {
+          "type": "integer"
+        },
+        "resources": {
+          "additionalProperties": false,
+          "patternProperties": {
+            "(^limits$)|(^requests$)": {
+              "additionalProperties": false,
+              "patternProperties": {
+                "(^cpu$)|(^memory$)|(ephemeral-storage$)|(hugepages-.+$)": {
+                  "type": [
+                    "string",
+                    "integer"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "service": {
+          "properties": {
+            "annotations": {
+              "type": "object"
+            },
+            "externalIPs": {
+              "items": {},
+              "type": "array"
+            },
+            "loadBalancerSourceRanges": {
+              "items": {},
+              "type": "array"
+            },
+            "servicePort": {
+              "type": "integer"
+            },
+            "type": {
+              "enum": [
+                "ClusterIP",
+                "NodePort",
+                "LoadBalancer"
+              ]
+            }
+          },
+          "type": "object"
+        },
+        "serviceAccount": {
+          "properties": {
+            "automountServiceAccountToken": {
+              "type": "boolean"
+            },
+            "create": {
+              "type": "boolean"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "tolerations": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "effect": {
+                "enum": [
+                  "NoSchedule",
+                  "PreferNoSchedule",
+                  "NoExecute"
+                ]
+              },
+              "key": {
+                "type": "string"
+              },
+              "operator": {
+                "enum": [
+                  "Equal",
+                  "Exists"
+                ]
+              },
+              "tolerationSeconds": {
+                "type": "integer"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "topologySpreadConstraints": {
+          "items": {
+            "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.TopologySpreadConstraint"
+          },
+          "type": "array"
+        },
+        "updateStrategy": {
+          "additionalProperties": false,
+          "properties": {
+            "rollingUpdate": {
+              "additionalProperties": false,
+              "properties": {
+                "maxSurge": {
+                  "type": [
+                    "string",
+                    "integer"
+                  ]
+                },
+                "maxUnavailable": {
+                  "type": [
+                    "string",
+                    "integer"
+                  ]
+                }
+              },
+              "type": "object"
+            },
+            "type": {
+              "enum": [
+                "Recreate",
+                "RollingUpdate",
+                "OnDelete"
+              ]
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "dhParam": {
+      "type": "string"
+    },
+    "global": {
+      "type": "object"
+    },
+    "imagePullSecrets": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "namespaceOverride": {
+      "type": "string"
+    },
+    "podSecurityPolicy": {
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "portNamePrefix": {
+      "type": "string"
+    },
+    "rbac": {
+      "properties": {
+        "create": {
+          "type": "boolean"
+        },
+        "scope": {
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "revisionHistoryLimit": {
+      "type": "integer"
+    },
+    "serviceAccount": {
+      "properties": {
+        "annotations": {
+          "type": "object"
+        },
+        "automountServiceAccountToken": {
+          "type": "boolean"
+        },
+        "create": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "tcp": {
+      "type": "object"
+    },
+    "udp": {
+      "type": "object"
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object"
+}

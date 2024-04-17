@@ -29,6 +29,9 @@ controller:
     tag: "v1.11.2"
     digest: sha256:d5f8217feeac4887cb1ed21f27c2674e58be06bd8f5184cacea2a69abaf78dce
     digestChroot: sha256:21b55a2f0213a18b91612a8c0850167e00a8e34391fd595139a708f9c047e7a8
+    # @schema
+    # enum: [IfNotPresent, Always, Never]
+    # @schema
     pullPolicy: IfNotPresent
     runAsNonRoot: true
     # -- This value must not be changed using the official image.
@@ -39,6 +42,9 @@ controller:
     runAsGroup: 82
     allowPrivilegeEscalation: false
     seccompProfile:
+      # @schema
+      # enum: [RuntimeDefault, Localhost, Unconfined]
+      # @schema
       type: RuntimeDefault
     readOnlyRootFilesystem: false
   # -- Use an existing PSP instead of creating one
@@ -60,6 +66,18 @@ controller:
   addHeaders: {}
   # -- Optionally customize the pod dnsConfig.
   dnsConfig: {}
+  # @schema
+  # type: array
+  # items:
+  #   type: object
+  #   properties:
+  #     ip:
+  #       type: string
+  #     hostnames:
+  #       type: array
+  #       items:
+  #         type: string
+  # @schema
   # -- Optionally customize the pod hostAliases.
   hostAliases: []
   # - ip: 127.0.0.1
@@ -71,7 +89,10 @@ controller:
   #   - foo.remote
   #   - bar.remote
   # -- Optionally customize the pod hostname.
-  hostname: {}
+  hostname: ""
+  # @schema
+  # enum: [ClusterFirst, ClusterFirstWithHostNet, Default, None]
+  # @schema
   # -- Optionally change this to ClusterFirstWithHostNet in case you have 'hostNetwork: true'.
   # By default, while using host network, name resolution uses the host's DNS. If you wish nginx-controller
   # to keep resolving names inside the k8s network, use ClusterFirstWithHostNet.
@@ -142,6 +163,17 @@ controller:
     # aliases:
     # - nginx-alias-1
     # - nginx-alias-2
+    # @schema
+    # type: object
+    # additionalProperties: false
+    # properties:
+    #   apiGroup:
+    #     type: string
+    #   kind:
+    #     type: string
+    #   name:
+    #     type: string
+    # @schema
     # -- A link to a custom resource containing additional configuration for the controller.
     # This is optional if the controller consuming this IngressClass does not require additional parameters.
     # Ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-class
@@ -157,6 +189,9 @@ controller:
   podLabels: {}
   #  key: value
 
+  # @schema
+  # $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.PodSecurityContext
+  # @schema
   # -- Security context for controller pods
   podSecurityContext: {}
   # -- sysctls for controller pods
@@ -164,6 +199,9 @@ controller:
   sysctls: {}
   # sysctls:
   #   "net.core.somaxconn": "8192"
+  # @schema
+  # $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.SecurityContext
+  # @schema
   # -- Security context for controller containers
   containerSecurityContext: {}
   # -- Allows customization of the source of the IP address or FQDN to report
@@ -209,6 +247,11 @@ controller:
   ##   length-buckets: "10,20,30,40,50,60,70,80,90,100"
   ##   size-buckets: "10,100,1000,10000,100000,1e+06,1e+07"
 
+  # @schema
+  # type: array
+  # items:
+  #   $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.EnvVar
+  # @schema
   # -- Additional environment variables to set
   extraEnvs: []
   # extraEnvs:
@@ -218,6 +261,9 @@ controller:
   #         key: FOO
   #         name: secret-resource
 
+  # @schema
+  # enum: [Deployment, DaemonSet]
+  # @schema
   # -- Use a `DaemonSet` or `Deployment`
   kind: Deployment
   # -- Annotations to be added to the controller Deployment or DaemonSet
@@ -231,6 +277,21 @@ controller:
   #  keel.sh/policy: patch
   #  keel.sh/trigger: poll
 
+  # @schema
+  # type: object
+  # additionalProperties: false
+  # properties:
+  #   type:
+  #     enum: [Recreate, RollingUpdate, OnDelete]
+  #   rollingUpdate:
+  #     type: object
+  #     additionalProperties: false
+  #     properties:
+  #       maxSurge:
+  #         type: [string, integer]
+  #       maxUnavailable:
+  #         type: [string, integer]
+  # @schema
   # -- The update strategy to apply to the Deployment or DaemonSet
   ##
   updateStrategy: {}
@@ -241,6 +302,23 @@ controller:
   # -- `minReadySeconds` to avoid killing pods before we are ready
   ##
   minReadySeconds: 0
+  # @schema
+  # type: array
+  # items:
+  #   additionalProperties: false
+  #   type: object
+  #   properties:
+  #     effect:
+  #       enum: [NoSchedule, PreferNoSchedule, NoExecute]
+  #     key:
+  #       type: string
+  #     operator:
+  #       enum: [Equal, Exists]
+  #     tolerationSeconds:
+  #       type: integer
+  #     value:
+  #       type: string
+  # @schema
   # -- Node tolerations for server scheduling to nodes with taints
   ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
   ##
@@ -250,6 +328,9 @@ controller:
   #    value: "value"
   #    effect: "NoSchedule|PreferNoSchedule|NoExecute(1.6 only)"
 
+  # @schema
+  # $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.Affinity
+  # @schema
   # -- Affinity and anti-affinity rules for server scheduling to nodes
   ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
   ##
@@ -294,6 +375,11 @@ controller:
   #         - controller
   #     topologyKey: kubernetes.io/hostname
 
+  # @schema
+  # type: array
+  # items:
+  #   $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.TopologySpreadConstraint
+  # @schema
   # -- Topology spread constraints rely on node labels to identify the topology domain(s) that each Node is in.
   ## Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
   ##
@@ -324,6 +410,9 @@ controller:
   ##
   nodeSelector:
     kubernetes.io/os: linux
+  # @schema
+  # $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.Probe
+  # @schema
   ## Liveness and readiness probe values
   ## Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
   ##
@@ -349,6 +438,9 @@ controller:
     timeoutSeconds: 1
     successThreshold: 1
     failureThreshold: 5
+  # @schema
+  # $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.Probe
+  # @schema
   readinessProbe:
     httpGet:
       # should match container.healthCheckPath
@@ -381,6 +473,17 @@ controller:
   ## ref: https://github.com/kubernetes/ingress-nginx/issues/4735#issuecomment-551204903
   ## Ideally, there should be no limits.
   ## https://engineering.indeedblog.com/blog/2019/12/cpu-throttling-regression-fix/
+  # @schema
+  # type: object
+  # additionalProperties: false
+  # properties: {}
+  # patternProperties:
+  #   "(^limits$)|(^requests$)":
+  #     additionalProperties: false
+  #     type: object
+  #     patternProperties:
+  #       "(^cpu$)|(^memory$)|(ephemeral-storage$)|(hugepages-.+$)": { type: [string, integer] }
+  # @schema
   resources:
     ##  limits:
     ##    cpu: 100m
@@ -479,6 +582,9 @@ controller:
     annotations: {}
     # -- Labels to be added to both controller services.
     labels: {}
+    # @schema
+    # enum: [ClusterIP, NodePort, LoadBalancer]
+    # @schema
     # -- Type of the external controller service.
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
     type: LoadBalancer
@@ -492,6 +598,11 @@ controller:
     # -- Deprecated: Pre-defined IP address of the external controller service. Used by cloud providers to connect the resulting load balancer service to a pre-existing static IP.
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
     loadBalancerIP: ""
+    # @schema
+    # type: array
+    # items:
+    #   type: string
+    # @schema
     # -- Restrict access to the external controller service. Values must be CIDRs. Allows any source address by default.
     loadBalancerSourceRanges: []
     # -- Load balancer class of the external controller service. Used by cloud providers to select a load balancer implementation other than the cloud provider default.
@@ -501,21 +612,35 @@ controller:
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#load-balancer-nodeport-allocation
     # allocateLoadBalancerNodePorts: true
 
+    # @schema
+    # enum: [Cluster, Local, ""]
+    # @schema
     # -- External traffic policy of the external controller service. Set to "Local" to preserve source IP on providers supporting it.
     # Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
     externalTrafficPolicy: ""
+    # @schema
+    # enum: [ClientIP, None]
+    # @schema
     # -- Session affinity of the external controller service. Must be either "None" or "ClientIP" if set. Defaults to "None".
     # Ref: https://kubernetes.io/docs/reference/networking/virtual-ips/#session-affinity
-    sessionAffinity: ""
+    sessionAffinity: "None"
     # -- Specifies the health check node port (numeric port number) for the external controller service.
     # If not specified, the service controller allocates a port from your cluster's node port range.
     # Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
     # healthCheckNodePort: 0
 
+    # @schema
+    # enum: [SingleStack, PreferDualStack, RequireDualStack]
+    # @schema
     # -- Represents the dual-stack capabilities of the external controller service. Possible values are SingleStack, PreferDualStack or RequireDualStack.
     # Fields `ipFamilies` and `clusterIP` depend on the value of this field.
     # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
     ipFamilyPolicy: SingleStack
+    # @schema
+    # type: array
+    # items:
+    #   enum: [IPv4, IPv6]
+    # @schema
     # -- List of IP families (e.g. IPv4, IPv6) assigned to the external controller service. This field is usually assigned automatically based on cluster configuration and the `ipFamilyPolicy` field.
     # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
     ipFamilies:
@@ -530,8 +655,14 @@ controller:
       # -- Port the external HTTPS listener is published with.
       https: 443
     targetPorts:
+      # @schema
+      # type: [integer, string]
+      # @schema
       # -- Port of the ingress controller the external HTTP listener is mapped to.
       http: http
+      # @schema
+      # type: [integer, string]
+      # @schema
       # -- Port of the ingress controller the external HTTPS listener is mapped to.
       https: https
     # -- Declare the app protocol of the external HTTP and HTTPS listeners or not. Supersedes provider-specific annotations for declaring the backend protocol.
@@ -539,9 +670,9 @@ controller:
     appProtocol: true
     nodePorts:
       # -- Node port allocated for the external HTTP listener. If left empty, the service controller allocates one from the configured node port range.
-      http: ""
+      http: 0
       # -- Node port allocated for the external HTTPS listener. If left empty, the service controller allocates one from the configured node port range.
-      https: ""
+      https: 0
       # -- Node port mapping for external TCP listeners. If left empty, the service controller allocates them from the configured node port range.
       # Example:
       # tcp:
@@ -558,6 +689,9 @@ controller:
       # -- Annotations to be added to the internal controller service. Mandatory for the internal controller service to be created. Varies with the cloud service.
       # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
       annotations: {}
+      # @schema
+      # enum: [ClusterIP, NodePort, LoadBalancer, ""]
+      # @schema
       # -- Type of the internal controller service.
       # Defaults to the value of `controller.service.type`.
       # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
@@ -581,9 +715,15 @@ controller:
       # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#load-balancer-nodeport-allocation
       # allocateLoadBalancerNodePorts: true
 
+      # @schema
+      # enum: [Cluster, Local, ""]
+      # @schema
       # -- External traffic policy of the internal controller service. Set to "Local" to preserve source IP on providers supporting it.
       # Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
       externalTrafficPolicy: ""
+      # @schema
+      # enum: [ClientIP, None, ""]
+      # @schema
       # -- Session affinity of the internal controller service. Must be either "None" or "ClientIP" if set. Defaults to "None".
       # Ref: https://kubernetes.io/docs/reference/networking/virtual-ips/#session-affinity
       sessionAffinity: ""
@@ -592,14 +732,30 @@ controller:
       # Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
       # healthCheckNodePort: 0
 
+      # @schema
+      # enum: [SingleStack, PreferDualStack, RequireDualStack]
+      # @schema
       # -- Represents the dual-stack capabilities of the internal controller service. Possible values are SingleStack, PreferDualStack or RequireDualStack.
       # Fields `ipFamilies` and `clusterIP` depend on the value of this field.
       # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
       ipFamilyPolicy: SingleStack
+      # @schema
+      # type: array
+      # items:
+      #   enum: [IPv4, IPv6]
+      # @schema
       # -- List of IP families (e.g. IPv4, IPv6) assigned to the internal controller service. This field is usually assigned automatically based on cluster configuration and the `ipFamilyPolicy` field.
       # Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services
       ipFamilies:
         - IPv4
+      # @schema
+      # type: object
+      # properties:
+      #   http:
+      #     type: integer
+      #   https:
+      #     type: integer
+      # @schema
       ports: {}
       # -- Port the internal HTTP listener is published with.
       # Defaults to the value of `controller.service.ports.http`.
@@ -608,6 +764,14 @@ controller:
       # Defaults to the value of `controller.service.ports.https`.
       # https: 443
 
+      # @schema
+      # type: object
+      # properties:
+      #   http:
+      #     type: [integer, string]
+      #   https:
+      #     type: [integer, string]
+      # @schema
       targetPorts: {}
       # -- Port of the ingress controller the internal HTTP listener is mapped to.
       # Defaults to the value of `controller.service.targetPorts.http`.
@@ -621,9 +785,9 @@ controller:
       appProtocol: true
       nodePorts:
         # -- Node port allocated for the internal HTTP listener. If left empty, the service controller allocates one from the configured node port range.
-        http: ""
+        http: 0
         # -- Node port allocated for the internal HTTPS listener. If left empty, the service controller allocates one from the configured node port range.
-        https: ""
+        https: 0
         # -- Node port mapping for internal TCP listeners. If left empty, the service controller allocates them from the configured node port range.
         # Example:
         # tcp:
@@ -637,6 +801,11 @@ controller:
   # shareProcessNamespace enables process namespace sharing within the pod.
   # This can be used for example to signal log rotation using `kill -USR1` from a sidecar.
   shareProcessNamespace: false
+  # @schema
+  # type: array
+  # items:
+  #   $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.Container
+  # @schema
   # -- Additional containers to be added to the controller pod.
   # See https://github.com/lemonldap-ng-controller/lemonldap-ng-controller as example.
   extraContainers: []
@@ -671,6 +840,11 @@ controller:
   #  - name: copy-portal-skins
   #    emptyDir: {}
 
+  # @schema
+  # type: array
+  # items:
+  #   $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.Container
+  # @schema
   # -- Containers, which are run before the app containers are started.
   extraInitContainers: []
   # - name: init-myservice
@@ -718,6 +892,9 @@ controller:
       tag: v20240813-b933310d
       digest: sha256:f7604ac0547ed64d79b98d92133234e66c2c8aade3c1f4809fed5eec1fb7f922
       distroless: true
+    # @schema
+    # $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.SecurityContext
+    # @schema
     containerSecurityContext:
       runAsNonRoot: true
       # -- The image's default user, inherited from its base image `cgr.dev/chainguard/static`.
@@ -730,6 +907,17 @@ controller:
         drop:
           - ALL
       readOnlyRootFilesystem: true
+    # @schema
+    # type: object
+    # additionalProperties: false
+    # properties: {}
+    # patternProperties:
+    #   "(^limits$)|(^requests$)":
+    #     additionalProperties: false
+    #     type: object
+    #     patternProperties:
+    #       "(^cpu$)|(^memory$)|(ephemeral-storage$)|(hugepages-.+$)": { type: [string, integer] }
+    # @schema
     resources: {}
   admissionWebhooks:
     name: admission
@@ -740,6 +928,11 @@ controller:
     ## These annotations will be added to the ValidatingWebhookConfiguration and
     ## the Jobs Spec of the admission webhooks.
     enabled: true
+    # @schema
+    # type: array
+    # items:
+    #   $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.EnvVar
+    # @schema
     # -- Additional environment variables to set
     extraEnvs: []
     # extraEnvs:
@@ -748,13 +941,30 @@ controller:
     #       secretKeyRef:
     #         key: FOO
     #         name: secret-resource
+    # @schema
+    # enum: [Fail, Ignore]
+    # @schema
     # -- Admission Webhook failure policy to use
     failurePolicy: Fail
     # timeoutSeconds: 10
     port: 8443
     certificate: "/usr/local/certificates/cert"
     key: "/usr/local/certificates/key"
+    # @schema
+    # anyOf:
+    # - $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelector
+    # - type: object
+    #   additionalProperties: false
+    #   properties: {}
+    # @schema
     namespaceSelector: {}
+    # @schema
+    # anyOf:
+    # - $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelector
+    # - type: object
+    #   additionalProperties: false
+    #   properties: {}
+    # @schema
     objectSelector: {}
     # -- Labels to be added to admission webhooks
     labels: {}
@@ -767,9 +977,15 @@ controller:
       # loadBalancerIP: ""
       loadBalancerSourceRanges: []
       servicePort: 443
+      # @schema
+      # enum: [ClusterIP, NodePort, LoadBalancer]
+      # @schema
       type: ClusterIP
     createSecretJob:
       name: create
+      # @schema
+      # $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.SecurityContext
+      # @schema
       # -- Security context for secret creation containers
       securityContext:
         runAsNonRoot: true
@@ -782,6 +998,17 @@ controller:
           drop:
             - ALL
         readOnlyRootFilesystem: true
+      # @schema
+      # type: object
+      # additionalProperties: false
+      # properties: {}
+      # patternProperties:
+      #   "(^limits$)|(^requests$)":
+      #     additionalProperties: false
+      #     type: object
+      #     patternProperties:
+      #       "(^cpu$)|(^memory$)|(ephemeral-storage$)|(hugepages-.+$)": { type: [string, integer] }
+      # @schema
       resources: {}
       # limits:
       #   cpu: 10m
@@ -791,6 +1018,9 @@ controller:
       #   memory: 20Mi
     patchWebhookJob:
       name: patch
+      # @schema
+      # $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.SecurityContext
+      # @schema
       # -- Security context for webhook patch containers
       securityContext:
         runAsNonRoot: true
@@ -803,6 +1033,17 @@ controller:
           drop:
             - ALL
         readOnlyRootFilesystem: true
+      # @schema
+      # type: object
+      # additionalProperties: false
+      # properties: {}
+      # patternProperties:
+      #   "(^limits$)|(^requests$)":
+      #     additionalProperties: false
+      #     type: object
+      #     patternProperties:
+      #       "(^cpu$)|(^memory$)|(ephemeral-storage$)|(hugepages-.+$)": { type: [string, integer] }
+      # @schema
       resources: {}
     patch:
       enabled: true
@@ -814,6 +1055,9 @@ controller:
         ## repository:
         tag: v1.4.3
         digest: sha256:a320a50cc91bd15fd2d6fa6de58bd98c1bd64b9a6f926ce23a600d87043455a3
+        # @schema
+        # enum: [IfNotPresent, Always, Never]
+        # @schema
         pullPolicy: IfNotPresent
       # -- Provide a priority class name to the webhook patching job
       ##
@@ -825,9 +1069,29 @@ controller:
         enabled: false
       nodeSelector:
         kubernetes.io/os: linux
+      # @schema
+      # type: array
+      # items:
+      #   additionalProperties: false
+      #   type: object
+      #   properties:
+      #     effect:
+      #       enum: [NoSchedule, PreferNoSchedule, NoExecute]
+      #     key:
+      #       type: string
+      #     operator:
+      #       enum: [Equal, Exists]
+      #     tolerationSeconds:
+      #       type: integer
+      #     value:
+      #       type: string
+      # @schema
       tolerations: []
       # -- Labels to be added to patch job resources
       labels: {}
+      # @schema
+      # $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.SecurityContext
+      # @schema
       # -- Security context for secret creation & webhook patch pods
       securityContext: {}
       # -- Admission webhook patch job RBAC
@@ -875,6 +1139,9 @@ controller:
       # loadBalancerIP: ""
       loadBalancerSourceRanges: []
       servicePort: 10254
+      # @schema
+      # enum: [ClusterIP, NodePort, LoadBalancer]
+      # @schema
       type: ClusterIP
       # externalTrafficPolicy: ""
       # nodePort: ""
@@ -967,6 +1234,9 @@ defaultBackend:
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
     tag: "1.5"
+    # @schema
+    # enum: [IfNotPresent, Always, Never]
+    # @schema
     pullPolicy: IfNotPresent
     runAsNonRoot: true
     # nobody user -> uid 65534
@@ -983,9 +1253,17 @@ defaultBackend:
     create: true
     name: ""
     automountServiceAccountToken: true
+  # @schema
+  # type: array
+  # items:
+  #   $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.EnvVar
+  # @schema
   # -- Additional environment variables to set for defaultBackend pods
   extraEnvs: []
   port: 8080
+  # @schema
+  # $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.Probe
+  # @schema
   ## Readiness and liveness probes for default backend
   ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/
   ##
@@ -995,12 +1273,30 @@ defaultBackend:
     periodSeconds: 10
     successThreshold: 1
     timeoutSeconds: 5
+  # @schema
+  # $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.Probe
+  # @schema
   readinessProbe:
     failureThreshold: 6
     initialDelaySeconds: 0
     periodSeconds: 5
     successThreshold: 1
     timeoutSeconds: 5
+  # @schema
+  # type: object
+  # additionalProperties: false
+  # properties:
+  #   type:
+  #     enum: [Recreate, RollingUpdate, OnDelete]
+  #   rollingUpdate:
+  #     type: object
+  #     additionalProperties: false
+  #     properties:
+  #       maxSurge:
+  #         type: [string, integer]
+  #       maxUnavailable:
+  #         type: [string, integer]
+  # @schema
   # -- The update strategy to apply to the Deployment or DaemonSet
   ##
   updateStrategy: {}
@@ -1011,6 +1307,23 @@ defaultBackend:
   # -- `minReadySeconds` to avoid killing pods before we are ready
   ##
   minReadySeconds: 0
+  # @schema
+  # type: array
+  # items:
+  #   additionalProperties: false
+  #   type: object
+  #   properties:
+  #     effect:
+  #       enum: [NoSchedule, PreferNoSchedule, NoExecute]
+  #     key:
+  #       type: string
+  #     operator:
+  #       enum: [Equal, Exists]
+  #     tolerationSeconds:
+  #       type: integer
+  #     value:
+  #       type: string
+  # @schema
   # -- Node tolerations for server scheduling to nodes with taints
   ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
   ##
@@ -1020,6 +1333,9 @@ defaultBackend:
   #    value: "value"
   #    effect: "NoSchedule|PreferNoSchedule|NoExecute(1.6 only)"
 
+  # @schema
+  # $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.Affinity
+  # @schema
   # -- Affinity and anti-affinity rules for server scheduling to nodes
   ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
   affinity: {}
@@ -1063,6 +1379,11 @@ defaultBackend:
   #         - default-backend
   #     topologyKey: kubernetes.io/hostname
 
+  # @schema
+  # type: array
+  # items:
+  #   $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.TopologySpreadConstraint
+  # @schema
   # -- Topology spread constraints rely on node labels to identify the topology domain(s) that each Node is in.
   # Ref.: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
   topologySpreadConstraints: []
@@ -1082,8 +1403,14 @@ defaultBackend:
   #   topologyKey: kubernetes.io/hostname
   #   maxSkew: 1
   #   whenUnsatisfiable: ScheduleAnyway
+  # @schema
+  # $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.PodSecurityContext
+  # @schema
   # -- Security context for default backend pods
   podSecurityContext: {}
+  # @schema
+  # $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.SecurityContext
+  # @schema
   # -- Security context for default backend containers
   containerSecurityContext: {}
   # -- Labels to add to the pod container metadata
@@ -1100,6 +1427,17 @@ defaultBackend:
   podAnnotations: {}
   replicaCount: 1
   minAvailable: 1
+  # @schema
+  # type: object
+  # additionalProperties: false
+  # properties: {}
+  # patternProperties:
+  #   "(^limits$)|(^requests$)":
+  #     additionalProperties: false
+  #     type: object
+  #     patternProperties:
+  #       "(^cpu$)|(^memory$)|(ephemeral-storage$)|(hugepages-.+$)": { type: [string, integer] }
+  # @schema
   resources: {}
   # limits:
   #   cpu: 10m
@@ -1108,16 +1446,43 @@ defaultBackend:
   #   cpu: 10m
   #   memory: 20Mi
 
+  # @schema
+  # type: array
+  # items:
+  #   $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.VolumeMount
+  # @schema
   extraVolumeMounts: []
   ## Additional volumeMounts to the default backend container.
   #  - name: copy-portal-skins
-  #   mountPath: /var/lib/lemonldap-ng/portal/skins
+  #    mountPath: /var/lib/lemonldap-ng/portal/skins
 
+  # @schema
+  # type: array
+  # items:
+  #   $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.3/_definitions.json#/definitions/io.k8s.api.core.v1.Volume
+  # @schema
   extraVolumes: []
   ## Additional volumes to the default backend pod.
   #  - name: copy-portal-skins
   #    emptyDir: {}
 
+  # @schema
+  # type: array
+  # items:
+  #   type: object
+  #   additionalProperties: false
+  #   properties:
+  #     name:
+  #       type: string
+  #     labels:
+  #       type: object
+  #       additionalProperties:
+  #         type: string
+  #     data:
+  #       type: object
+  #       additionalProperties:
+  #         type: string
+  # @schema
   extraConfigMaps: []
   ## Additional configmaps to the default backend pod.
   #  - name: my-extra-configmap-1
@@ -1155,6 +1520,9 @@ defaultBackend:
     # loadBalancerIP: ""
     loadBalancerSourceRanges: []
     servicePort: 80
+    # @schema
+    # enum: [ClusterIP, NodePort, LoadBalancer]
+    # @schema
     type: ClusterIP
   priorityClassName: ""
   # -- Labels to be added to the default backend resources
@@ -1173,6 +1541,15 @@ serviceAccount:
   automountServiceAccountToken: true
   # -- Annotations for the controller service account
   annotations: {}
+# @schema
+# type: array
+# items:
+#   additionalProperties: false
+#   type: object
+#   properties:
+#     name:
+#       type: string
+# @schema
 # -- Optional array of imagePullSecrets containing private registry credentials
 ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []

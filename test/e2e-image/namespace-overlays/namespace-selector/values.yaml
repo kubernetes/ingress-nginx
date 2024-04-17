@@ -8,8 +8,8 @@ controller:
     digest:
     digestChroot:
   containerPort:
-    http: "1080"
-    https: "1443"
+    http: 1080
+    https: 1443
 
   extraArgs:
     http-port: "1080"
