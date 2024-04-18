@@ -11,7 +11,7 @@ icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/5
 keywords:
   - ingress
   - nginx
-kubeVersion: '>=1.20.0-0'
+kubeVersion: '>=1.21.0-0'
 maintainers:
   - name: Gacko
   - name: rikatz
