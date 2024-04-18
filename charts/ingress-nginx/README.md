@@ -10,7 +10,7 @@ This chart bootstraps an ingress-nginx deployment on a [Kubernetes](http://kuber
 
 ## Requirements
 
-Kubernetes: `>=1.20.0-0`
+Kubernetes: `>=1.21.0-0`
 
 ## Get Repo Info
 
