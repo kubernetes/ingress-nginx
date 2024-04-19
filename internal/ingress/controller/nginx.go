@@ -202,6 +202,8 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 	}
 
 	for _, f := range filesToWatch {
+		// This redeclaration is necessary for the closure to get the correct value for the iteration in go versions <1.22
+		// See https://go.dev/blog/loopvar-preview
 		f := f
 		_, err = file.NewFileWatcher(f, func() {
 			klog.InfoS("File change detected. Reloading NGINX", "path", f)
