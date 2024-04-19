@@ -137,7 +137,7 @@ func IsValidationError(e error) bool {
 	return ok
 }
 
-// NewValidationError returns a new LocationDenied error
+// NewRiskyAnnotations returns a new LocationDenied error
 func NewRiskyAnnotations(name string) error {
 	return RiskyAnnotationError{
 		Reason: fmt.Errorf("annotation group %s contains risky annotation based on ingress configuration", name),
