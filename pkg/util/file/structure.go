@@ -31,11 +31,16 @@ const (
 	// The name of each file is <namespace>-<secret name>.pem. The content is the concatenated
 	// certificate and key.
 	DefaultSSLDirectory = "/etc/ingress-controller/ssl"
+
+	OpenTelemetry = "/etc/ingress-controller/telemetry"
+	TempDir = "/etc/ingress-controller/tempconf"
 )
 
 var directories = []string{
 	DefaultSSLDirectory,
 	AuthDirectory,
+	OpenTelemetry,
+	TempDir,
 }
 
 // CreateRequiredDirectories verifies if the required directories to

@@ -1,6 +1,8 @@
 package nginx
 
 import (
+	"errors"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -12,7 +14,9 @@ import (
 const (
 	defBinary = "/usr/bin/nginx"
 	CfgPath   = "/etc/nginx/conf/nginx.conf"
+	initialConf = "/etc/nginx/nginx.conf"
 	TempDir = "/etc/ingress-controller/tempconf"
+	ReadyFile = TempDir + "/ready"
 )
 
 // NginxExecTester defines the interface to execute
@@ -45,7 +49,7 @@ func NewNginxCommand() NginxCommand {
 }
 
 // ExecCommand instanciates an exec.Cmd object to call nginx program
-func (nc NginxCommand) execCommand(args ...string) *exec.Cmd {
+func (nc NginxCommand) execCommand(start bool, args ...string) *exec.Cmd {
 	cmdArgs := []string{}
 
 	cmdArgs = append(cmdArgs, "-c", CfgPath)
@@ -60,7 +64,21 @@ func (nc NginxCommand) execCommand(args ...string) *exec.Cmd {
 }
 
 func (nc NginxCommand) Start(errch chan error) error {
-	cmd := nc.execCommand()
+	klog.Infof("starting NGINX")
+	_, err := os.Stat(CfgPath)
+	if err != nil && errors.Is(err, fs.ErrNotExist) {
+		orig, err := os.ReadFile(initialConf)
+		if err != nil {
+			return err
+		}
+		if err = os.WriteFile(CfgPath, orig, 0644); err != nil {
+ 			return err
+    	}
+	}
+	if err := os.WriteFile(ReadyFile, []byte("OK"), 0644); err != nil {
+		return err
+	}
+	cmd := nc.execCommand(true)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Start(); err != nil {
@@ -74,12 +92,12 @@ func (nc NginxCommand) Start(errch chan error) error {
 }
 
 func (nc NginxCommand) Reload() ([]byte, error) {
-	cmd := nc.execCommand("-s", "reload")
+	cmd := nc.execCommand(false, "-s", "reload")
 	return cmd.CombinedOutput()
 }
 
 func (nc NginxCommand) Stop() error {
-	cmd := nc.execCommand("-s", "quit")
+	cmd := nc.execCommand(false, "-s", "quit")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()

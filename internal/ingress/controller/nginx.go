@@ -183,7 +183,7 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 		klog.Fatalf("Error creating file watcher for %v: %v", nginx.TemplatePath, err)
 	}
 
-	filesToWatch := []string{}
+	filesToWatch := []string{nginxdataplane.ReadyFile}
 
 	if err := os.Mkdir("/etc/ingress-controller/geoip/", 0o755); err != nil && !os.IsExist(err) {
 		klog.Fatalf("Error creating geoip dir: %v", err)
@@ -420,7 +420,19 @@ func (n *NGINXController) Stop() error {
 }
 
 func (n *NGINXController) start() {
-	// TODO: do a better retry of start before failing 
+
+	// TODO: Start should ping the http and https ports
+	// First pass should wait it to be ready for X seconds, otherwise fail
+	// Second pass should open a goroutine and keep trying / pinging http port.
+	// After x retries it should state nginx is dead and restart everything
+	// Right now, if Dataplane dies, the dataplane container alone will be restarted
+	// This means the default configuration will come back again and will only be reload
+	// in case a full reload is requested.
+	// Another approach is to filewatch nginx.conf and if not controller changing it, reload
+	// Another problem here is: we are just re-creating the file in case it does not exists, 
+	// so dynamic reconfiguration will not be detected.
+	// We need a better way for controller to detect dataplane dying and get new information
+	// again
 	if err := n.command.Start(n.ngxErrCh); err != nil {
 		n.stopCh <- struct{}{}
 		klog.Fatalf("error starting NGINX: %s", err)
