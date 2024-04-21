@@ -1147,7 +1147,7 @@ stream {
         {{ end }}
 
         location {{ $path }} {
-            {{ $ing := (getIngressInformation $location.Ingress $server.Hostname $location.IngressPath) }}
+            {{ $ing := (getIngressInformation $location.Ingress $server.Hostname $location.IngressPath $location.PathType) }}
             set $namespace      {{ $ing.Namespace | quote}};
             set $ingress_name   {{ $ing.Rule | quote }};
             set $service_name   {{ $ing.Service | quote }};
