@@ -33,12 +33,18 @@ var (
 
 // String returns information about the release.
 func String() string {
+	ngxVer := nginx.Version()
+	controllerType := "controller"
+	if ngxVer != "N/A" {
+		ngxVer = fmt.Sprintf("NGINX:         %s", ngxVer)
+		controllerType = "dataplane"
+	}
 	return fmt.Sprintf(`-------------------------------------------------------------------------------
-NGINX Ingress controller
+NGINX Ingress %s
   Release:       %v
   Build:         %v
   Repository:    %v
-  %v
+  %s
 -------------------------------------------------------------------------------
-`, RELEASE, COMMIT, REPO, nginx.Version())
+`, controllerType, RELEASE, COMMIT, REPO, ngxVer)
 }

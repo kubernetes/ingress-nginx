@@ -22,23 +22,6 @@ func NewNginxRemote(host string) NginxExecutor {
 }
 
 func (nc NginxRemote) Start(errch chan error) error {
-	/*getStart, err := url.JoinPath(nc.host, "start") // TODO: Turn this path a constant on dataplane
-	if err != nil {
-		return err
-	}
-	resp, err := http.Get(getStart)
-	if err != nil {
-		return err
-	}
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error executing start: %s", string(body))
-	}*/
-
-	// TODO: Add a ping/watcher to backend and populate error channel
 	return nil
 }
 

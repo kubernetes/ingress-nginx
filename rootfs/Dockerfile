@@ -39,7 +39,7 @@ RUN apk update \
   && adduser -S -D -H -u 101 -h /usr/local/nginx \
   -s /sbin/nologin -G www-data -g www-data www-data
 
-COPY --chown=www-data:www-data etc /etc
+COPY --chown=www-data:www-data etc/nginx/template /etc/nginx/template
 
 COPY --chown=www-data:www-data bin/${TARGETARCH}/dbg /
 COPY --chown=www-data:www-data bin/${TARGETARCH}/nginx-ingress-controller /
@@ -54,9 +54,6 @@ RUN bash -xeu -c ' \
     /etc/ingress-controller/geoip \
     /etc/ingress-controller/telemetry \
     /etc/ingress-controller/tempconf \
-    /etc/nginx/conf \
-    /var/log \
-    /var/log/nginx \
     /tmp/nginx \
   ); \
   for dir in "${writeDirs[@]}"; do \
@@ -74,9 +71,4 @@ RUN apk add --no-cache libcap \
   && setcap -v cap_net_bind_service=+ep /nginx-ingress-controller \
   && apk del libcap
 USER www-data
-
-# Create symlinks to redirect nginx logs to stdout and stderr docker log collector
-RUN  ln -sf /dev/stdout /var/log/nginx/access.log \
-  && ln -sf /dev/stderr /var/log/nginx/error.log
-
 ENTRYPOINT ["/nginx-ingress-controller"]

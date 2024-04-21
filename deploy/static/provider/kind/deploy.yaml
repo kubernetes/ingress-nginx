@@ -493,7 +493,7 @@ spec:
               fieldPath: metadata.namespace
         - name: LD_PRELOAD
           value: /usr/local/lib/libmimalloc.so
-        image: gcr.io/k8s-staging-ingress-nginx/dataplane:v0.0.16
+        image: gcr.io/k8s-staging-ingress-nginx/dataplane:v0.0.21
         imagePullPolicy: IfNotPresent
         lifecycle:
           preStop:
@@ -534,6 +534,8 @@ spec:
           name: ingress-controller
         - mountPath: /etc/nginx/conf
           name: nginx-conf
+        - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+          name: emptysecret
       dnsPolicy: ClusterFirst
       nodeSelector:
         ingress-ready: "true"
@@ -557,6 +559,9 @@ spec:
       - name: nginx-conf
         emptyDir:
           sizeLimit: 500Mi
+      - name: emptysecret
+        emptyDir:
+          sizeLimit: 1Mi
 ---
 apiVersion: batch/v1
 kind: Job

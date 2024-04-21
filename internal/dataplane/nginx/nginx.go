@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"syscall"
+	"time"
 
 	"k8s.io/klog/v2"
 )
@@ -75,9 +76,7 @@ func (nc NginxCommand) Start(errch chan error) error {
  			return err
     	}
 	}
-	if err := os.WriteFile(ReadyFile, []byte("OK"), 0644); err != nil {
-		return err
-	}
+	
 	cmd := nc.execCommand(true)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -88,6 +87,10 @@ func (nc NginxCommand) Start(errch chan error) error {
 	go func() {
 		errch <- cmd.Wait()
 	}()
+	now := time.Now().String()
+	if err := os.WriteFile(ReadyFile, []byte(now), 0644); err != nil {
+		return err
+	}
 	return nil
 }
 

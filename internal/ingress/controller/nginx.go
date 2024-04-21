@@ -183,7 +183,21 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 		klog.Fatalf("Error creating file watcher for %v: %v", nginx.TemplatePath, err)
 	}
 
-	filesToWatch := []string{nginxdataplane.ReadyFile}
+	// With this test, we will check if the readiness file is not changed. This file is always created or 
+	// changed by dataplane on its start. In case the dataplane dies and restarts, the file will be 
+	// updated with the current time. 
+	// This watcher will then detect a change on the file, meaning controller should restart and reconfigure
+	// everything.
+	// It should be guaranteed by the dataplane that this file is changed just once 
+	// NGINX finishes starting
+	_, err = file.NewFileWatcherUpdateOnly(nginxdataplane.ReadyFile, true, func() {
+		klog.Fatalf("readiness file changed, restarting contorller")
+	})
+	if err != nil {
+		klog.Fatalf("error creating file watcher for %v: %v", nginxdataplane.ReadyFile, err)
+	}
+
+	filesToWatch := []string{}
 
 	if err := os.Mkdir("/etc/ingress-controller/geoip/", 0o755); err != nil && !os.IsExist(err) {
 		klog.Fatalf("Error creating geoip dir: %v", err)

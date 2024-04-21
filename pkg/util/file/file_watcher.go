@@ -37,16 +37,23 @@ type OSFileWatcher struct {
 	watcher *fsnotify.Watcher
 	// onEvent callback to be invoked after the file being watched changes
 	onEvent func()
+	updateOnly bool
+}
+
+// NewFileWatcher creates a new FileWatcher
+func NewFileWatcherUpdateOnly(file string, updateOnly bool, onEvent func()) (Watcher, error) {
+	fw := OSFileWatcher{
+		file:    file,
+		onEvent: onEvent,
+		updateOnly: updateOnly,
+	}
+	err := fw.watch()
+	return fw, err
 }
 
 // NewFileWatcher creates a new FileWatcher
 func NewFileWatcher(file string, onEvent func()) (Watcher, error) {
-	fw := OSFileWatcher{
-		file:    file,
-		onEvent: onEvent,
-	}
-	err := fw.watch()
-	return fw, err
+	return NewFileWatcherUpdateOnly(file, false, onEvent)
 }
 
 // Close ends the watch
@@ -72,7 +79,7 @@ func (f *OSFileWatcher) watch() error {
 		for {
 			select {
 			case event := <-watcher.Events:
-				if event.Has(fsnotify.Create) ||
+				if (!f.updateOnly && event.Has(fsnotify.Create)) ||
 					event.Has(fsnotify.Write) {
 					if finfo, err := os.Lstat(event.Name); err != nil {
 						log.Printf("can not lstat file: %v\n", err)

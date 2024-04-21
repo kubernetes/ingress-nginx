@@ -261,7 +261,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 	parser.EnableAnnotationValidation = *enableAnnotationValidation
 
 	// check port collisions
-	if !ing_net.IsPortAvailable(*httpPort) {
+	/*if !ing_net.IsPortAvailable(*httpPort) {
 		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --http-port", *httpPort)
 	}
 
@@ -283,7 +283,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 
 	if !ing_net.IsPortAvailable(*profilerPort) {
 		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --profiler-port", *profilerPort)
-	}
+	}*/
 
 	nginx.StatusPort = *statusPort
 	nginx.StreamPort = *streamPort

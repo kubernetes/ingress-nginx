@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -30,13 +31,13 @@ import (
 	dataplanenginx "k8s.io/ingress-nginx/cmd/dataplane/pkg/nginx"
 	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/pkg/metrics"
+	"k8s.io/ingress-nginx/version"
 )
 
 func main() {
 	klog.InitFlags(nil)
 
-	//fmt.Println(version.String())
-	//var err error
+	fmt.Println(version.String())
 
 	reg := prometheus.NewRegistry()
 
