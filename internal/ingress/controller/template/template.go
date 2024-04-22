@@ -37,7 +37,6 @@ import (
 	text_template "text/template"
 
 	networkingv1 "k8s.io/api/networking/v1"
-	v1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog/v2"
 
@@ -1073,7 +1072,7 @@ func getIngressInformation(i, h, p, t interface{}) *ingressInformation {
 		return &ingressInformation{}
 	}
 
-	ingressPathType, ok := t.(*v1.PathType)
+	ingressPathType, ok := t.(*networkingv1.PathType)
 	if !ok {
 		klog.Errorf("expected a '*v1.PathType' type but %T was returned", t)
 	}
