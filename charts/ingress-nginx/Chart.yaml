@@ -11,9 +11,9 @@ description: Ingress controller for Kubernetes using NGINX as a reverse proxy an
 home: https://github.com/kubernetes/ingress-nginx
 icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
 keywords:
-- ingress
-- nginx
-kubeVersion: '>=1.20.0-0'
+  - ingress
+  - nginx
+kubeVersion: '>=1.21.0-0'
 maintainers:
 - name: Gacko
 - name: rikatz
