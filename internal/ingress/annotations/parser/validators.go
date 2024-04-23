@@ -190,7 +190,7 @@ func ValidateServiceName(value string) error {
 	return nil
 }
 
-// checkAnnotations will check each annotation for:
+// checkAnnotation will check each annotation for:
 // 1 - Does it contain the internal validation and docs config?
 // 2 - Does the ingress contains annotations? (validate null pointers)
 // 3 - Does it contains a validator? Should it contain a validator (not containing is a bug!)
