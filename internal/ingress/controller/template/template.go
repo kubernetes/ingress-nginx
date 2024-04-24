@@ -497,7 +497,7 @@ func buildResolvers(res, disableIpv6 interface{}) string {
 }
 
 func needsRewrite(location *ingress.Location) bool {
-	if len(location.Rewrite.Target) > 0 && location.Rewrite.Target != location.Path {
+	if location.Rewrite.Target != "" && location.Rewrite.Target != location.Path {
 		return true
 	}
 	return false
@@ -771,10 +771,10 @@ func buildProxyPass(_ string, b, loc interface{}) string {
 		return defProxyPass
 	}
 
-	if len(location.Rewrite.Target) > 0 {
+	if location.Rewrite.Target != "" {
 		var xForwardedPrefix string
 
-		if len(location.XForwardedPrefix) > 0 {
+		if location.XForwardedPrefix != "" {
 			xForwardedPrefix = fmt.Sprintf("%s X-Forwarded-Prefix %q;\n", proxySetHeader(location), location.XForwardedPrefix)
 		}
 
@@ -1501,13 +1501,8 @@ func httpsListener(addresses []string, co string, tc *config.TemplateConfig) []s
 			}
 		}
 
-		lo = append(lo, co, "ssl")
+		lo = append(lo, co, "ssl;")
 
-		if tc.Cfg.UseHTTP2 {
-			lo = append(lo, "http2")
-		}
-
-		lo = append(lo, ";")
 		out = append(out, strings.Join(lo, " "))
 	}
 
@@ -1743,7 +1738,7 @@ func buildCorsOriginRegex(corsOrigins []string) string {
 	originsRegex := "if ($http_origin ~* ("
 	for i, origin := range corsOrigins {
 		originTrimmed := strings.TrimSpace(origin)
-		if len(originTrimmed) > 0 {
+		if originTrimmed != "" {
 			builtOrigin := buildOriginRegex(originTrimmed)
 			originsRegex += builtOrigin
 			if i != len(corsOrigins)-1 {

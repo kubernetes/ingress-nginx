@@ -329,7 +329,7 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 			continue
 		}
 
-		if sc.reportStatusClasses && len(stats.Status) > 0 {
+		if sc.reportStatusClasses && stats.Status != "" {
 			stats.Status = fmt.Sprintf("%cxx", stats.Status[0])
 		}
 

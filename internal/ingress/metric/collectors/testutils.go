@@ -50,7 +50,7 @@ func GatherAndCompare(_ prometheus.Collector, expected string, metricNames []str
 	if !reflect.DeepEqual(metrics, normalizeMetricFamilies(expectedMetrics)) {
 		// Encode the gathered output to the readable text format for comparison.
 		var buf1 bytes.Buffer
-		enc := expfmt.NewEncoder(&buf1, expfmt.FmtText)
+		enc := expfmt.NewEncoder(&buf1, expfmt.NewFormat(expfmt.TypeTextPlain))
 		for _, mf := range metrics {
 			if err := enc.Encode(mf); err != nil {
 				return fmt.Errorf("encoding result failed: %s", err)
@@ -59,7 +59,7 @@ func GatherAndCompare(_ prometheus.Collector, expected string, metricNames []str
 		// Encode normalized expected metrics again to generate them in the same ordering
 		// the registry does to spot differences more easily.
 		var buf2 bytes.Buffer
-		enc = expfmt.NewEncoder(&buf2, expfmt.FmtText)
+		enc = expfmt.NewEncoder(&buf2, expfmt.NewFormat(expfmt.TypeTextPlain))
 		for _, mf := range normalizeMetricFamilies(expectedMetrics) {
 			if err := enc.Encode(mf); err != nil {
 				return fmt.Errorf("encoding result failed: %s", err)
@@ -109,7 +109,7 @@ func removeUnusedWhitespace(s string) string {
 	for _, l := range lines {
 		trimmedLine = strings.TrimSpace(l)
 
-		if len(trimmedLine) > 0 {
+		if trimmedLine != "" {
 			trimmedLines = append(trimmedLines, trimmedLine)
 		}
 	}

@@ -36,7 +36,7 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "conf",
 		Short: "Inspect the generated nginx.conf",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			host, err := cmd.Flags().GetString("host")
 			if err != nil {
 				return err

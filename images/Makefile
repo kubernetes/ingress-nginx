@@ -23,6 +23,11 @@ INIT_BUILDX=$(DIR)/../hack/init-buildx.sh
 
 BASE_IMAGE = $(shell cat $(DIR)/../NGINX_BASE)
 
+# The env below is called GO_VERSION and not GOLANG_VERSION because 
+# the gcb image we use to build already defines GOLANG_VERSION and is a 
+# really old version
+GO_VERSION = $(shell cat $(DIR)/../GOLANG_VERSION)
+
 REGISTRY ?= local
 NAME ?=
 
@@ -52,6 +57,7 @@ build: precheck ensure-buildx
 		--label=org.opencontainers.image.licenses=Apache-2.0 \
 		--label=org.opencontainers.image.description="Ingress NGINX $(NAME) image" \
 		--build-arg BASE_IMAGE=$(BASE_IMAGE) \
+		--build-arg GOLANG_VERSION=$(GO_VERSION) \
 		--platform=${PLATFORMS} $(OUTPUT) \
 		--progress=$(PROGRESS) \
 		--pull $(EXTRAARGS) \

@@ -2,10 +2,9 @@ name: golangci-lint
 
 on:
   pull_request:
-    branches:
-      - "*"
     paths:
       - '**/*.go'
+      - '.github/workflows/golangci-lint.yml'
 
 permissions:
   contents: read
@@ -16,16 +15,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      
+        uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4.1.3
+
+      - name: Get go version
+        run: echo "GOLANG_VERSION=$(cat GOLANG_VERSION)" >> $GITHUB_ENV
+
       - name: Set up Go
         id: go
         uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
-          go-version: '1.21.5'
+          go-version: ${{ env.GOLANG_VERSION }}
           check-latest: true
-      
+
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@3a919529898de77ec3da873e3063ca4b10e7f5cc # v3.7.0
+        uses: golangci/golangci-lint-action@3cfe3a4abbb849e10058ce4af15d205b6da42804 # v4.0.0
         with:
-          version: v1.55.2
+          version: v1.56

@@ -419,7 +419,6 @@ spec:
     operator: "Exists"
     effect: NoSchedule
 ```
-
 * update the namespace if applicable/desired
 * replace `##_NODE_NAME_##` with the problematic node (or remove nodeSelector section if problem is not confined to one node)
 * replace `##_CONTROLLER_IMAGE_##` with the same image as in use by your ingress-nginx deployment
@@ -446,7 +445,6 @@ $ capsh --decode=0000000000000400
 ## Create a test pod as root
 (Note, this may be restricted by PodSecurityPolicy, PodSecurityAdmission/Standards, OPA Gatekeeper, etc. in which case you will need to do the appropriate workaround for testing, e.g. deploy in a new namespace without the restrictions.)
 To test further you may want to install additional utilities, etc.  Modify the pod yaml by:
-
 * changing runAsUser from 101 to 0
 * removing the "drop..ALL" section from the capabilities.
 

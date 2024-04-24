@@ -27,6 +27,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authtls"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/connection"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/customheaders"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/fastcgi"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/globalratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipallowlist"
@@ -263,7 +264,8 @@ type Location struct {
 	BasicDigestAuth auth.Config `json:"basicDigestAuth,omitempty"`
 	// Denied returns an error when this location cannot not be allowed
 	// Requesting a denied location should return HTTP code 403.
-	Denied *string `json:"denied,omitempty"`
+	Denied        *string              `json:"denied,omitempty"`
+	CustomHeaders customheaders.Config `json:"customHeaders,omitempty"`
 	// CorsConfig returns the Cors Configuration for the ingress rule
 	// +optional
 	CorsConfig cors.Config `json:"corsConfig,omitempty"`

@@ -48,16 +48,6 @@ metadata:
 
 EOF
 
-OTEL_MODULE=$(cat <<EOF
-  opentelemetry:
-    enabled: true
-EOF
-)
-
-if [[ "$NAMESPACE_OVERLAY" != "enable-opentelemetry" ]]; then
-  OTEL_MODULE=""
-fi
-
 # Use the namespace overlay if it was requested
 if [[ ! -z "$NAMESPACE_OVERLAY" && -d "$DIR/namespace-overlays/$NAMESPACE_OVERLAY" ]]; then
     echo "Namespace overlay $NAMESPACE_OVERLAY is being used for namespace $NAMESPACE"
@@ -99,6 +89,8 @@ controller:
   terminationGracePeriodSeconds: 1
   admissionWebhooks:
     enabled: false
+  metrics:
+    enabled: true
 
   # ulimit -c unlimited
   # mkdir -p /tmp/coredump

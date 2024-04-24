@@ -199,14 +199,16 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 		filesToWatch = append(filesToWatch, path)
 		return nil
 	})
-
 	if err != nil {
 		klog.Fatalf("Error creating file watchers: %v", err)
 	}
 
 	for _, f := range filesToWatch {
+		// This redeclaration is necessary for the closure to get the correct value for the iteration in go versions <1.22
+		// See https://go.dev/blog/loopvar-preview
+		f := f
 		_, err = file.NewFileWatcher(f, func() {
-			klog.InfoS("File changed detected. Reloading NGINX", "path", f)
+			klog.InfoS("File change detected. Reloading NGINX", "path", f)
 			n.syncQueue.EnqueueTask(task.GetDummyObject("file-change"))
 		})
 		if err != nil {
@@ -275,26 +277,29 @@ func (n *NGINXController) Start() {
 	// TODO: For now, as the the IngressClass logics has changed, is up to the
 	// cluster admin to create different Leader Election IDs.
 	// Should revisit this in a future
-	electionID := n.cfg.ElectionID
 
-	setupLeaderElection(&leaderElectionConfig{
-		Client:     n.cfg.Client,
-		ElectionID: electionID,
-		OnStartedLeading: func(stopCh chan struct{}) {
-			if n.syncStatus != nil {
-				go n.syncStatus.Run(stopCh)
-			}
+	if !n.cfg.DisableLeaderElection {
+		electionID := n.cfg.ElectionID
+		setupLeaderElection(&leaderElectionConfig{
+			Client:      n.cfg.Client,
+			ElectionID:  electionID,
+			ElectionTTL: n.cfg.ElectionTTL,
+			OnStartedLeading: func(stopCh chan struct{}) {
+				if n.syncStatus != nil {
+					go n.syncStatus.Run(stopCh)
+				}
 
-			n.metricCollector.OnStartedLeading(electionID)
-			// manually update SSL expiration metrics
-			// (to not wait for a reload)
-			n.metricCollector.SetSSLExpireTime(n.runningConfig.Servers)
-			n.metricCollector.SetSSLInfo(n.runningConfig.Servers)
-		},
-		OnStoppedLeading: func() {
-			n.metricCollector.OnStoppedLeading(electionID)
-		},
-	})
+				n.metricCollector.OnStartedLeading(electionID)
+				// manually update SSL expiration metrics
+				// (to not wait for a reload)
+				n.metricCollector.SetSSLExpireTime(n.runningConfig.Servers)
+				n.metricCollector.SetSSLInfo(n.runningConfig.Servers)
+			},
+			OnStoppedLeading: func() {
+				n.metricCollector.OnStoppedLeading(electionID)
+			},
+		})
+	}
 
 	cmd := n.command.ExecCommand()
 

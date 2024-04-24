@@ -3,9 +3,8 @@ templates:
   - controller-keda.yaml
 
 tests:
-  - it: should create a ScaledObject if `controller.kind` is "Deployment" and `controller.keda.enabled` is true
+  - it: should create a ScaledObject if `controller.keda.enabled` is true
     set:
-      controller.kind: Deployment
       controller.keda.enabled: true
     asserts:
       - hasDocuments:
@@ -15,3 +14,18 @@ tests:
       - equal:
           path: metadata.name
           value: RELEASE-NAME-ingress-nginx-controller
+
+  - it: should not create a ScaledObject if `controller.keda.enabled` is true and `controller.autoscaling.enabled` is true
+    set:
+      controller.keda.enabled: true
+      controller.autoscaling.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not create a ScaledObject if `controller.kind` is "DaemonSet"
+    set:
+      controller.kind: DaemonSet
+    asserts:
+      - hasDocuments:
+          count: 0

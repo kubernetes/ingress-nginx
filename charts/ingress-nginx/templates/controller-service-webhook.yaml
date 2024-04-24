@@ -31,7 +31,7 @@ spec:
     - name: https-webhook
       port: 443
       targetPort: webhook
-    {{- if semverCompare ">=1.20" .Capabilities.KubeVersion.Version }}
+    {{- if semverCompare ">=1.20.0-0" .Capabilities.KubeVersion.Version }}
       appProtocol: https
     {{- end }}
   selector:

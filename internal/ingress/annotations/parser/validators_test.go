@@ -104,7 +104,7 @@ func Test_checkAnnotation(t *testing.T) {
 				},
 				fields: AnnotationFields{
 					"otherannotation": AnnotationConfig{
-						Validator: func(value string) error { return nil },
+						Validator: func(_ string) error { return nil },
 					},
 				},
 			},
