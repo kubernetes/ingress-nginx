@@ -60,6 +60,12 @@
 {{- if .Values.controller.enableTopologyAwareRouting }}
 - --enable-topology-aware-routing=true
 {{- end }}
+{{- if .Values.controller.disableLeaderElection }}
+- --disable-leader-election=true
+{{- end }}
+{{- if .Values.controller.electionTTL }}
+- --election-ttl={{ .Values.controller.electionTTL }}
+{{- end }}
 {{- range $key, $value := .Values.controller.extraArgs }}
 {{- /* Accept keys without values or with false as value */}}
 {{- if eq ($value | quote | len) 2 }}
