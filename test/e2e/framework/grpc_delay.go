@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//nolint:dupl // Ignore dupl errors for similar test case
 package framework
 
 import (
