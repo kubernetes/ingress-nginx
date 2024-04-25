@@ -61,7 +61,7 @@ func (f *Framework) NewNewGRPCBinDelayDeploymentWithReplicas(replicas int32) {
 					Containers: []corev1.Container{
 						{
 							Name:  name,
-							Image: "ghcr.io/anddd7/grpcbin:v1.0.5",
+							Image: "ghcr.io/anddd7/grpcbin:v1.0.6",
 							Env:   []corev1.EnvVar{},
 							Ports: []corev1.ContainerPort{
 								{
