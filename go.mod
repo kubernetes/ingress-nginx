@@ -48,6 +48,7 @@ require (
 )
 
 require (
+	github.com/Anddd7/pb v0.0.0-20240425032658-369b0f6a404c
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
