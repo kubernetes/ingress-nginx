@@ -41,7 +41,7 @@ jobs:
         uses: helm/chart-testing-action@e6669bcd63d7cb57cb4380c33043eebe5d111992 # v2.6.1
 
       - name: Run chart-testing (lint)
-        run: ct lint --config --target-branch ${{ github.ref_name }} ./.ct.yaml
+        run: ct lint --target-branch ${{ github.ref_name }} --config ./.ct.yaml
 
       - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         id: filter
