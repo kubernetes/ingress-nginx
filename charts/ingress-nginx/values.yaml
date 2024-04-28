@@ -42,9 +42,9 @@ controller:
   # -- Configures the controller container name
   containerName: controller
   # -- Configures the ports that the nginx-controller listens on
-  containerPort:
-    http: 80
-    https: 443
+  # containerPort:
+  #  http: 80
+  #  https: 443
   # -- Global configuration passed to the ConfigMap consumed by the controller. Values may contain Helm templates.
   # Ref.: https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/
   config: {}

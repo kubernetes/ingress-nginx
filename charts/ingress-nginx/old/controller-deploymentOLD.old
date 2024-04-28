@@ -78,59 +78,6 @@ spec:
       shareProcessNamespace: {{ .Values.controller.shareProcessNamespace }}
     {{- end }}
       containers:
-        - args:
-          - /nginx-ingress-dataplane
-          env:
-          - name: POD_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.name
-          - name: POD_NAMESPACE
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace
-          - name: LD_PRELOAD
-            value: /usr/local/lib/libmimalloc.so
-          image: ingress-controller/dataplane:1.0.0-dev
-          imagePullPolicy: IfNotPresent
-          lifecycle:
-            preStop:
-              exec:
-                command:
-                - /wait-shutdown
-          name: "dataplane"
-          ports:
-          - containerPort: 80
-            hostPort: 80
-            name: http
-            protocol: TCP
-          - containerPort: 443
-            hostPort: 443
-            name: https
-            protocol: TCP
-          resources:
-            requests:
-              cpu: 100m
-              memory: 90Mi
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              add:
-              - NET_BIND_SERVICE
-              drop:
-              - ALL
-            readOnlyRootFilesystem: false
-            runAsNonRoot: true
-            runAsUser: 101
-            seccompProfile:
-              type: RuntimeDefault
-          volumeMounts:
-          - mountPath: /etc/ingress-controller
-            name: ingress-controller
-          - mountPath: /etc/nginx/conf
-            name: nginx-conf
-          - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-            name: emptysecret
         - name: {{ .Values.controller.containerName }}
           {{- with .Values.controller.image }}
           image: {{ if .repository }}{{ .repository }}{{ else }}{{ .registry }}/{{ include "ingress-nginx.image" . }}{{ end }}:{{ .tag }}{{ include "ingress-nginx.imageDigest" . }}
@@ -201,12 +148,8 @@ spec:
               hostPort: {{ $key }}
               {{- end }}
           {{- end }}
-          volumeMounts:
-            - mountPath: /etc/ingress-controller
-              name: ingress-controller
-            - mountPath: /etc/nginx/conf
-              name: nginx-conf
         {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
+          volumeMounts:
           {{- if (or .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
             - name: modules
             {{- if .Values.controller.image.chroot }}
@@ -270,17 +213,8 @@ spec:
     {{- end }}
       serviceAccountName: {{ template "ingress-nginx.serviceAccountName" . }}
       terminationGracePeriodSeconds: {{ .Values.controller.terminationGracePeriodSeconds }}
-      volumes:
-        - name: ingress-controller
-          emptyDir:
-            sizeLimit: 500Mi
-        - name: nginx-conf
-          emptyDir:
-            sizeLimit: 500Mi
-        - name: emptysecret
-          emptyDir:
-            sizeLimit: 1Mi
     {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraVolumes .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
+      volumes:
       {{- if (or .Values.controller.extraModules .Values.controller.opentelemetry.enabled)}}
         - name: modules
           emptyDir: {}

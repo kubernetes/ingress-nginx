@@ -44,6 +44,7 @@ import (
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/flowcontrol"
+	"k8s.io/client-go/util/retry"
 	"k8s.io/ingress-nginx/pkg/tcpproxy"
 
 	adm_controller "k8s.io/ingress-nginx/internal/admission/controller"
@@ -190,6 +191,15 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 	// everything.
 	// It should be guaranteed by the dataplane that this file is changed just once 
 	// NGINX finishes starting
+	err = retry.OnError(retry.DefaultBackoff, func(err error) bool {
+		return true
+	}, func() error {
+		_, errStat := os.Stat(nginxdataplane.ReadyFile)
+		return errStat
+	})
+	if err != nil {
+		klog.Fatalf("error waiting for ready file: %s", err)
+	}
 	_, err = file.NewFileWatcherUpdateOnly(nginxdataplane.ReadyFile, true, func() {
 		klog.Fatalf("readiness file changed, restarting contorller")
 	})
