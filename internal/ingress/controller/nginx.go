@@ -677,13 +677,13 @@ Error: %v
 //
 //nolint:gocritic // the cfg shouldn't be changed, and shouldn't be mutated by other processes while being rendered.
 func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
-	workerSerialReloads := n.store.GetBackendConfiguration().WorkerSerialReloads
+	cfg := n.store.GetBackendConfiguration()
+	cfg.Resolver = n.resolver
+
+	workerSerialReloads := cfg.WorkerSerialReloads
 	if workerSerialReloads && n.workersReloading {
 		return errors.New("worker reload already in progress, requeuing reload")
 	}
-
-	cfg := n.store.GetBackendConfiguration()
-	cfg.Resolver = n.resolver
 
 	content, err := n.generateTemplate(cfg, ingressCfg)
 	if err != nil {

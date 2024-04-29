@@ -14,7 +14,7 @@ metadata:
   namespace: {{ include "ingress-nginx.namespace" . }}
 data:
   allow-snippet-annotations: "{{ .Values.controller.allowSnippetAnnotations }}"
-  enable-serial-reloads: "{{ .Values.controller.enableSerialReloads }}"
+  enable-serial-reloads: "{{ .Values.controller.enableWorkerSerialReloads }}"
 {{- if .Values.controller.addHeaders }}
   add-headers: {{ include "ingress-nginx.namespace" . }}/{{ include "ingress-nginx.fullname" . }}-custom-add-headers
 {{- end }}
