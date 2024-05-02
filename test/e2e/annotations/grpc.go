@@ -267,6 +267,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 		f.NewGRPCBinDelayDeployment()
 
 		proxyTimeout := "10"
+		ingressName := "grpcbin-delay"
 
 		annotations := make(map[string]string)
 		annotations["nginx.ingress.kubernetes.io/backend-protocol"] = "GRPC"
@@ -274,7 +275,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 		annotations["nginx.ingress.kubernetes.io/proxy-send-timeout"] = proxyTimeout
 		annotations["nginx.ingress.kubernetes.io/proxy-read-timeout"] = proxyTimeout
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "grpcbin-delay", 50051, annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, ingressName, 50051, annotations)
 
 		f.EnsureIngress(ing)
 
@@ -309,6 +310,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 		f.NewGRPCBinDelayDeployment()
 
 		proxyTimeout := "10"
+		ingressName := "grpcbin-delay"
 
 		annotations := make(map[string]string)
 		annotations["nginx.ingress.kubernetes.io/backend-protocol"] = "GRPC"
@@ -316,7 +318,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 		annotations["nginx.ingress.kubernetes.io/proxy-send-timeout"] = proxyTimeout
 		annotations["nginx.ingress.kubernetes.io/proxy-read-timeout"] = proxyTimeout
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "grpcbin-delay", 50051, annotations)
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, ingressName, 50051, annotations)
 
 		f.EnsureIngress(ing)
 
