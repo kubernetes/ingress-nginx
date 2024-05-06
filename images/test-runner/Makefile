@@ -49,8 +49,8 @@ image:
 		--push \
 		--build-arg BASE_IMAGE=${NGINX_BASE_IMAGE} \
 		--build-arg GOLANG_VERSION=${GO_VERSION} \
-		--build-arg ETCD_VERSION=3.4.3-0 \
-		--build-arg K8S_RELEASE=v1.26.0 \
+		--build-arg ETCD_VERSION=3.5.13-0 \
+		--build-arg K8S_RELEASE=v1.29.2 \
 		--build-arg RESTY_CLI_VERSION=0.27 \
 		--build-arg RESTY_CLI_SHA=e5f4f3128af49ba5c4d039d0554e5ae91bbe05866f60eccfa96d3653274bff90 \
 		--build-arg LUAROCKS_VERSION=3.8.0 \
@@ -58,8 +58,8 @@ image:
 		--build-arg CHART_TESTING_VERSION=3.8.0 \
 		--build-arg YAML_LINT_VERSION=1.33.0 \
 		--build-arg YAMALE_VERSION=4.0.4 \
-		--build-arg HELM_VERSION=3.11.2 \
-		--build-arg GINKGO_VERSION=2.17.1 \
+		--build-arg HELM_VERSION=3.14.4 \
+		--build-arg GINKGO_VERSION=2.17.2 \
 		--build-arg GOLINT_VERSION=latest \
 		-t ${IMAGE}:${TAG} rootfs
 
@@ -70,8 +70,8 @@ build: ensure-buildx
 		--pull \
 		--build-arg BASE_IMAGE=${NGINX_BASE_IMAGE} \
 		--build-arg GOLANG_VERSION=${GO_VERSION} \
-		--build-arg ETCD_VERSION=3.4.3-0 \
-		--build-arg K8S_RELEASE=v1.26.0 \
+		--build-arg ETCD_VERSION=3.5.13-0 \
+		--build-arg K8S_RELEASE=v1.29.2 \
 		--build-arg RESTY_CLI_VERSION=0.27 \
 		--build-arg RESTY_CLI_SHA=e5f4f3128af49ba5c4d039d0554e5ae91bbe05866f60eccfa96d3653274bff90 \
 		--build-arg LUAROCKS_VERSION=3.8.0 \
@@ -79,8 +79,8 @@ build: ensure-buildx
 		--build-arg CHART_TESTING_VERSION=3.8.0 \
 		--build-arg YAML_LINT_VERSION=1.33.0 \
 		--build-arg YAMALE_VERSION=4.0.4 \
-		--build-arg HELM_VERSION=3.11.2 \
-		--build-arg GINKGO_VERSION=2.17.1 \
+		--build-arg HELM_VERSION=3.14.4 \
+		--build-arg GINKGO_VERSION=2.17.2 \
 		--build-arg GOLINT_VERSION=latest \
 		-t ${IMAGE}:${TAG} rootfs
 
