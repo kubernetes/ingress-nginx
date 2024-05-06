@@ -67,7 +67,7 @@ func (f *Framework) ExecCommand(pod *corev1.Pod, command string) (string, error)
 	)
 
 	//nolint:gosec // Ignore G204 error
-	cmd := exec.Command("/bin/bash", "-c", fmt.Sprintf("%v exec --namespace %s %s --container controller -- %s", KubectlPath, pod.Namespace, pod.Name, command))
+	cmd := exec.Command("/bin/bash", "-c", fmt.Sprintf("%v exec --namespace %s %s --container dataplane -- %s", KubectlPath, pod.Namespace, pod.Name, command))
 	cmd.Stdout = &execOut
 	cmd.Stderr = &execErr
 

@@ -183,7 +183,8 @@ func (f *Framework) AfterEach() {
 		return
 	}
 
-	cmd := "cat /etc/nginx/nginx.conf"
+	// TODO: This file location should be a const
+	cmd := "cat /etc/nginx/conf/nginx.conf"
 	o, err := f.ExecCommand(f.pod, cmd)
 	if err != nil {
 		Logf("Unexpected error obtaining nginx.conf file: %v", err)
@@ -303,9 +304,9 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 	return func() (bool, error) {
 		var cmd string
 		if name == "" {
-			cmd = "cat /etc/nginx/nginx.conf"
+			cmd = "cat /etc/nginx/conf/nginx.conf"
 		} else {
-			cmd = fmt.Sprintf("cat /etc/nginx/nginx.conf | awk '/## start server %v/,/## end server %v/'", name, name)
+			cmd = fmt.Sprintf("cat /etc/nginx/conf/nginx.conf | awk '/## start server %v/,/## end server %v/'", name, name)
 		}
 
 		o, err := f.ExecCommand(f.pod, cmd)
@@ -328,7 +329,7 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 
 func (f *Framework) matchNginxCustomConditions(from, to string, matcher func(cfg string) bool) wait.ConditionFunc {
 	return func() (bool, error) {
-		cmd := fmt.Sprintf("cat /etc/nginx/nginx.conf| awk '/%v/,/%v/'", from, to)
+		cmd := fmt.Sprintf("cat /etc/nginx/conf/nginx.conf| awk '/%v/,/%v/'", from, to)
 
 		o, err := f.ExecCommand(f.pod, cmd)
 		if err != nil {

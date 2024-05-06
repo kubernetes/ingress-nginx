@@ -49,7 +49,8 @@ func main() {
 	}))
 
 	//mc := metric.NewDummyCollector()
-	go metrics.RegisterProfiler(nginx.ProfilerAddress, nginx.ProfilerPort)
+	// TODO: Enable metric collector for DP again
+	//go metrics.RegisterProfiler(nginx.ProfilerAddress, nginx.ProfilerPort)
 	
 	mux := http.NewServeMux()
 	metrics.RegisterHealthz(nginx.HealthPath, mux)

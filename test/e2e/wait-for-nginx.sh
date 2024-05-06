@@ -34,7 +34,8 @@ function on_exit {
     test $error_code == 0 && return;
 
     echo "Obtaining ingress controller pod logs..."
-    kubectl logs -l app.kubernetes.io/name=ingress-nginx -n $NAMESPACE
+    kubectl logs -l app.kubernetes.io/name=ingress-nginx -n $NAMESPACE -c controller
+    kubectl logs -l app.kubernetes.io/name=ingress-nginx -n $NAMESPACE -c dataplane
 }
 trap on_exit EXIT
 

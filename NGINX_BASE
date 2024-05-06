@@ -1,1 +1,1 @@
-registry.k8s.io/ingress-nginx/nginx-1.25:v0.0.6@sha256:b3e027ab191eb9461a9bcf25092eabb1d547cba164992dbd722c1aa2b4a936ee
+rpkatz/nginx-split:v1

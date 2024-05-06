@@ -40,6 +40,7 @@ import (
 	"github.com/eapache/channels"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes/scheme"
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
@@ -191,7 +192,13 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 	// everything.
 	// It should be guaranteed by the dataplane that this file is changed just once 
 	// NGINX finishes starting
-	err = retry.OnError(retry.DefaultBackoff, func(err error) bool {
+	readinessBackoff := wait.Backoff{
+		Steps:    5,
+		Duration: 3 * time.Millisecond,
+		Factor:   5.0,
+		Jitter:   0.1,
+	}
+	err = retry.OnError(readinessBackoff, func(err error) bool {
 		return true
 	}, func() error {
 		_, errStat := os.Stat(nginxdataplane.ReadyFile)

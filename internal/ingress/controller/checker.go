@@ -19,11 +19,6 @@ package controller
 import (
 	"fmt"
 	"net/http"
-	"os"
-	"strconv"
-	"strings"
-
-	"github.com/ncabatoff/process-exporter/proc"
 
 	"k8s.io/ingress-nginx/internal/nginx"
 )
@@ -40,7 +35,8 @@ func (n *NGINXController) Check(_ *http.Request) error {
 	}
 
 	// check the nginx master process is running
-	fs, err := proc.NewFS("/proc", false)
+	// TODO: Move this checker to dataplane!
+	/*fs, err := proc.NewFS("/proc", false)
 	if err != nil {
 		return fmt.Errorf("reading /proc directory: %w", err)
 	}
@@ -58,7 +54,7 @@ func (n *NGINXController) Check(_ *http.Request) error {
 	_, err = fs.Proc(pid)
 	if err != nil {
 		return fmt.Errorf("checking for NGINX process with PID %v: %w", pid, err)
-	}
+	}*/
 
 	statusCode, _, err := nginx.NewGetStatusRequest("/is-dynamic-lb-initialized")
 	if err != nil {
