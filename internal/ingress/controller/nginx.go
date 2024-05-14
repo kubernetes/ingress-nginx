@@ -35,6 +35,7 @@ import (
 	"syscall"
 	"text/template"
 	"time"
+	"unicode"
 
 	proxyproto "github.com/armon/go-proxyproto"
 	"github.com/eapache/channels"
@@ -87,9 +88,10 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 	n := &NGINXController{
 		isIPV6Enabled: ing_net.IsIPv6Enabled(),
 
-		resolver:        h,
-		cfg:             config,
-		syncRateLimiter: flowcontrol.NewTokenBucketRateLimiter(config.SyncRateLimit, 1),
+		resolver:         h,
+		cfg:              config,
+		syncRateLimiter:  flowcontrol.NewTokenBucketRateLimiter(config.SyncRateLimit, 1),
+		workersReloading: false,
 
 		recorder: eventBroadcaster.NewRecorder(scheme.Scheme, apiv1.EventSource{
 			Component: "nginx-ingress-controller",
@@ -228,6 +230,8 @@ type NGINXController struct {
 	syncStatus status.Syncer
 
 	syncRateLimiter flowcontrol.RateLimiter
+
+	workersReloading bool
 
 	// stopLock is used to enforce that only a single call to Stop send at
 	// a given time. We allow stopping through an HTTP endpoint and
@@ -676,6 +680,11 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	cfg := n.store.GetBackendConfiguration()
 	cfg.Resolver = n.resolver
 
+	workerSerialReloads := cfg.WorkerSerialReloads
+	if workerSerialReloads && n.workersReloading {
+		return errors.New("worker reload already in progress, requeuing reload")
+	}
+
 	content, err := n.generateTemplate(cfg, ingressCfg)
 	if err != nil {
 		return err
@@ -738,7 +747,39 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		return fmt.Errorf("%v\n%v", err, string(o))
 	}
 
+	// Reload status checking runs in a separate goroutine to avoid blocking the sync queue
+	if workerSerialReloads {
+		go n.awaitWorkersReload()
+	}
+
 	return nil
+}
+
+// awaitWorkersReload checks if the number of workers has returned to the expected count
+func (n *NGINXController) awaitWorkersReload() {
+	n.workersReloading = true
+	defer func() { n.workersReloading = false }()
+
+	expectedWorkers := n.store.GetBackendConfiguration().WorkerProcesses
+	var numWorkers string
+	klog.V(3).Infof("waiting for worker count to be equal to %s", expectedWorkers)
+	for numWorkers != expectedWorkers {
+		time.Sleep(time.Second)
+		o, err := exec.Command("/bin/sh", "-c", "pgrep worker | wc -l").Output()
+		if err != nil {
+			klog.ErrorS(err, numWorkers)
+			return
+		}
+		// cleanup any non-printable chars from shell output
+		numWorkers = strings.Map(func(r rune) rune {
+			if unicode.IsPrint(r) {
+				return r
+			}
+			return -1
+		}, string(o))
+
+		klog.V(3).Infof("Currently running nginx worker processes: %s, expected %s", numWorkers, expectedWorkers)
+	}
 }
 
 // nginxHashBucketSize computes the correct NGINX hash_bucket_size for a hash

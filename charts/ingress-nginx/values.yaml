@@ -93,6 +93,8 @@ controller:
   # when users add those annotations.
   # Global snippets in ConfigMap are still respected
   allowSnippetAnnotations: false
+  # -- This configuration defines if NGINX workers should reload serially instead of concurrently when multiple changes that require reloads are queued
+  enableWorkerSerialReloads: false
   # -- Required for use with CNI based kubernetes installations (such as ones set up by kubeadm),
   # since CNI and hostport don't mix yet. Can be deprecated once https://github.com/kubernetes/kubernetes/issues/23920
   # is merged
