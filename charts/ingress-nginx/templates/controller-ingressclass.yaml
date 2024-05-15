@@ -9,10 +9,13 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
   name: {{ .Values.controller.ingressClassResource.name }}
-  {{- if .Values.controller.ingressClassResource.default }}
   annotations:
+    {{- if .Values.controller.ingressClassResource.default }}
     ingressclass.kubernetes.io/is-default-class: "true"
-  {{- end }}
+    {{- end }}
+    {{- if .Values.controller.ingressClassResource.annotations }}
+      {{- toYaml .Values.controller.ingressClassResource.annotations | nindent 4 }}
+    {{- end }}
 spec:
   controller: {{ .Values.controller.ingressClassResource.controllerValue }}
   {{- with .Values.controller.ingressClassResource.parameters }}
