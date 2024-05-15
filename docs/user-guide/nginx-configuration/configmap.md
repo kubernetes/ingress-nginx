@@ -135,13 +135,6 @@ The following table shows a configuration option's name, type, and the default v
 |[compute-full-forwarded-for](#compute-full-forwarded-for)| bool         | "false"                                                                                                                                                                                                                                                                                                                                                      ||
 |[proxy-add-original-uri-header](#proxy-add-original-uri-header)| bool         | "false"                                                                                                                                                                                                                                                                                                                                                      ||
 |[generate-request-id](#generate-request-id)| bool         | "true"                                                                                                                                                                                                                                                                                                                                                       ||
-|[enable-opentracing](#enable-opentracing)| bool         | "false"                                                                                                                                                                                                                                                                                                                                                      ||
-|[opentracing-operation-name](#opentracing-operation-name)| string       | ""                                                                                                                                                                                                                                                                                                                                                           ||
-|[opentracing-location-operation-name](#opentracing-location-operation-name)| string       | ""                                                                                                                                                                                                                                                                                                                                                           ||
-|[zipkin-collector-host](#zipkin-collector-host)| string       | ""                                                                                                                                                                                                                                                                                                                                                           ||
-|[zipkin-collector-port](#zipkin-collector-port)| int          | 9411                                                                                                                                                                                                                                                                                                                                                         ||
-|[zipkin-service-name](#zipkin-service-name)| string       | "nginx"                                                                                                                                                                                                                                                                                                                                                      ||
-|[zipkin-sample-rate](#zipkin-sample-rate)| float        | 1.0                                                                                                                                                                                                                                                                                                                                                          ||
 |[jaeger-collector-host](#jaeger-collector-host)| string       | ""                                                                                                                                                                                                                                                                                                                                                           ||
 |[jaeger-collector-port](#jaeger-collector-port)| int          | 6831                                                                                                                                                                                                                                                                                                                                                         ||
 |[jaeger-endpoint](#jaeger-endpoint)| string       | ""                                                                                                                                                                                                                                                                                                                                                           ||
@@ -944,41 +937,6 @@ Adds an X-Original-Uri header with the original request URI to the backend reque
 ## generate-request-id
 
 Ensures that X-Request-ID is defaulted to a random value, if no X-Request-ID is present in the request
-
-## enable-opentracing
-
-Enables the nginx Opentracing extension. _**default:**_ is disabled
-
-_References:_
-[https://github.com/opentracing-contrib/nginx-opentracing](https://github.com/opentracing-contrib/nginx-opentracing)
-
-## opentracing-operation-name
-
-Specifies a custom name for the server span. _**default:**_ is empty
-
-For example, set to "HTTP $request_method $uri".
-
-## opentracing-location-operation-name
-
-Specifies a custom name for the location span. _**default:**_ is empty
-
-For example, set to "HTTP $request_method $uri".
-
-## zipkin-collector-host
-
-Specifies the host to use when uploading traces. It must be a valid URL.
-
-## zipkin-collector-port
-
-Specifies the port to use when uploading traces. _**default:**_ 9411
-
-## zipkin-service-name
-
-Specifies the service name to use for any traces created. _**default:**_ nginx
-
-## zipkin-sample-rate
-
-Specifies sample rate for any traces created. _**default:**_ 1.0
 
 ## jaeger-collector-host
 
