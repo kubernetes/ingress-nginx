@@ -52,6 +52,7 @@ export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-config-$KIND_CLUSTER_NAME}"
 SKIP_INGRESS_IMAGE_CREATION="${SKIP_INGRESS_IMAGE_CREATION:-false}"
 SKIP_E2E_IMAGE_CREATION="${SKIP_E2E_IMAGE_CREATION:=false}"
 SKIP_CLUSTER_CREATION="${SKIP_CLUSTER_CREATION:-false}"
+SKIP_CUSTOMERRORPAGES_IMAGE_CREATION="${SKIP_CUSTOMERRORPAGES_IMAGE_CREATION:-false}"
 
 if ! command -v kind --version &> /dev/null; then
   echo "kind is not installed. Use the package manager or visit the official site https://kind.sigs.k8s.io/"
@@ -104,6 +105,12 @@ if [ "${SKIP_E2E_IMAGE_CREATION}" = "false" ]; then
   echo "[dev-env] ..done building e2e-image"
 fi
 
+if [ "${SKIP_CUSTOMERRORPAGES_IMAGE_CREATION}" = "false" ]; then
+  echo "[dev-env] building custom-error-pages image"
+  REGISTRY=localhost NAME=custom-error-pages TAG=e2e make -C "${DIR}"/../../images build
+  echo "[dev-env] .. done building custom-error-pages image"
+fi
+
 # Preload images used in e2e tests
 KIND_WORKERS=$(kind get nodes --name="${KIND_CLUSTER_NAME}" | grep worker | awk '{printf (NR>1?",":"") $1}')
 
@@ -111,5 +118,6 @@ echo "[dev-env] copying docker images to cluster..."
 
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes="${KIND_WORKERS}" nginx-ingress-controller:e2e
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes="${KIND_WORKERS}" "${REGISTRY}"/controller:"${TAG}"
+kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes="${KIND_WORKERS}" "localhost/custom-error-pages:e2e"
 echo "[dev-env] running e2e tests..."
 make -C "${DIR}"/../../ e2e-test

@@ -49,6 +49,12 @@ var HTTPBunImage = os.Getenv("HTTPBUN_IMAGE")
 // EchoImage is the default image to be used by the echo service
 const EchoImage = "registry.k8s.io/ingress-nginx/e2e-test-echo:v1.0.1@sha256:1cec65aa768720290d05d65ab1c297ca46b39930e56bc9488259f9114fcd30e2" //#nosec G101
 
+// CustomErrorPagesService name of the deployment for the custom-error-pages app
+const CustomErrorPagesService = "custom-error-pages"
+
+// CustomErrorPagesImage is the default image that is used to deploy custom-error-pages with the framework
+var CustomErrorPagesImage = os.Getenv("CUSTOMERRORPAGES_IMAGE")
+
 // TODO: change all Deployment functions to use these options
 // in order to reduce complexity and have a unified API across the
 // framework
@@ -58,6 +64,7 @@ type deploymentOptions struct {
 	image          string
 	replicas       int
 	svcAnnotations map[string]string
+	envVars        map[string]string
 }
 
 // WithDeploymentNamespace allows configuring the deployment's namespace
@@ -101,6 +108,74 @@ func WithImage(i string) func(*deploymentOptions) {
 	return func(o *deploymentOptions) {
 		o.image = i
 	}
+}
+
+// WithEnvVars allows configuring environment variables for the deployment
+func WithEnvVars(e map[string]string) func(*deploymentOptions) {
+	return func(o *deploymentOptions) {
+		o.envVars = e
+	}
+}
+
+// NewCustomErrorPagesDeployment creates a new single replica deployment of the custom-error-pages server image in a particular namespace
+func (f *Framework) NewCustomErrorPagesDeployment(opts ...func(*deploymentOptions)) {
+	options := &deploymentOptions{
+		namespace: f.Namespace,
+		name:      CustomErrorPagesService,
+		replicas:  1,
+		image:     CustomErrorPagesImage,
+	}
+	for _, o := range opts {
+		o(options)
+	}
+
+	envVars := []corev1.EnvVar{}
+	for k, v := range options.envVars {
+		envVars = append(envVars, corev1.EnvVar{Name: k, Value: v})
+	}
+
+	f.EnsureDeployment(newDeployment(
+		options.name,
+		options.namespace,
+		options.image,
+		8080,
+		int32(options.replicas),
+		nil, nil,
+		envVars,
+		[]corev1.VolumeMount{},
+		[]corev1.Volume{},
+		false,
+	))
+
+	f.EnsureService(&corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        options.name,
+			Namespace:   options.namespace,
+			Annotations: options.svcAnnotations,
+		},
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{
+				{
+					Name:       "http",
+					Port:       8080,
+					TargetPort: intstr.FromInt(8080),
+					Protocol:   corev1.ProtocolTCP,
+				},
+			},
+			Selector: map[string]string{
+				"app": options.name,
+			},
+		},
+	})
+
+	err := WaitForEndpoints(
+		f.KubeClientSet,
+		DefaultTimeout,
+		options.name,
+		options.namespace,
+		options.replicas,
+	)
+	assert.Nil(ginkgo.GinkgoT(), err, "waiting for endpoints to become ready")
 }
 
 // NewEchoDeployment creates a new single replica deployment of the echo server image in a particular namespace
