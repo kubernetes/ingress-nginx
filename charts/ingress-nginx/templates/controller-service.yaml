@@ -6,6 +6,9 @@ metadata:
   {{- range $key, $value := .Values.controller.service.annotations }}
     {{ $key }}: {{ tpl ($value | toString) $ | quote }}
   {{- end }}
+  {{- if .Values.controller.service.psc.enabled }}
+    {{ .Values.controller.service.psc.annotation.key }}: "{{ .Values.controller.service.psc.annotation.value }}"
+  {{- end }}
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: controller

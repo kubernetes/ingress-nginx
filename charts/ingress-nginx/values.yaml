@@ -436,6 +436,11 @@ controller:
     configMapKey: ""
   service:
     enabled: true
+    psc:
+      enabled: false
+      annotation:
+        key: "cloud.google.com/load-balancer-type"
+        value: "Internal"
     # -- If enabled is adding an appProtocol option for Kubernetes service. An appProtocol field replacing annotations that were
     # using for setting a backend protocol. Here is an example for AWS: service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
     # It allows choosing the protocol for each backend specified in the Kubernetes service.
