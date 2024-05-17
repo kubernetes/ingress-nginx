@@ -1,0 +1,5 @@
+{{- range .Values.extraManifests }}
+{{- $manifest := tpl . $ }}
+{{ $manifest | nindent 0 }}
+---
+{{- end }}

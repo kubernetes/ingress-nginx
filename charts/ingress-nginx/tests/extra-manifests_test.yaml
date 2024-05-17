@@ -1,0 +1,28 @@
+suite: extraManifests
+templates:
+  - extra-manifests.yaml
+
+tests:
+  - it: should create a TargetGroupBinding if `extraManifests` contains TargetGroupBinding configuration
+    set:
+      extraManifests:
+          - |
+            apiVersion: elbv2.k8s.aws/v1beta1
+            kind: TargetGroupBinding
+            metadata:
+              name: nginx-tgb
+            spec:
+              serviceRef:
+                name: ingress-nginx-controller
+              targetGroupARN: arn:aws:elasticloadbalancing:region:123123123:targetgroup/foo
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: TargetGroupBinding
+      - equal:
+          path: metadata.name
+          value: nginx-tgb
+      - equal:
+          path: spec.serviceRef.name
+          value: ingress-nginx-controller

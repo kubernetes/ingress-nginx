@@ -1134,3 +1134,35 @@ portNamePrefix: ""
 # This can be generated with: `openssl dhparam 4096 2> /dev/null | base64`
 ## Ref: https://github.com/kubernetes/ingress-nginx/tree/main/docs/examples/customization/ssl-dh-param
 dhParam: ""
+
+# Optional array to generate extra manifests.
+extraManifests: []
+  # - |
+  #   apiVersion: cert-manager.io/v1
+  #   kind: ClusterIssuer
+  #   metadata:
+  #     name: letsencrypt-example
+  #   spec:
+  #     acme:
+  #       server: https://acme-v02.api.letsencrypt.org/directory
+  #       email: your-email@example.com
+  #       privateKeySecretRef:
+  #         name: letsencrypt-prod
+  #       solvers:
+  #       - http01:
+  #           ingress:
+  #             class: nginx
+  # - |
+  #   apiVersion: cert-manager.io/v1
+  #   kind: Certificate
+  #   metadata:
+  #     name: foo-cert
+  #     namespace: default
+  #   spec:
+  #     secretName: foo-tls-secret
+  #     issuerRef:
+  #       name: letsencrypt-example
+  #       kind: ClusterIssuer
+  #     commonName: foo.bar.com
+  #     dnsNames:
+  #     - foo.bar.com
