@@ -107,7 +107,7 @@ fi
 
 if [ "${SKIP_CUSTOMERRORPAGES_IMAGE_CREATION}" = "false" ]; then
   echo "[dev-env] building custom-error-pages image"
-  REGISTRY=localhost NAME=custom-error-pages TAG=e2e make -C "${DIR}"/../../images build
+  make NAME=custom-error-pages -C "${DIR}"/../../images build
   echo "[dev-env] .. done building custom-error-pages image"
 fi
 
@@ -118,6 +118,6 @@ echo "[dev-env] copying docker images to cluster..."
 
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes="${KIND_WORKERS}" nginx-ingress-controller:e2e
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes="${KIND_WORKERS}" "${REGISTRY}"/controller:"${TAG}"
-kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes="${KIND_WORKERS}" "localhost/custom-error-pages:e2e"
+kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes="${KIND_WORKERS}" "${REGISTRY}"/custom-error-pages:"${TAG}"
 echo "[dev-env] running e2e tests..."
 make -C "${DIR}"/../../ e2e-test
