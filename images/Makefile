@@ -41,9 +41,9 @@ EXTRAARGS ?= $(shell cat $(NAME)/EXTRAARGS)
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
 # build with buildx
-PLATFORMS?=linux/amd64,linux/arm,linux/arm64
-OUTPUT=
-PROGRESS=plain
+BUILDX_PLATFORMS ?= linux/amd64,linux/arm,linux/arm64,linux/s390x
+OUTPUT ?=
+PROGRESS = plain
 
 
 precheck:
@@ -58,7 +58,7 @@ build: precheck ensure-buildx
 		--label=org.opencontainers.image.description="Ingress NGINX $(NAME) image" \
 		--build-arg BASE_IMAGE=$(BASE_IMAGE) \
 		--build-arg GOLANG_VERSION=$(GO_VERSION) \
-		--platform=${PLATFORMS} $(OUTPUT) \
+		--platform=${BUILDX_PLATFORMS} $(OUTPUT) \
 		--progress=$(PROGRESS) \
 		--pull $(EXTRAARGS) \
 		-t $(IMAGE):$(TAG) $(NAME)/rootfs

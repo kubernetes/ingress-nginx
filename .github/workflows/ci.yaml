@@ -193,12 +193,18 @@ jobs:
           export TAGNGINX=$(cat images/nginx/TAG)
           make BASE_IMAGE=registry.k8s.io/ingress-nginx/nginx:${TAGNGINX} clean-image build image image-chroot
           make -C test/e2e-image image
+          cd images/custom-error-pages/rootfs && docker image build \
+              --build-arg=BASE_IMAGE=registry.k8s.io/ingress-nginx/nginx-1.25:${TAGNGINX} \
+              --build-arg GOLANG_VERSION=$(cat ../../../GOLANG_VERSION) \
+              --tag ingress-controller/custom-error-pages:1.0.0-dev . \
+              && cd ../../..
 
           echo "creating images cache..."
           docker save \
             nginx-ingress-controller:e2e \
             ingress-controller/controller:1.0.0-dev \
             ingress-controller/controller-chroot:1.0.0-dev \
+            ingress-controller/custom-error-pages:1.0.0-dev \
             | gzip > docker.tar.gz
 
       - name: cache
