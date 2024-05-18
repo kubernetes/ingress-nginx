@@ -24,13 +24,33 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
+const (
+	sslPassthroughAnnotation = "ssl-passthrough"
+)
+
+var sslPassthroughAnnotations = parser.Annotation{
+	Group: "", // TBD
+	Annotations: parser.AnnotationFields{
+		sslPassthroughAnnotation: {
+			Validator:     parser.ValidateBool,
+			Scope:         parser.AnnotationScopeIngress,
+			Risk:          parser.AnnotationRiskLow, // Low, as it allows regexes but on a very limited set
+			Documentation: `This annotation instructs the controller to send TLS connections directly to the backend instead of letting NGINX decrypt the communication.`,
+		},
+	},
+}
+
 type sslpt struct {
-	r resolver.Resolver
+	r                resolver.Resolver
+	annotationConfig parser.Annotation
 }
 
 // NewParser creates a new SSL passthrough annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return sslpt{r}
+	return sslpt{
+		r:                r,
+		annotationConfig: sslPassthroughAnnotations,
+	}
 }
 
 // ParseAnnotations parses the annotations contained in the ingress
@@ -40,5 +60,14 @@ func (a sslpt) Parse(ing *networking.Ingress) (interface{}, error) {
 		return false, ing_errors.ErrMissingAnnotations
 	}
 
-	return parser.GetBoolAnnotation("ssl-passthrough", ing)
+	return parser.GetBoolAnnotation(sslPassthroughAnnotation, ing, a.annotationConfig.Annotations)
+}
+
+func (a sslpt) GetDocumentation() parser.AnnotationFields {
+	return a.annotationConfig.Annotations
+}
+
+func (a sslpt) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+	return parser.CheckAnnotationRisk(anns, maxrisk, sslPassthroughAnnotations.Annotations)
 }

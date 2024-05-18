@@ -9,4 +9,7 @@ controller:
     allowPrivilegeEscalation: false
   extraModules:
     - name: opentelemetry
-      image: busybox
+      image:
+        registry: registry.k8s.io
+        image: busybox
+        tag: latest

@@ -36,7 +36,7 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "logs",
 		Short: "Get the kubernetes logs for an ingress-nginx pod",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			util.PrintError(logs(flags, *pod, *deployment, *selector, *container, o))
 			return nil
 		},
@@ -95,7 +95,7 @@ func (o *logsFlags) toStrings() []string {
 	return r
 }
 
-func logs(flags *genericclioptions.ConfigFlags, podName string, deployment string, selector string, container string, opts logsFlags) error {
+func logs(flags *genericclioptions.ConfigFlags, podName, deployment, selector, container string, opts logsFlags) error {
 	pod, err := request.ChoosePod(flags, podName, deployment, selector)
 	if err != nil {
 		return err

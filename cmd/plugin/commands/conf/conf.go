@@ -36,7 +36,7 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "conf",
 		Short: "Inspect the generated nginx.conf",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			host, err := cmd.Flags().GetString("host")
 			if err != nil {
 				return err
@@ -55,7 +55,7 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	return cmd
 }
 
-func conf(flags *genericclioptions.ConfigFlags, host string, podName string, deployment string, selector string, container string) error {
+func conf(flags *genericclioptions.ConfigFlags, host, podName, deployment, selector, container string) error {
 	pod, err := request.ChoosePod(flags, podName, deployment, selector)
 	if err != nil {
 		return err

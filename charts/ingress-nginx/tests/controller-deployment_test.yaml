@@ -1,0 +1,120 @@
+suite: Controller > Deployment
+templates:
+  - controller-deployment.yaml
+
+tests:
+  - it: should create a Deployment
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-controller
+
+  - it: should create a Deployment with 3 replicas if `controller.replicaCount` is 3
+    set:
+      controller.replicaCount: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: should create a Deployment without replicas if `controller.autoscaling.enabled` is true
+    set:
+      controller.autoscaling.enabled: true
+    asserts:
+      - notExists:
+          path: spec.replicas
+
+  - it: should create a Deployment without replicas if `controller.keda.enabled` is true
+    set:
+      controller.keda.enabled: true
+    asserts:
+      - notExists:
+          path: spec.replicas
+
+  - it: should create a Deployment with replicas if `controller.autoscaling.enabled` is true and `controller.keda.enabled` is true
+    set:
+      controller.autoscaling.enabled: true
+      controller.keda.enabled: true
+    asserts:
+      - exists:
+          path: spec.replicas
+
+  - it: should create a Deployment with argument `--enable-metrics=false` if `controller.metrics.enabled` is false
+    set:
+      controller.metrics.enabled: false
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --enable-metrics=false
+
+  - it: should create a Deployment without argument `--enable-metrics=false` if `controller.metrics.enabled` is true
+    set:
+      controller.metrics.enabled: true
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: --enable-metrics=false
+
+  - it: should create a Deployment with argument `--controller-class=k8s.io/ingress-nginx-internal` if `controller.ingressClassResource.controllerValue` is "k8s.io/ingress-nginx-internal"
+    set:
+      controller.ingressClassResource.controllerValue: k8s.io/ingress-nginx-internal
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --controller-class=k8s.io/ingress-nginx-internal
+
+  - it: should create a Deployment with resource limits if `controller.resources.limits` is set
+    set:
+      controller.resources.limits.cpu: 500m
+      controller.resources.limits.memory: 512Mi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: 500m
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 512Mi
+
+  - it: should create a Deployment with topology spread constraints if `controller.topologySpreadConstraints` is set
+    set:
+      controller.topologySpreadConstraints:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
+              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/component: controller
+          topologyKey: topology.kubernetes.io/zone
+          maxSkew: 1
+          whenUnsatisfiable: ScheduleAnyway
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
+              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/component: controller
+          topologyKey: kubernetes.io/hostname
+          maxSkew: 1
+          whenUnsatisfiable: ScheduleAnyway
+    asserts:
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints
+          value:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: ingress-nginx
+                  app.kubernetes.io/instance: RELEASE-NAME
+                  app.kubernetes.io/component: controller
+              topologyKey: topology.kubernetes.io/zone
+              maxSkew: 1
+              whenUnsatisfiable: ScheduleAnyway
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: ingress-nginx
+                  app.kubernetes.io/instance: RELEASE-NAME
+                  app.kubernetes.io/component: controller
+              topologyKey: kubernetes.io/hostname
+              maxSkew: 1
+              whenUnsatisfiable: ScheduleAnyway

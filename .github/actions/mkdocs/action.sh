@@ -16,7 +16,7 @@
 
 set -e
 
-REQUIREMENTS="${GITHUB_WORKSPACE}/requirements.txt"
+REQUIREMENTS="${GITHUB_WORKSPACE}/docs/requirements.txt"
 
 if [ -f "${REQUIREMENTS}" ]; then
     pip install -r "${REQUIREMENTS}"

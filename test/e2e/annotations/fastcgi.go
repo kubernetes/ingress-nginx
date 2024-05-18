@@ -75,14 +75,14 @@ var _ = framework.DescribeAnnotation("backend-protocol - FastCGI", func() {
 				Namespace: f.Namespace,
 			},
 			Data: map[string]string{
-				"SCRIPT_FILENAME": "/home/www/scripts/php$fastcgi_script_name",
+				"SCRIPT_FILENAME": "$fastcgi_script_name",
 				"REDIRECT_STATUS": "200",
 			},
 		}
 
 		f.EnsureConfigMap(configuration)
 
-		host := "fastcgi-params-configmap"
+		host := "fastcgi-params-configmap" //#nosec G101
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/backend-protocol":         "FCGI",
@@ -94,7 +94,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - FastCGI", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "fastcgi_param SCRIPT_FILENAME \"/home/www/scripts/php$fastcgi_script_name\";") &&
+				return strings.Contains(server, "fastcgi_param SCRIPT_FILENAME \"$fastcgi_script_name\";") &&
 					strings.Contains(server, "fastcgi_param REDIRECT_STATUS \"200\";")
 			})
 	})

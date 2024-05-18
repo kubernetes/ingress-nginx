@@ -1,6 +1,4 @@
 {{- if .Values.controller.ingressClassResource.enabled -}}
-# We don't support namespaced ingressClass yet
-# So a ClusterRole and a ClusterRoleBinding is required
 apiVersion: networking.k8s.io/v1
 kind: IngressClass
 metadata:
@@ -11,11 +9,13 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
   name: {{ .Values.controller.ingressClassResource.name }}
-{{- if .Values.controller.ingressClassResource.default }}
+  {{- if .Values.controller.ingressClassResource.default }}
   annotations:
     ingressclass.kubernetes.io/is-default-class: "true"
-{{- end }}
+  {{- end }}
 spec:
   controller: {{ .Values.controller.ingressClassResource.controllerValue }}
-  {{ template "ingressClass.parameters" . }}
+  {{- with .Values.controller.ingressClassResource.parameters }}
+  parameters: {{ toYaml . | nindent 4 }}
+  {{- end }}
 {{- end }}

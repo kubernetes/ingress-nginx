@@ -1,0 +1,77 @@
+suite: Controller > IngressClass
+templates:
+  - controller-ingressclass.yaml
+
+tests:
+  - it: should create an IngressClass
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: IngressClass
+      - equal:
+          path: metadata.name
+          value: nginx
+
+  - it: should create an IngressClass with name "nginx-internal" if `controller.ingressClassResource.name` is "nginx-internal"
+    set:
+      controller.ingressClassResource.name: nginx-internal
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: IngressClass
+      - equal:
+          path: metadata.name
+          value: nginx-internal
+
+  - it: "should create an IngressClass with annotation `ingressclass.kubernetes.io/is-default-class: \"true\"` if `controller.ingressClassResource.default` is true"
+    set:
+      controller.ingressClassResource.default: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: IngressClass
+      - equal:
+          path: metadata.name
+          value: nginx
+      - equal:
+          path: metadata.annotations["ingressclass.kubernetes.io/is-default-class"]
+          value: "true"
+
+  - it: should create an IngressClass with controller "k8s.io/ingress-nginx-internal" if `controller.ingressClassResource.controllerValue` is "k8s.io/ingress-nginx-internal"
+    set:
+      controller.ingressClassResource.controllerValue: k8s.io/ingress-nginx-internal
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: IngressClass
+      - equal:
+          path: metadata.name
+          value: nginx
+      - equal:
+          path: spec.controller
+          value: k8s.io/ingress-nginx-internal
+
+  - it: should create an IngressClass with parameters if `controller.ingressClassResource.parameters` is set
+    set:
+      controller.ingressClassResource.parameters:
+        apiGroup: k8s.example.com
+        kind: IngressParameters
+        name: external-lb
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: IngressClass
+      - equal:
+          path: metadata.name
+          value: nginx
+      - equal:
+          path: spec.parameters
+          value:
+            apiGroup: k8s.example.com
+            kind: IngressParameters
+            name: external-lb

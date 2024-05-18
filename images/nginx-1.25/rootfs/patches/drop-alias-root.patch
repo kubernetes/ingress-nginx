@@ -1,0 +1,144 @@
+:100644 100644 c7463dcd 00000000 M	src/http/ngx_http_core_module.c
+diff --git a/src/http/ngx_http_core_module.c b/src/http/ngx_http_core_module.c
+index c7463dcd..e2e45931 100644
+--- a/src/http/ngx_http_core_module.c
++++ b/src/http/ngx_http_core_module.c
+@@ -55,7 +55,6 @@ static char *ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd,
+     void *conf);
+ static char *ngx_http_core_server_name(ngx_conf_t *cf, ngx_command_t *cmd,
+     void *conf);
+-static char *ngx_http_core_root(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
+ static char *ngx_http_core_limit_except(ngx_conf_t *cf, ngx_command_t *cmd,
+     void *conf);
+ static char *ngx_http_core_set_aio(ngx_conf_t *cf, ngx_command_t *cmd,
+@@ -323,21 +322,6 @@ static ngx_command_t  ngx_http_core_commands[] = {
+       offsetof(ngx_http_core_loc_conf_t, default_type),
+       NULL },
+ 
+-    { ngx_string("root"),
+-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
+-                        |NGX_CONF_TAKE1,
+-      ngx_http_core_root,
+-      NGX_HTTP_LOC_CONF_OFFSET,
+-      0,
+-      NULL },
+-
+-    { ngx_string("alias"),
+-      NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+-      ngx_http_core_root,
+-      NGX_HTTP_LOC_CONF_OFFSET,
+-      0,
+-      NULL },
+-
+     { ngx_string("limit_except"),
+       NGX_HTTP_LOC_CONF|NGX_CONF_BLOCK|NGX_CONF_1MORE,
+       ngx_http_core_limit_except,
+@@ -4312,108 +4296,6 @@ ngx_http_core_server_name(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+ }
+ 
+ 
+-static char *
+-ngx_http_core_root(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+-{
+-    ngx_http_core_loc_conf_t *clcf = conf;
+-
+-    ngx_str_t                  *value;
+-    ngx_int_t                   alias;
+-    ngx_uint_t                  n;
+-    ngx_http_script_compile_t   sc;
+-
+-    alias = (cmd->name.len == sizeof("alias") - 1) ? 1 : 0;
+-
+-    if (clcf->root.data) {
+-
+-        if ((clcf->alias != 0) == alias) {
+-            return "is duplicate";
+-        }
+-
+-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+-                           "\"%V\" directive is duplicate, "
+-                           "\"%s\" directive was specified earlier",
+-                           &cmd->name, clcf->alias ? "alias" : "root");
+-
+-        return NGX_CONF_ERROR;
+-    }
+-
+-    if (clcf->named && alias) {
+-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+-                           "the \"alias\" directive cannot be used "
+-                           "inside the named location");
+-
+-        return NGX_CONF_ERROR;
+-    }
+-
+-    value = cf->args->elts;
+-
+-    if (ngx_strstr(value[1].data, "$document_root")
+-        || ngx_strstr(value[1].data, "${document_root}"))
+-    {
+-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+-                           "the $document_root variable cannot be used "
+-                           "in the \"%V\" directive",
+-                           &cmd->name);
+-
+-        return NGX_CONF_ERROR;
+-    }
+-
+-    if (ngx_strstr(value[1].data, "$realpath_root")
+-        || ngx_strstr(value[1].data, "${realpath_root}"))
+-    {
+-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+-                           "the $realpath_root variable cannot be used "
+-                           "in the \"%V\" directive",
+-                           &cmd->name);
+-
+-        return NGX_CONF_ERROR;
+-    }
+-
+-    clcf->alias = alias ? clcf->name.len : 0;
+-    clcf->root = value[1];
+-
+-    if (!alias && clcf->root.len > 0
+-        && clcf->root.data[clcf->root.len - 1] == '/')
+-    {
+-        clcf->root.len--;
+-    }
+-
+-    if (clcf->root.data[0] != '$') {
+-        if (ngx_conf_full_name(cf->cycle, &clcf->root, 0) != NGX_OK) {
+-            return NGX_CONF_ERROR;
+-        }
+-    }
+-
+-    n = ngx_http_script_variables_count(&clcf->root);
+-
+-    ngx_memzero(&sc, sizeof(ngx_http_script_compile_t));
+-    sc.variables = n;
+-
+-#if (NGX_PCRE)
+-    if (alias && clcf->regex) {
+-        clcf->alias = NGX_MAX_SIZE_T_VALUE;
+-        n = 1;
+-    }
+-#endif
+-
+-    if (n) {
+-        sc.cf = cf;
+-        sc.source = &clcf->root;
+-        sc.lengths = &clcf->root_lengths;
+-        sc.values = &clcf->root_values;
+-        sc.complete_lengths = 1;
+-        sc.complete_values = 1;
+-
+-        if (ngx_http_script_compile(&sc) != NGX_OK) {
+-            return NGX_CONF_ERROR;
+-        }
+-    }
+-
+-    return NGX_CONF_OK;
+-}
+-
+-
+ static ngx_http_method_name_t  ngx_methods_names[] = {
+     { (u_char *) "GET",       (uint32_t) ~NGX_HTTP_GET },
+     { (u_char *) "HEAD",      (uint32_t) ~NGX_HTTP_HEAD },

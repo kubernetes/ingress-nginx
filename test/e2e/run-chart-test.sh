@@ -62,7 +62,7 @@ export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-config-$KIND_CLUSTER_NAME}"
 if [ "${SKIP_CLUSTER_CREATION:-false}" = "false" ]; then
   echo "[dev-env] creating Kubernetes cluster with kind"
 
-  export K8S_VERSION=${K8S_VERSION:-v1.26.3@sha256:61b92f38dff6ccc29969e7aa154d34e38b89443af1a2c14e6cfbd2df6419c66f}
+  export K8S_VERSION=${K8S_VERSION:-v1.29.2@sha256:51a1434a5397193442f0be2a297b488b6c919ce8a3931be0ce822606ea5ca245}
 
   kind create cluster \
     --verbosity=${KIND_LOG_LEVEL} \
@@ -78,7 +78,7 @@ fi
 
 if [ "${SKIP_IMAGE_CREATION:-false}" = "false" ]; then
   if ! command -v ginkgo &> /dev/null; then
-    go install github.com/onsi/ginkgo/v2/ginkgo@v2.9.5
+    go install github.com/onsi/ginkgo/v2/ginkgo@v2.17.1
   fi
   echo "[dev-env] building image"
   make -C ${DIR}/../../ clean-image build image
@@ -104,13 +104,12 @@ if [ "${SKIP_CERT_MANAGER_CREATION:-false}" = "false" ]; then
 fi
 
 echo "[dev-env] running helm chart e2e tests..."
-# Uses a custom chart-testing image to avoid timeouts waiting for namespace deletion.
-# The changes can be found here: https://github.com/aledbf/chart-testing/commit/41fe0ae0733d0c9a538099fb3cec522e888e3d82
 docker run --rm --interactive --network host \
     --name ct \
     --volume $KUBECONFIG:/root/.kube/config \
     --volume "${DIR}/../../":/workdir \
     --workdir /workdir \
-    aledbf/chart-testing:v3.3.1-next ct install \
+    registry.k8s.io/ingress-nginx/e2e-test-runner:v20240404-436df3e4@sha256:6bcba53b14d396177414e01f20e9111f1c009ac3b476a9b7668bb98d12bd5e85 \
+        ct install \
         --charts charts/ingress-nginx \
         --helm-extra-args "--timeout 60s"

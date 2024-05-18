@@ -37,13 +37,56 @@ type Config struct {
 	FromToWWW bool   `json:"fromToWWW"`
 }
 
+const (
+	fromToWWWRedirAnnotation        = "from-to-www-redirect"
+	temporalRedirectAnnotation      = "temporal-redirect"
+	permanentRedirectAnnotation     = "permanent-redirect"
+	permanentRedirectAnnotationCode = "permanent-redirect-code"
+)
+
+var redirectAnnotations = parser.Annotation{
+	Group: "redirect",
+	Annotations: parser.AnnotationFields{
+		fromToWWWRedirAnnotation: {
+			Validator:     parser.ValidateBool,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow, // Low, as it allows just a set of options
+			Documentation: `In some scenarios is required to redirect from www.domain.com to domain.com or vice versa. To enable this feature use this annotation.`,
+		},
+		temporalRedirectAnnotation: {
+			Validator: parser.ValidateRegex(parser.URLIsValidRegex, false),
+			Scope:     parser.AnnotationScopeLocation,
+			Risk:      parser.AnnotationRiskMedium, // Medium, as it allows arbitrary URLs that needs to be validated
+			Documentation: `This annotation allows you to return a temporal redirect (Return Code 302) instead of sending data to the upstream. 
+			For example setting this annotation to https://www.google.com would redirect everything to Google with a Return Code of 302 (Moved Temporarily).`,
+		},
+		permanentRedirectAnnotation: {
+			Validator: parser.ValidateRegex(parser.URLIsValidRegex, false),
+			Scope:     parser.AnnotationScopeLocation,
+			Risk:      parser.AnnotationRiskMedium, // Medium, as it allows arbitrary URLs that needs to be validated
+			Documentation: `This annotation allows to return a permanent redirect (Return Code 301) instead of sending data to the upstream. 
+			For example setting this annotation https://www.google.com would redirect everything to Google with a code 301`,
+		},
+		permanentRedirectAnnotationCode: {
+			Validator:     parser.ValidateInt,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow, // Low, as it allows just a set of options
+			Documentation: `This annotation allows you to modify the status code used for permanent redirects.`,
+		},
+	},
+}
+
 type redirect struct {
-	r resolver.Resolver
+	r                resolver.Resolver
+	annotationConfig parser.Annotation
 }
 
 // NewParser creates a new redirect annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return redirect{r}
+	return redirect{
+		r:                r,
+		annotationConfig: redirectAnnotations,
+	}
 }
 
 // Parse parses the annotations contained in the ingress
@@ -51,9 +94,12 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // If the Ingress contains both annotations the execution order is
 // temporal and then permanent
 func (r redirect) Parse(ing *networking.Ingress) (interface{}, error) {
-	r3w, _ := parser.GetBoolAnnotation("from-to-www-redirect", ing)
+	r3w, err := parser.GetBoolAnnotation(fromToWWWRedirAnnotation, ing, r.annotationConfig.Annotations)
+	if err != nil && !errors.IsMissingAnnotations(err) {
+		return nil, err
+	}
 
-	tr, err := parser.GetStringAnnotation("temporal-redirect", ing)
+	tr, err := parser.GetStringAnnotation(temporalRedirectAnnotation, ing, r.annotationConfig.Annotations)
 	if err != nil && !errors.IsMissingAnnotations(err) {
 		return nil, err
 	}
@@ -70,12 +116,12 @@ func (r redirect) Parse(ing *networking.Ingress) (interface{}, error) {
 		}, nil
 	}
 
-	pr, err := parser.GetStringAnnotation("permanent-redirect", ing)
+	pr, err := parser.GetStringAnnotation(permanentRedirectAnnotation, ing, r.annotationConfig.Annotations)
 	if err != nil && !errors.IsMissingAnnotations(err) {
 		return nil, err
 	}
 
-	prc, err := parser.GetIntAnnotation("permanent-redirect-code", ing)
+	prc, err := parser.GetIntAnnotation(permanentRedirectAnnotationCode, ing, r.annotationConfig.Annotations)
 	if err != nil && !errors.IsMissingAnnotations(err) {
 		return nil, err
 	}
@@ -126,4 +172,13 @@ func isValidURL(s string) error {
 	}
 
 	return nil
+}
+
+func (r redirect) GetDocumentation() parser.AnnotationFields {
+	return r.annotationConfig.Annotations
+}
+
+func (r redirect) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(r.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+	return parser.CheckAnnotationRisk(anns, maxrisk, redirectAnnotations.Annotations)
 }

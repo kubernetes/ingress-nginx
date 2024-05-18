@@ -32,7 +32,7 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "ssh",
 		Short: "ssh into a running ingress-nginx pod",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			util.PrintError(ssh(flags, *pod, *deployment, *selector, *container))
 			return nil
 		},
@@ -45,7 +45,7 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	return cmd
 }
 
-func ssh(flags *genericclioptions.ConfigFlags, podName string, deployment string, selector string, container string) error {
+func ssh(flags *genericclioptions.ConfigFlags, podName, deployment, selector, container string) error {
 	pod, err := request.ChoosePod(flags, podName, deployment, selector)
 	if err != nil {
 		return err

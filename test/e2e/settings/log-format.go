@@ -36,7 +36,6 @@ var _ = framework.DescribeSetting("log-format-*", func() {
 	})
 
 	ginkgo.Context("Check log-format-escape-json and log-format-escape-none", func() {
-
 		ginkgo.It("should not configure log-format escape by default", func() {
 			f.WaitForNginxConfiguration(
 				func(cfg string) bool {
@@ -78,7 +77,6 @@ var _ = framework.DescribeSetting("log-format-*", func() {
 	})
 
 	ginkgo.Context("Check log-format-upstream with log-format-escape-json and log-format-escape-none", func() {
-
 		ginkgo.It("log-format-escape-json enabled", func() {
 			f.SetNginxConfigMapData(map[string]string{
 				"log-format-escape-json": "true",

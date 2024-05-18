@@ -1,6 +1,4 @@
-{{- if and .Values.controller.keda.enabled (or (eq .Values.controller.kind "Deployment") (eq .Values.controller.kind "Both")) -}}
-# https://keda.sh/docs/
-
+{{- if and (eq .Values.controller.kind "Deployment") .Values.controller.keda.enabled (not .Values.controller.autoscaling.enabled) -}}
 apiVersion: {{ .Values.controller.keda.apiVersion }}
 kind: ScaledObject
 metadata:
@@ -11,6 +9,7 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
   name: {{ include "ingress-nginx.controller.fullname" . }}
+  namespace: {{ include "ingress-nginx.namespace" . }}
   {{- if .Values.controller.keda.scaledObject.annotations }}
   annotations: {{ toYaml .Values.controller.keda.scaledObject.annotations | nindent 4 }}
   {{- end }}

@@ -1,13 +1,8 @@
 name: kubectl plugin
 
 on:
-  push:
-    branches:
-      - "main"
-    paths:
-      - "cmd/plugin/**"
-    tags:
-      - "v*"
+  release:
+    types: [published]
 
 permissions:
   contents: write # for goreleaser/goreleaser-action
@@ -17,25 +12,39 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
         with:
           fetch-depth: 0
 
+      - name: Get go version
+        run: echo "GOLANG_VERSION=$(cat GOLANG_VERSION)" >> $GITHUB_ENV
+
       - name: Set up Go
-        uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
-          go-version: 1.20
+          go-version: ${{ env.GOLANG_VERSION }}
           check-latest: true
 
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@336e29918d653399e599bfca99fadc1d7ffbc9f7 # v4.3.0
+      - name: Run GoReleaser Snapshot
+        if: ${{ ! startsWith(github.ref, 'refs/tags/') }}
+        uses: goreleaser/goreleaser-action@7ec5c2b0c6cdda6e8bbb49444bc797dd33d74dd8 # v5.0.0
         with:
           version: latest
-          args: release --rm-dist
+          args: release --snapshot --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run GoReleaser
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        uses: goreleaser/goreleaser-action@7ec5c2b0c6cdda6e8bbb49444bc797dd33d74dd8 # v5.0.0
+        with:
+          version: latest
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update new version in krew-index
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
         uses: rajatjindal/krew-release-bot@df3eb197549e3568be8b4767eec31c5e8e8e6ad8 # v0.0.46
         with:
           krew_template_file: cmd/plugin/krew.yaml

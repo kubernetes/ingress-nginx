@@ -1,0 +1,73 @@
+suite: Controller > PodDisruptionBudget
+templates:
+  - controller-poddisruptionbudget.yaml
+
+tests:
+  - it: should create a PodDisruptionBudget if `controller.replicaCount` is greater than 1
+    set:
+      controller.replicaCount: 2
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: PodDisruptionBudget
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-controller
+
+  - it: should not create a PodDisruptionBudget if `controller.replicaCount` is less than or equal 1
+    set:
+      controller.replicaCount: 1
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create a PodDisruptionBudget if `controller.autoscaling.enabled` is true and `controller.autoscaling.minReplicas` is greater than 1
+    set:
+      controller.autoscaling.enabled: true
+      controller.autoscaling.minReplicas: 2
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: PodDisruptionBudget
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-controller
+
+  - it: should not create a PodDisruptionBudget if `controller.autoscaling.enabled` is true and `controller.autoscaling.minReplicas` is less than or equal 1
+    set:
+      controller.autoscaling.enabled: true
+      controller.autoscaling.minReplicas: 1
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create a PodDisruptionBudget if `controller.keda.enabled` is true and `controller.keda.minReplicas` is greater than 1
+    set:
+      controller.keda.enabled: true
+      controller.keda.minReplicas: 2
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: PodDisruptionBudget
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-controller
+
+  - it: should not create a PodDisruptionBudget if `controller.keda.enabled` is true and `controller.keda.minReplicas` is less than or equal 1
+    set:
+      controller.keda.enabled: true
+      controller.keda.minReplicas: 1
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not create a PodDisruptionBudget if `controller.autoscaling.enabled` is true and `controller.keda.enabled` is true
+    set:
+      controller.autoscaling.enabled: true
+      controller.keda.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0

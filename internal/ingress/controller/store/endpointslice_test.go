@@ -87,7 +87,6 @@ func TestEndpointSliceLister(t *testing.T) {
 			t.Errorf("unexpected error %v", err)
 		}
 		eps, err := el.MatchByKey(key)
-
 		if err != nil {
 			t.Errorf("unexpeted error %v", err)
 		}

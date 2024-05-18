@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/onsi/ginkgo/v2"
+	"github.com/stretchr/testify/assert"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -50,7 +51,6 @@ var _ = framework.DescribeSetting("keep-alive keep-alive-requests", func() {
 			f.WaitForNginxConfiguration(func(server string) bool {
 				return strings.Contains(server, `keepalive_requests 200;`)
 			})
-
 		})
 	})
 
@@ -59,7 +59,8 @@ var _ = framework.DescribeSetting("keep-alive keep-alive-requests", func() {
 			f.UpdateNginxConfigMapData("upstream-keepalive-connections", "128")
 
 			f.WaitForNginxConfiguration(func(server string) bool {
-				match, _ := regexp.MatchString(`upstream\supstream_balancer\s\{[\s\S]*keepalive 128;`, server)
+				match, err := regexp.MatchString(`upstream\supstream_balancer\s\{[\s\S]*keepalive 128;`, server)
+				assert.Nil(ginkgo.GinkgoT(), err, "unexpected error matching the upstream keepalive time")
 				return match
 			})
 		})
@@ -68,7 +69,8 @@ var _ = framework.DescribeSetting("keep-alive keep-alive-requests", func() {
 			f.UpdateNginxConfigMapData("upstream-keepalive-timeout", "120")
 
 			f.WaitForNginxConfiguration(func(server string) bool {
-				match, _ := regexp.MatchString(`upstream\supstream_balancer\s\{[\s\S]*keepalive_timeout\s*120s;`, server)
+				match, err := regexp.MatchString(`upstream\supstream_balancer\s\{[\s\S]*keepalive_timeout\s*120s;`, server)
+				assert.Nil(ginkgo.GinkgoT(), err, "unexpected error matching the upstream keepalive time")
 				return match
 			})
 		})
@@ -77,7 +79,8 @@ var _ = framework.DescribeSetting("keep-alive keep-alive-requests", func() {
 			f.UpdateNginxConfigMapData("upstream-keepalive-time", "75s")
 
 			f.WaitForNginxConfiguration(func(server string) bool {
-				match, _ := regexp.MatchString(`upstream\supstream_balancer\s\{[\s\S]*keepalive_time\s*75s;`, server)
+				match, err := regexp.MatchString(`upstream\supstream_balancer\s\{[\s\S]*keepalive_time\s*75s;`, server)
+				assert.Nil(ginkgo.GinkgoT(), err, "unexpected error matching the upstream keepalive time")
 				return match
 			})
 		})
@@ -86,7 +89,8 @@ var _ = framework.DescribeSetting("keep-alive keep-alive-requests", func() {
 			f.UpdateNginxConfigMapData("upstream-keepalive-requests", "200")
 
 			f.WaitForNginxConfiguration(func(server string) bool {
-				match, _ := regexp.MatchString(`upstream\supstream_balancer\s\{[\s\S]*keepalive_requests\s*200;`, server)
+				match, err := regexp.MatchString(`upstream\supstream_balancer\s\{[\s\S]*keepalive_requests\s*200;`, server)
+				assert.Nil(ginkgo.GinkgoT(), err, "unexpected error matching the upstream keepalive time")
 				return match
 			})
 		})

@@ -35,7 +35,7 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "certs",
 		Short: "Output the certificate data stored in an ingress-nginx pod",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			host, err := cmd.Flags().GetString("host")
 			if err != nil {
 				return err
@@ -59,7 +59,7 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	return cmd
 }
 
-func certs(flags *genericclioptions.ConfigFlags, podName string, deployment string, selector string, container string, host string) error {
+func certs(flags *genericclioptions.ConfigFlags, podName, deployment, selector, container, host string) error {
 	command := []string{"/dbg", "certs", "get", host}
 
 	pod, err := request.ChoosePod(flags, podName, deployment, selector)

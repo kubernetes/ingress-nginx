@@ -34,7 +34,7 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "backends",
 		Short: "Inspect the dynamic backend information of an ingress-nginx instance",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			backend, err := cmd.Flags().GetString("backend")
 			if err != nil {
 				return err
@@ -63,13 +63,14 @@ func CreateCommand(flags *genericclioptions.ConfigFlags) *cobra.Command {
 	return cmd
 }
 
-func backends(flags *genericclioptions.ConfigFlags, podName string, deployment string, selector string, container string, backend string, onlyList bool) error {
+func backends(flags *genericclioptions.ConfigFlags, podName, deployment, selector, container, backend string, onlyList bool) error {
 	var command []string
-	if onlyList {
+	switch {
+	case onlyList:
 		command = []string{"/dbg", "backends", "list"}
-	} else if backend != "" {
+	case backend != "":
 		command = []string{"/dbg", "backends", "get", backend}
-	} else {
+	default:
 		command = []string{"/dbg", "backends", "all"}
 	}
 

@@ -1,0 +1,31 @@
+suite: Controller > ConfigMap
+templates:
+  - controller-configmap.yaml
+
+tests:
+  - it: should create a ConfigMap
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-controller
+
+  - it: should create a ConfigMap with templated values if `controller.config` contains templates
+    set:
+      controller.config:
+        global-rate-limit-memcached-host: "memcached.{{ .Release.Namespace }}.svc.kubernetes.local"
+        global-rate-limit-memcached-port: 11211
+        use-gzip: true
+    asserts:
+      - equal:
+          path: data.global-rate-limit-memcached-host
+          value: memcached.NAMESPACE.svc.kubernetes.local
+      - equal:
+          path: data.global-rate-limit-memcached-port
+          value: "11211"
+      - equal:
+          path: data.use-gzip
+          value: "true"

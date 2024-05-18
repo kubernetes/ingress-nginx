@@ -132,6 +132,9 @@ Requires setting the publish-service parameter to a valid Service reference.`)
 		electionID = flags.String("election-id", "ingress-controller-leader",
 			`Election id to use for Ingress status updates.`)
 
+		electionTTL = flags.Duration("election-ttl", 30*time.Second,
+			`Duration a leader election is valid before it's getting re-elected`)
+
 		updateStatusOnShutdown = flags.Bool("update-status-on-shutdown", true,
 			`Update the load-balancer status of Ingress objects when the controller shuts down.
 Requires the update-status parameter.`)
@@ -146,11 +149,17 @@ Requires the update-status parameter.`)
 		enableSSLPassthrough = flags.Bool("enable-ssl-passthrough", false,
 			`Enable SSL Passthrough.`)
 
+		disableLeaderElection = flags.Bool("disable-leader-election", false,
+			`Disable Leader Election on NGINX Controller.`)
+
 		disableServiceExternalName = flags.Bool("disable-svc-external-name", false,
 			`Disable support for Services of type ExternalName.`)
 
 		annotationsPrefix = flags.String("annotations-prefix", parser.DefaultAnnotationsPrefix,
 			`Prefix of the Ingress annotations specific to the NGINX controller.`)
+
+		enableAnnotationValidation = flags.Bool("enable-annotation-validation", false,
+			`If true, will enable the annotation validation feature. This value will be defaulted to true on a future release`)
 
 		enableSSLChainCompletion = flags.Bool("enable-ssl-chain-completion", false,
 			`Autocomplete SSL certificate chains with missing intermediate CA certificates.
@@ -218,7 +227,7 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 
 		disableSyncEvents = flags.Bool("disable-sync-events", false, "Disables the creation of 'Sync' event resources")
 
-		enableTopologyAwareRouting = flags.Bool("enable-topology-aware-routing", false, "Enable topology aware hints feature, needs service object annotation service.kubernetes.io/topology-aware-hints sets to auto.")
+		enableTopologyAwareRouting = flags.Bool("enable-topology-aware-routing", false, "Enable topology aware routing feature, needs service object annotation service.kubernetes.io/topology-mode sets to auto.")
 	)
 
 	flags.StringVar(&nginx.MaxmindMirror, "maxmind-mirror", "", `Maxmind mirror url (example: http://geoip.local/databases.`)
@@ -249,6 +258,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 	}
 
 	parser.AnnotationsPrefix = *annotationsPrefix
+	parser.EnableAnnotationValidation = *enableAnnotationValidation
 
 	// check port collisions
 	if !ing_net.IsPortAvailable(*httpPort) {
@@ -294,12 +304,12 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		nginx.HealthCheckTimeout = time.Duration(*defHealthCheckTimeout) * time.Second
 	}
 
-	if len(*watchNamespace) != 0 && len(*watchNamespaceSelector) != 0 {
+	if *watchNamespace != "" && *watchNamespaceSelector != "" {
 		return false, nil, fmt.Errorf("flags --watch-namespace and --watch-namespace-selector are mutually exclusive")
 	}
 
 	var namespaceSelector labels.Selector
-	if len(*watchNamespaceSelector) != 0 {
+	if *watchNamespaceSelector != "" {
 		var err error
 		namespaceSelector, err = labels.Parse(*watchNamespaceSelector)
 		if err != nil {
@@ -307,7 +317,11 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		}
 	}
 
-	var histogramBuckets = &collectors.HistogramBuckets{
+	if *electionTTL <= 0 {
+		*electionTTL = 30 * time.Second
+	}
+
+	histogramBuckets := &collectors.HistogramBuckets{
 		TimeBuckets:   *timeBuckets,
 		LengthBuckets: *lengthBuckets,
 		SizeBuckets:   *sizeBuckets,
@@ -320,6 +334,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		KubeConfigFile:              *kubeConfigFile,
 		UpdateStatus:                *updateStatus,
 		ElectionID:                  *electionID,
+		ElectionTTL:                 *electionTTL,
 		EnableProfiling:             *profiling,
 		EnableMetrics:               *enableMetrics,
 		MetricsPerHost:              *metricsPerHost,
@@ -329,6 +344,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		MonitorMaxBatchSize:         *monitorMaxBatchSize,
 		DisableServiceExternalName:  *disableServiceExternalName,
 		EnableSSLPassthrough:        *enableSSLPassthrough,
+		DisableLeaderElection:       *disableLeaderElection,
 		ResyncPeriod:                *resyncPeriod,
 		DefaultService:              *defaultSvc,
 		Namespace:                   *watchNamespace,
@@ -356,7 +372,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 			HTTPS:    *httpsPort,
 			SSLProxy: *sslProxyPort,
 		},
-		IngressClassConfiguration: &ingressclass.IngressClassConfiguration{
+		IngressClassConfiguration: &ingressclass.Configuration{
 			Controller:         *ingressClassController,
 			AnnotationValue:    *ingressClassAnnotation,
 			WatchWithoutClass:  *watchWithoutClass,
@@ -376,7 +392,7 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 
 	var err error
 	if nginx.MaxmindEditionIDs != "" {
-		if err = nginx.ValidateGeoLite2DBEditions(); err != nil {
+		if err := nginx.ValidateGeoLite2DBEditions(); err != nil {
 			return false, nil, err
 		}
 		if nginx.MaxmindLicenseKey != "" || nginx.MaxmindMirror != "" {
