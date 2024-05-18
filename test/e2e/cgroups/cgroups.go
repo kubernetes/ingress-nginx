@@ -19,6 +19,7 @@ package cgroups
 import (
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +27,6 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 
 	"k8s.io/ingress-nginx/pkg/util/runtime"
-	"path/filepath"
 
 	libcontainercgroups "github.com/opencontainers/runc/libcontainer/cgroups"
 )
@@ -46,22 +46,34 @@ var _ = framework.IngressNginxDescribeSerial("[CGroups] cgroups", func() {
 		}
 
 		quotaFile, err := os.Create(filepath.Join(cgroupPath, "cpu.cfs_quota_us"))
-
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		periodFile, err := os.Create(filepath.Join(cgroupPath, "cpu.cfs_period_us"))
-
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		quotaFile.WriteString("4")
-		quotaFile.Sync()
+		_, err = quotaFile.WriteString("4")
+		if err != nil {
+			log.Fatal(err)
+		}
 
-		periodFile.WriteString("2")
-		periodFile.Sync()
+		err = quotaFile.Sync()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		_, err = periodFile.WriteString("2")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = periodFile.Sync()
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		assert.Equal(ginkgo.GinkgoT(), runtime.GetCgroupVersion(), int64(1))
 		assert.Equal(ginkgo.GinkgoT(), runtime.NumCPU(), 2)
@@ -75,15 +87,25 @@ var _ = framework.IngressNginxDescribeSerial("[CGroups] cgroups", func() {
 			log.Fatal(err)
 		}
 
-		os.Create("/sys/fs/cgroup/cgroup.controllers")
-		file, err := os.Create("/sys/fs/cgroup/cpu.max")
-
+		_, err := os.Create("/sys/fs/cgroup/cgroup.controllers")
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		file.WriteString("4 2")
-		file.Sync()
+		file, err := os.Create("/sys/fs/cgroup/cpu.max")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		_, err = file.WriteString("4 2")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = file.Sync()
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		assert.Equal(ginkgo.GinkgoT(), runtime.GetCgroupVersion(), int64(2))
 		assert.Equal(ginkgo.GinkgoT(), runtime.NumCPU(), 2)
