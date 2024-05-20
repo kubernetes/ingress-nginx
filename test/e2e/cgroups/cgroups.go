@@ -27,8 +27,6 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 
 	"k8s.io/ingress-nginx/pkg/util/runtime"
-
-	libcontainercgroups "github.com/opencontainers/runc/libcontainer/cgroups"
 )
 
 var _ = framework.IngressNginxDescribeSerial("[CGroups] cgroups", func() {
@@ -40,10 +38,7 @@ var _ = framework.IngressNginxDescribeSerial("[CGroups] cgroups", func() {
 	})
 
 	ginkgo.It("detects cgroups version v1", func() {
-		cgroupPath, err := libcontainercgroups.FindCgroupMountpoint("", "cpu")
-		if err != nil {
-			log.Fatal(err)
-		}
+		cgroupPath := "/testing/sys/fs/cgroup/"
 
 		quotaFile, err := os.Create(filepath.Join(cgroupPath, "cpu.cfs_quota_us"))
 		if err != nil {
@@ -75,24 +70,25 @@ var _ = framework.IngressNginxDescribeSerial("[CGroups] cgroups", func() {
 			log.Fatal(err)
 		}
 
-		assert.Equal(ginkgo.GinkgoT(), runtime.GetCgroupVersion(), int64(1))
-		assert.Equal(ginkgo.GinkgoT(), runtime.NumCPU(), 2)
+		assert.Equal(ginkgo.GinkgoT(), runtime.GetCgroupVersion(cgroupPath), int64(1))
+		assert.Equal(ginkgo.GinkgoT(), runtime.NumCPUWithCustomPath(cgroupPath), 2)
 
 		os.Remove(filepath.Join(cgroupPath, "cpu.cfs_quota_us"))
 		os.Remove(filepath.Join(cgroupPath, "cpu.cfs_period_us"))
 	})
 
 	ginkgo.It("detect cgroups version v2", func() {
-		if err := os.MkdirAll("/sys/fs/cgroup/", os.ModePerm); err != nil {
+		cgroupPath := "/testing/sys/fs/cgroup/"
+		if err := os.MkdirAll(cgroupPath, os.ModePerm); err != nil {
 			log.Fatal(err)
 		}
 
-		_, err := os.Create("/sys/fs/cgroup/cgroup.controllers")
+		_, err := os.Create(filepath.Join(cgroupPath, "cgroup.controllers"))
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		file, err := os.Create("/sys/fs/cgroup/cpu.max")
+		file, err := os.Create(filepath.Join(cgroupPath, "cpu.max"))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -107,10 +103,10 @@ var _ = framework.IngressNginxDescribeSerial("[CGroups] cgroups", func() {
 			log.Fatal(err)
 		}
 
-		assert.Equal(ginkgo.GinkgoT(), runtime.GetCgroupVersion(), int64(2))
-		assert.Equal(ginkgo.GinkgoT(), runtime.NumCPU(), 2)
+		assert.Equal(ginkgo.GinkgoT(), runtime.GetCgroupVersion(cgroupPath), int64(2))
+		assert.Equal(ginkgo.GinkgoT(), runtime.NumCPUWithCustomPath(cgroupPath), 2)
 
-		os.Remove("/sys/fs/cgroup/cpu.max")
-		os.Remove("/sys/fs/cgroup/cgroup.controllers")
+		os.Remove(filepath.Join(cgroupPath, "cpu.max"))
+		os.Remove(filepath.Join(cgroupPath, "cgroup.controllers"))
 	})
 })
