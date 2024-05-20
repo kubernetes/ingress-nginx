@@ -39,6 +39,9 @@ var _ = framework.IngressNginxDescribeSerial("[CGroups] cgroups", func() {
 
 	ginkgo.It("detects cgroups version v1", func() {
 		cgroupPath := "/testing/sys/fs/cgroup/"
+		if err := os.MkdirAll(cgroupPath, os.ModePerm); err != nil {
+			log.Fatal(err)
+		}
 
 		quotaFile, err := os.Create(filepath.Join(cgroupPath, "cpu.cfs_quota_us"))
 		if err != nil {
