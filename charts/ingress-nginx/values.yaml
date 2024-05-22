@@ -754,6 +754,8 @@ controller:
     labels: {}
     # -- Use an existing PSP instead of creating one
     existingPsp: ""
+    rbac:
+      create: true
     service:
       annotations: {}
       # clusterIP: ""
