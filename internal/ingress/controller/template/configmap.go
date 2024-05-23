@@ -70,6 +70,7 @@ const (
 	plugins                       = "plugins"
 	debugConnections              = "debug-connections"
 	workerSerialReloads           = "enable-serial-reloads"
+	allowSnippetAnnotations       = "allow-snippet-annotations"
 )
 
 var (
@@ -121,6 +122,15 @@ func ReadConfig(src map[string]string) config.Configuration {
 	allowedResponseHeaders := make([]string, 0)
 	luaSharedDicts := make(map[string]int)
 	debugConnectionsList := make([]string, 0)
+
+	if val, ok := conf[allowSnippetAnnotations]; ok {
+		boolValue, err := strconv.ParseBool(val)
+		if err != nil {
+			klog.Errorf("Ignoring poorly formatted value %v for allow-snippet-annotations", val)
+		} else {
+			to.AllowSnippetAnnotations = boolValue
+		}
+	}
 
 	// parse lua shared dict values
 	if val, ok := conf[luaSharedDictsKey]; ok {
