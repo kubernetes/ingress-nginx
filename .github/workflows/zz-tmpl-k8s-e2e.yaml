@@ -20,10 +20,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4.1.3
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
 
       - name: cache
-        uses: actions/download-artifact@8caf195ad4b1dee92908e23f56eeb0696f1dd42d # v4.1.5
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
         with:
           name: docker.tar.gz
 
@@ -50,7 +50,7 @@ jobs:
           make kind-e2e-test
 
       - name: Upload e2e junit-reports ${{ inputs.variation }}
-        uses: actions/upload-artifact@1746f4ab65b179e0ea60a494b83293b640dd5bba # v4.3.2
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         if: success() || failure()
         with:
           name: e2e-test-reports-${{ inputs.k8s-version }}${{ inputs.variation }}
