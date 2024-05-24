@@ -17,6 +17,7 @@ local tostring = tostring
 local pairs = pairs
 local math = math
 local ngx = ngx
+local type = type
 
 -- measured in seconds
 -- for an Nginx worker to pick up the new list of upstream peers
@@ -292,6 +293,27 @@ local function get_balancer()
   ngx.ctx.balancer = balancer
 
   return balancer
+end
+
+function _M.register_implementation(name, implementation)
+  if not name or #name == 0 then
+    return false, "name is required"
+  end
+  if not implementation or type(implementation) ~= "table" then
+    return false, "implementation is required"
+  end
+  if type(implementation.new) ~= "function" or type(implementation.sync) ~= "function" or
+    type(implementation.balance) ~= "function" then
+
+    return false, "`new`, `sync` and `balance` functions must be implemented"
+  end
+  if IMPLEMENTATIONS[name] then
+    return false, "implementation with name " .. name .. " already exists"
+  end
+
+  IMPLEMENTATIONS[name] = implementation
+
+  return true, nil
 end
 
 function _M.init_worker()

@@ -533,4 +533,45 @@ describe("Balancer", function()
     end)
 
   end)
+
+  describe("register_implementation", function ()
+    it("registers a new balancer implementation", function ()
+      local new_implementation = {
+        name = "new_implementation",
+        new = function(self, backend)
+          local o = {
+            endpoints = backend.endpoints,
+            traffic_shaping_policy = backend.trafficShapingPolicy,
+            alternative_backends = backend.alternativeBackends,
+          }
+          setmetatable(o, self)
+          self.__index = self
+          return o
+        end,
+        is_affinitized = function(_) return false end,
+        after_balance = function(_) end,
+        sync = function(self, backend)
+          self.endpoints = backend.endpoints
+          self.traffic_shaping_policy = backend.trafficShapingPolicy
+          self.alternative_backends = backend.alternativeBackends
+        end,
+        balance = function (self)
+          local endpoint = self.endpoints[1]
+          return endpoint.address .. ":" .. endpoint.port
+        end,
+      }
+
+      balancer.register_implementation("new_implementation", new_implementation)
+
+      local backend = {
+        name = "dummy",
+        ["load-balance"] = "new_implementation",
+        endpoints = {
+          { address = "1.1.1.1", port = "8080", maxFails = 0, failTimeout = 0 },
+        }
+      }
+      local implementation = balancer.get_implementation(backend)
+      assert.equal(new_implementation, implementation)
+    end)
+  end)
 end)
