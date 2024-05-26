@@ -1101,13 +1101,19 @@ See NGINX [client_max_body_size](https://nginx.org/en/docs/http/ngx_http_core_mo
 
 Sets the timeout for [establishing a connection with a proxied server](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_connect_timeout). It should be noted that this timeout cannot usually exceed 75 seconds.
 
+It will also set the [grpc_connect_timeout](https://nginx.org/en/docs/http/ngx_http_grpc_module.html#grpc_connect_timeout) for gRPC connections.
+
 ## proxy-read-timeout
 
 Sets the timeout in seconds for [reading a response from the proxied server](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout). The timeout is set only between two successive read operations, not for the transmission of the whole response.
 
+It will also set the [grpc_read_timeout](https://nginx.org/en/docs/http/ngx_http_grpc_module.html#grpc_read_timeout) for gRPC connections.
+
 ## proxy-send-timeout
 
 Sets the timeout in seconds for [transmitting a request to the proxied server](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_send_timeout). The timeout is set only between two successive write operations, not for the transmission of the whole request.
+
+It will also set the [grpc_send_timeout](https://nginx.org/en/docs/http/ngx_http_grpc_module.html#grpc_send_timeout) for gRPC connections.
 
 ## proxy-buffers-number
 

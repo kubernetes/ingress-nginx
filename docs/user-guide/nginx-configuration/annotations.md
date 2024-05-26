@@ -698,6 +698,12 @@ In some scenarios is required to have different values. To allow this we provide
 - `nginx.ingress.kubernetes.io/proxy-next-upstream-tries`
 - `nginx.ingress.kubernetes.io/proxy-request-buffering`
 
+If you indicate [Backend Protocol](#backend-protocol) as `GRPC` or `GRPCS`, the following grpc values will be set and inherited from proxy timeouts:
+
+- [`grpc_connect_timeout=5s`](https://nginx.org/en/docs/http/ngx_http_grpc_module.html#grpc_connect_timeout), from `nginx.ingress.kubernetes.io/proxy-connect-timeout`
+- [`grpc_send_timeout=60s`](https://nginx.org/en/docs/http/ngx_http_grpc_module.html#grpc_send_timeout), from `nginx.ingress.kubernetes.io/proxy-send-timeout`
+- [`grpc_read_timeout=60s`](https://nginx.org/en/docs/http/ngx_http_grpc_module.html#grpc_read_timeout), from `nginx.ingress.kubernetes.io/proxy-read-timeout`
+
 Note: All timeout values are unitless and in seconds e.g. `nginx.ingress.kubernetes.io/proxy-read-timeout: "120"` sets a valid 120 seconds proxy read timeout.
 
 ### Proxy redirect
