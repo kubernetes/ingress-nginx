@@ -65,6 +65,32 @@ It will install the controller in the `ingress-nginx` namespace, creating that n
 helm show values ingress-nginx --repo https://kubernetes.github.io/ingress-nginx
 ```
 
+!!! helm install on AWS/GCP/Azure/Other providers
+    There have been too many attempts at using helm to install the controller on the cloud infra like AWS/GCP/Azure/Other.
+    The ingress-nginx-controller helm-chart is a generic install out of the box.
+    The default set of helm values are not configured for installing on any infra provider.
+    The annotations that are applicable to the cloud provider must be customized by the users.
+    Link to AWS LB Constroller https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.2/guide/service/annotations/
+    Examples of some annotations needed for the service resource of --type LoadBalancer on AWS are below
+
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+        service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
+        service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+        service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "ip"
+        service.beta.kubernetes.io/aws-load-balancer-type: nlb
+        service.beta.kubernetes.io/aws-load-balancer-manage-backend-security-group-rules: "true"
+        service.beta.kubernetes.io/aws-load-balancer-access-log-enabled: "true"
+        service.beta.kubernetes.io/aws-load-balancer-security-groups: "sg-something1 sg-something2"
+        service.beta.kubernetes.io/aws-load-balancer-access-log-s3-bucket-name: "somebucket"
+        service.beta.kubernetes.io/aws-load-balancer-access-log-s3-bucket-prefix: "ingress-nginx"
+        service.beta.kubernetes.io/aws-load-balancer-access-log-emit-interval: "5"
+
+
+
+
+
+
 **If you don't have Helm** or if you prefer to use a YAML manifest, you can run the following command instead:
 
 ```console
@@ -247,17 +273,6 @@ In AWS, we use a Network load balancer (NLB) to expose the Ingress-Nginx Control
     [Network load balancing on Amazon EKS](https://docs.aws.amazon.com/eks/latest/userguide/network-load-balancing.html)
     with [AWS Load Balancer Controller](https://github.com/kubernetes-sigs/aws-load-balancer-controller).
 
-!!! helm install on AWS
-    There have been too many attempts at using helm to install the controller on AWS recently.
-    The ingress-nginx-controller helm-chart is generic and not aimed at installing on AWS on any other infra provider.
-    There are annotations and configurations that are applicable only to AWS.
-    Please run `helm template` and compare with the static yaml manifests you see below.
-    A user is expected to use annotations for
-    (a) internal/external
-    (b) type - nlb
-    (c) sqcurity-groups
-    (d) and other such requirements
-    during their ``helm install`` process.
 
 ##### Network Load Balancer (NLB)
 
