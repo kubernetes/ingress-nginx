@@ -65,7 +65,7 @@ It will install the controller in the `ingress-nginx` namespace, creating that n
 helm show values ingress-nginx --repo https://kubernetes.github.io/ingress-nginx
 ```
 
-!!! attention helm install on AWS/GCP/Azure/Other providers
+!!! attention  helm install on AWS/GCP/Azure/Other providers
     There have been too many attempts at using helm to install the controller on the cloud infra like AWS/GCP/Azure/Other.
     
     The ingress-nginx-controller helm-chart is a generic install out of the box.
