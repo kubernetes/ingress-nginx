@@ -65,17 +65,11 @@ It will install the controller in the `ingress-nginx` namespace, creating that n
 helm show values ingress-nginx --repo https://kubernetes.github.io/ingress-nginx
 ```
 
-!!! attention  helm install on AWS/GCP/Azure/Other providers
-    There have been too many attempts at using helm to install the controller on the cloud infra like AWS/GCP/Azure/Other.
-    
-    The ingress-nginx-controller helm-chart is a generic install out of the box.
-    The default set of helm values are not configured for installing on any infra provider.
-    The annotations that are applicable to the cloud provider must be customized by the users.
-    
-    See [AWS LB Constroller](https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.2/guide/service/annotations/).
-    
+!!! attention "helm install on AWS/GCP/Azure/Other providers"
+    There have been too many attempts at using helm to install the controller on the cloud infra like AWS/GCP/Azure/Other.<br/>
+    The ingress-nginx-controller helm-chart is a generic install out of the box. The default set of helm values are **not** configured for installing on any infra provider. The annotations that are applicable to the cloud provider must be customized by the users.<br/>
+    See [AWS LB Constroller](https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.2/guide/service/annotations/).<br/>
     Examples of some annotations needed for the service resource of --type LoadBalancer on AWS are below:
-
     ```yaml
       annotations:
         service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
