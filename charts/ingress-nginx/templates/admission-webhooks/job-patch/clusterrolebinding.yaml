@@ -18,6 +18,6 @@ roleRef:
   name: {{ include "ingress-nginx.admissionWebhooks.fullname" . }}
 subjects:
   - kind: ServiceAccount
-    name: {{ include "ingress-nginx.admissionWebhooks.fullname" . }}
+    name: {{ template "ingress-nginx.admissionWebhooks.serviceAccountName" . }}
     namespace: {{ include "ingress-nginx.namespace" . }}
 {{- end }}

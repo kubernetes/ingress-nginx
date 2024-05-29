@@ -754,8 +754,14 @@ controller:
     labels: {}
     # -- Use an existing PSP instead of creating one
     existingPsp: ""
+    # -- Create RBAC for admission webhook patch job or not
     rbac:
       create: true
+    # -- ServiceAccount for admission webhook patch job
+    serviceAccount:
+      create: true
+      name: ""
+      automountServiceAccountToken: true
     service:
       annotations: {}
       # clusterIP: ""

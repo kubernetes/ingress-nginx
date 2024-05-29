@@ -168,6 +168,17 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 
 {{/*
+Create the name of the admission webhook job service account to use
+*/}}
+{{- define "ingress-nginx.admissionWebhooks.serviceAccountName" -}}
+{{- if .Values.controller.admissionWebhooks.serviceAccount.create -}}
+    {{ default (include "ingress-nginx.admissionWebhooks.fullname" .) .Values.controller.admissionWebhooks.serviceAccount.name }}
+{{- else -}}
+    {{ default "default" .Values.controller.admissionWebhooks.serviceAccount.name }}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Create a default fully qualified admission webhook secret creation job name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
