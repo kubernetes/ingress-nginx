@@ -413,7 +413,7 @@ func configForLua(input interface{}) string {
 		all.Cfg.GlobalRateLimitMemcachedConnectTimeout,
 		all.Cfg.GlobalRateLimitMemcachedMaxIdleTimeout,
 		all.Cfg.GlobalRateLimitMemcachedPoolSize,
-		all.Cfg.GlobalRateLimitStatucCode,
+		all.Cfg.GlobalRateLimitStatusCode,
 	)
 }
 
