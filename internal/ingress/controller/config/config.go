@@ -734,9 +734,9 @@ type Configuration struct {
 	// simultaneous connections.
 	GlobalRateLimitMemcachedPoolSize int `json:"global-rate-limit-memcached-pool-size"`
 
-	// GlobalRateLimitStatucCode determines the HTTP status code to return
+	// GlobalRateLimitStatusCode determines the HTTP status code to return
 	// when limit is exceeding during global rate limiting.
-	GlobalRateLimitStatucCode int `json:"global-rate-limit-status-code"`
+	GlobalRateLimitStatusCode int `json:"global-rate-limit-status-code"`
 
 	// DebugConnections Enables debugging log for selected client connections
 	// http://nginx.org/en/docs/ngx_core_module.html#debug_connection
@@ -909,7 +909,7 @@ func NewDefault() Configuration {
 		GlobalRateLimitMemcachedConnectTimeout: 50,
 		GlobalRateLimitMemcachedMaxIdleTimeout: 10000,
 		GlobalRateLimitMemcachedPoolSize:       50,
-		GlobalRateLimitStatucCode:              429,
+		GlobalRateLimitStatusCode:              429,
 		DebugConnections:                       []string{},
 		StrictValidatePathType:                 false, // TODO: This will be true in future releases
 	}
