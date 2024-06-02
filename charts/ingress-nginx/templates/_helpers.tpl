@@ -168,13 +168,13 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 
 {{/*
-Create the name of the admission webhook job service account to use
+Create the name of the admission webhook patch job service account to use
 */}}
-{{- define "ingress-nginx.admissionWebhooks.serviceAccountName" -}}
-{{- if .Values.controller.admissionWebhooks.serviceAccount.create -}}
-    {{ default (include "ingress-nginx.admissionWebhooks.fullname" .) .Values.controller.admissionWebhooks.serviceAccount.name }}
+{{- define "ingress-nginx.admissionWebhooks.patch.serviceAccountName" -}}
+{{- if .Values.controller.admissionWebhooks.patch.serviceAccount.create -}}
+    {{ default (include "ingress-nginx.admissionWebhooks.fullname" .) .Values.controller.admissionWebhooks.patch.serviceAccount.name }}
 {{- else -}}
-    {{ default "default" .Values.controller.admissionWebhooks.serviceAccount.name }}
+    {{ default "default" .Values.controller.admissionWebhooks.patch.serviceAccount.name }}
 {{- end -}}
 {{- end -}}
 
