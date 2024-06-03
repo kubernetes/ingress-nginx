@@ -1,0 +1,11 @@
+suite: Admission Webhooks > Patch Job > RoleBinding
+templates:
+  - admission-webhooks/job-patch/rolebinding.yaml
+
+tests:
+  - it: should not create a RoleBinding if `controller.admissionWebhooks.patch.rbac.create` is false
+    set:
+      controller.admissionWebhooks.patch.rbac.create: false
+    asserts:
+      - hasDocuments:
+          count: 0

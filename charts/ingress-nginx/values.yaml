@@ -822,6 +822,18 @@ controller:
       labels: {}
       # -- Security context for secret creation & webhook patch pods
       securityContext: {}
+      # -- Admission webhook patch job RBAC
+      rbac:
+        # -- Create RBAC or not
+        create: true
+      # -- Admission webhook patch job service account
+      serviceAccount:
+        # -- Create a service account or not
+        create: true
+        # -- Custom service account name
+        name: ""
+        # -- Auto-mount service account token or not
+        automountServiceAccountToken: true
     # Use certmanager to generate webhook certs
     certManager:
       enabled: false
