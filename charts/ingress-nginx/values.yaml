@@ -196,6 +196,8 @@ controller:
   # -- Maxmind license key to download GeoLite2 Databases.
   ## https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases
   maxmindLicenseKey: ""
+  # -- Maxmind mirror to download GeoLite2 Databases. Example: https://maxmind.example.com
+  maxmindMirror: ""
   # -- Additional command line arguments to pass to Ingress-Nginx Controller
   # E.g. to specify the default SSL certificate you can use
   extraArgs: {}

@@ -42,6 +42,9 @@
 {{- if .Values.controller.maxmindLicenseKey }}
 - --maxmind-license-key={{ .Values.controller.maxmindLicenseKey }}
 {{- end }}
+{{- if .Values.controller.maxmindMirror }}
+- --maxmind-mirror={{ .Values.controller.maxmindMirror }}
+{{- end }}
 {{- if .Values.controller.healthCheckHost }}
 - --healthz-host={{ .Values.controller.healthCheckHost }}
 {{- end }}
