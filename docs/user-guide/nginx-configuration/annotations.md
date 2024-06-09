@@ -958,7 +958,7 @@ Enables a request to be mirrored to a mirror backend. Responses by mirror backen
 The mirror backend can be set by applying:
 
 ```yaml
-nginx.ingress.kubernetes.io/mirror-target: https://test.env.com/$request_uri
+nginx.ingress.kubernetes.io/mirror-target: https://test.env.com$request_uri
 ```
 
 By default the request-body is sent to the mirror backend, but can be turned off by applying:
@@ -970,7 +970,7 @@ nginx.ingress.kubernetes.io/mirror-request-body: "off"
 Also by default header Host for mirrored requests will be set the same as a host part of uri in the "mirror-target" annotation. You can override it by "mirror-host" annotation:
 
 ```yaml
-nginx.ingress.kubernetes.io/mirror-target: https://1.2.3.4/$request_uri
+nginx.ingress.kubernetes.io/mirror-target: https://1.2.3.4$request_uri
 nginx.ingress.kubernetes.io/mirror-host: "test.env.com"
 ```
 
