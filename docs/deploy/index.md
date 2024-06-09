@@ -364,6 +364,8 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 ```console
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.1/deploy/static/provider/scw/deploy.yaml
 ```
+Refer to the [dedicated tutorial](https://www.scaleway.com/en/docs/tutorials/proxy-protocol-v2-load-balancer/#configuring-proxy-protocol-for-ingress-nginx) in the Scaleway documentation for configuring the proxy protocol for ingress-nginx with the Scaleway load balancer.
+
 
 #### Exoscale
 
