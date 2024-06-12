@@ -1011,6 +1011,8 @@ defaultBackend:
   #    value: "value"
   #    effect: "NoSchedule|PreferNoSchedule|NoExecute(1.6 only)"
 
+  # -- Affinity and anti-affinity rules for server scheduling to nodes
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
   affinity: {}
   # -- Topology spread constraints rely on node labels to identify the topology domain(s) that each Node is in.
   # Ref.: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
