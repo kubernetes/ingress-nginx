@@ -264,7 +264,7 @@ controller:
   #         - key: app.kubernetes.io/instance
   #           operator: In
   #           values:
-  #           - '{{ .Release.Name }}'
+  #           - "{{ .Release.Name }}"
   #         - key: app.kubernetes.io/component
   #           operator: In
   #           values:
@@ -283,7 +283,7 @@ controller:
   #       - key: app.kubernetes.io/instance
   #         operator: In
   #         values:
-  #         - '{{ .Release.Name }}'
+  #         - "{{ .Release.Name }}"
   #       - key: app.kubernetes.io/component
   #         operator: In
   #         values:
