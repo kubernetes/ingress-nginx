@@ -264,7 +264,7 @@ controller:
   #         - key: app.kubernetes.io/instance
   #           operator: In
   #           values:
-  #           - "{{ .Release.Name }}"
+  #           - '{{ .Release.Name }}'
   #         - key: app.kubernetes.io/component
   #           operator: In
   #           values:
@@ -1014,6 +1014,46 @@ defaultBackend:
   # -- Affinity and anti-affinity rules for server scheduling to nodes
   ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
   affinity: {}
+  # # An example of preferred pod anti-affinity, weight is in the range 1-100
+  # podAntiAffinity:
+  #   preferredDuringSchedulingIgnoredDuringExecution:
+  #   - weight: 100
+  #     podAffinityTerm:
+  #       labelSelector:
+  #         matchExpressions:
+  #         - key: app.kubernetes.io/name
+  #           operator: In
+  #           values:
+  #           - '{{ include "ingress-nginx.name" . }}'
+  #         - key: app.kubernetes.io/instance
+  #           operator: In
+  #           values:
+  #           - '{{ .Release.Name }}'
+  #         - key: app.kubernetes.io/component
+  #           operator: In
+  #           values:
+  #           - controller
+  #       topologyKey: kubernetes.io/hostname
+
+  # # An example of required pod anti-affinity
+  # podAntiAffinity:
+  #   requiredDuringSchedulingIgnoredDuringExecution:
+  #   - labelSelector:
+  #       matchExpressions:
+  #       - key: app.kubernetes.io/name
+  #         operator: In
+  #         values:
+  #         - '{{ include "ingress-nginx.name" . }}'
+  #       - key: app.kubernetes.io/instance
+  #         operator: In
+  #         values:
+  #         - '{{ .Release.Name }}'
+  #       - key: app.kubernetes.io/component
+  #         operator: In
+  #         values:
+  #         - controller
+  #     topologyKey: "kubernetes.io/hostname"
+
   # -- Topology spread constraints rely on node labels to identify the topology domain(s) that each Node is in.
   # Ref.: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
   topologySpreadConstraints: []
