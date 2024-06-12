@@ -206,7 +206,7 @@ spec:
       tolerations: {{ toYaml .Values.controller.tolerations | nindent 8 }}
     {{- end }}
     {{- if .Values.controller.affinity }}
-      affinity: {{ tpl ( toYaml .Values.controller.affinity ) $ | nindent 8 }}
+      affinity: {{ tpl (toYaml .Values.controller.affinity) $ | nindent 8 }}
     {{- end }}
     {{- if .Values.controller.topologySpreadConstraints }}
       topologySpreadConstraints: {{ tpl (toYaml .Values.controller.topologySpreadConstraints) $ | nindent 8 }}
