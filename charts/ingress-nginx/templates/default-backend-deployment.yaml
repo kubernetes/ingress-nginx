@@ -107,7 +107,7 @@ spec:
       tolerations: {{ toYaml .Values.defaultBackend.tolerations | nindent 8 }}
     {{- end }}
     {{- if .Values.defaultBackend.affinity }}
-      affinity: {{ toYaml .Values.defaultBackend.affinity | nindent 8 }}
+      affinity: {{ tpl ( toYaml .Values.defaultBackend.affinity ) $ | nindent 8 }}
     {{- end }}
     {{- if .Values.defaultBackend.topologySpreadConstraints }}
       topologySpreadConstraints: {{ tpl (toYaml .Values.defaultBackend.topologySpreadConstraints) $ | nindent 8 }}

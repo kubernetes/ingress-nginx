@@ -1,8 +1,6 @@
 annotations:
   artifacthub.io/changes: |-
-    - "update post submit helm ci and clean up (#11221)"
-    - "refactor helm ci tests part I (#11188)"
-    - "Update Ingress-Nginx version controller-v1.10.1"
+    - "template pod affinity"
   artifacthub.io/prerelease: "false"
 apiVersion: v2
 appVersion: 1.10.1
@@ -22,4 +20,4 @@ maintainers:
 name: ingress-nginx
 sources:
 - https://github.com/kubernetes/ingress-nginx
-version: 4.10.1
+version: 4.11.0
