@@ -138,7 +138,7 @@ tests:
                     operator: In
                     values:
                       - controller
-              topologyKey: "kubernetes.io/hostname"
+              topologyKey: kubernetes.io/hostname
     asserts:
       - equal:
           path: spec.template.spec.affinity

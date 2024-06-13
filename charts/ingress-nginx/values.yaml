@@ -1052,7 +1052,7 @@ defaultBackend:
   #         operator: In
   #         values:
   #         - default-backend
-  #     topologyKey: "kubernetes.io/hostname"
+  #     topologyKey: kubernetes.io/hostname
 
   # -- Topology spread constraints rely on node labels to identify the topology domain(s) that each Node is in.
   # Ref.: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
