@@ -1032,7 +1032,7 @@ defaultBackend:
   #         - key: app.kubernetes.io/component
   #           operator: In
   #           values:
-  #           - controller
+  #           - default-backend
   #       topologyKey: kubernetes.io/hostname
 
   # # An example of required pod anti-affinity
@@ -1051,7 +1051,7 @@ defaultBackend:
   #       - key: app.kubernetes.io/component
   #         operator: In
   #         values:
-  #         - controller
+  #         - default-backend
   #     topologyKey: "kubernetes.io/hostname"
 
   # -- Topology spread constraints rely on node labels to identify the topology domain(s) that each Node is in.

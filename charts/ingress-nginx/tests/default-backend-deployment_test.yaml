@@ -112,7 +112,7 @@ tests:
                   - key: app.kubernetes.io/component
                     operator: In
                     values:
-                      - controller
+                      - default-backend
               topologyKey: "kubernetes.io/hostname"
     asserts:
       - equal:
@@ -133,5 +133,5 @@ tests:
                       - key: app.kubernetes.io/component
                         operator: In
                         values:
-                          - controller
+                          - default-backend
                   topologyKey: kubernetes.io/hostname
