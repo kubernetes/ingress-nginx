@@ -4,8 +4,9 @@ about: CVE reporting for ingress-nginx
 title: ''
 labels: kind/bug
 assignees:
-    - strongjz
+    - Gacko
     - rikatz
+    - strongjz
 ---
 
 <!-- if you found something that impacts directly ingress-nginx and

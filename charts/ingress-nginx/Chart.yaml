@@ -15,7 +15,9 @@ keywords:
   - nginx
 kubeVersion: '>=1.21.0-0'
 maintainers:
+- name: cpanato
 - name: Gacko
+- name: puerco
 - name: rikatz
 - name: strongjz
 - name: tao12345666333
