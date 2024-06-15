@@ -86,7 +86,7 @@ var _ = framework.DescribeSetting("GRPC", func() {
 				return strings.Contains(server, "grpc_pass grpc://upstream_balancer;")
 			})
 
-		conn, err := grpc.Dial(f.GetNginxIP()+":443",
+		conn, err := grpc.NewClient(f.GetNginxIP()+":443",
 			grpc.WithTransportCredentials(
 				credentials.NewTLS(&tls.Config{
 					ServerName:         echoHost,

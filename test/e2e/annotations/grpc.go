@@ -107,7 +107,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 			})
 
 		//nolint:goconst //string interpolation
-		conn, err := grpc.Dial(f.GetNginxIP()+":443",
+		conn, err := grpc.NewClient(f.GetNginxIP()+":443",
 			grpc.WithTransportCredentials(
 				credentials.NewTLS(&tls.Config{
 					ServerName:         echoHost,
@@ -168,7 +168,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 				return strings.Contains(server, "grpc_pass grpc://upstream_balancer;")
 			})
 
-		conn, err := grpc.Dial(f.GetNginxIP()+":443",
+		conn, err := grpc.NewClient(f.GetNginxIP()+":443",
 			grpc.WithTransportCredentials(
 				credentials.NewTLS(&tls.Config{
 					ServerName:         echoHost,
@@ -242,7 +242,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 				return strings.Contains(server, "grpc_pass grpcs://upstream_balancer;")
 			})
 
-		conn, err := grpc.Dial(f.GetNginxIP()+":443",
+		conn, err := grpc.NewClient(f.GetNginxIP()+":443",
 			grpc.WithTransportCredentials(
 				credentials.NewTLS(&tls.Config{
 					ServerName:         echoHost,
@@ -286,7 +286,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 					strings.Contains(server, fmt.Sprintf("grpc_read_timeout %ss;", proxyTimeout))
 			})
 
-		conn, err := grpc.Dial(
+		conn, err := grpc.NewClient(
 			f.GetNginxIP()+":80",
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 			grpc.WithAuthority(host),
@@ -329,7 +329,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 					strings.Contains(server, fmt.Sprintf("grpc_read_timeout %ss;", proxyTimeout))
 			})
 
-		conn, err := grpc.Dial(
+		conn, err := grpc.NewClient(
 			f.GetNginxIP()+":80",
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 			grpc.WithAuthority(host),
