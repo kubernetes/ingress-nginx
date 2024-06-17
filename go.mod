@@ -41,7 +41,7 @@ require (
 	k8s.io/client-go v0.30.2
 	k8s.io/code-generator v0.30.1
 	k8s.io/component-base v0.30.2
-	k8s.io/klog/v2 v2.120.1
+	k8s.io/klog/v2 v2.130.0
 	pault.ag/go/sniff v0.0.0-20200207005214-cf7e4d167732
 	sigs.k8s.io/controller-runtime v0.18.4
 	sigs.k8s.io/mdtoc v1.1.0
