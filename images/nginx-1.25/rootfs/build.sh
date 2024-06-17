@@ -41,8 +41,8 @@ export MODSECURITY_VERSION=v1.0.3
 # Check for recent changes: https://github.com/SpiderLabs/ModSecurity/compare/v3.0.8...v3/master
 export MODSECURITY_LIB_VERSION=v3.0.12
 
-# Check for recent changes: https://github.com/coreruleset/coreruleset/compare/v4.3.0...main
-export OWASP_MODSECURITY_CRS_VERSION=v4.3.0
+# Check for recent changes: https://github.com/coreruleset/coreruleset/compare/v3.3.5...main
+export OWASP_MODSECURITY_CRS_VERSION=v3.3.5
 
 # Check for recent changes: https://github.com/openresty/lua-nginx-module/compare/b5d1688ae722538ba4dc8a7ec08820a08abfb93d...master
 export LUA_NGX_VERSION=b5d1688ae722538ba4dc8a7ec08820a08abfb93d
@@ -105,9 +105,9 @@ export LUA_RESTY_GLOBAL_THROTTLE_VERSION=v0.2.0
 export MIMALOC_VERSION=v2.1.7
 
 # Check on https://github.com/open-telemetry/opentelemetry-cpp
-export OPENTELEMETRY_CPP_VERSION="v1.15.0"
+export OPENTELEMETRY_CPP_VERSION="v1.11.0"
 # Check on https://github.com/open-telemetry/opentelemetry-proto
-export OPENTELEMETRY_PROTO_VERSION="v1.3.1"
+export OPENTELEMETRY_PROTO_VERSION="v1.1.0"
 
 export BUILD_PATH=/tmp/build
 
@@ -521,7 +521,7 @@ make
 make modules
 make install
 
-export OPENTELEMETRY_CONTRIB_COMMIT=512a8a5c13f31b513bc0c6e7aadd6c1f9d75981a
+export OPENTELEMETRY_CONTRIB_COMMIT=aaa51e2297bcb34297f3c7aa44fa790497d2f7f3
 cd "$BUILD_PATH"
 
 git clone https://github.com/open-telemetry/opentelemetry-cpp-contrib.git opentelemetry-cpp-contrib-${OPENTELEMETRY_CONTRIB_COMMIT}
