@@ -30,7 +30,7 @@ The following table shows a configuration option's name, type, and the default v
 |[add-headers](#add-headers)|string|""||
 |[allow-backend-server-header](#allow-backend-server-header)|bool|"false"||
 |[allow-cross-namespace-resources](#allow-cross-namespace-resources)|bool|"true"||
-|[allow-snippet-annotations](#allow-snippet-annotations)|bool|false||
+|[allow-snippet-annotations](#allow-snippet-annotations)|bool|"false"||
 |[annotations-risk-level](#annotations-risk-level)|string|Critical||
 |[annotation-value-word-blocklist](#annotation-value-word-blocklist)|string array|""||
 |[hide-headers](#hide-headers)|string array|empty||
@@ -47,12 +47,12 @@ The following table shows a configuration option's name, type, and the default v
 |[client-header-timeout](#client-header-timeout)|int|60||
 |[client-body-buffer-size](#client-body-buffer-size)|string|"8k"||
 |[client-body-timeout](#client-body-timeout)|int|60||
-|[disable-access-log](#disable-access-log)|bool|false||
-|[disable-ipv6](#disable-ipv6)|bool|false||
-|[disable-ipv6-dns](#disable-ipv6-dns)|bool|false||
-|[enable-underscores-in-headers](#enable-underscores-in-headers)|bool|false||
-|[enable-ocsp](#enable-ocsp)|bool|false||
-|[ignore-invalid-headers](#ignore-invalid-headers)|bool|true||
+|[disable-access-log](#disable-access-log)|bool|"false"||
+|[disable-ipv6](#disable-ipv6)|bool|"false"||
+|[disable-ipv6-dns](#disable-ipv6-dns)|bool|"false"||
+|[enable-underscores-in-headers](#enable-underscores-in-headers)|bool|"false"||
+|[enable-ocsp](#enable-ocsp)|bool|"false"||
+|[ignore-invalid-headers](#ignore-invalid-headers)|bool|"true"||
 |[retry-non-idempotent](#retry-non-idempotent)|bool|"false"||
 |[error-log-level](#error-log-level)|string|"notice"||
 |[http2-max-field-size](#http2-max-field-size)|string|""|DEPRECATED in favour of [large_client_header_buffers](#large-client-header-buffers)|
@@ -197,7 +197,7 @@ The following table shows a configuration option's name, type, and the default v
 |[proxy-buffering](#proxy-buffering)|string|"off"||
 |[limit-req-status-code](#limit-req-status-code)|int|503||
 |[limit-conn-status-code](#limit-conn-status-code)|int|503||
-|[enable-syslog](#enable-syslog)|bool|false||
+|[enable-syslog](#enable-syslog)|bool|"false"||
 |[syslog-host](#syslog-host)|string|""||
 |[syslog-port](#syslog-port)|int|514||
 |[no-tls-redirect-locations](#no-tls-redirect-locations)|string|"/.well-known/acme-challenge"||
