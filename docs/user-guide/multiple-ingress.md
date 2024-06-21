@@ -57,6 +57,7 @@ or if installing with Helm:
 ```yaml
 controller:
   electionID: ingress-controller-leader
+  ingressClass: internal-nginx  # default: nginx
   ingressClassResource:
     name: internal-nginx  # default: nginx
     enabled: true
