@@ -41,8 +41,9 @@ If this flag is not provided NGINX will use a self-signed certificate.
 For instance, if you have a TLS secret `foo-tls` in the `default` namespace,
 add `--default-ssl-certificate=default/foo-tls` in the `nginx-controller` deployment.
 
-The default certificate will also be used for ingress `tls:` sections that do not
-have a `secretName` option.
+If the `tls:` section is not set, NGINX will provide the default certificate but will not force HTTPS redirect.
+
+On the other hand, if the `tls:` section is set - even without specifying a `secretName` option - NGINX will force HTTPS redirect. 
 
 To force redirects for Ingresses that do not specify a TLS-block at all, take a look at `force-ssl-redirect` in [ConfigMap][ConfigMap].
 
