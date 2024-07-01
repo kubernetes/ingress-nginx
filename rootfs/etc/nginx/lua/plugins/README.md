@@ -14,8 +14,9 @@ By defining functions with the following names, you can run your custom Lua code
 
  - `init_worker`: useful for initializing some data per Nginx worker process
  - `rewrite`: useful for modifying request, changing headers, redirection, dropping request, doing authentication etc
+ - `balance`: when a plugin implements `balancer_implementation` function, it will be registered as a load balancer implementation. This plugin has to implement the balancer interface. Check [`hello_world`](./hello_world/main.lua) for an example implementation.
  - `header_filter`: this is called when backend response header is received, it is useful for modifying response headers
- - `body_filter`: this is called when response body is received, it is useful for logging response body 
+ - `body_filter`: this is called when response body is received, it is useful for logging response body
  - `log`: this is called when request processing is completed and a response is delivered to the client
 
 Check this [`hello_world`](https://github.com/kubernetes/ingress-nginx/tree/main/rootfs/etc/nginx/lua/plugins/hello_world) plugin as a simple example or refer to [OpenID Connect integration](https://github.com/ElvinEfendi/ingress-nginx-openidc/tree/master/rootfs/etc/nginx/lua/plugins/openidc) for more advanced usage.

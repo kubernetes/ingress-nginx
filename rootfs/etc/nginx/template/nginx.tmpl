@@ -122,6 +122,12 @@ http {
         end
         -- load all plugins that'll be used here
         plugins.init({ {{ range  $idx, $plugin := $cfg.Plugins }}{{ if $idx }},{{ end }}{{ $plugin | quote }}{{ end }} })
+        for name, implementation in pairs(plugins.balancer_implementations) do
+            local ok, err = balancer.register_implementation(name, implementation)
+            if not ok then
+                error("failed to register balancer implementation: " .. err)
+            end
+        end
     }
 
     init_worker_by_lua_block {
@@ -789,7 +795,7 @@ stream {
     lua_package_path "/etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/?.lua;;";
 
     lua_shared_dict tcp_udp_configuration_data 5M;
-    
+
     {{ buildResolvers $cfg.Resolver $cfg.DisableIpv6DNS }}
 
     init_by_lua_block {

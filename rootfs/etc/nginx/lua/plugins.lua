@@ -7,7 +7,9 @@ local INFO = ngx.INFO
 local ERR = ngx.ERR
 local pcall = pcall
 
-local _M = {}
+local _M = {
+  balancer_implementations = {},
+}
 local MAX_NUMBER_OF_PLUGINS = 20
 local plugins = {}
 
@@ -22,6 +24,10 @@ local function load_plugin(name)
   local index = #plugins
   if (plugin.name == nil or plugin.name == '') then
     plugin.name = name
+  end
+
+  if plugin["balancer_implementation"] then
+    _M.balancer_implementations[name] = plugin.balancer_implementation()
   end
   plugins[index + 1] = plugin
 end

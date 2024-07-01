@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/onsi/ginkgo/v2"
+	"github.com/stretchr/testify/assert"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
@@ -43,6 +44,35 @@ var _ = framework.IngressNginxDescribe("plugins", func() {
 				return strings.Contains(server, fmt.Sprintf("server_name %v", host)) &&
 					strings.Contains(server, `plugins.init({ "hello_world","invalid" })`)
 			})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("User-Agent", "hello").
+			Expect().
+			Status(http.StatusOK).
+			Body().Contains("x-hello-world=1")
+	})
+
+	ginkgo.It("registers hello_world as a custom balancer implementation", func() {
+		f.SetNginxConfigMapData(map[string]string{
+			"plugins":      "hello_world",
+			"load-balance": "hello_world",
+		})
+
+		host := "example.com"
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
+
+		f.WaitForNginxConfiguration(
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("server_name %v", host)) &&
+					strings.Contains(server, `plugins.init({ "hello_world" })`) &&
+					strings.Contains(server, `local ok, err = balancer.register_implementation(name, implementation)`)
+			})
+
+		algorithm, err := f.GetLbAlgorithm(framework.EchoService, 80)
+		assert.Nil(ginkgo.GinkgoT(), err)
+		assert.Equal(ginkgo.GinkgoT(), algorithm, "hello_world")
 
 		f.HTTPTestClient().
 			GET("/").
