@@ -452,6 +452,9 @@ type Configuration struct {
 	// MIME Types that will be compressed on-the-fly using Brotli module
 	BrotliTypes string `json:"brotli-types,omitempty"`
 
+	//Enables NGINX JS
+	EnableNJS bool `json:"enable-njs,omitempty`
+
 	// Enables or disables the HTTP/2 support in secure connections
 	// http://nginx.org/en/docs/http/ngx_http_v2_module.html
 	// Default: true
@@ -797,6 +800,7 @@ func NewDefault() Configuration {
 		BrotliLevel:                      4,
 		BrotliMinLength:                  20,
 		BrotliTypes:                      brotliTypes,
+		EnableNJS:                        false,
 		ClientHeaderBufferSize:           "1k",
 		ClientHeaderTimeout:              60,
 		ClientBodyBufferSize:             "8k",
