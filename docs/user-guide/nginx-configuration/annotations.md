@@ -390,13 +390,13 @@ CORS can be controlled with the following annotations:
 
 * `nginx.ingress.kubernetes.io/cors-allow-origin`: Controls what's the accepted Origin for CORS.
 
-    This is a multi-valued field, separated by ','. It must follow this format: `http(s)://origin-site.com` or `http(s)://origin-site.com:port`
+    This is a multi-valued field, separated by ','. It must follow this format: `protocol://origin-site.com` or `protocol://origin-site.com:port`
 
     - Default: `*`
-    - Example: `nginx.ingress.kubernetes.io/cors-allow-origin: "https://origin-site.com:4443, http://origin-site.com, https://example.org:1199"`
+    - Example: `nginx.ingress.kubernetes.io/cors-allow-origin: "https://origin-site.com:4443, http://origin-site.com, myprotocol://example.org:1199"`
 
-    It also supports single level wildcard subdomains and follows this format: `http(s)://*.foo.bar`, `http(s)://*.bar.foo:8080` or `http(s)://*.abc.bar.foo:9000`
-    - Example: `nginx.ingress.kubernetes.io/cors-allow-origin: "https://*.origin-site.com:4443, http://*.origin-site.com, https://example.org:1199"`
+    It also supports single level wildcard subdomains and follows this format: `protocol://*.foo.bar`, `protocol://*.bar.foo:8080` or `protocol://*.abc.bar.foo:9000`
+    - Example: `nginx.ingress.kubernetes.io/cors-allow-origin: "https://*.origin-site.com:4443, http://*.origin-site.com, myprotocol://example.org:1199"`
 
 * `nginx.ingress.kubernetes.io/cors-allow-credentials`: Controls if credentials can be passed during CORS operations.
 
