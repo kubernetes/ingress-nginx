@@ -154,6 +154,7 @@ func TestRateLimiting(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix(limitRateAfterAnnotation)] = "100"
 	data[parser.GetAnnotationWithPrefix(limitRateAnnotation)] = "10"
 	data[parser.GetAnnotationWithPrefix(limitRateBurstMultiplierAnnotation)] = "3"
+	data[parser.GetAnnotationWithPrefix(limitRateDelayAnnotation)] = "5"
 
 	ing.SetAnnotations(data)
 
@@ -171,11 +172,20 @@ func TestRateLimiting(t *testing.T) {
 	if rateLimit.Connections.Burst != 5*3 {
 		t.Errorf("expected %d in burst limit by ip but %v was returned", 5*3, rateLimit.Connections)
 	}
+	if rateLimit.Connections.SharedSize != 5 {
+		t.Errorf("expected %d in sharedSize limit by ip but %v was returned", 5, rateLimit.Connections)
+	}
 	if rateLimit.RPS.Limit != 100 {
 		t.Errorf("expected 100 in limit by rps but %v was returned", rateLimit.RPS)
 	}
 	if rateLimit.RPS.Burst != 100*3 {
 		t.Errorf("expected %d in burst limit by rps but %v was returned", 100*3, rateLimit.RPS)
+	}
+	if rateLimit.RPS.Delay != 5 {
+		t.Errorf("expected %d in delay limit by rps but %v was returned", 5, rateLimit.RPS)
+	}
+	if rateLimit.RPS.SharedSize != 5 {
+		t.Errorf("expected %d in sharedSize limit by rps but %v was returned", 5, rateLimit.RPS)
 	}
 	if rateLimit.RPM.Limit != 10 {
 		t.Errorf("expected 10 in limit by rpm but %v was returned", rateLimit.RPM)
@@ -183,8 +193,67 @@ func TestRateLimiting(t *testing.T) {
 	if rateLimit.RPM.Burst != 10*3 {
 		t.Errorf("expected %d in burst limit by rpm but %v was returned", 10*3, rateLimit.RPM)
 	}
+	if rateLimit.RPM.Delay != 5 {
+		t.Errorf("expected %d in delay limit by rpm but %v was returned", 5, rateLimit.RPM)
+	}
 	if rateLimit.LimitRateAfter != 100 {
 		t.Errorf("expected 100 in limit by limitrateafter but %v was returned", rateLimit.LimitRateAfter)
+	}
+	if rateLimit.LimitRate != 10 {
+		t.Errorf("expected 10 in limit by limitrate but %v was returned", rateLimit.LimitRate)
+	}
+
+	data = map[string]string{}
+	data[parser.GetAnnotationWithPrefix(limitRateConnectionsAnnotation)] = "5"
+	data[parser.GetAnnotationWithPrefix(limitRateRPSAnnotation)] = "100"
+	data[parser.GetAnnotationWithPrefix(limitRateRPMAnnotation)] = "10"
+	data[parser.GetAnnotationWithPrefix(limitRateAnnotation)] = "10"
+	data[parser.GetAnnotationWithPrefix(limitRateBurstMultiplierAnnotation)] = "3"
+	data[parser.GetAnnotationWithPrefix(limitRateNoBurstAnnotation)] = "true"
+	data[parser.GetAnnotationWithPrefix(limitRateSharedSizeAnnotation)] = "1"
+
+	ing.SetAnnotations(data)
+
+	i, err = NewParser(mockBackend{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	rateLimit, ok = i.(*Config)
+	if !ok {
+		t.Errorf("expected a RateLimit type")
+	}
+	if rateLimit.Connections.Limit != 5 {
+		t.Errorf("expected 5 in limit by ip but %v was returned", rateLimit.Connections)
+	}
+	if rateLimit.Connections.Burst != 0 {
+		t.Errorf("expected %d in burst limit by ip but %v was returned", 0, rateLimit.Connections)
+	}
+	if rateLimit.Connections.SharedSize != 1 {
+		t.Errorf("expected %d in sharedSize limit by ip but %v was returned", 1, rateLimit.Connections)
+	}
+	if rateLimit.RPS.Limit != 100 {
+		t.Errorf("expected 100 in limit by rps but %v was returned", rateLimit.RPS)
+	}
+	if rateLimit.RPS.Burst != 0 {
+		t.Errorf("expected %d in burst limit by rps but %v was returned", 0, rateLimit.RPS)
+	}
+	if rateLimit.RPS.Delay != -1 {
+		t.Errorf("expected %d in delay limit by rps but %v was returned", -1, rateLimit.RPS)
+	}
+	if rateLimit.RPS.SharedSize != 1 {
+		t.Errorf("expected %d in sharedSize limit by rps but %v was returned", 1, rateLimit.RPS)
+	}
+	if rateLimit.RPM.Limit != 10 {
+		t.Errorf("expected 10 in limit by rpm but %v was returned", rateLimit.RPM)
+	}
+	if rateLimit.RPM.Burst != 0 {
+		t.Errorf("expected %d in burst limit by rpm but %v was returned", 0, rateLimit.RPM)
+	}
+	if rateLimit.RPM.Delay != -1 {
+		t.Errorf("expected %d in delay limit by rpm but %v was returned", -1, rateLimit.RPM)
+	}
+	if rateLimit.RPM.SharedSize != 1 {
+		t.Errorf("expected %d in sharedSize limit by rps but %v was returned", 1, rateLimit.RPM)
 	}
 	if rateLimit.LimitRate != 10 {
 		t.Errorf("expected 10 in limit by limitrate but %v was returned", rateLimit.LimitRate)
