@@ -91,3 +91,26 @@ func TestParseAnnotations(t *testing.T) {
 		t.Errorf("expected %v but got %v", expected, val)
 	}
 }
+
+func TestParseDisabledAnnotations(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix("custom-http-errors")] = "off"
+	ing.SetAnnotations(data)
+
+	i, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error parsing ingress with custom-http-errors")
+	}
+	val, ok := i.([]int)
+	if !ok {
+		t.Errorf("expected a []int type")
+	}
+
+	expected := []int{}
+
+	if !reflect.DeepEqual(expected, val) {
+		t.Errorf("expected %v but got %v", expected, val)
+	}
+}
