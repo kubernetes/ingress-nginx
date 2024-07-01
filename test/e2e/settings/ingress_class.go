@@ -645,14 +645,35 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 				Status(http.StatusOK)
 		})
 
-		ginkgo.It("should ignore Ingress with only IngressClassName", func() {
-			invalidHost := "noclassforyou"
+		ginkgo.It("should watch Ingress with matched Ingress.Spec.IngressClassName and CLI parameter --ingress-class", func() {
+			validHost := "validhostnameforingressclassname"
+			testIngressClassName := "testclass"
 
-			ing := framework.NewSingleIngress(invalidHost, "/", invalidHost, f.Namespace, framework.EchoService, 80, nil)
+			ing := framework.NewSingleIngress(validHost, "/", validHost, f.Namespace, framework.EchoService, 80, nil)
+			ing.Spec.IngressClassName = &testIngressClassName
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
-				return !strings.Contains(cfg, "server_name noclassforyou")
+				return strings.Contains(cfg, "server_name "+validHost)
+			})
+
+			f.HTTPTestClient().
+				GET("/").
+				WithHeader("Host", validHost).
+				Expect().
+				Status(http.StatusOK)
+		})
+
+		ginkgo.It("should ignore Ingress with only IngressClassName", func() {
+			invalidHost := "noclassforyou"
+			unmatchedIngressClassName := "testclass-unmatched"
+
+			ing := framework.NewSingleIngress(invalidHost, "/", invalidHost, f.Namespace, framework.EchoService, 80, nil)
+			ing.Spec.IngressClassName = &unmatchedIngressClassName
+			f.EnsureIngress(ing)
+
+			f.WaitForNginxConfiguration(func(cfg string) bool {
+				return !strings.Contains(cfg, "server_name "+invalidHost)
 			})
 
 			f.HTTPTestClient().
