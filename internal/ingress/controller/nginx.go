@@ -72,6 +72,8 @@ const (
 	emptyUID         = "-1"
 )
 
+var tmpDir = os.TempDir() + "/nginx/"
+
 // NewNGINXController creates a new NGINX Ingress controller.
 func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXController {
 	eventBroadcaster := record.NewBroadcaster()
@@ -643,7 +645,6 @@ func (n *NGINXController) testTemplate(cfg []byte) error {
 	if len(cfg) == 0 {
 		return fmt.Errorf("invalid NGINX configuration (empty)")
 	}
-	tmpDir := os.TempDir() + "/nginx"
 	tmpfile, err := os.CreateTemp(tmpDir, tempNginxPattern)
 	if err != nil {
 		return err
@@ -1082,11 +1083,11 @@ func createOpentelemetryCfg(cfg *ngx_config.Configuration) error {
 func cleanTempNginxCfg() error {
 	var files []string
 
-	err := filepath.Walk(os.TempDir(), func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(tmpDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		if info.IsDir() && os.TempDir() != path {
+		if info.IsDir() && tmpDir != path {
 			return filepath.SkipDir
 		}
 
