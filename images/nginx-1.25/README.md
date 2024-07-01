@@ -15,7 +15,7 @@ But this requires adding a new flag during the build:
 
 > When configuring nginx, it is possible to enable QUIC and HTTP/3 using the --with-http_v3_module configuration parameter.
 
-We have added this flag, but it is not enough to use HTTP/3 in ingress-nginx, this is the first step.
+[We have added this flag](https://github.com/kubernetes/ingress-nginx/pull/11470), but it is not enough to use HTTP/3 in ingress-nginx, this is the first step.
 
 The next steps will be:
 
@@ -39,7 +39,7 @@ The next steps will be:
 
     > Server-side QUIC support
     
-    [Options for using instead of OpenSSL(HAProxy Documentation)](https://github.com/haproxy/wiki/wiki/SSL-Libraries-Support-Status#tldr)  
+    [Overview of SSL libraries(HAProxy Documentation)](https://github.com/haproxy/wiki/wiki/SSL-Libraries-Support-Status#tldr)  
 
 2. **Adding [parameters](https://nginx.org/en/docs/http/ngx_http_v3_module.html) to the configmap to configure HTTP/3 and quic(enableHTTP3, enableHTTP/0.9, maxCurrentStream, and so on).**
 3. **Adding options to the nginx config template(`listen 443 quic` to server blocks and `add_header Alt-Svc 'h3=":8443"; ma=86400';` to location blocks).**
