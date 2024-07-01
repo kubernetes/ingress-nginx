@@ -119,10 +119,11 @@ type Configuration struct {
 
 	IngressClassConfiguration *ingressclass.Configuration
 
-	ValidationWebhook         string
-	ValidationWebhookCertPath string
-	ValidationWebhookKeyPath  string
-	DisableFullValidationTest bool
+	ValidationWebhook            string
+	ValidationWebhookCertPath    string
+	ValidationWebhookKeyPath     string
+	DisableFullValidationTest    bool
+	DisablePathOverlapValidation bool
 
 	GlobalExternalAuth  *ngx_config.GlobalExternalAuth
 	MaxmindEditionFiles *[]string
@@ -404,10 +405,14 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 	startTest := time.Now().UnixNano() / 1000000
 	_, servers, pcfg := n.getConfiguration(ings)
 
-	err = checkOverlap(ing, servers)
-	if err != nil {
-		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
-		return err
+	if n.cfg.DisablePathOverlapValidation {
+		klog.Warningf("ingress %v in namespace %v not checked for path overlap since --disable-path-overlap-validation is enabled", ing.Name, ing.ObjectMeta.Namespace)
+	} else {
+		err = checkOverlap(ing, servers)
+		if err != nil {
+			n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
+			return err
+		}
 	}
 	testedSize := len(ings)
 	if n.cfg.DisableFullValidationTest {
