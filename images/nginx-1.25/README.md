@@ -1,6 +1,5 @@
 NGINX 1.25 base image
 
-
 ### HTTP/3 Support
 
 **HTTP/3 support is experimental and under development**
@@ -33,7 +32,7 @@ The next steps will be:
 
     > ... the QUIC (currently client side only) version 1 protocol
    
-    [and also there are some issues even with client side](https://github.com/openssl/openssl/discussions/23339)
+    [And also there are some issues even with client side](https://github.com/openssl/openssl/discussions/23339)
 
     Due to this, we currently have incomplete HTTP/3 support, without important security and performance features.\
     But the good news is that [OpenSSL plans to add server-side support in 3.4](https://www.openssl.org/roadmap.html):
