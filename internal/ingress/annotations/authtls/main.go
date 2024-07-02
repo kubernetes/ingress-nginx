@@ -122,6 +122,9 @@ func (assl1 *Config) Equal(assl2 *Config) bool {
 	if assl1.PassCertToUpstream != assl2.PassCertToUpstream {
 		return false
 	}
+	if assl1.MatchCN != assl2.MatchCN {
+		return false
+	}
 
 	return true
 }
