@@ -1,0 +1,11 @@
+--- nginx-1.25.3/auto/cc/conf	2015-10-30 22:47:50.000000000 +0800
++++ nginx-1.25.3-patched/auto/cc/conf	2015-11-02 12:23:05.385156987 +0800
+@@ -144,7 +144,7 @@ fi
+ CFLAGS="$CFLAGS $NGX_CC_OPT"
+ NGX_TEST_LD_OPT="$NGX_LD_OPT"
+ 
+-if [ "$NGX_PLATFORM" != win32 ]; then
++if [ 1 ]; then
+ 
+     if test -n "$NGX_LD_OPT"; then
+         ngx_feature=--with-ld-opt=\"$NGX_LD_OPT\"

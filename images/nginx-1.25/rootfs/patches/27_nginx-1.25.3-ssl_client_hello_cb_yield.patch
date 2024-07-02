@@ -1,0 +1,38 @@
+diff --git a/src/event/ngx_event_openssl.c b/src/event/ngx_event_openssl.c
+index 8ba30e58..2b2db95c 100644
+--- a/src/event/ngx_event_openssl.c
++++ b/src/event/ngx_event_openssl.c
+@@ -1712,6 +1712,9 @@ ngx_ssl_handshake(ngx_connection_t *c)
+     if (sslerr == SSL_ERROR_WANT_X509_LOOKUP
+ #   ifdef SSL_ERROR_PENDING_SESSION
+         || sslerr == SSL_ERROR_PENDING_SESSION
++#   endif
++#   ifdef SSL_ERROR_WANT_CLIENT_HELLO_CB
++        || sslerr == SSL_ERROR_WANT_CLIENT_HELLO_CB
+ #   endif
+        )
+     {
+@@ -1889,6 +1892,23 @@ ngx_ssl_try_early_data(ngx_connection_t *c)
+     }
+ #endif
+ 
++#ifdef SSL_ERROR_WANT_CLIENT_HELLO_CB
++    if (sslerr == SSL_ERROR_WANT_CLIENT_HELLO_CB) {
++        c->read->handler = ngx_ssl_handshake_handler;
++        c->write->handler = ngx_ssl_handshake_handler;
++
++        if (ngx_handle_read_event(c->read, 0) != NGX_OK) {
++            return NGX_ERROR;
++        }
++
++        if (ngx_handle_write_event(c->write, 0) != NGX_OK) {
++            return NGX_ERROR;
++        }
++
++        return NGX_AGAIN;
++    }
++#endif
++
+     err = (sslerr == SSL_ERROR_SYSCALL) ? ngx_errno : 0;
+ 
+     c->ssl->no_wait_shutdown = 1;
