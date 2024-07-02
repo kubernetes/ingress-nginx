@@ -959,6 +959,10 @@ stream {
             rewrite                (.*) / break;
 
             proxy_pass            http://upstream_balancer;
+            access_by_lua_block {
+                balancer.is_default_backend()
+            }
+
             log_by_lua_block {
                 {{ if $enableMetrics }}
                 monitor.call()
