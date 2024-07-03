@@ -74,7 +74,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: changes
     if: |
-      (needs.changes.outputs.go == 'true')
+      (needs.changes.outputs.go == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
     steps:
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
@@ -99,7 +99,7 @@ jobs:
     outputs:
       golangversion: ${{ steps.golangversion.outputs.version }}
     if: |
-      (needs.changes.outputs.go == 'true') || (needs.changes.outputs.charts == 'true') || (needs.changes.outputs.baseimage == 'true')
+      (needs.changes.outputs.go == 'true') || (needs.changes.outputs.charts == 'true') || (needs.changes.outputs.baseimage == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
 
     env:
         PLATFORMS: linux/amd64
@@ -175,7 +175,7 @@ jobs:
     needs:
       - changes
     if: |
-      (needs.changes.outputs.charts == 'true') || (needs.changes.outputs.baseimage == 'true')
+      (needs.changes.outputs.charts == 'true') || (needs.changes.outputs.baseimage == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
 
     steps:
       - name: Checkout
@@ -231,11 +231,11 @@ jobs:
       - build
       - helm-lint
     if: |
-      (needs.changes.outputs.charts == 'true') || (needs.changes.outputs.baseimage == 'true')
+      (needs.changes.outputs.charts == 'true') || (needs.changes.outputs.baseimage == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
 
     strategy:
       matrix:
-        k8s: [v1.26.14, v1.27.11, v1.28.7, v1.29.2]
+        k8s: [v1.26.15, v1.27.13, v1.28.9, v1.29.4, v1.30.0]
 
     steps:
       - name: Checkout
@@ -283,10 +283,10 @@ jobs:
       - changes
       - build
     if: |
-      (needs.changes.outputs.go == 'true') || (needs.changes.outputs.baseimage == 'true')
+      (needs.changes.outputs.go == 'true') || (needs.changes.outputs.baseimage == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
     strategy:
       matrix:
-        k8s: [v1.26.14, v1.27.11, v1.28.7, v1.29.2]
+        k8s: [v1.26.15, v1.27.13, v1.28.9, v1.29.4, v1.30.0]
     uses: ./.github/workflows/zz-tmpl-k8s-e2e.yaml
     with:
       k8s-version: ${{ matrix.k8s }}
@@ -297,10 +297,10 @@ jobs:
       - changes
       - build
     if: |
-      (needs.changes.outputs.go == 'true') || (needs.changes.outputs.baseimage == 'true')
+      (needs.changes.outputs.go == 'true') || (needs.changes.outputs.baseimage == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
     strategy:
       matrix:
-        k8s: [v1.26.14, v1.27.11, v1.28.7, v1.29.2]
+        k8s: [v1.26.15, v1.27.13, v1.28.9, v1.29.4, v1.30.0]
     uses: ./.github/workflows/zz-tmpl-k8s-e2e.yaml
     with:
       k8s-version: ${{ matrix.k8s }}
@@ -312,10 +312,10 @@ jobs:
       - changes
       - build
     if: |
-      (needs.changes.outputs.go == 'true') || (needs.changes.outputs.baseimage == 'true')
+      (needs.changes.outputs.go == 'true') || (needs.changes.outputs.baseimage == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
     strategy:
       matrix:
-        k8s: [v1.26.14, v1.27.11, v1.28.7, v1.29.2]
+        k8s: [v1.26.15, v1.27.13, v1.28.9, v1.29.4, v1.30.0]
     uses: ./.github/workflows/zz-tmpl-k8s-e2e.yaml
     with:
       k8s-version: ${{ matrix.k8s }}
