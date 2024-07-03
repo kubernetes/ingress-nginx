@@ -1,5 +1,5 @@
-apiVersion: policy/v1beta1
-kind: PodSecurityPolicy
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
 metadata:
   name: {{ include "ingress-nginx.fullname" . }}-backend
   labels:
