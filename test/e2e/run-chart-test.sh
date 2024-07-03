@@ -109,7 +109,7 @@ docker run --rm --interactive --network host \
     --volume $KUBECONFIG:/root/.kube/config \
     --volume "${DIR}/../../":/workdir \
     --workdir /workdir \
-    registry.k8s.io/ingress-nginx/e2e-test-runner:v20240404-436df3e4@sha256:6bcba53b14d396177414e01f20e9111f1c009ac3b476a9b7668bb98d12bd5e85 \
+    registry.k8s.io/ingress-nginx/e2e-test-runner:v20240703-195ce186@sha256:98db2302f2a548d1b0748cb4d0a381995de761e4324fef3b8296004337a9b581 \
         ct install \
         --charts charts/ingress-nginx \
         --helm-extra-args "--timeout 60s"
