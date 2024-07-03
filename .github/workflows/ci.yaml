@@ -298,7 +298,7 @@ jobs:
       - build
     if: |
       (needs.changes.outputs.go == 'true') || (needs.changes.outputs.baseimage == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
-    strategy: 
+    strategy:
       matrix:
         k8s: [v1.26.15, v1.27.13, v1.28.9, v1.29.4, v1.30.0]
     uses: ./.github/workflows/zz-tmpl-k8s-e2e.yaml
