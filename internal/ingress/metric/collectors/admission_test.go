@@ -59,7 +59,7 @@ func TestAdmissionCounters(t *testing.T) {
 	}{
 		{
 			name: "should return 0 as values on a fresh initiated collector",
-			test: func(am *AdmissionCollector) {
+			test: func(_ *AdmissionCollector) {
 			},
 			want: metadataFirst + `
 				nginx_ingress_controller_admission_config_size{controller_class="nginx",controller_namespace="default",controller_pod="pod"} 0

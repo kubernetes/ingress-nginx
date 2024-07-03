@@ -177,8 +177,8 @@ func (c canary) Parse(ing *networking.Ingress) (interface{}, error) {
 		config.Cookie = ""
 	}
 
-	if !config.Enabled && (config.Weight > 0 || len(config.Header) > 0 || len(config.HeaderValue) > 0 || len(config.Cookie) > 0 ||
-		len(config.HeaderPattern) > 0) {
+	if !config.Enabled && (config.Weight > 0 || config.Header != "" || config.HeaderValue != "" || config.Cookie != "" ||
+		config.HeaderPattern != "") {
 		return nil, errors.NewInvalidAnnotationConfiguration(canaryAnnotation, "configured but not enabled")
 	}
 

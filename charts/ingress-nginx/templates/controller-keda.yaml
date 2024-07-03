@@ -1,4 +1,4 @@
-{{- if and .Values.controller.keda.enabled (eq .Values.controller.kind "Deployment") -}}
+{{- if and (eq .Values.controller.kind "Deployment") .Values.controller.keda.enabled (not .Values.controller.autoscaling.enabled) -}}
 apiVersion: {{ .Values.controller.keda.apiVersion }}
 kind: ScaledObject
 metadata:

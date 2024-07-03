@@ -22,11 +22,13 @@ import (
 	"fmt"
 	"strings"
 
+	delaypb "github.com/Anddd7/pb/grpcbin"
 	pb "github.com/moul/pb/grpcbin/go-grpc"
 	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,15 +37,16 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-const echoHost = "echo"
+const (
+	echoHost = "echo"
+	host     = "grpc"
+)
 
 var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 	f := framework.NewDefaultFramework("grpc", framework.WithHTTPBunEnabled())
 
 	ginkgo.It("should use grpc_pass in the configuration file", func() {
 		f.NewGRPCFortuneTellerDeployment()
-
-		host := "grpc"
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
@@ -104,7 +107,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 			})
 
 		//nolint:goconst //string interpolation
-		conn, err := grpc.Dial(f.GetNginxIP()+":443",
+		conn, err := grpc.NewClient(f.GetNginxIP()+":443",
 			grpc.WithTransportCredentials(
 				credentials.NewTLS(&tls.Config{
 					ServerName:         echoHost,
@@ -165,7 +168,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 				return strings.Contains(server, "grpc_pass grpc://upstream_balancer;")
 			})
 
-		conn, err := grpc.Dial(f.GetNginxIP()+":443",
+		conn, err := grpc.NewClient(f.GetNginxIP()+":443",
 			grpc.WithTransportCredentials(
 				credentials.NewTLS(&tls.Config{
 					ServerName:         echoHost,
@@ -239,7 +242,7 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 				return strings.Contains(server, "grpc_pass grpcs://upstream_balancer;")
 			})
 
-		conn, err := grpc.Dial(f.GetNginxIP()+":443",
+		conn, err := grpc.NewClient(f.GetNginxIP()+":443",
 			grpc.WithTransportCredentials(
 				credentials.NewTLS(&tls.Config{
 					ServerName:         echoHost,
@@ -258,5 +261,90 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 
 		metadata := res.GetMetadata()
 		assert.Equal(ginkgo.GinkgoT(), metadata["content-type"].Values[0], "application/grpc")
+	})
+
+	ginkgo.It("should return OK when request not exceed timeout", func() {
+		f.NewGRPCBinDelayDeployment()
+
+		proxyTimeout := "10"
+		ingressName := "grpcbin-delay"
+
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/backend-protocol"] = "GRPC"
+		annotations["nginx.ingress.kubernetes.io/proxy-connect-timeout"] = proxyTimeout
+		annotations["nginx.ingress.kubernetes.io/proxy-send-timeout"] = proxyTimeout
+		annotations["nginx.ingress.kubernetes.io/proxy-read-timeout"] = proxyTimeout
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, ingressName, 50051, annotations)
+
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("grpc_connect_timeout %ss;", proxyTimeout)) &&
+					strings.Contains(server, fmt.Sprintf("grpc_send_timeout %ss;", proxyTimeout)) &&
+					strings.Contains(server, fmt.Sprintf("grpc_read_timeout %ss;", proxyTimeout))
+			})
+
+		conn, err := grpc.NewClient(
+			f.GetNginxIP()+":80",
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+			grpc.WithAuthority(host),
+		)
+		assert.Nil(ginkgo.GinkgoT(), err, "error creating a connection")
+		defer conn.Close()
+
+		client := delaypb.NewGrpcbinServiceClient(conn)
+
+		res, err := client.Unary(context.Background(), &delaypb.UnaryRequest{
+			Data: "hello",
+		})
+		assert.Nil(ginkgo.GinkgoT(), err)
+
+		metadata := res.GetResponseAttributes().RequestHeaders
+		assert.Equal(ginkgo.GinkgoT(), metadata["content-type"], "application/grpc")
+		assert.Equal(ginkgo.GinkgoT(), metadata[":authority"], host)
+	})
+
+	ginkgo.It("should return Error when request exceed timeout", func() {
+		f.NewGRPCBinDelayDeployment()
+
+		proxyTimeout := "10"
+		ingressName := "grpcbin-delay"
+
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/backend-protocol"] = "GRPC"
+		annotations["nginx.ingress.kubernetes.io/proxy-connect-timeout"] = proxyTimeout
+		annotations["nginx.ingress.kubernetes.io/proxy-send-timeout"] = proxyTimeout
+		annotations["nginx.ingress.kubernetes.io/proxy-read-timeout"] = proxyTimeout
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, ingressName, 50051, annotations)
+
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("grpc_connect_timeout %ss;", proxyTimeout)) &&
+					strings.Contains(server, fmt.Sprintf("grpc_send_timeout %ss;", proxyTimeout)) &&
+					strings.Contains(server, fmt.Sprintf("grpc_read_timeout %ss;", proxyTimeout))
+			})
+
+		conn, err := grpc.NewClient(
+			f.GetNginxIP()+":80",
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+			grpc.WithAuthority(host),
+		)
+		assert.Nil(ginkgo.GinkgoT(), err, "error creating a connection")
+		defer conn.Close()
+
+		client := delaypb.NewGrpcbinServiceClient(conn)
+
+		_, err = client.Unary(context.Background(), &delaypb.UnaryRequest{
+			Data: "hello",
+			RequestAttributes: &delaypb.RequestAttributes{
+				Delay: 15,
+			},
+		})
+		assert.Error(ginkgo.GinkgoT(), err)
 	})
 })

@@ -132,7 +132,7 @@ func DownloadGeoLite2DB(attempts int, period time.Duration) error {
 }
 
 func createURL(mirror, licenseKey, dbName string) string {
-	if len(mirror) > 0 {
+	if mirror != "" {
 		return fmt.Sprintf("%s/%s.tar.gz", mirror, dbName)
 	}
 	return fmt.Sprintf(maxmindURL, licenseKey, dbName)

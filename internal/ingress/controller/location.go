@@ -100,7 +100,7 @@ func normalizePrefixPath(path string) string {
 }
 
 func needsRewrite(location *ingress.Location) bool {
-	if len(location.Rewrite.Target) > 0 && location.Rewrite.Target != location.Path {
+	if location.Rewrite.Target != "" && location.Rewrite.Target != location.Path {
 		return true
 	}
 

@@ -39,7 +39,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/auth-proxy-set-headers](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-snippet](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/enable-global-auth](#external-authentication)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/backend-protocol](#backend-protocol)|string|HTTP,HTTPS,GRPC,GRPCS|
+|[nginx.ingress.kubernetes.io/backend-protocol](#backend-protocol)|string|
 |[nginx.ingress.kubernetes.io/canary](#canary)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/canary-by-header](#canary)|string|
 |[nginx.ingress.kubernetes.io/canary-by-header-value](#canary)|string|
@@ -50,6 +50,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
 |[nginx.ingress.kubernetes.io/configuration-snippet](#configuration-snippet)|string|
 |[nginx.ingress.kubernetes.io/custom-http-errors](#custom-http-errors)|[]int|
+|[nginx.ingress.kubernetes.io/custom-headers](#custom-headers)|string|
 |[nginx.ingress.kubernetes.io/default-backend](#default-backend)|string|
 |[nginx.ingress.kubernetes.io/enable-cors](#enable-cors)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/cors-allow-origin](#enable-cors)|string|
@@ -123,8 +124,6 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/ssl-prefer-server-ciphers](#ssl-ciphers)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/connection-proxy-header](#connection-proxy-header)|string|
 |[nginx.ingress.kubernetes.io/enable-access-log](#enable-access-log)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/enable-opentracing](#enable-opentracing)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/opentracing-trust-incoming-span](#opentracing-trust-incoming-span)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/enable-opentelemetry](#enable-opentelemetry)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/opentelemetry-trust-incoming-span](#opentelemetry-trust-incoming-spans)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/use-regex](#use-regex)|bool|
@@ -337,6 +336,22 @@ Example usage:
 ```
 nginx.ingress.kubernetes.io/custom-http-errors: "404,415"
 ```
+
+### Custom Headers
+This annotation is of the form `nginx.ingress.kubernetes.io/custom-headers: custom-headers-configmap` to specify a configmap name that contains custom headers. This annotation uses `more_set_headers` nginx directive.
+
+Example configmap:
+```yaml
+apiVersion: v1
+data:
+  Content-Type: application/json
+kind: ConfigMap
+metadata:
+  name: custom-headers-configmap
+```
+
+!!! attention
+  First define the allowed response headers in [global-allowed-response-headers](https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/configmap.md#global-allowed-response-headers).
 
 ### Default Backend
 
@@ -683,6 +698,12 @@ In some scenarios is required to have different values. To allow this we provide
 - `nginx.ingress.kubernetes.io/proxy-next-upstream-tries`
 - `nginx.ingress.kubernetes.io/proxy-request-buffering`
 
+If you indicate [Backend Protocol](#backend-protocol) as `GRPC` or `GRPCS`, the following grpc values will be set and inherited from proxy timeouts:
+
+- [`grpc_connect_timeout=5s`](https://nginx.org/en/docs/http/ngx_http_grpc_module.html#grpc_connect_timeout), from `nginx.ingress.kubernetes.io/proxy-connect-timeout`
+- [`grpc_send_timeout=60s`](https://nginx.org/en/docs/http/ngx_http_grpc_module.html#grpc_send_timeout), from `nginx.ingress.kubernetes.io/proxy-send-timeout`
+- [`grpc_read_timeout=60s`](https://nginx.org/en/docs/http/ngx_http_grpc_module.html#grpc_read_timeout), from `nginx.ingress.kubernetes.io/proxy-read-timeout`
+
 Note: All timeout values are unitless and in seconds e.g. `nginx.ingress.kubernetes.io/proxy-read-timeout: "120"` sets a valid 120 seconds proxy read timeout.
 
 ### Proxy redirect
@@ -813,24 +834,6 @@ Note that rewrite logs are sent to the error_log file at the notice level. To en
 nginx.ingress.kubernetes.io/enable-rewrite-log: "true"
 ```
 
-### Enable Opentracing
-
-Opentracing can be enabled or disabled globally through the ConfigMap but this will sometimes need to be overridden
-to enable it or disable it for a specific ingress (e.g. to turn off tracing of external health check endpoints)
-
-```yaml
-nginx.ingress.kubernetes.io/enable-opentracing: "true"
-```
-
-### Opentracing Trust Incoming Span
-
-The option to trust incoming trace spans can be enabled or disabled globally through the ConfigMap but this will
-sometimes need to be overridden to enable it or disable it for a specific ingress (e.g. only enable on a private endpoint)
-
-```yaml
-nginx.ingress.kubernetes.io/opentracing-trust-incoming-span: "true"
-```
-
 ### Enable Opentelemetry
 
 Opentelemetry can be enabled or disabled globally through the ConfigMap but this will sometimes need to be overridden
@@ -907,7 +910,7 @@ Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
 ### Backend Protocol
 
 Using `backend-protocol` annotations is possible to indicate how NGINX should communicate with the backend service. (Replaces `secure-backends` in older versions)
-Valid Values: HTTP, HTTPS, GRPC, GRPCS and FCGI
+Valid Values: HTTP, HTTPS, AUTO_HTTP, GRPC, GRPCS and FCGI
 
 By default NGINX uses `HTTP`.
 
@@ -955,7 +958,7 @@ Enables a request to be mirrored to a mirror backend. Responses by mirror backen
 The mirror backend can be set by applying:
 
 ```yaml
-nginx.ingress.kubernetes.io/mirror-target: https://test.env.com/$request_uri
+nginx.ingress.kubernetes.io/mirror-target: https://test.env.com$request_uri
 ```
 
 By default the request-body is sent to the mirror backend, but can be turned off by applying:
@@ -967,7 +970,7 @@ nginx.ingress.kubernetes.io/mirror-request-body: "off"
 Also by default header Host for mirrored requests will be set the same as a host part of uri in the "mirror-target" annotation. You can override it by "mirror-host" annotation:
 
 ```yaml
-nginx.ingress.kubernetes.io/mirror-target: https://1.2.3.4/$request_uri
+nginx.ingress.kubernetes.io/mirror-target: https://1.2.3.4$request_uri
 nginx.ingress.kubernetes.io/mirror-host: "test.env.com"
 ```
 

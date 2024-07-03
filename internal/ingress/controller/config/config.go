@@ -20,9 +20,8 @@ import (
 	"strconv"
 	"time"
 
-	"k8s.io/klog/v2"
-
 	apiv1 "k8s.io/api/core/v1"
+	"k8s.io/klog/v2"
 
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
@@ -436,6 +435,10 @@ type Configuration struct {
 	// By default this is disabled
 	UseGeoIP2 bool `json:"use-geoip2,omitempty"`
 
+	// GeoIP2AutoReloadMinutes enables autoreload on geoip2 setting the interval in minutes
+	// By default this is disabled using 0
+	GeoIP2AutoReloadMinutes int `json:"geoip2-autoreload-in-minutes,omitempty"`
+
 	// Enables or disables the use of the NGINX Brotli Module for compression
 	// https://github.com/google/ngx_brotli
 	EnableBrotli bool `json:"enable-brotli,omitempty"`
@@ -473,6 +476,13 @@ type Configuration struct {
 	// Defines the number of worker processes. By default auto means number of available CPU cores
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_processes
 	WorkerProcesses string `json:"worker-processes,omitempty"`
+
+	// Defines whether multiple concurrent reloads of worker processes should occur.
+	// Set this to false to prevent more than n x 2 workers to exist at any time, to avoid potential OOM situations and high CPU load
+	// With this setting on false, configuration changes in the queue will be re-queued with an exponential backoff, until the number of worker process is the expected value.
+	// By default new worker processes are spawned every time there's a change that cannot be applied dynamically with no upper limit to the number of running workers
+	// http://nginx.org/en/docs/ngx_core_module.html#worker_processes
+	WorkerSerialReloads bool `json:"enable-serial-reloads,omitempty"`
 
 	// Defines a timeout for a graceful shutdown of worker processes
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout
@@ -734,9 +744,9 @@ type Configuration struct {
 	// simultaneous connections.
 	GlobalRateLimitMemcachedPoolSize int `json:"global-rate-limit-memcached-pool-size"`
 
-	// GlobalRateLimitStatucCode determines the HTTP status code to return
+	// GlobalRateLimitStatusCode determines the HTTP status code to return
 	// when limit is exceeding during global rate limiting.
-	GlobalRateLimitStatucCode int `json:"global-rate-limit-status-code"`
+	GlobalRateLimitStatusCode int `json:"global-rate-limit-status-code"`
 
 	// DebugConnections Enables debugging log for selected client connections
 	// http://nginx.org/en/docs/ngx_core_module.html#debug_connection
@@ -748,6 +758,11 @@ type Configuration struct {
 	// alphanumeric chars, "-", "_", "/".In case of additional characters,
 	// like used on Rewrite configurations the user should use pathType as ImplementationSpecific
 	StrictValidatePathType bool `json:"strict-validate-path-type"`
+
+	// GRPCBufferSizeKb Sets the size of the buffer used for reading the response received
+	// from the gRPC server. The response is passed to the client synchronously,
+	// as soon as it is received.
+	GRPCBufferSizeKb int `json:"grpc-buffer-size-kb"`
 }
 
 // NewDefault returns the default nginx configuration
@@ -841,7 +856,9 @@ func NewDefault() Configuration {
 		EnableAioWrite:                   true,
 		UseGzip:                          false,
 		UseGeoIP2:                        false,
+		GeoIP2AutoReloadMinutes:          0,
 		WorkerProcesses:                  strconv.Itoa(runtime.NumCPU()),
+		WorkerSerialReloads:              false,
 		WorkerShutdownTimeout:            "240s",
 		VariablesHashBucketSize:          256,
 		VariablesHashMaxSize:             2048,
@@ -879,6 +896,7 @@ func NewDefault() Configuration {
 			ProxyHTTPVersion:            "1.1",
 			ProxyMaxTempFileSize:        "1024m",
 			ServiceUpstream:             false,
+			AllowedResponseHeaders:      []string{},
 		},
 		UpstreamKeepaliveConnections:           320,
 		UpstreamKeepaliveTime:                  "1h",
@@ -909,9 +927,10 @@ func NewDefault() Configuration {
 		GlobalRateLimitMemcachedConnectTimeout: 50,
 		GlobalRateLimitMemcachedMaxIdleTimeout: 10000,
 		GlobalRateLimitMemcachedPoolSize:       50,
-		GlobalRateLimitStatucCode:              429,
+		GlobalRateLimitStatusCode:              429,
 		DebugConnections:                       []string{},
 		StrictValidatePathType:                 false, // TODO: This will be true in future releases
+		GRPCBufferSizeKb:                       0,
 	}
 
 	if klog.V(5).Enabled() {

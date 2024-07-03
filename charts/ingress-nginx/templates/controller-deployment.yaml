@@ -19,7 +19,7 @@ spec:
     matchLabels:
       {{- include "ingress-nginx.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: controller
-  {{- if not (or .Values.controller.autoscaling.enabled .Values.controller.keda.enabled) }}
+  {{- if eq .Values.controller.autoscaling.enabled .Values.controller.keda.enabled }}
   replicas: {{ .Values.controller.replicaCount }}
   {{- end }}
   revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
@@ -206,7 +206,7 @@ spec:
       tolerations: {{ toYaml .Values.controller.tolerations | nindent 8 }}
     {{- end }}
     {{- if .Values.controller.affinity }}
-      affinity: {{ toYaml .Values.controller.affinity | nindent 8 }}
+      affinity: {{ tpl (toYaml .Values.controller.affinity) $ | nindent 8 }}
     {{- end }}
     {{- if .Values.controller.topologySpreadConstraints }}
       topologySpreadConstraints: {{ tpl (toYaml .Values.controller.topologySpreadConstraints) $ | nindent 8 }}

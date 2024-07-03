@@ -446,7 +446,7 @@ func TestTLSKeyReloader(t *testing.T) {
 	}
 	watcher.load()
 
-	s := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	s := httptest.NewUnstartedServer(http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}))
 	s.Config.TLSConfig = watcher.TLSConfig()
 	s.Listener = tls.NewListener(s.Listener, s.Config.TLSConfig)
 	go s.Start()

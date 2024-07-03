@@ -168,6 +168,17 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 
 {{/*
+Create the name of the admission webhook patch job service account to use
+*/}}
+{{- define "ingress-nginx.admissionWebhooks.patch.serviceAccountName" -}}
+{{- if .Values.controller.admissionWebhooks.patch.serviceAccount.create -}}
+    {{ default (include "ingress-nginx.admissionWebhooks.fullname" .) .Values.controller.admissionWebhooks.patch.serviceAccount.name }}
+{{- else -}}
+    {{ default "default" .Values.controller.admissionWebhooks.patch.serviceAccount.name }}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Create a default fully qualified admission webhook secret creation job name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
@@ -240,16 +251,6 @@ Check the ingress controller version tag is at most three versions behind the la
 {{- if not (semverCompare ">=0.27.0-0" .Values.controller.image.tag) -}}
 {{- fail "Controller container image tag should be 0.27.0 or higher" -}}
 {{- end -}}
-{{- end -}}
-
-{{/*
-IngressClass parameters.
-*/}}
-{{- define "ingressClass.parameters" -}}
-  {{- if .Values.controller.ingressClassResource.parameters -}}
-          parameters:
-{{ toYaml .Values.controller.ingressClassResource.parameters | indent 4}}
-  {{ end }}
 {{- end -}}
 
 {{/*

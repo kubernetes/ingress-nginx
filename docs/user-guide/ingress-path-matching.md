@@ -3,7 +3,7 @@
 ## Regular Expression Support
 
 !!! important
-    Regular expressions and wild cards are not supported in the `spec.rules.host` field. Full hostnames must be used.
+    Regular expressions is not supported in the `spec.rules.host` field. The wildcard character '\*' must appear by itself as the first DNS label and matches only a single label. You cannot have a wildcard label by itself (e.g. Host == "\*").
 
 !!! note
     Please see the [FAQ](../faq.md#validation-of-path) for Validation Of __`path`__

@@ -1,0 +1,137 @@
+suite: Default Backend > Deployment
+templates:
+  - default-backend-deployment.yaml
+
+tests:
+  - it: should not create a Deployment if `defaultBackend.enabled` is false
+    set:
+      defaultBackend.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create a Deployment if `defaultBackend.enabled` is true
+    set:
+      defaultBackend.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-defaultbackend
+
+  - it: should create a Deployment with 3 replicas if `defaultBackend.replicaCount` is 3
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.replicaCount: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: should create a Deployment without replicas if `defaultBackend.autoscaling.enabled` is true
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.autoscaling.enabled: true
+    asserts:
+      - notExists:
+          path: spec.replicas
+
+  - it: should create a Deployment with resource limits if `defaultBackend.resources.limits` is set
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.resources.limits.cpu: 500m
+      defaultBackend.resources.limits.memory: 512Mi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: 500m
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 512Mi
+
+  - it: should create a Deployment with topology spread constraints if `defaultBackend.topologySpreadConstraints` is set
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.topologySpreadConstraints:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
+              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/component: default-backend
+          topologyKey: topology.kubernetes.io/zone
+          maxSkew: 1
+          whenUnsatisfiable: ScheduleAnyway
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
+              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/component: default-backend
+          topologyKey: kubernetes.io/hostname
+          maxSkew: 1
+          whenUnsatisfiable: ScheduleAnyway
+    asserts:
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints
+          value:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: ingress-nginx
+                  app.kubernetes.io/instance: RELEASE-NAME
+                  app.kubernetes.io/component: default-backend
+              topologyKey: topology.kubernetes.io/zone
+              maxSkew: 1
+              whenUnsatisfiable: ScheduleAnyway
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: ingress-nginx
+                  app.kubernetes.io/instance: RELEASE-NAME
+                  app.kubernetes.io/component: default-backend
+              topologyKey: kubernetes.io/hostname
+              maxSkew: 1
+              whenUnsatisfiable: ScheduleAnyway
+
+  - it: should create a Deployment with affinity if `defaultBackend.affinity` is set
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/name
+                    operator: In
+                    values:
+                      - '{{ include "ingress-nginx.name" . }}'
+                  - key: app.kubernetes.io/instance
+                    operator: In
+                    values:
+                      - '{{ .Release.Name }}'
+                  - key: app.kubernetes.io/component
+                    operator: In
+                    values:
+                      - default-backend
+              topologyKey: kubernetes.io/hostname
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            podAntiAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchExpressions:
+                      - key: app.kubernetes.io/name
+                        operator: In
+                        values:
+                          - ingress-nginx
+                      - key: app.kubernetes.io/instance
+                        operator: In
+                        values:
+                          - RELEASE-NAME
+                      - key: app.kubernetes.io/component
+                        operator: In
+                        values:
+                          - default-backend
+                  topologyKey: kubernetes.io/hostname
