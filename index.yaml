@@ -2,6 +2,44 @@ apiVersion: v1
 entries:
   ingress-nginx:
   - annotations:
+      artifacthub.io/changes: |
+        - 'Chores: Align security contacts & chart maintainers to actual owners. (#11465)'
+        - 'Merge pull request #11277 from strongjz/chart-1.10.1 (#11415)'
+        - Fix helm install on cloud provider admonition block (#11394)
+        - edited helm-install tips (#11393)
+        - added info for aws helm install (#11390)
+        - add workflow to helm release and update ct for branch (#11378)
+        - release helm chart from release branch (#11276)
+        - update post submit helm ci and clean up (#11220)
+        - refactor helm ci tests part I (#11178)
+        - Update Ingress-Nginx version controller-v1.11.0
+      artifacthub.io/prerelease: "false"
+    apiVersion: v2
+    appVersion: 1.11.0
+    created: "2024-07-08T19:30:36.154343925Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
+    digest: eac211cdd9a5ae960f9c319e88c81d4e6e1ba5339599e217229d907bc9f67737
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.21.0-0'
+    maintainers:
+    - name: cpanato
+    - name: Gacko
+    - name: puerco
+    - name: rikatz
+    - name: strongjz
+    - name: tao12345666333
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-4.11.0/ingress-nginx-4.11.0.tgz
+    version: 4.11.0
+  - annotations:
       artifacthub.io/changes: |-
         - "Chores: Align security contacts & chart maintainers to actual owners. (#11480)"
         - "Fix helm install on cloud provider admonition block (#11412)"
@@ -3329,4 +3367,4 @@ entries:
     urls:
     - https://github.com/kubernetes/ingress-nginx/releases/download/ingress-nginx-2.0.0/ingress-nginx-2.0.0.tgz
     version: 2.0.0
-generated: "2024-07-08T18:11:54.50475217Z"
+generated: "2024-07-08T19:30:36.154748063Z"
