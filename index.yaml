@@ -3,6 +3,44 @@ entries:
   ingress-nginx:
   - annotations:
       artifacthub.io/changes: |-
+        - "Chores: Align security contacts & chart maintainers to actual owners. (#11480)"
+        - "Fix helm install on cloud provider admonition block (#11412)"
+        - "edited helm-install tips (#11411)"
+        - "added info for aws helm install (#11410)"
+        - "add workflow to helm release and update ct for branch (#11317)"
+        - "Merge pull request #11277 from strongjz/chart-1.10.1 (#11314)"
+        - "release helm chart from release branch (#11278)"
+        - "update post submit helm ci and clean up (#11221)"
+        - "refactor helm ci tests part I (#11188)"
+        - "Update Ingress-Nginx version controller-v1.10.2"
+      artifacthub.io/prerelease: "false"
+    apiVersion: v2
+    appVersion: 1.10.2
+    created: "2024-07-08T18:11:54.504413545Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
+    digest: f21d1d2926409fb40920f560b9b225692409d1b07e817a9cd05ff43833276d65
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.21.0-0'
+    maintainers:
+    - name: cpanato
+    - name: Gacko
+    - name: puerco
+    - name: rikatz
+    - name: strongjz
+    - name: tao12345666333
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-4.10.2/ingress-nginx-4.10.2.tgz
+    version: 4.10.2
+  - annotations:
+      artifacthub.io/changes: |-
         - "update post submit helm ci and clean up (#11221)"
         - "refactor helm ci tests part I (#11188)"
         - "Update Ingress-Nginx version controller-v1.10.1"
@@ -3291,4 +3329,4 @@ entries:
     urls:
     - https://github.com/kubernetes/ingress-nginx/releases/download/ingress-nginx-2.0.0/ingress-nginx-2.0.0.tgz
     version: 2.0.0
-generated: "2024-04-26T14:02:38.18984159Z"
+generated: "2024-07-08T18:11:54.50475217Z"
