@@ -721,10 +721,11 @@ func TestTemplateWithData(t *testing.T) {
 		dat.ListenPorts = &config.ListenPorts{}
 	}
 
-	ngxTpl, err := NewTemplate(nginx.TemplatePath)
-	if err != nil {
+	// ngxTpl, err := NewTemplate(nginx.TemplatePath)
+	ngxTpl := NewCrossplaneTemplate()
+	/*if err != nil {
 		t.Errorf("invalid NGINX template: %v", err)
-	}
+	}*/
 
 	dat.Cfg.DefaultSSLCertificate = &ingress.SSLCert{}
 
@@ -732,6 +733,7 @@ func TestTemplateWithData(t *testing.T) {
 	if err != nil {
 		t.Errorf("invalid NGINX template: %v", err)
 	}
+	fmt.Printf("%s\n", string(rt))
 
 	if !strings.Contains(string(rt), "listen [2001:db8:a0b:12f0::1]") {
 		t.Errorf("invalid NGINX template, expected IPV6 listen address not present")

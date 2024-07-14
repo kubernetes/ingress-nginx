@@ -459,6 +459,27 @@ func locationConfigForLua(l, a interface{}) string {
 }
 
 // buildResolvers returns the resolvers reading the /etc/resolv.conf file
+func buildResolversInternal(res []net.IP, disableIpv6 bool) []string {
+	r := make([]string, 0)
+	for _, ns := range res {
+		if ing_net.IsIPV6(ns) {
+			if disableIpv6 {
+				continue
+			}
+			r = append(r, fmt.Sprintf("[%v]", ns))
+		} else {
+			r = append(r, ns.String())
+		}
+	}
+	r = append(r, "valid=30s")
+
+	if disableIpv6 {
+		r = append(r, "ipv6=off")
+	}
+
+	return r
+}
+
 func buildResolvers(res, disableIpv6 interface{}) string {
 	// NGINX need IPV6 addresses to be surrounded by brackets
 	nss, ok := res.([]net.IP)
@@ -475,24 +496,8 @@ func buildResolvers(res, disableIpv6 interface{}) string {
 	if len(nss) == 0 {
 		return ""
 	}
-
 	r := []string{"resolver"}
-	for _, ns := range nss {
-		if ing_net.IsIPV6(ns) {
-			if no6 {
-				continue
-			}
-			r = append(r, fmt.Sprintf("[%v]", ns))
-		} else {
-			r = append(r, ns.String())
-		}
-	}
-	r = append(r, "valid=30s")
-
-	if no6 {
-		r = append(r, "ipv6=off")
-	}
-
+	r = append(r, buildResolversInternal(nss, no6)...)
 	return strings.Join(r, " ") + ";"
 }
 

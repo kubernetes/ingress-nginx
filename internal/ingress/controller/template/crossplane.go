@@ -1,12 +1,23 @@
 package template
 
 import (
+	"bytes"
+	"fmt"
 	"strconv"
 	"strings"
 
 	crossplane "github.com/nginxinc/nginx-go-crossplane"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
+	"k8s.io/ingress-nginx/pkg/apis/ingress"
 )
+
+/*
+Unsupported directives:
+- opentelemetry
+- modsecurity
+- any stream directive (TCP/UDP forwarding)
+- geoip2
+*/
 
 // On this case we will try to use the go crossplane to write the template instead of the template renderer
 
@@ -44,39 +55,16 @@ func (c *crossplaneTemplate) Write(conf *config.TemplateConfig) ([]byte, error) 
 	}
 	c.config = config
 
-	// Load Modules
-	c.loadModules()
-
 	// build events directive
 	c.buildEvents()
 
 	// build http directive
 	c.buildHTTP()
 
-	return nil, nil
-}
+	var buf bytes.Buffer
 
-func (c *crossplaneTemplate) loadModules() {
-	if c.tplConfig.Cfg.EnableBrotli {
-		c.config.Parsed = append(c.config.Parsed, buildDirective("load_module", "/etc/nginx/modules/ngx_http_brotli_filter_module.so"))
-		c.config.Parsed = append(c.config.Parsed, buildDirective("load_module", "/etc/nginx/modules/ngx_http_brotli_static_module.so"))
-	}
-
-	if c.tplConfig.Cfg.UseGeoIP2 {
-		c.config.Parsed = append(c.config.Parsed, buildDirective("load_module", "/etc/nginx/modules/ngx_http_geoip2_module.so"))
-	}
-
-	if shouldLoadAuthDigestModule(c.tplConfig.Servers) {
-		c.config.Parsed = append(c.config.Parsed, buildDirective("load_module", "/etc/nginx/modules/ngx_http_auth_digest_module.so"))
-	}
-
-	if shouldLoadModSecurityModule(c.tplConfig.Cfg, c.tplConfig.Servers) {
-		c.config.Parsed = append(c.config.Parsed, buildDirective("load_module", "/etc/nginx/modules/ngx_http_modsecurity_module.so"))
-	}
-
-	if shouldLoadOpentelemetryModule(c.tplConfig.Cfg, c.tplConfig.Servers) {
-		c.config.Parsed = append(c.config.Parsed, buildDirective("load_module", "/etc/nginx/modules/otel_ngx_module.so"))
-	}
+	err := crossplane.Build(&buf, *c.config, &crossplane.BuildOptions{})
+	return buf.Bytes(), err
 }
 
 func (c *crossplaneTemplate) buildEvents() {
@@ -104,6 +92,7 @@ func (c *crossplaneTemplate) buildHTTP() {
 		buildDirective("aio", "threads"),
 		buildDirective("aio_write", cfg.EnableAioWrite),
 		buildDirective("server_tokens", cfg.ShowServerTokens),
+		buildDirective("resolver", buildResolversInternal(cfg.Resolver, cfg.DisableIpv6DNS)),
 		buildDirective("tcp_nopush", "on"),
 		buildDirective("tcp_nodelay", "on"),
 		buildDirective("log_subrequest", "on"),
@@ -141,9 +130,107 @@ func (c *crossplaneTemplate) buildHTTP() {
 		buildDirective("ssl_certificate", cfg.DefaultSSLCertificate.PemFileName),
 		buildDirective("ssl_certificate_key", cfg.DefaultSSLCertificate.PemFileName),
 		buildDirective("proxy_ssl_session_reuse", "on"),
-		buildDirective("proxy_cache_path", strings.Split("/tmp/nginx/nginx-cache-auth levels=1:2 keys_zone=auth_cache:10m max_size=128m inactive=30m use_temp_path=off", " ")),
+		buildDirective("proxy_cache_path", []string{
+			"/tmp/nginx/nginx-cache-auth", "levels=1:2", "keys_zone=auth_cache:10m",
+			"max_size=128m", "inactive=30m", "use_temp_path=off",
+		}),
+	}
 
-		// add grpc_buffer_size
+	httpBlock = append(httpBlock, buildLuaSharedDictionariesForCrossplane(c.tplConfig.Cfg, c.tplConfig.Servers)...)
+
+	// Real IP dealing
+	if (cfg.UseForwardedHeaders || cfg.UseProxyProtocol) || cfg.EnableRealIP {
+		if cfg.UseProxyProtocol {
+			httpBlock = append(httpBlock, buildDirective("real_ip_header", "proxy_protocol"))
+		} else {
+			httpBlock = append(httpBlock, buildDirective("real_ip_header", cfg.ForwardedForHeader))
+		}
+
+		for k := range cfg.ProxyRealIPCIDR {
+			httpBlock = append(httpBlock, buildDirective("set_real_ip_from", cfg.ProxyRealIPCIDR[k]))
+		}
+	}
+
+	if cfg.GRPCBufferSizeKb > 0 {
+		httpBlock = append(httpBlock, buildDirective("grpc_buffer_size", strconv.Itoa(cfg.GRPCBufferSizeKb)+"k"))
+	}
+
+	// HTTP2 Configuration
+	if cfg.HTTP2MaxHeaderSize != "" && cfg.HTTP2MaxFieldSize != "" {
+		httpBlock = append(httpBlock, buildDirective("http2_max_field_size", cfg.HTTP2MaxFieldSize))
+		httpBlock = append(httpBlock, buildDirective("http2_max_header_size", cfg.HTTP2MaxHeaderSize))
+		if cfg.HTTP2MaxRequests > 0 {
+			httpBlock = append(httpBlock, buildDirective("http2_max_requests", cfg.HTTP2MaxRequests))
+		}
+	}
+
+	if cfg.UseGzip {
+		httpBlock = append(httpBlock, buildDirective("gzip", "on"))
+		httpBlock = append(httpBlock, buildDirective("gzip_comp_level", cfg.GzipLevel))
+		httpBlock = append(httpBlock, buildDirective("gzip_http_version", "1.1"))
+		httpBlock = append(httpBlock, buildDirective("gzip_min_length", cfg.GzipMinLength))
+		httpBlock = append(httpBlock, buildDirective("gzip_types", cfg.GzipTypes))
+		httpBlock = append(httpBlock, buildDirective("gzip_proxied", "any"))
+		httpBlock = append(httpBlock, buildDirective("gzip_vary", "on"))
+
+		if cfg.GzipDisable != "" {
+			httpBlock = append(httpBlock, buildDirective("gzip_disable", strings.Split(cfg.GzipDisable, "")))
+		}
+	}
+
+	if !cfg.ShowServerTokens {
+		httpBlock = append(httpBlock, buildDirective("more_clear_headers", "Server"))
+	}
+
+	if len(c.tplConfig.AddHeaders) > 0 {
+		additionalHeaders := make([]string, 0)
+		for headerName, headerValue := range c.tplConfig.AddHeaders {
+			additionalHeaders = append(additionalHeaders, fmt.Sprintf("%s: %s", headerName, headerValue))
+		}
+		httpBlock = append(httpBlock, buildDirective("more_set_headers", additionalHeaders))
+	}
+
+	escape := ""
+	if cfg.LogFormatEscapeNone {
+		escape = "escape=none"
+	} else if cfg.LogFormatEscapeJSON {
+		escape = "escape=json"
+	}
+
+	httpBlock = append(httpBlock, buildDirective("log_format", "upstreaminfo", escape, cfg.LogFormatUpstream))
+
+	// buildMap directive
+	mapLogDirective := &crossplane.Directive{
+		Directive: "map",
+		Args:      []string{"$request_uri", "$loggable"},
+		Block:     make(crossplane.Directives, 0),
+	}
+	for k := range cfg.SkipAccessLogURLs {
+		mapLogDirective.Block = append(mapLogDirective.Block, buildDirective(cfg.SkipAccessLogURLs[k], "0"))
+	}
+	mapLogDirective.Block = append(mapLogDirective.Block, buildDirective("default", "1"))
+	httpBlock = append(httpBlock, mapLogDirective)
+	// end of build mapLog
+
+	if cfg.DisableAccessLog || cfg.DisableHTTPAccessLog {
+		httpBlock = append(httpBlock, buildDirective("access_log", "off"))
+	} else {
+		logDirectives := []string{"upstreaminfo", "if=$loggable"}
+		if cfg.EnableSyslog {
+			httpBlock = append(httpBlock, buildDirective("access_log", fmt.Sprintf("syslog:server%s:%d", cfg.SyslogHost, cfg.SyslogPort), logDirectives))
+		} else {
+			accessLog := cfg.AccessLogPath
+			if cfg.HTTPAccessLogPath != "" {
+				accessLog = cfg.HTTPAccessLogPath
+			}
+			httpBlock = append(httpBlock, buildDirective("access_log", accessLog, logDirectives))
+		}
+	}
+
+	if cfg.EnableSyslog {
+		httpBlock = append(httpBlock, buildDirective("error_log", fmt.Sprintf("syslog:server%s:%d", cfg.SyslogHost, cfg.SyslogPort), cfg.ErrorLogLevel))
+	} else {
+		httpBlock = append(httpBlock, buildDirective("error_log", cfg.ErrorLogPath, cfg.ErrorLogLevel))
 	}
 
 	c.config.Parsed = append(c.config.Parsed, &crossplane.Directive{
@@ -154,26 +241,37 @@ func (c *crossplaneTemplate) buildHTTP() {
 
 type seconds int
 
+// TODO: This conversion doesn't work with array
 func buildDirective(directive string, args ...any) *crossplane.Directive {
-	argsVal := make([]string, len(args))
+	argsVal := make([]string, 0)
 	for k := range args {
 		switch v := args[k].(type) {
 		case string:
-			argsVal[k] = v
+			argsVal = append(argsVal, v)
+		case []string:
+			argsVal = append(argsVal, v...)
 		case int:
-			argsVal[k] = strconv.Itoa(v)
+			argsVal = append(argsVal, strconv.Itoa(v))
 		case bool:
-			argsVal[k] = boolToStr(v)
+			argsVal = append(argsVal, boolToStr(v))
 		case seconds:
-			argsVal[k] = strconv.Itoa(int(v)) + "s"
-		default:
-			argsVal[k] = ""
+			argsVal = append(argsVal, strconv.Itoa(int(v))+"s")
 		}
 	}
 	return &crossplane.Directive{
 		Directive: directive,
 		Args:      argsVal,
 	}
+}
+
+func buildLuaSharedDictionariesForCrossplane(cfg config.Configuration, s []*ingress.Server) []*crossplane.Directive {
+	out := make([]*crossplane.Directive, 0, len(cfg.LuaSharedDicts))
+	for name, size := range cfg.LuaSharedDicts {
+		sizeStr := dictKbToStr(size)
+		out = append(out, buildDirective("lua_shared_dict", name, sizeStr))
+	}
+
+	return out
 }
 
 func boolToStr(b bool) string {
