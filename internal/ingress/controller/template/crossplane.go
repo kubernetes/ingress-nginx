@@ -8,7 +8,6 @@ import (
 
 	crossplane "github.com/nginxinc/nginx-go-crossplane"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
-	"k8s.io/ingress-nginx/pkg/apis/ingress"
 )
 
 /*
@@ -136,7 +135,7 @@ func (c *crossplaneTemplate) buildHTTP() {
 		}),
 	}
 
-	httpBlock = append(httpBlock, buildLuaSharedDictionariesForCrossplane(c.tplConfig.Cfg, c.tplConfig.Servers)...)
+	httpBlock = append(httpBlock, buildLuaSharedDictionariesForCrossplane(c.tplConfig.Cfg)...)
 
 	// Real IP dealing
 	if (cfg.UseForwardedHeaders || cfg.UseProxyProtocol) || cfg.EnableRealIP {
@@ -264,7 +263,7 @@ func buildDirective(directive string, args ...any) *crossplane.Directive {
 	}
 }
 
-func buildLuaSharedDictionariesForCrossplane(cfg config.Configuration, s []*ingress.Server) []*crossplane.Directive {
+func buildLuaSharedDictionariesForCrossplane(cfg config.Configuration) []*crossplane.Directive {
 	out := make([]*crossplane.Directive, 0, len(cfg.LuaSharedDicts))
 	for name, size := range cfg.LuaSharedDicts {
 		sizeStr := dictKbToStr(size)
