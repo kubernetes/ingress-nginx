@@ -622,7 +622,7 @@ for dir in "${writeDirs[@]}"; do
 done
 
 rm -rf /etc/nginx/owasp-modsecurity-crs/.git
-rm -rf /etc/nginx/owasp-modsecurity-crs/util/regression-tests
+rm -rf /etc/nginx/owasp-modsecurity-crs/tests
 
 # remove .a files
 find /usr/local -name "*.a" -print | xargs /bin/rm
