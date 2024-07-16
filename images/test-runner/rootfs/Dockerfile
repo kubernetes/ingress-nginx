@@ -66,7 +66,8 @@ RUN apk update && apk upgrade && apk add --no-cache \
   openssl \
   cfssl@testing \
   tzdata \
-  libc6-compat
+  libc6-compat \ 
+  sqlite-dev 
 
 RUN go install -v github.com/onsi/ginkgo/v2/ginkgo@v${GINKGO_VERSION} \
     && go install golang.org/x/lint/golint@${GOLINT_VERSION}
