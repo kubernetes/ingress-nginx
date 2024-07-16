@@ -9,7 +9,8 @@ RUN apk update \
   bash \
   tzdata \
   libc6-compat \
-  openssl
+  openssl \
+  sqlite-dev
 
 COPY --from=BASE /go/bin/ginkgo /usr/local/bin/
 COPY --from=BASE /usr/local/bin/helm /usr/local/bin/
