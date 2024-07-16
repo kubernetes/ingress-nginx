@@ -47,12 +47,15 @@ var _ = framework.DescribeSetting("OCSP", func() {
 	})
 
 	ginkgo.It("should enable OCSP and contain stapling information in the connection", func() {
-		ginkgo.Skip("Skipped due to a bug with cfssl and Alpine")
 		host := "www.example.com"
 
 		f.UpdateNginxConfigMapData("enable-ocsp", "true")
 
 		err := prepareCertificates(f.Namespace)
+		if err != nil {
+			ginkgo.By(fmt.Sprintf("Prepare Certs error %v", err.Error()))
+		}
+
 		assert.Nil(ginkgo.GinkgoT(), err)
 
 		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, nil)
