@@ -1,4 +1,3 @@
-timeout: 600s
 options:
   substitution_option: ALLOW_LOOSE
 steps:
