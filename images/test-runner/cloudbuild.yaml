@@ -1,4 +1,3 @@
-timeout: 3600s
 options:
   substitution_option: ALLOW_LOOSE
 steps:
@@ -9,3 +8,4 @@ steps:
     args:
       - -c
       - gcloud auth configure-docker && cd images/test-runner && make push
+timeout: 1800s
