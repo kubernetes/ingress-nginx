@@ -14,7 +14,4 @@ steps:
   - HOME=/root
   args:
   - -c
-  - |
-    gcloud auth configure-docker \
-    && cd images/opentelemetry && make NGINX_VERSION=1.25.3 push \
-    && make NGINX_VERSION=1.21.6 push
+  - gcloud auth configure-docker && cd images/opentelemetry && make NGINX_VERSION=1.21.6 push && make NGINX_VERSION=1.25.3 push

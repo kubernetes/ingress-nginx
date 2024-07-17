@@ -14,6 +14,4 @@ steps:
   - HOME=/root
   args:
   - -c
-  - |
-    gcloud auth configure-docker \
-    && cd images && make NAME=go-grpc-greeter-server push
+  - gcloud auth configure-docker && cd images && make NAME=go-grpc-greeter-server push

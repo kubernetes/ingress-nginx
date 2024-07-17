@@ -12,6 +12,4 @@ steps:
   - HOME=/root
   args:
   - -c
-  - |
-    gcloud auth configure-docker \
-    && cd images && make NAME=kube-webhook-certgen push
+  - gcloud auth configure-docker && cd images && make NAME=kube-webhook-certgen push

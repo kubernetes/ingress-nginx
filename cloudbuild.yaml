@@ -14,9 +14,7 @@ steps:
   - USER=root
   args:
   - -c
-  - |
-    gcloud auth configure-docker \
-    && make release
+  - gcloud auth configure-docker && make release
 substitutions:
   _GIT_TAG: "12345"
   _PULL_BASE_REF: main
