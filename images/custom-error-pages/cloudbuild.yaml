@@ -2,14 +2,10 @@ timeout: 1800s
 options:
   substitution_option: ALLOW_LOOSE
 steps:
-- name: gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:v20211118-2f2d816b90
+- name: gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:v20240523-a15ad90fc9
   entrypoint: bash
   env:
-  - DOCKER_CLI_EXPERIMENTAL=enabled
   - REGISTRY=gcr.io/k8s-staging-ingress-nginx
-  # default cloudbuild has HOME=/builder/home and docker buildx is in /root/.docker/cli-plugins/docker-buildx
-  # set the home to /root explicitly to if using docker buildx
-  - HOME=/root
   args:
   - -c
   - gcloud auth configure-docker && cd images && make NAME=custom-error-pages push
