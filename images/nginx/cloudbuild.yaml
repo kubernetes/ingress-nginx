@@ -4,7 +4,7 @@ options:
   # Increase machine type for multi-arch builds.
   machineType: E2_HIGHCPU_32
 steps:
-  - name: 'gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:v20211118-2f2d816b90'
+  - name: gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:v20211118-2f2d816b90
     entrypoint: bash
     env:
       - DOCKER_CLI_EXPERIMENTAL=enabled
