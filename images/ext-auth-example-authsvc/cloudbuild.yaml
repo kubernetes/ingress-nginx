@@ -16,4 +16,4 @@ steps:
     - -c
     - |
       gcloud auth configure-docker \
-      && cd images/ && make NAME=ext-auth-example-authsvc push
+      && cd images && make NAME=ext-auth-example-authsvc push
