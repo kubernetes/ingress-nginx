@@ -1,6 +1,6 @@
 module github.com/jet/kube-webhook-certgen
 
-go 1.21
+go 1.22.5
 
 require (
 	github.com/onrik/logrus v0.11.0

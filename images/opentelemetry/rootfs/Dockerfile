@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-FROM alpine:3.20.0 as base
+FROM alpine:3.20.0 AS base
 
 RUN mkdir -p /opt/third_party/install
 COPY . /opt/third_party/
@@ -24,14 +24,14 @@ RUN apk update \
 	&& apk add -U bash \
 	&& bash /opt/third_party/build.sh -p
 
-ENV NINJA_STATUS "[%p/%f/%t] "
+ENV NINJA_STATUS="[%p/%f/%t] "
 
 # install otel_ngx_module.so
-FROM base as nginx
+FROM base AS nginx
 ARG NGINX_VERSION=1.25.3
 RUN bash /opt/third_party/build.sh -n ${NGINX_VERSION}
 
-FROM golang:1.21.6-bullseye as build-init
+FROM golang:1.22.5-bullseye AS build-init
 
 WORKDIR /go/src/app
 COPY . .
@@ -39,7 +39,7 @@ COPY . .
 RUN go mod download
 RUN CGO_ENABLED=0 go build -o /go/bin/init_module
 
-FROM gcr.io/distroless/static-debian11 as final
+FROM gcr.io/distroless/static-debian11 AS final
 COPY --from=build-init /go/bin/init_module /
 COPY --from=nginx /etc/nginx/modules /etc/nginx/modules
 
