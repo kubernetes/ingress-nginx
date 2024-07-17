@@ -11,7 +11,7 @@ steps:
       # set the home to /root explicitly to if using docker buildx
       - HOME=/root
     args:
-    - -c
-    - |
-      gcloud auth configure-docker \
-      && cd images && make NAME=custom-error-pages push
+      - -c
+      - |
+        gcloud auth configure-docker \
+        && cd images && make NAME=custom-error-pages push
