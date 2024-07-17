@@ -512,7 +512,7 @@ make
 make modules
 make install
 
-export OPENTELEMETRY_CONTRIB_COMMIT=aaa51e2297bcb34297f3c7aa44fa790497d2f7f3
+export OPENTELEMETRY_CONTRIB_COMMIT=e11348bb400d5472bf1da5d6128bead66fa111ff
 cd "$BUILD_PATH"
 
 git clone https://github.com/open-telemetry/opentelemetry-cpp-contrib.git opentelemetry-cpp-contrib-${OPENTELEMETRY_CONTRIB_COMMIT}
