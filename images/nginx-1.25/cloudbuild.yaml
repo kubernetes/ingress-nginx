@@ -1,4 +1,4 @@
-timeout: 10800s
+timeout: 7200s
 options:
   substitution_option: ALLOW_LOOSE
   # Increase machine type for multi-arch builds.
