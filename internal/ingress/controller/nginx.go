@@ -52,6 +52,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/controller/process"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
 	ngx_template "k8s.io/ingress-nginx/internal/ingress/controller/template"
+	"k8s.io/ingress-nginx/internal/ingress/controller/template/crossplane"
 	"k8s.io/ingress-nginx/internal/ingress/metric"
 	"k8s.io/ingress-nginx/internal/ingress/status"
 	ing_net "k8s.io/ingress-nginx/internal/net"
@@ -70,6 +71,7 @@ import (
 const (
 	tempNginxPattern = "nginx-cfg"
 	emptyUID         = "-1"
+	goTemplateEngine = "go-template"
 )
 
 // NewNGINXController creates a new NGINX Ingress controller.
@@ -158,6 +160,9 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 	}
 
 	onTemplateChange := func() {
+		if config.ConfigurationTemplateEngine != goTemplateEngine {
+			return
+		}
 		template, err := ngx_template.NewTemplate(nginx.TemplatePath)
 		if err != nil {
 			// this error is different from the rest because it must be clear why nginx is not working
@@ -170,17 +175,27 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 		n.syncQueue.EnqueueTask(task.GetDummyObject("template-change"))
 	}
 
-	ngxTpl, err := ngx_template.NewTemplate(nginx.TemplatePath)
-	if err != nil {
-		klog.Fatalf("Invalid NGINX configuration template: %v", err)
+	var ngxTpl ngx_template.Writer
+	switch config.ConfigurationTemplateEngine {
+	case goTemplateEngine:
+		ngxTpl, err = ngx_template.NewTemplate(nginx.TemplatePath)
+		if err != nil {
+			klog.Fatalf("Invalid NGINX configuration template: %v", err)
+		}
+		_, err = file.NewFileWatcher(nginx.TemplatePath, onTemplateChange)
+		if err != nil {
+			klog.Fatalf("Error creating file watcher for %v: %v", nginx.TemplatePath, err)
+		}
+	case "crossplane":
+		ngxTpl, err = crossplane.NewTemplate()
+		if err != nil {
+			klog.Fatalf("Invalid NGINX configuration template: %v", err)
+		}
+	default:
+		klog.Fatal("Invalid template engine, please use 'go-template' or 'crossplane'")
 	}
 
 	n.t = ngxTpl
-
-	_, err = file.NewFileWatcher(nginx.TemplatePath, onTemplateChange)
-	if err != nil {
-		klog.Fatalf("Error creating file watcher for %v: %v", nginx.TemplatePath, err)
-	}
 
 	filesToWatch := []string{}
 
@@ -652,6 +667,11 @@ func (n *NGINXController) testTemplate(cfg []byte) error {
 	if err != nil {
 		return err
 	}
+
+	if err := n.t.Validate(tmpfile.Name()); err != nil {
+		return fmt.Errorf("error during template validation: %w", err)
+	}
+
 	out, err := n.command.Test(tmpfile.Name())
 	if err != nil {
 		// this error is different from the rest because it must be clear why nginx is not working
@@ -868,11 +888,13 @@ func (n *NGINXController) configureDynamically(pcfg *ingress.Configuration) erro
 		}
 	}
 
-	streamConfigurationChanged := !reflect.DeepEqual(n.runningConfig.TCPEndpoints, pcfg.TCPEndpoints) || !reflect.DeepEqual(n.runningConfig.UDPEndpoints, pcfg.UDPEndpoints)
-	if streamConfigurationChanged {
-		err := updateStreamConfiguration(pcfg.TCPEndpoints, pcfg.UDPEndpoints)
-		if err != nil {
-			return err
+	if n.cfg.ConfigurationTemplateEngine == goTemplateEngine {
+		streamConfigurationChanged := !reflect.DeepEqual(n.runningConfig.TCPEndpoints, pcfg.TCPEndpoints) || !reflect.DeepEqual(n.runningConfig.UDPEndpoints, pcfg.UDPEndpoints)
+		if streamConfigurationChanged {
+			err := updateStreamConfiguration(pcfg.TCPEndpoints, pcfg.UDPEndpoints)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

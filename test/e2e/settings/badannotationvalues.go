@@ -50,7 +50,8 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return !strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+				return !strings.Contains(server, fmt.Sprintf("server_name %s;", host)) &&
+					!strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
 		f.WaitForNginxServer(host,
@@ -87,7 +88,8 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return !strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+				return !strings.Contains(server, fmt.Sprintf("server_name %s;", host)) &&
+					!strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
 		f.WaitForNginxServer(host,
@@ -103,6 +105,9 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 	})
 
 	ginkgo.It("[BAD_ANNOTATIONS] should allow an ingress if there is a default blocklist config in place", func() {
+		if framework.IsCrossplane() {
+			ginkgo.Skip("Crossplane does not support snippets")
+		}
 		disableSnippet := f.AllowSnippetConfiguration()
 		defer disableSnippet()
 
@@ -120,7 +125,8 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 
 		f.WaitForNginxServer(hostValid,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %s ;", hostValid))
+				return strings.Contains(server, fmt.Sprintf("server_name %s;", hostValid)) ||
+					strings.Contains(server, fmt.Sprintf("server_name %s ;", hostValid))
 			})
 
 		f.WaitForNginxServer(hostValid,
@@ -153,7 +159,8 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return !strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+				return !strings.Contains(server, fmt.Sprintf("server_name %s;", host)) &&
+					!strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
 		f.WaitForNginxServer(host,

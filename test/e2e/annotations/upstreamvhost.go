@@ -42,7 +42,8 @@ var _ = framework.DescribeAnnotation("upstream-vhost", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, `proxy_set_header Host "upstreamvhost.bar.com";`)
+				return strings.Contains(server, `proxy_set_header Host "upstreamvhost.bar.com";`) ||
+					strings.Contains(server, `proxy_set_header Host upstreamvhost.bar.com;`)
 			})
 	})
 })

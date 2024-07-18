@@ -97,8 +97,8 @@ var _ = framework.DescribeAnnotation("rewrite-target use-regex enable-rewrite-lo
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, `location ~* "^/" {`) &&
-					strings.Contains(server, `location ~* "^/.well-known/acme/challenge" {`)
+				return (strings.Contains(server, `location ~* "^/" {`) || strings.Contains(server, `location ~* ^/ {`)) &&
+					(strings.Contains(server, `location ~* "^/.well-known/acme/challenge" {`) || strings.Contains(server, `location ~* ^/.well-known/acme/challenge {`))
 			})
 
 		ginkgo.By("making a second request to the non-rewritten location")
@@ -132,8 +132,8 @@ var _ = framework.DescribeAnnotation("rewrite-target use-regex enable-rewrite-lo
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, `location ~* "^/foo" {`) &&
-					strings.Contains(server, `location ~* "^/foo.+" {`)
+				return (strings.Contains(server, `location ~* "^/foo" {`) || strings.Contains(server, `location ~* ^/foo {`)) &&
+					(strings.Contains(server, `location ~* "^/foo.+" {`) || strings.Contains(server, `location ~* ^/foo.+ {`))
 			})
 
 		ginkgo.By("ensuring '/foo' matches '~* ^/foo'")
@@ -174,7 +174,8 @@ var _ = framework.DescribeAnnotation("rewrite-target use-regex enable-rewrite-lo
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, `location ~* "^/foo/bar/bar" {`) &&
+				return (strings.Contains(server, `location ~* "^/foo/bar/bar" {`) ||
+					strings.Contains(server, `location ~* ^/foo/bar/bar {`)) &&
 					strings.Contains(server, `location ~* "^/foo/bar/[a-z]{3}" {`)
 			})
 
@@ -202,7 +203,7 @@ var _ = framework.DescribeAnnotation("rewrite-target use-regex enable-rewrite-lo
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, `location ~* "^/foo/bar/(.+)" {`)
+				return strings.Contains(server, `location ~* "^/foo/bar/(.+)" {`) || strings.Contains(server, `location ~* ^/foo/bar/(.+) {`)
 			})
 
 		ginkgo.By("check that '/foo/bar/bar' redirects to custom rewrite")

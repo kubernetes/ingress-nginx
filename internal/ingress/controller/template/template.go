@@ -71,6 +71,10 @@ type Writer interface {
 	// NOTE: Implementors must ensure that the content of the returned slice is not modified by the implementation
 	// after the return of this function.
 	Write(conf *config.TemplateConfig) ([]byte, error)
+	// Validate is a function that can be called, containing the file name to be tested
+	// This function should be used just by specific cases like crossplane, otherwise it can return
+	// null error
+	Validate(filename string) error
 }
 
 // Template ingress template
@@ -227,6 +231,11 @@ type LuaListenPorts struct {
 	HTTPSPort    string `json:"https"`
 	StatusPort   string `json:"status_port"`
 	SSLProxyPort string `json:"ssl_proxy"`
+}
+
+// Validate is no-op at go-template
+func (t *Template) Validate(_ string) error {
+	return nil
 }
 
 // Write populates a buffer using a template with NGINX configuration

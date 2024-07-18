@@ -64,7 +64,8 @@ var _ = framework.DescribeAnnotation("backend-protocol - FastCGI", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "fastcgi_index \"index.php\";")
+				return strings.Contains(server, "fastcgi_index \"index.php\";") ||
+					strings.Contains(server, "fastcgi_index index.php;")
 			})
 	})
 
@@ -94,8 +95,10 @@ var _ = framework.DescribeAnnotation("backend-protocol - FastCGI", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "fastcgi_param SCRIPT_FILENAME \"$fastcgi_script_name\";") &&
-					strings.Contains(server, "fastcgi_param REDIRECT_STATUS \"200\";")
+				return (strings.Contains(server, "fastcgi_param SCRIPT_FILENAME \"$fastcgi_script_name\";") &&
+					strings.Contains(server, "fastcgi_param REDIRECT_STATUS \"200\";")) ||
+					(strings.Contains(server, "fastcgi_param SCRIPT_FILENAME $fastcgi_script_name;") &&
+						strings.Contains(server, "fastcgi_param REDIRECT_STATUS 200;"))
 			})
 	})
 

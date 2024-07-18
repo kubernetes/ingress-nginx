@@ -39,11 +39,17 @@ var _ = framework.IngressNginxDescribe("[Ingress] definition without host", func
 
 		f.WaitForNginxServer("_",
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf(`set $namespace "%v";`, f.Namespace)) &&
+				return (strings.Contains(server, fmt.Sprintf(`set $namespace "%v";`, f.Namespace)) &&
 					strings.Contains(server, fmt.Sprintf(`set $ingress_name "%v";`, ing.Name)) &&
 					strings.Contains(server, fmt.Sprintf(`set $service_name "%v";`, framework.EchoService)) &&
 					strings.Contains(server, `set $service_port "80";`) &&
-					strings.Contains(server, `set $location_path "/";`)
+					strings.Contains(server, `set $location_path "/";`)) ||
+					// Crossplane assertions
+					(strings.Contains(server, fmt.Sprintf(`set $namespace %s;`, f.Namespace)) &&
+						strings.Contains(server, fmt.Sprintf(`set $ingress_name %s;`, ing.Name)) &&
+						strings.Contains(server, fmt.Sprintf(`set $service_name %s;`, framework.EchoService)) &&
+						strings.Contains(server, `set $service_port 80;`) &&
+						strings.Contains(server, `set $location_path /;`))
 			})
 
 		f.HTTPTestClient().
@@ -81,11 +87,17 @@ var _ = framework.IngressNginxDescribe("[Ingress] definition without host", func
 
 		f.WaitForNginxServer("only-backend",
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf(`set $namespace "%v";`, f.Namespace)) &&
+				return (strings.Contains(server, fmt.Sprintf(`set $namespace "%v";`, f.Namespace)) &&
 					strings.Contains(server, fmt.Sprintf(`set $ingress_name "%v";`, ing.Name)) &&
 					strings.Contains(server, fmt.Sprintf(`set $service_name "%v";`, framework.EchoService)) &&
 					strings.Contains(server, `set $service_port "80";`) &&
-					strings.Contains(server, `set $location_path "/";`)
+					strings.Contains(server, `set $location_path "/";`)) ||
+					// Crossplane assertions
+					(strings.Contains(server, fmt.Sprintf(`set $namespace %s;`, f.Namespace)) &&
+						strings.Contains(server, fmt.Sprintf(`set $ingress_name %s;`, ing.Name)) &&
+						strings.Contains(server, fmt.Sprintf(`set $service_name %s;`, framework.EchoService)) &&
+						strings.Contains(server, `set $service_port 80;`) &&
+						strings.Contains(server, `set $location_path /;`))
 			})
 
 		f.HTTPTestClient().

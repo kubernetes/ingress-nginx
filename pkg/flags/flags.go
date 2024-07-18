@@ -233,6 +233,8 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 		disableSyncEvents = flags.Bool("disable-sync-events", false, "Disables the creation of 'Sync' event resources")
 
 		enableTopologyAwareRouting = flags.Bool("enable-topology-aware-routing", false, "Enable topology aware routing feature, needs service object annotation service.kubernetes.io/topology-mode sets to auto.")
+
+		configurationTemplateEngine = flags.String("configuration-template-engine", "go-template", "Defines what configuration template engine should be used. Can be 'go-template' or 'crossplane'. ")
 	)
 
 	flags.StringVar(&nginx.MaxmindMirror, "maxmind-mirror", "", `Maxmind mirror url (example: http://geoip.local/databases.`)
@@ -301,6 +303,10 @@ https://blog.maxmind.com/2019/12/significant-changes-to-accessing-and-using-geol
 
 	if *publishSvc != "" && *publishStatusAddress != "" {
 		return false, nil, fmt.Errorf("flags --publish-service and --publish-status-address are mutually exclusive")
+	}
+
+	if *enableSSLPassthrough && *configurationTemplateEngine != "go-template" {
+		return false, nil, fmt.Errorf("SSL Passthrough can only be enabled with 'go-template' configuration engine")
 	}
 
 	nginx.HealthPath = *defHealthzURL
@@ -390,12 +396,13 @@ https://blog.maxmind.com/2019/12/significant-changes-to-accessing-and-using-geol
 			WatchWithoutClass:  *watchWithoutClass,
 			IngressClassByName: *ingressClassByName,
 		},
-		DisableCatchAll:           *disableCatchAll,
-		ValidationWebhook:         *validationWebhook,
-		ValidationWebhookCertPath: *validationWebhookCert,
-		ValidationWebhookKeyPath:  *validationWebhookKey,
-		InternalLoggerAddress:     *internalLoggerAddress,
-		DisableSyncEvents:         *disableSyncEvents,
+		DisableCatchAll:             *disableCatchAll,
+		ValidationWebhook:           *validationWebhook,
+		ValidationWebhookCertPath:   *validationWebhookCert,
+		ValidationWebhookKeyPath:    *validationWebhookKey,
+		InternalLoggerAddress:       *internalLoggerAddress,
+		DisableSyncEvents:           *disableSyncEvents,
+		ConfigurationTemplateEngine: *configurationTemplateEngine,
 	}
 
 	if *apiserverHost != "" {

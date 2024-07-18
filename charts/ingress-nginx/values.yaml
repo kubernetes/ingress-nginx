@@ -21,6 +21,8 @@ commonLabels: {}
 
 controller:
   name: controller
+  # -- Defines which template engine should be used when creating NGINX configuration. Can be 'go-template' or 'crossplane'
+  templateEngine: "go-template"
   enableAnnotationValidations: true
   image:
     ## Keep false as default for now!

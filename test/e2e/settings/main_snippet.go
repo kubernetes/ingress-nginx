@@ -26,6 +26,9 @@ import (
 
 var _ = framework.DescribeSetting("main-snippet", func() {
 	f := framework.NewDefaultFramework("main-snippet")
+	if framework.IsCrossplane() {
+		return
+	}
 	mainSnippet := "main-snippet"
 
 	ginkgo.It("should add value of main-snippet setting to nginx config", func() {

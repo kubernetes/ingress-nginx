@@ -69,8 +69,10 @@ var _ = framework.IngressNginxDescribe("[SSL] [Flag] default-ssl-certificate", f
 
 		ginkgo.By("making sure new ingress is deployed")
 		expectedConfig := fmt.Sprintf(`set $proxy_upstream_name "%v-%v-%v";`, f.Namespace, service, port)
+		expectedConfigCrossPlane := fmt.Sprintf(`set $proxy_upstream_name %v-%v-%v;`, f.Namespace, service, port)
+
 		f.WaitForNginxServer("_", func(cfg string) bool {
-			return strings.Contains(cfg, expectedConfig)
+			return strings.Contains(cfg, expectedConfig) || strings.Contains(cfg, expectedConfigCrossPlane)
 		})
 
 		ginkgo.By("making sure new ingress is responding")
@@ -91,8 +93,9 @@ var _ = framework.IngressNginxDescribe("[SSL] [Flag] default-ssl-certificate", f
 
 		ginkgo.By("making sure new ingress is deployed")
 		expectedConfig := fmt.Sprintf(`set $proxy_upstream_name "%v-%v-%v";`, f.Namespace, service, port)
+		expectedConfigCrossPlane := fmt.Sprintf(`set $proxy_upstream_name %v-%v-%v;`, f.Namespace, service, port)
 		f.WaitForNginxServer(host, func(cfg string) bool {
-			return strings.Contains(cfg, expectedConfig)
+			return strings.Contains(cfg, expectedConfig) || strings.Contains(cfg, expectedConfigCrossPlane)
 		})
 
 		ginkgo.By("making sure the configured default ssl certificate is being used")

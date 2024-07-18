@@ -35,6 +35,9 @@ import (
 
 var _ = framework.IngressNginxDescribe("[Flag] enable-ssl-passthrough", func() {
 	f := framework.NewDefaultFramework("ssl-passthrough", framework.WithHTTPBunEnabled())
+	if framework.IsCrossplane() {
+		return
+	}
 
 	ginkgo.BeforeEach(func() {
 		err := f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {

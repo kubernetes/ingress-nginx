@@ -320,3 +320,18 @@ jobs:
     with:
       k8s-version: ${{ matrix.k8s }}
       variation: "CHROOT"
+
+  kubernetes-crossplane:
+    name: Kubernetes Crossplane
+    needs:
+      - changes
+      - build
+    if: |
+      (needs.changes.outputs.go == 'true') || (needs.changes.outputs.baseimage == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
+    strategy:
+      matrix:
+        k8s: [v1.30.10, v1.31.6, v1.32.3]
+    uses: ./.github/workflows/zz-tmpl-k8s-e2e.yaml
+    with:
+      k8s-version: ${{ matrix.k8s }}
+      variation: "CROSSPLANE"

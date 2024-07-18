@@ -44,6 +44,7 @@ jobs:
           SKIP_INGRESS_IMAGE_CREATION: true
           SKIP_E2E_IMAGE_CREATION: true
           IS_CHROOT: ${{ inputs.variation == 'CHROOT' }}
+          IS_CROSSPLANE: ${{ inputs.variation == 'CROSSPLANE' }}
         run: |
           kind get kubeconfig > $HOME/.kube/kind-config-kind
           make kind-e2e-test

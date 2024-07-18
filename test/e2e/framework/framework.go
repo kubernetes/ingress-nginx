@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -117,6 +118,11 @@ func NewSimpleFramework(baseName string, opts ...func(*Framework)) *Framework {
 	ginkgo.AfterEach(f.DestroyEnvironment)
 
 	return f
+}
+
+func IsCrossplane() bool {
+	isCrossplane, ok := os.LookupEnv("IS_CROSSPLANE")
+	return ok && isCrossplane == "true"
 }
 
 func (f *Framework) CreateEnvironment() {
@@ -315,7 +321,7 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 		if name == "" {
 			cmd = "cat /etc/nginx/nginx.conf"
 		} else {
-			cmd = fmt.Sprintf("cat /etc/nginx/nginx.conf | awk '/## start server %v/,/## end server %v/'", name, name)
+			cmd = fmt.Sprintf("cat /etc/nginx/nginx.conf | awk '/## start server %s/,/## end server %s/'", name, name)
 		}
 
 		o, err := f.ExecCommand(f.pod, cmd)

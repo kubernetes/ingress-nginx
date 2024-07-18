@@ -47,7 +47,8 @@ var _ = framework.IngressNginxDescribe("[Default Backend] custom service", func(
 
 		f.WaitForNginxServer("_",
 			func(server string) bool {
-				return strings.Contains(server, `set $proxy_upstream_name "upstream-default-backend"`)
+				return strings.Contains(server, `set $proxy_upstream_name "upstream-default-backend"`) ||
+					strings.Contains(server, `set $proxy_upstream_name upstream-default-backend`)
 			})
 
 		f.HTTPTestClient().

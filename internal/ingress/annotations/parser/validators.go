@@ -49,8 +49,6 @@ var (
 
 // IsValidRegex checks if the tested string can be used as a regex, but without any weird character.
 // It includes regex characters for paths that may contain regexes
-//
-//nolint:goconst //already a constant
 var IsValidRegex = regexp.MustCompile("^[/" + alphaNumericChars + regexEnabledChars + "]*$")
 
 // SizeRegex validates sizes understood by NGINX, like 1000, 100k, 1000M

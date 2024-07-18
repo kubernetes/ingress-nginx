@@ -157,6 +157,10 @@ func (ntc testNginxTestCommand) Test(cfg string) ([]byte, error) {
 
 type fakeTemplate struct{}
 
+func (fakeTemplate) Validate(_ string) error {
+	return nil
+}
+
 func (fakeTemplate) Write(conf *ngx_config.TemplateConfig) ([]byte, error) {
 	r := []byte{}
 	for _, s := range conf.Servers {

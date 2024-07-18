@@ -37,6 +37,9 @@ import (
 
 var _ = framework.IngressNginxDescribe("[TCP] tcp-services", func() {
 	f := framework.NewDefaultFramework("tcp")
+	if framework.IsCrossplane() {
+		return
+	}
 	var ip string
 
 	ginkgo.BeforeEach(func() {

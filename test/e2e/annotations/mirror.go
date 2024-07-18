@@ -43,7 +43,8 @@ var _ = framework.DescribeAnnotation("mirror-*", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("mirror \"/_mirror-%v\";", ing.UID)) &&
+				return (strings.Contains(server, fmt.Sprintf("mirror \"/_mirror-%v\";", ing.UID)) ||
+					strings.Contains(server, fmt.Sprintf("mirror /_mirror-%v;", ing.UID))) &&
 					strings.Contains(server, "mirror_request_body on;")
 			})
 	})
@@ -58,9 +59,11 @@ var _ = framework.DescribeAnnotation("mirror-*", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("mirror \"/_mirror-%v\";", ing.UID)) &&
+				return (strings.Contains(server, fmt.Sprintf("mirror \"/_mirror-%v\";", ing.UID)) ||
+					strings.Contains(server, fmt.Sprintf("mirror /_mirror-%v;", ing.UID))) &&
 					strings.Contains(server, "mirror_request_body on;") &&
-					strings.Contains(server, `proxy_pass "https://test.env.com/$request_uri";`)
+					(strings.Contains(server, `proxy_pass "https://test.env.com/$request_uri";`) ||
+						strings.Contains(server, `proxy_pass https://test.env.com/$request_uri;`))
 			})
 	})
 
@@ -75,7 +78,8 @@ var _ = framework.DescribeAnnotation("mirror-*", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("mirror \"/_mirror-%v\";", ing.UID)) &&
+				return (strings.Contains(server, fmt.Sprintf("mirror \"/_mirror-%v\";", ing.UID)) ||
+					strings.Contains(server, fmt.Sprintf("mirror /_mirror-%v;", ing.UID))) &&
 					strings.Contains(server, "mirror_request_body off;")
 			})
 	})
