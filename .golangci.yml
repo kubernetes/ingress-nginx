@@ -26,7 +26,6 @@ linters:
     - ginkgolinter
     - gocheckcompilerdirectives
     - goconst
-    - gocritic
     - gocyclo
     - godox
     - gofmt

@@ -51,7 +51,7 @@ func buildDirective(directive string, args ...any) *ngx_crossplane.Directive {
 	}
 }
 
-func buildLuaSharedDictionaries(cfg config.Configuration) []*ngx_crossplane.Directive {
+func buildLuaSharedDictionaries(cfg *config.Configuration) []*ngx_crossplane.Directive {
 	out := make([]*ngx_crossplane.Directive, 0, len(cfg.LuaSharedDicts))
 	for name, size := range cfg.LuaSharedDicts {
 		sizeStr := dictKbToStr(size)

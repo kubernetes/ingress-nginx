@@ -83,7 +83,7 @@ func (c *crossplaneTemplate) initHTTPDirectives() ngx_crossplane.Directives {
 func (c *crossplaneTemplate) buildHTTP() {
 	cfg := c.tplConfig.Cfg
 	httpBlock := c.initHTTPDirectives()
-	httpBlock = append(httpBlock, buildLuaSharedDictionaries(c.tplConfig.Cfg)...)
+	httpBlock = append(httpBlock, buildLuaSharedDictionaries(&c.tplConfig.Cfg)...)
 
 	// Real IP dealing
 	if (cfg.UseForwardedHeaders || cfg.UseProxyProtocol) || cfg.EnableRealIP {
