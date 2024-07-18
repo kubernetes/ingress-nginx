@@ -28,9 +28,11 @@ func (c *Template) initHTTPDirectives() ngx_crossplane.Directives {
 	cfg := c.tplConfig.Cfg
 	httpBlock := ngx_crossplane.Directives{
 		buildDirective("lua_package_path", "/etc/nginx/lua/?.lua;;"),
+		buildDirective("lua_shared_dict", "luaconfig", "5m"),
+		buildDirective("init_by_lua_file", "/etc/nginx/lua/ngx_conf_init.lua"),
+		buildDirective("init_worker_by_lua_file", "/etc/nginx/lua/ngx_conf_init_worker.lua"),
 		buildDirective("include", c.mimeFile),
 		buildDirective("default_type", cfg.DefaultType),
-		buildDirective("real_ip_recursive", "on"),
 		buildDirective("aio", "threads"),
 		buildDirective("aio_write", cfg.EnableAioWrite),
 		buildDirective("server_tokens", cfg.ShowServerTokens),
@@ -85,8 +87,11 @@ func (c *Template) initHTTPDirectives() ngx_crossplane.Directives {
 func (c *Template) buildHTTP() {
 	cfg := c.tplConfig.Cfg
 	httpBlock := c.initHTTPDirectives()
-	httpBlock = append(httpBlock, buildLuaSharedDictionaries(&c.tplConfig.Cfg)...)
+	httpBlock = append(httpBlock, buildLuaSharedDictionaries(&cfg)...)
 
+	if c.tplConfig.Cfg.EnableOpentelemetry || shouldLoadOpentelemetryModule(c.tplConfig.Servers) {
+		httpBlock = append(httpBlock, buildDirective("opentelemetry_config", cfg.OpentelemetryConfig))
+	}
 	// Real IP dealing
 	if (cfg.UseForwardedHeaders || cfg.UseProxyProtocol) || cfg.EnableRealIP {
 		if cfg.UseProxyProtocol {
@@ -94,7 +99,7 @@ func (c *Template) buildHTTP() {
 		} else {
 			httpBlock = append(httpBlock, buildDirective("real_ip_header", cfg.ForwardedForHeader))
 		}
-
+		httpBlock = append(httpBlock, buildDirective("real_ip_recursive", "on"))
 		for k := range cfg.ProxyRealIPCIDR {
 			httpBlock = append(httpBlock, buildDirective("set_real_ip_from", cfg.ProxyRealIPCIDR[k]))
 		}
@@ -128,9 +133,24 @@ func (c *Template) buildHTTP() {
 		}
 	}
 
+	if cfg.EnableBrotli {
+		httpBlock = append(httpBlock, buildDirective("brotli", "on"))
+		httpBlock = append(httpBlock, buildDirective("brotli_comp_level", cfg.BrotliLevel))
+		httpBlock = append(httpBlock, buildDirective("brotli_min_length", cfg.BrotliMinLength))
+		httpBlock = append(httpBlock, buildDirective("brotli_types", cfg.BrotliTypes))
+	}
+
 	if !cfg.ShowServerTokens {
 		httpBlock = append(httpBlock, buildDirective("more_clear_headers", "Server"))
 	}
+
+	httpBlock = append(httpBlock, buildBlockDirective(
+		"geo",
+		[]string{"$literal_dollar"},
+		ngx_crossplane.Directives{
+			buildDirective("default", "$"),
+		},
+	))
 
 	if len(c.tplConfig.AddHeaders) > 0 {
 		additionalHeaders := make([]string, 0)
@@ -206,6 +226,8 @@ func (c *Template) buildHTTP() {
 	httpUpgradeMap := ngx_crossplane.Directives{buildDirective("default", "upgrade")}
 	if cfg.UpstreamKeepaliveConnections < 1 {
 		httpUpgradeMap = append(httpUpgradeMap, buildDirective("", "close"))
+	} else {
+		httpUpgradeMap = append(httpUpgradeMap, buildDirective("", ""))
 	}
 	httpBlock = append(httpBlock, buildMapDirective("$http_upgrade", "$connection_upgrade", httpUpgradeMap))
 
@@ -220,7 +242,7 @@ func (c *Template) buildHTTP() {
 		if cfg.UseProxyProtocol {
 			forwardForMap = append(forwardForMap,
 				buildDirective("default", "$http_x_forwarded_for, $proxy_protocol_addr"),
-				buildDirective("", "$http_x_forwarded_for, $proxy_protocol_addr"),
+				buildDirective("", "$proxy_protocol_addr"),
 			)
 		} else {
 			forwardForMap = append(forwardForMap,
@@ -244,15 +266,13 @@ func (c *Template) buildHTTP() {
 		)
 	}
 
-	if len(cfg.HideHeaders) > 0 {
-		for k := range cfg.HideHeaders {
-			httpBlock = append(httpBlock, buildDirective("proxy_hide_header", cfg.HideHeaders[k]))
-		}
+	for k := range cfg.HideHeaders {
+		httpBlock = append(httpBlock, buildDirective("proxy_hide_header", cfg.HideHeaders[k]))
 	}
 
 	blockUpstreamDirectives := ngx_crossplane.Directives{
 		buildDirective("server", "0.0.0.1"),
-		buildBlockDirective("balancer_by_lua_block", nil, ngx_crossplane.Directives{buildDirective("balancer.balance()")}),
+		buildDirective("balancer_by_lua_file", "/etc/nginx/lua/nginx/ngx_conf_balancer.lua"),
 	}
 	if c.tplConfig.Cfg.UpstreamKeepaliveConnections > 0 {
 		blockUpstreamDirectives = append(blockUpstreamDirectives,
