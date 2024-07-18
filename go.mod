@@ -48,8 +48,10 @@ require (
 require (
 	github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be // indirect
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
+	github.com/jstemmer/go-junit-report v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/moby/sys/userns v0.1.0 // indirect
+	github.com/maxbrunsfeld/counterfeiter/v6 v6.8.1 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	sigs.k8s.io/release-utils v0.8.3 // indirect
