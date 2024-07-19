@@ -180,6 +180,10 @@ func (c *crossplaneTemplate) buildHTTP() {
 		httpBlock = append(httpBlock, buildDirective("error_log", cfg.ErrorLogPath, cfg.ErrorLogLevel))
 	}
 
+	if cfg.AllowBackendServerHeader {
+		httpBlock = append(httpBlock, buildDirective("proxy_pass_header", "Server"))
+	}
+
 	c.config.Parsed = append(c.config.Parsed, &ngx_crossplane.Directive{
 		Directive: "http",
 		Block:     httpBlock,
