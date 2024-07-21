@@ -276,11 +276,6 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://kubernetes.github.io/ingress-nginx/user-guide/retaining-client-ipaddress/</loc>
-         <lastmod>2024-07-21</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
          <loc>https://kubernetes.github.io/ingress-nginx/user-guide/tls/</loc>
          <lastmod>2024-07-21</lastmod>
          <changefreq>daily</changefreq>
