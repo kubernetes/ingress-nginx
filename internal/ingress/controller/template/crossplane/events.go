@@ -20,7 +20,7 @@ import (
 	ngx_crossplane "github.com/nginxinc/nginx-go-crossplane"
 )
 
-func (c *crossplaneTemplate) buildEvents() {
+func (c *CrossplaneTemplate) buildEvents() {
 	events := &ngx_crossplane.Directive{
 		Directive: "events",
 		Block: ngx_crossplane.Directives{

@@ -24,11 +24,11 @@ import (
 	ngx_crossplane "github.com/nginxinc/nginx-go-crossplane"
 )
 
-func (c *crossplaneTemplate) initHTTPDirectives() ngx_crossplane.Directives {
+func (c *CrossplaneTemplate) initHTTPDirectives() ngx_crossplane.Directives {
 	cfg := c.tplConfig.Cfg
 	httpBlock := ngx_crossplane.Directives{
 		buildDirective("lua_package_path", "/etc/nginx/lua/?.lua;;"),
-		buildDirective("include", "/etc/nginx/mime.types"),
+		buildDirective("include", c.mimeFile),
 		buildDirective("default_type", cfg.DefaultType),
 		buildDirective("real_ip_recursive", "on"),
 		buildDirective("aio", "threads"),
@@ -46,7 +46,7 @@ func (c *crossplaneTemplate) initHTTPDirectives() ngx_crossplane.Directives {
 		buildDirective("proxy_temp_path", "/tmp/nginx/proxy-temp"),
 		buildDirective("client_header_buffer_size", cfg.ClientHeaderBufferSize),
 		buildDirective("client_header_timeout", seconds(cfg.ClientHeaderTimeout)),
-		buildDirective("large_client_header_buffers", cfg.LargeClientHeaderBuffers),
+		buildDirective("large_client_header_buffers", strings.Split(cfg.LargeClientHeaderBuffers, " ")),
 		buildDirective("client_body_buffer_size", cfg.ClientBodyBufferSize),
 		buildDirective("client_body_timeout", seconds(cfg.ClientBodyTimeout)),
 		buildDirective("types_hash_max_size", "2048"),
@@ -64,6 +64,7 @@ func (c *crossplaneTemplate) initHTTPDirectives() ngx_crossplane.Directives {
 		buildDirective("uninitialized_variable_warn", "off"),
 		buildDirective("server_name_in_redirect", "off"),
 		buildDirective("port_in_redirect", "off"),
+		buildDirective("http2_max_concurrent_streams", cfg.HTTP2MaxConcurrentStreams),
 		buildDirective("ssl_protocols", strings.Split(cfg.SSLProtocols, " ")),
 		buildDirective("ssl_early_data", cfg.SSLEarlyData),
 		buildDirective("ssl_session_tickets", cfg.SSLSessionTickets),
@@ -80,7 +81,7 @@ func (c *crossplaneTemplate) initHTTPDirectives() ngx_crossplane.Directives {
 	return httpBlock
 }
 
-func (c *crossplaneTemplate) buildHTTP() {
+func (c *CrossplaneTemplate) buildHTTP() {
 	cfg := c.tplConfig.Cfg
 	httpBlock := c.initHTTPDirectives()
 	httpBlock = append(httpBlock, buildLuaSharedDictionaries(&c.tplConfig.Cfg)...)
@@ -121,7 +122,7 @@ func (c *crossplaneTemplate) buildHTTP() {
 		httpBlock = append(httpBlock, buildDirective("gzip_vary", "on"))
 
 		if cfg.GzipDisable != "" {
-			httpBlock = append(httpBlock, buildDirective("gzip_disable", strings.Split(cfg.GzipDisable, "")))
+			httpBlock = append(httpBlock, buildDirective("gzip_disable", strings.Split(cfg.GzipDisable, " ")))
 		}
 	}
 

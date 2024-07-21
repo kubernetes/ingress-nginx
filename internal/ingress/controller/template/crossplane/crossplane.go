@@ -34,15 +34,17 @@ Unsupported directives:
 
 // On this case we will try to use the go ngx_crossplane to write the template instead of the template renderer
 
-type crossplaneTemplate struct {
+type CrossplaneTemplate struct {
 	options   *ngx_crossplane.BuildOptions
 	config    *ngx_crossplane.Config
 	tplConfig *config.TemplateConfig
+	mimeFile  string
 }
 
-func NewCrossplaneTemplate() *crossplaneTemplate {
+func NewCrossplaneTemplate() *CrossplaneTemplate {
 	lua := ngx_crossplane.Lua{}
-	return &crossplaneTemplate{
+	return &CrossplaneTemplate{
+		mimeFile: "/etc/nginx/mime.types",
 		options: &ngx_crossplane.BuildOptions{
 			Builders: []ngx_crossplane.RegisterBuilder{
 				lua.RegisterBuilder(),
@@ -51,7 +53,11 @@ func NewCrossplaneTemplate() *crossplaneTemplate {
 	}
 }
 
-func (c *crossplaneTemplate) Write(conf *config.TemplateConfig) ([]byte, error) {
+func (c *CrossplaneTemplate) SetMimeFile(file string) {
+	c.mimeFile = file
+}
+
+func (c *CrossplaneTemplate) Write(conf *config.TemplateConfig) ([]byte, error) {
 	c.tplConfig = conf
 
 	// build root directives
