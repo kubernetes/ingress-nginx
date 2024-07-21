@@ -36,7 +36,7 @@ types {
 }
 `
 
-// TestCrossplaneTemplate should be a roundtrip test.
+// TestTemplate should be a roundtrip test.
 // We should initialize the scenarios based on the template configuration
 // Then Parse and write a crossplane configuration, and roundtrip/parse back to check
 // if the directives matches
@@ -69,7 +69,7 @@ func TestCrossplaneTemplate(t *testing.T) {
 		}
 		tplConfig.Cfg.DefaultSSLCertificate = defaultCertificate
 
-		tpl := crossplane.NewCrossplaneTemplate()
+		tpl := crossplane.NewTemplate()
 		tpl.SetMimeFile(mimeFile.Name())
 		content, err := tpl.Write(tplConfig)
 		require.NoError(t, err)

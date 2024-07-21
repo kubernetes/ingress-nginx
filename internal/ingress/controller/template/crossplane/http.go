@@ -24,7 +24,7 @@ import (
 	ngx_crossplane "github.com/nginxinc/nginx-go-crossplane"
 )
 
-func (c *CrossplaneTemplate) initHTTPDirectives() ngx_crossplane.Directives {
+func (c *Template) initHTTPDirectives() ngx_crossplane.Directives {
 	cfg := c.tplConfig.Cfg
 	httpBlock := ngx_crossplane.Directives{
 		buildDirective("lua_package_path", "/etc/nginx/lua/?.lua;;"),
@@ -81,7 +81,7 @@ func (c *CrossplaneTemplate) initHTTPDirectives() ngx_crossplane.Directives {
 	return httpBlock
 }
 
-func (c *CrossplaneTemplate) buildHTTP() {
+func (c *Template) buildHTTP() {
 	cfg := c.tplConfig.Cfg
 	httpBlock := c.initHTTPDirectives()
 	httpBlock = append(httpBlock, buildLuaSharedDictionaries(&c.tplConfig.Cfg)...)
@@ -147,18 +147,12 @@ func (c *CrossplaneTemplate) buildHTTP() {
 
 	httpBlock = append(httpBlock, buildDirective("log_format", "upstreaminfo", escape, cfg.LogFormatUpstream))
 
-	// buildMap directive
-	mapLogDirective := &ngx_crossplane.Directive{
-		Directive: "map",
-		Args:      []string{"$request_uri", "$loggable"},
-		Block:     make(ngx_crossplane.Directives, 0),
-	}
+	loggableMap := make(ngx_crossplane.Directives, 0)
 	for k := range cfg.SkipAccessLogURLs {
-		mapLogDirective.Block = append(mapLogDirective.Block, buildDirective(cfg.SkipAccessLogURLs[k], "0"))
+		loggableMap = append(loggableMap, buildDirective(cfg.SkipAccessLogURLs[k], "0"))
 	}
-	mapLogDirective.Block = append(mapLogDirective.Block, buildDirective("default", "1"))
-	httpBlock = append(httpBlock, mapLogDirective)
-	// end of build mapLog
+	loggableMap = append(loggableMap, buildDirective("default", "1"))
+	httpBlock = append(httpBlock, buildMapDirective("$request_uri", "$loggable", loggableMap))
 
 	if cfg.DisableAccessLog || cfg.DisableHTTPAccessLog {
 		httpBlock = append(httpBlock, buildDirective("access_log", "off"))
@@ -179,6 +173,60 @@ func (c *CrossplaneTemplate) buildHTTP() {
 		httpBlock = append(httpBlock, buildDirective("error_log", fmt.Sprintf("syslog:server%s:%d", cfg.SyslogHost, cfg.SyslogPort), cfg.ErrorLogLevel))
 	} else {
 		httpBlock = append(httpBlock, buildDirective("error_log", cfg.ErrorLogPath, cfg.ErrorLogLevel))
+	}
+
+	if cfg.SSLSessionCache {
+		httpBlock = append(httpBlock,
+			buildDirective("ssl_session_cache", fmt.Sprintf("shared:SSL:%s", cfg.SSLSessionCacheSize)),
+			buildDirective("ssl_session_timeout", cfg.SSLSessionTimeout),
+		)
+	}
+
+	if cfg.SSLSessionTicketKey != "" {
+		httpBlock = append(httpBlock, buildDirective("ssl_session_ticket_key", "/etc/ingress-controller/tickets.key"))
+	}
+
+	if cfg.SSLCiphers != "" {
+		httpBlock = append(httpBlock,
+			buildDirective("ssl_ciphers", cfg.SSLCiphers),
+			buildDirective("ssl_prefer_server_ciphers", "on"),
+		)
+	}
+
+	if cfg.SSLDHParam != "" {
+		httpBlock = append(httpBlock, buildDirective("ssl_dhparam", cfg.SSLDHParam))
+	}
+
+	if len(cfg.CustomHTTPErrors) > 0 && !cfg.DisableProxyInterceptErrors {
+		httpBlock = append(httpBlock, buildDirective("proxy_intercept_errors", "on"))
+	}
+
+	httpUpgradeMap := ngx_crossplane.Directives{buildDirective("default", "upgrade")}
+	if cfg.UpstreamKeepaliveConnections < 1 {
+		httpUpgradeMap = append(httpUpgradeMap, buildDirective("", "close"))
+	}
+	httpBlock = append(httpBlock, buildMapDirective("$http_upgrade", "$connection_upgrade", httpUpgradeMap))
+
+	reqIDMap := ngx_crossplane.Directives{buildDirective("default", "$http_x_request_id")}
+	if cfg.GenerateRequestID {
+		reqIDMap = append(reqIDMap, buildDirective("", "$request_id"))
+	}
+	httpBlock = append(httpBlock, buildMapDirective("$http_x_request_id", "$req_id", reqIDMap))
+
+	if cfg.UseForwardedHeaders && cfg.ComputeFullForwardedFor {
+		forwardForMap := make(ngx_crossplane.Directives, 0)
+		if cfg.UseProxyProtocol {
+			forwardForMap = append(forwardForMap,
+				buildDirective("default", "$http_x_forwarded_for, $proxy_protocol_addr"),
+				buildDirective("", "$http_x_forwarded_for, $proxy_protocol_addr"),
+			)
+		} else {
+			forwardForMap = append(forwardForMap,
+				buildDirective("default", "$http_x_forwarded_for, $realip_remote_addr"),
+				buildDirective("", "$realip_remote_addr"),
+			)
+		}
+		httpBlock = append(httpBlock, buildMapDirective("$http_x_forwarded_for", "$full_x_forwarded_for", forwardForMap))
 	}
 
 	c.config.Parsed = append(c.config.Parsed, &ngx_crossplane.Directive{

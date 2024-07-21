@@ -20,7 +20,7 @@ import (
 	ngx_crossplane "github.com/nginxinc/nginx-go-crossplane"
 )
 
-func (c *CrossplaneTemplate) buildConfig() {
+func (c *Template) buildConfig() {
 	// Write basic directives
 	config := &ngx_crossplane.Config{
 		Parsed: ngx_crossplane.Directives{

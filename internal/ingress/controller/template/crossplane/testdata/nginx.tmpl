@@ -10,6 +10,7 @@
 # MIGRATED
 pid {{ .PID }};
 
+# MODULES ARE NOT MIGRATED YET!
 {{ if $cfg.EnableBrotli }}
 load_module /etc/nginx/modules/ngx_http_brotli_filter_module.so;
 load_module /etc/nginx/modules/ngx_http_brotli_static_module.so;
@@ -23,10 +24,9 @@ load_module /etc/nginx/modules/ngx_http_auth_digest_module.so;
 load_module /etc/nginx/modules/otel_ngx_module.so;
 {{ end }}
 
-# MIGRATED
+# MIGRATED 1
 daemon off;
 
-# MIGRATED 1
 worker_processes {{ $cfg.WorkerProcesses }};
 {{ if gt (len $cfg.WorkerCPUAffinity) 0 }}
 worker_cpu_affinity {{ $cfg.WorkerCPUAffinity }};
@@ -38,9 +38,6 @@ worker_rlimit_nofile {{ $cfg.MaxWorkerOpenFiles }};
 {{/* avoid waiting too long during a reload */}}
 worker_shutdown_timeout {{ $cfg.WorkerShutdownTimeout }} ;
 
-# END MIGRATED 1
-
-# MIGRATED EVENTS
 events {
     multi_accept        {{ if $cfg.EnableMultiAccept }}on{{ else }}off{{ end }};
     worker_connections  {{ $cfg.MaxWorkerConnections }};
@@ -49,7 +46,8 @@ events {
     debug_connection    {{ $v }};
     {{ end }}
 }
-# END MIGRATED EVENTS
+
+# END MIGRATED 1
 
 http {
     {{ if (shouldLoadOpentelemetryModule $cfg $servers) }}
@@ -129,7 +127,7 @@ http {
         plugins.run()
     }
 
-    # MIGRATED REALIP
+    # MIGRATED VARIOUS 1
     {{/* Enable the real_ip module only if we use either X-Forwarded headers or Proxy Protocol. */}}
     {{/* we use the value of the real IP for the geo_ip module */}}
     {{ if or (or $cfg.UseForwardedHeaders $cfg.UseProxyProtocol) $cfg.EnableRealIP }}
@@ -144,9 +142,7 @@ http {
     set_real_ip_from    {{ $trusted_ip }};
     {{ end }}
     {{ end }}
-    # END MIGRATED REAL IP
 
-    # MIGRATED VARIOUS 1
     aio                 threads;
 
     {{ if $cfg.EnableAioWrite }}
@@ -287,17 +283,6 @@ http {
     
     proxy_ssl_session_reuse on;
 
-    # END MIGRATED VARIOUS 1
-
-    {{ buildOpentelemetry $cfg $servers }}
-
-    {{ if $cfg.EnableBrotli }}
-    brotli on;
-    brotli_comp_level {{ $cfg.BrotliLevel }};
-    brotli_min_length {{ $cfg.BrotliMinLength }};
-    brotli_types {{ $cfg.BrotliTypes }};
-    {{ end }}
-
     # See https://www.nginx.com/blog/websocket-nginx
     map $http_upgrade $connection_upgrade {
         default          upgrade;
@@ -318,6 +303,9 @@ http {
         {{ end }}
     }
 
+    # Cache for internal auth checks
+    proxy_cache_path /tmp/nginx/nginx-cache-auth levels=1:2 keys_zone=auth_cache:10m max_size=128m inactive=30m use_temp_path=off;
+
     {{ if and $cfg.UseForwardedHeaders $cfg.ComputeFullForwardedFor }}
     # We can't use $proxy_add_x_forwarded_for because the realip module
     # replaces the remote_addr too soon
@@ -333,13 +321,7 @@ http {
 
     {{ end }}
 
-    # Create a variable that contains the literal $ character.
-    # This works because the geo module will not resolve variables.
-    geo $literal_dollar {
-        default "$";
-    }
-
-    # turn on session caching to drastically improve performance
+        # turn on session caching to drastically improve performance
     {{ if $cfg.SSLSessionCache }}
     ssl_session_cache shared:SSL:{{ $cfg.SSLSessionCacheSize }};
     ssl_session_timeout {{ $cfg.SSLSessionTimeout }};
@@ -363,6 +345,23 @@ http {
     {{ if and $cfg.CustomHTTPErrors (not $cfg.DisableProxyInterceptErrors) }}
     proxy_intercept_errors on;
     {{ end }}
+
+    # END MIGRATED VARIOUS 1
+
+    {{ buildOpentelemetry $cfg $servers }}
+
+    {{ if $cfg.EnableBrotli }}
+    brotli on;
+    brotli_comp_level {{ $cfg.BrotliLevel }};
+    brotli_min_length {{ $cfg.BrotliMinLength }};
+    brotli_types {{ $cfg.BrotliTypes }};
+    {{ end }}
+
+    # Create a variable that contains the literal $ character.
+    # This works because the geo module will not resolve variables.
+    geo $literal_dollar {
+        default "$";
+    }
 
     {{ range $errCode := $cfg.CustomHTTPErrors }}
     error_page {{ $errCode }} = @custom_upstream-default-backend_{{ $errCode }};{{ end }}
@@ -409,9 +408,6 @@ http {
     {{ range $zone := (buildRateLimitZones $servers) }}
     {{ $zone }}
     {{ end }}
-
-    # Cache for internal auth checks
-    proxy_cache_path /tmp/nginx/nginx-cache-auth levels=1:2 keys_zone=auth_cache:10m max_size=128m inactive=30m use_temp_path=off;
 
     # Global filters
     {{ range $ip := $cfg.BlockCIDRs }}deny {{ trimSpace $ip }};
