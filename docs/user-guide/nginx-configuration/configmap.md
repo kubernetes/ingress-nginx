@@ -195,6 +195,8 @@ The following table shows a configuration option's name, type, and the default v
 |[limit-rate](#limit-rate)| int          | 0                                                                                                                                                                                                                                                                                                                                                            ||
 |[limit-rate-after](#limit-rate-after)| int          | 0                                                                                                                                                                                                                                                                                                                                                            ||
 |[lua-shared-dicts](#lua-shared-dicts)| string       | ""                                                                                                                                                                                                                                                                                                                                                           ||
+|[include-endpoint-target-refs](#include-endpoint-target-refs)| bool | "false" ||
+
 |[http-redirect-code](#http-redirect-code)| int          | 308                                                                                                                                                                                                                                                                                                                                                          ||
 |[proxy-buffering](#proxy-buffering)| string       | "off"                                                                                                                                                                                                                                                                                                                                                        ||
 |[limit-req-status-code](#limit-req-status-code)| int          | 503                                                                                                                                                                                                                                                                                                                                                          ||
@@ -1211,6 +1213,10 @@ lua-shared-dicts: "certificate_data: 100, my_custom_plugin: 512k"
 
 _References:_
 [https://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after](https://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after)
+
+## include-endpoint-target-refs
+
+Enables including an endpoint's target reference when updating the dynamic configuration of backends. Useful for exposing things like pod name.
 
 ## http-redirect-code
 

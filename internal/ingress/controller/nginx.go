@@ -859,7 +859,7 @@ func (n *NGINXController) setupSSLProxy() {
 func (n *NGINXController) configureDynamically(pcfg *ingress.Configuration) error {
 	backendsChanged := !reflect.DeepEqual(n.runningConfig.Backends, pcfg.Backends)
 	if backendsChanged {
-		err := configureBackends(pcfg.Backends)
+		err := n.configureBackends(pcfg.Backends)
 		if err != nil {
 			return err
 		}
@@ -941,7 +941,9 @@ func updateStreamConfiguration(tcpEndpoints, udpEndpoints []ingress.L4Service) e
 	return nil
 }
 
-func configureBackends(rawBackends []*ingress.Backend) error {
+func (n *NGINXController) configureBackends(rawBackends []*ingress.Backend) error {
+	backend_config := n.store.GetBackendConfiguration()
+
 	backends := make([]*ingress.Backend, len(rawBackends))
 
 	for i, backend := range rawBackends {
@@ -962,15 +964,21 @@ func configureBackends(rawBackends []*ingress.Backend) error {
 			AlternativeBackends:  backend.AlternativeBackends,
 		}
 
-		var endpoints []ingress.Endpoint
+		var luaEndpoints []ingress.Endpoint
 		for _, endpoint := range backend.Endpoints {
-			endpoints = append(endpoints, ingress.Endpoint{
+			luaEndpoint := ingress.Endpoint{
 				Address: endpoint.Address,
 				Port:    endpoint.Port,
-			})
+			}
+
+			if backend_config.IncludeEndpointTargetRefs {
+				luaEndpoint.Target = endpoint.Target
+			}
+
+			luaEndpoints = append(luaEndpoints, luaEndpoint)
 		}
 
-		luaBackend.Endpoints = endpoints
+		luaBackend.Endpoints = luaEndpoints
 		backends[i] = luaBackend
 	}
 

@@ -709,6 +709,9 @@ type Configuration struct {
 	// Lua shared dict configuration data / certificate data
 	LuaSharedDicts map[string]int `json:"lua-shared-dicts"`
 
+	// Include endpoint target references (e.g., pod name) when updating dynamic configuration
+	IncludeEndpointTargetRefs bool `json:"include-endpoint-target-refs"`
+
 	// DefaultSSLCertificate holds the default SSL certificate to use in the configuration
 	// It can be the fake certificate or the one behind the flag --default-ssl-certificate
 	DefaultSSLCertificate *ingress.SSLCert `json:"-"`
@@ -828,6 +831,7 @@ func NewDefault() Configuration {
 		LogFormatEscapeJSON:              false,
 		LogFormatStream:                  logFormatStream,
 		LogFormatUpstream:                logFormatUpstream,
+		IncludeEndpointTargetRefs:        false,
 		EnableMultiAccept:                true,
 		MaxWorkerConnections:             16384,
 		MaxWorkerOpenFiles:               0,

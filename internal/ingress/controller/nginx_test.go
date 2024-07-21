@@ -28,10 +28,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/eapache/channels"
 	jsoniter "github.com/json-iterator/go"
 	apiv1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/kubernetes/fake"
 
+	"k8s.io/ingress-nginx/internal/ingress/controller/ingressclass"
+	"k8s.io/ingress-nginx/internal/ingress/controller/store"
 	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 )
@@ -49,6 +55,7 @@ func TestConfigureDynamically(t *testing.T) {
 	}
 	defer streamListener.Close()
 
+	targetIncluded := false
 	endpointStats := map[string]int{"/configuration/backends": 0, "/configuration/general": 0, "/configuration/servers": 0}
 	resetEndpointStats := func() {
 		for k := range endpointStats {
@@ -78,7 +85,7 @@ func TestConfigureDynamically(t *testing.T) {
 				switch r.URL.Path {
 				case "/configuration/backends":
 					if strings.Contains(body, "target") {
-						t.Errorf("unexpected target reference in JSON content: %v", body)
+						targetIncluded = true
 					}
 
 					if !strings.Contains(body, "service") {
@@ -133,9 +140,28 @@ func TestConfigureDynamically(t *testing.T) {
 		Servers:  servers,
 	}
 
+	ns := corev1.NamespaceDefault
+
+	storer := store.New(
+		ns,
+		labels.Nothing(),
+		fmt.Sprintf("%v/config", ns),
+		fmt.Sprintf("%v/tcp", ns),
+		fmt.Sprintf("%v/udp", ns),
+		"",
+		10*time.Minute,
+		fake.NewSimpleClientset(),
+		channels.NewRingChannel(10),
+		false,
+		true,
+		&ingressclass.Configuration{},
+		false,
+	)
+
 	n := &NGINXController{
 		runningConfig: &ingress.Configuration{},
 		cfg:           &Configuration{},
+		store:         storer,
 	}
 
 	err = n.configureDynamically(commonConfig)
@@ -145,6 +171,19 @@ func TestConfigureDynamically(t *testing.T) {
 	if commonConfig.Backends[0].Endpoints[0].Target != target {
 		t.Errorf("unexpected change in the configuration object after configureDynamically invocation")
 	}
+	if targetIncluded {
+		t.Errorf("unexpected target reference in JSON content")
+	}
+
+	backend_config := n.store.GetBackendConfiguration()
+	err = n.configureDynamically(commonConfig)
+	if err != nil {
+		t.Errorf("unexpected error posting dynamic configuration: %v", err)
+	}
+	if !targetIncluded {
+		t.Errorf("expected target reference in JSON content not found")
+	}
+	backend_config.IncludeEndpointTargetRefs = false
 
 	resetEndpointStats()
 	n.runningConfig.Backends = backends
