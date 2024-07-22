@@ -19,6 +19,7 @@ package crossplane
 import (
 	"testing"
 
+	ngx_crossplane "github.com/nginxinc/nginx-go-crossplane"
 	"github.com/stretchr/testify/require"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 )
@@ -33,6 +34,16 @@ func Test_Internal_buildDirectives(t *testing.T) {
 	t.Run("should be able to run a directive with multiple different arguments", func(t *testing.T) {
 		directive := buildDirective("somedirective", "bla", 5, true, seconds(10), []string{"xpto", "bla"})
 		require.Equal(t, directive.Directive, "somedirective", []string{"bla", "5", "on", "10s", "xpto", "bla"})
+	})
+}
+
+func Test_Internal_buildMapDirectives(t *testing.T) {
+	t.Run("should be able to run build a map directive with empty block", func(t *testing.T) {
+		directive := buildMapDirective("somedirective", "bla", ngx_crossplane.Directives{buildDirective("something", "otherstuff")})
+		require.Equal(t, directive.Directive, "map")
+		require.Equal(t, directive.Args, []string{"somedirective", "bla"})
+		require.Equal(t, directive.Block[0].Directive, "something")
+		require.Equal(t, directive.Block[0].Args, []string{"otherstuff"})
 	})
 }
 

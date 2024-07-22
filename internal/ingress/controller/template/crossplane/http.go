@@ -24,11 +24,11 @@ import (
 	ngx_crossplane "github.com/nginxinc/nginx-go-crossplane"
 )
 
-func (c *crossplaneTemplate) initHTTPDirectives() ngx_crossplane.Directives {
+func (c *Template) initHTTPDirectives() ngx_crossplane.Directives {
 	cfg := c.tplConfig.Cfg
 	httpBlock := ngx_crossplane.Directives{
 		buildDirective("lua_package_path", "/etc/nginx/lua/?.lua;;"),
-		buildDirective("include", "/etc/nginx/mime.types"),
+		buildDirective("include", c.mimeFile),
 		buildDirective("default_type", cfg.DefaultType),
 		buildDirective("real_ip_recursive", "on"),
 		buildDirective("aio", "threads"),
@@ -46,7 +46,7 @@ func (c *crossplaneTemplate) initHTTPDirectives() ngx_crossplane.Directives {
 		buildDirective("proxy_temp_path", "/tmp/nginx/proxy-temp"),
 		buildDirective("client_header_buffer_size", cfg.ClientHeaderBufferSize),
 		buildDirective("client_header_timeout", seconds(cfg.ClientHeaderTimeout)),
-		buildDirective("large_client_header_buffers", cfg.LargeClientHeaderBuffers),
+		buildDirective("large_client_header_buffers", strings.Split(cfg.LargeClientHeaderBuffers, " ")),
 		buildDirective("client_body_buffer_size", cfg.ClientBodyBufferSize),
 		buildDirective("client_body_timeout", seconds(cfg.ClientBodyTimeout)),
 		buildDirective("types_hash_max_size", "2048"),
@@ -64,6 +64,7 @@ func (c *crossplaneTemplate) initHTTPDirectives() ngx_crossplane.Directives {
 		buildDirective("uninitialized_variable_warn", "off"),
 		buildDirective("server_name_in_redirect", "off"),
 		buildDirective("port_in_redirect", "off"),
+		buildDirective("http2_max_concurrent_streams", cfg.HTTP2MaxConcurrentStreams),
 		buildDirective("ssl_protocols", strings.Split(cfg.SSLProtocols, " ")),
 		buildDirective("ssl_early_data", cfg.SSLEarlyData),
 		buildDirective("ssl_session_tickets", cfg.SSLSessionTickets),
@@ -80,7 +81,7 @@ func (c *crossplaneTemplate) initHTTPDirectives() ngx_crossplane.Directives {
 	return httpBlock
 }
 
-func (c *crossplaneTemplate) buildHTTP() {
+func (c *Template) buildHTTP() {
 	cfg := c.tplConfig.Cfg
 	httpBlock := c.initHTTPDirectives()
 	httpBlock = append(httpBlock, buildLuaSharedDictionaries(&c.tplConfig.Cfg)...)
@@ -121,7 +122,7 @@ func (c *crossplaneTemplate) buildHTTP() {
 		httpBlock = append(httpBlock, buildDirective("gzip_vary", "on"))
 
 		if cfg.GzipDisable != "" {
-			httpBlock = append(httpBlock, buildDirective("gzip_disable", strings.Split(cfg.GzipDisable, "")))
+			httpBlock = append(httpBlock, buildDirective("gzip_disable", strings.Split(cfg.GzipDisable, " ")))
 		}
 	}
 
@@ -146,18 +147,12 @@ func (c *crossplaneTemplate) buildHTTP() {
 
 	httpBlock = append(httpBlock, buildDirective("log_format", "upstreaminfo", escape, cfg.LogFormatUpstream))
 
-	// buildMap directive
-	mapLogDirective := &ngx_crossplane.Directive{
-		Directive: "map",
-		Args:      []string{"$request_uri", "$loggable"},
-		Block:     make(ngx_crossplane.Directives, 0),
-	}
+	loggableMap := make(ngx_crossplane.Directives, 0)
 	for k := range cfg.SkipAccessLogURLs {
-		mapLogDirective.Block = append(mapLogDirective.Block, buildDirective(cfg.SkipAccessLogURLs[k], "0"))
+		loggableMap = append(loggableMap, buildDirective(cfg.SkipAccessLogURLs[k], "0"))
 	}
-	mapLogDirective.Block = append(mapLogDirective.Block, buildDirective("default", "1"))
-	httpBlock = append(httpBlock, mapLogDirective)
-	// end of build mapLog
+	loggableMap = append(loggableMap, buildDirective("default", "1"))
+	httpBlock = append(httpBlock, buildMapDirective("$request_uri", "$loggable", loggableMap))
 
 	if cfg.DisableAccessLog || cfg.DisableHTTPAccessLog {
 		httpBlock = append(httpBlock, buildDirective("access_log", "off"))
@@ -178,6 +173,60 @@ func (c *crossplaneTemplate) buildHTTP() {
 		httpBlock = append(httpBlock, buildDirective("error_log", fmt.Sprintf("syslog:server%s:%d", cfg.SyslogHost, cfg.SyslogPort), cfg.ErrorLogLevel))
 	} else {
 		httpBlock = append(httpBlock, buildDirective("error_log", cfg.ErrorLogPath, cfg.ErrorLogLevel))
+	}
+
+	if cfg.SSLSessionCache {
+		httpBlock = append(httpBlock,
+			buildDirective("ssl_session_cache", fmt.Sprintf("shared:SSL:%s", cfg.SSLSessionCacheSize)),
+			buildDirective("ssl_session_timeout", cfg.SSLSessionTimeout),
+		)
+	}
+
+	if cfg.SSLSessionTicketKey != "" {
+		httpBlock = append(httpBlock, buildDirective("ssl_session_ticket_key", "/etc/ingress-controller/tickets.key"))
+	}
+
+	if cfg.SSLCiphers != "" {
+		httpBlock = append(httpBlock,
+			buildDirective("ssl_ciphers", cfg.SSLCiphers),
+			buildDirective("ssl_prefer_server_ciphers", "on"),
+		)
+	}
+
+	if cfg.SSLDHParam != "" {
+		httpBlock = append(httpBlock, buildDirective("ssl_dhparam", cfg.SSLDHParam))
+	}
+
+	if len(cfg.CustomHTTPErrors) > 0 && !cfg.DisableProxyInterceptErrors {
+		httpBlock = append(httpBlock, buildDirective("proxy_intercept_errors", "on"))
+	}
+
+	httpUpgradeMap := ngx_crossplane.Directives{buildDirective("default", "upgrade")}
+	if cfg.UpstreamKeepaliveConnections < 1 {
+		httpUpgradeMap = append(httpUpgradeMap, buildDirective("", "close"))
+	}
+	httpBlock = append(httpBlock, buildMapDirective("$http_upgrade", "$connection_upgrade", httpUpgradeMap))
+
+	reqIDMap := ngx_crossplane.Directives{buildDirective("default", "$http_x_request_id")}
+	if cfg.GenerateRequestID {
+		reqIDMap = append(reqIDMap, buildDirective("", "$request_id"))
+	}
+	httpBlock = append(httpBlock, buildMapDirective("$http_x_request_id", "$req_id", reqIDMap))
+
+	if cfg.UseForwardedHeaders && cfg.ComputeFullForwardedFor {
+		forwardForMap := make(ngx_crossplane.Directives, 0)
+		if cfg.UseProxyProtocol {
+			forwardForMap = append(forwardForMap,
+				buildDirective("default", "$http_x_forwarded_for, $proxy_protocol_addr"),
+				buildDirective("", "$http_x_forwarded_for, $proxy_protocol_addr"),
+			)
+		} else {
+			forwardForMap = append(forwardForMap,
+				buildDirective("default", "$http_x_forwarded_for, $realip_remote_addr"),
+				buildDirective("", "$realip_remote_addr"),
+			)
+		}
+		httpBlock = append(httpBlock, buildMapDirective("$http_x_forwarded_for", "$full_x_forwarded_for", forwardForMap))
 	}
 
 	c.config.Parsed = append(c.config.Parsed, &ngx_crossplane.Directive{
