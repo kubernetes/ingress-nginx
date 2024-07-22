@@ -34,5 +34,13 @@ func (c *Template) buildConfig() {
 	if c.tplConfig.Cfg.WorkerCPUAffinity != "" {
 		config.Parsed = append(config.Parsed, buildDirective("worker_cpu_affinity", c.tplConfig.Cfg.WorkerCPUAffinity))
 	}
+
+	if c.tplConfig.Cfg.EnableBrotli {
+		config.Parsed = append(config.Parsed,
+			buildDirective("load_module", "/etc/nginx/modules/ngx_http_brotli_filter_module.so"),
+			buildDirective("load_module", "/etc/nginx/modules/ngx_http_brotli_static_module.so"),
+		)
+	}
+
 	c.config = config
 }

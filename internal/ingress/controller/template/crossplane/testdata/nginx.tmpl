@@ -346,16 +346,23 @@ http {
     proxy_intercept_errors on;
     {{ end }}
 
-    # END MIGRATED VARIOUS 1
-
-    {{ buildOpentelemetry $cfg $servers }}
-
     {{ if $cfg.EnableBrotli }}
     brotli on;
     brotli_comp_level {{ $cfg.BrotliLevel }};
     brotli_min_length {{ $cfg.BrotliMinLength }};
     brotli_types {{ $cfg.BrotliTypes }};
     {{ end }}
+
+    {{ if $cfg.AllowBackendServerHeader }}
+    proxy_pass_header Server;
+    {{ end }}
+
+    {{ range $header := $cfg.HideHeaders }}proxy_hide_header {{ $header }};
+    {{ end }}
+
+    # END MIGRATED VARIOUS 1
+
+    {{ buildOpentelemetry $cfg $servers }}
 
     # Create a variable that contains the literal $ character.
     # This works because the geo module will not resolve variables.
@@ -365,13 +372,6 @@ http {
 
     {{ range $errCode := $cfg.CustomHTTPErrors }}
     error_page {{ $errCode }} = @custom_upstream-default-backend_{{ $errCode }};{{ end }}
-
-    {{ if $cfg.AllowBackendServerHeader }}
-    proxy_pass_header Server;
-    {{ end }}
-
-    {{ range $header := $cfg.HideHeaders }}proxy_hide_header {{ $header }};
-    {{ end }}
 
     upstream upstream_balancer {
         server 0.0.0.1; # placeholder
