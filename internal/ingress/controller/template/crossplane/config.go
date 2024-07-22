@@ -20,7 +20,7 @@ import (
 	ngx_crossplane "github.com/nginxinc/nginx-go-crossplane"
 )
 
-func (c *crossplaneTemplate) buildConfig() {
+func (c *Template) buildConfig() {
 	// Write basic directives
 	config := &ngx_crossplane.Config{
 		Parsed: ngx_crossplane.Directives{
@@ -34,5 +34,13 @@ func (c *crossplaneTemplate) buildConfig() {
 	if c.tplConfig.Cfg.WorkerCPUAffinity != "" {
 		config.Parsed = append(config.Parsed, buildDirective("worker_cpu_affinity", c.tplConfig.Cfg.WorkerCPUAffinity))
 	}
+
+	if c.tplConfig.Cfg.EnableBrotli {
+		config.Parsed = append(config.Parsed,
+			buildDirective("load_module", "/etc/nginx/modules/ngx_http_brotli_filter_module.so"),
+			buildDirective("load_module", "/etc/nginx/modules/ngx_http_brotli_static_module.so"),
+		)
+	}
+
 	c.config = config
 }

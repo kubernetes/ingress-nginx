@@ -85,6 +85,15 @@ func buildResolversInternal(res []net.IP, disableIpv6 bool) []string {
 	return r
 }
 
+// buildMapDirective is used to build a map directive
+func buildMapDirective(name, variable string, block ngx_crossplane.Directives) *ngx_crossplane.Directive {
+	return &ngx_crossplane.Directive{
+		Directive: "map",
+		Args:      []string{name, variable},
+		Block:     block,
+	}
+}
+
 func boolToStr(b bool) string {
 	if b {
 		return "on"
