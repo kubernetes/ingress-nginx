@@ -48,7 +48,7 @@ func Test_Internal_buildEvents(t *testing.T) {
 			},
 		}
 
-		cplane := NewCrossplaneTemplate()
+		cplane := NewTemplate()
 		cplane.config = &c
 		cplane.tplConfig = tplConfig
 		cplane.buildEvents()
@@ -81,7 +81,7 @@ func Test_Internal_buildEvents(t *testing.T) {
 			},
 		}
 
-		cplane := NewCrossplaneTemplate()
+		cplane := NewTemplate()
 		cplane.config = &c
 		cplane.tplConfig = tplConfig
 		cplane.buildEvents()
