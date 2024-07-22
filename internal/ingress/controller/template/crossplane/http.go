@@ -229,6 +229,10 @@ func (c *Template) buildHTTP() {
 		httpBlock = append(httpBlock, buildMapDirective("$http_x_forwarded_for", "$full_x_forwarded_for", forwardForMap))
 	}
 
+	if cfg.AllowBackendServerHeader {
+		httpBlock = append(httpBlock, buildDirective("proxy_pass_header", "Server"))
+	}
+
 	c.config.Parsed = append(c.config.Parsed, &ngx_crossplane.Directive{
 		Directive: "http",
 		Block:     httpBlock,
