@@ -135,3 +135,12 @@ tests:
                         values:
                           - default-backend
                   topologyKey: kubernetes.io/hostname
+
+  - it: should create a Deployment with `runAsGroup` if `defaultBackend.image.runAsGroup` is set
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.image.runAsGroup: 1000
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsGroup
+          value: 1000

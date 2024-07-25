@@ -242,7 +242,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.admissionWebhooks.certificate | string | `"/usr/local/certificates/cert"` |  |
 | controller.admissionWebhooks.createSecretJob.name | string | `"create"` |  |
 | controller.admissionWebhooks.createSecretJob.resources | object | `{}` |  |
-| controller.admissionWebhooks.createSecretJob.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":65532,"seccompProfile":{"type":"RuntimeDefault"}}` | Security context for secret creation containers |
+| controller.admissionWebhooks.createSecretJob.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsGroup":65532,"runAsNonRoot":true,"runAsUser":65532,"seccompProfile":{"type":"RuntimeDefault"}}` | Security context for secret creation containers |
 | controller.admissionWebhooks.enabled | bool | `true` |  |
 | controller.admissionWebhooks.existingPsp | string | `""` | Use an existing PSP instead of creating one |
 | controller.admissionWebhooks.extraEnvs | list | `[]` | Additional environment variables to set |
@@ -273,7 +273,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.admissionWebhooks.patch.tolerations | list | `[]` |  |
 | controller.admissionWebhooks.patchWebhookJob.name | string | `"patch"` |  |
 | controller.admissionWebhooks.patchWebhookJob.resources | object | `{}` |  |
-| controller.admissionWebhooks.patchWebhookJob.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":65532,"seccompProfile":{"type":"RuntimeDefault"}}` | Security context for webhook patch containers |
+| controller.admissionWebhooks.patchWebhookJob.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsGroup":65532,"runAsNonRoot":true,"runAsUser":65532,"seccompProfile":{"type":"RuntimeDefault"}}` | Security context for webhook patch containers |
 | controller.admissionWebhooks.port | int | `8443` |  |
 | controller.admissionWebhooks.service.annotations | object | `{}` |  |
 | controller.admissionWebhooks.service.externalIPs | list | `[]` |  |
@@ -331,6 +331,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.image.pullPolicy | string | `"IfNotPresent"` |  |
 | controller.image.readOnlyRootFilesystem | bool | `false` |  |
 | controller.image.registry | string | `"registry.k8s.io"` |  |
+| controller.image.runAsGroup | int | `82` |  |
 | controller.image.runAsNonRoot | bool | `true` |  |
 | controller.image.runAsUser | int | `101` |  |
 | controller.image.seccompProfile.type | string | `"RuntimeDefault"` |  |
@@ -396,6 +397,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.opentelemetry.containerSecurityContext.allowPrivilegeEscalation | bool | `false` |  |
 | controller.opentelemetry.containerSecurityContext.capabilities.drop[0] | string | `"ALL"` |  |
 | controller.opentelemetry.containerSecurityContext.readOnlyRootFilesystem | bool | `true` |  |
+| controller.opentelemetry.containerSecurityContext.runAsGroup | int | `65532` |  |
 | controller.opentelemetry.containerSecurityContext.runAsNonRoot | bool | `true` |  |
 | controller.opentelemetry.containerSecurityContext.runAsUser | int | `65532` | The image's default user, inherited from its base image `cgr.dev/chainguard/static`. |
 | controller.opentelemetry.containerSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
@@ -505,6 +507,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | defaultBackend.image.pullPolicy | string | `"IfNotPresent"` |  |
 | defaultBackend.image.readOnlyRootFilesystem | bool | `true` |  |
 | defaultBackend.image.registry | string | `"registry.k8s.io"` |  |
+| defaultBackend.image.runAsGroup | int | `65534` |  |
 | defaultBackend.image.runAsNonRoot | bool | `true` |  |
 | defaultBackend.image.runAsUser | int | `65534` |  |
 | defaultBackend.image.seccompProfile.type | string | `"RuntimeDefault"` |  |

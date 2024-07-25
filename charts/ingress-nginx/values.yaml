@@ -31,8 +31,12 @@ controller:
     digestChroot: sha256:7cabe4bd7558bfdf5b707976d7be56fd15ffece735d7c90fc238b6eda290fd8d
     pullPolicy: IfNotPresent
     runAsNonRoot: true
+    # The values for `runAsUser` or `runAsGroup` below should not be changed if your installation
+    # uses the `registry.k8s.io/ingress-nginx/conttroller` container image.
     # www-data -> uid 101
+    # www-data -> gid 82
     runAsUser: 101
+    runAsGroup: 82
     allowPrivilegeEscalation: false
     seccompProfile:
       type: RuntimeDefault
@@ -688,6 +692,7 @@ controller:
   #   containerSecurityContext:
   #     runAsNonRoot: true
   #     runAsUser: <user-id>
+  #     runAsGroup: <group-id>
   #     allowPrivilegeEscalation: false
   #     seccompProfile:
   #       type: RuntimeDefault
@@ -717,6 +722,7 @@ controller:
       runAsNonRoot: true
       # -- The image's default user, inherited from its base image `cgr.dev/chainguard/static`.
       runAsUser: 65532
+      runAsGroup: 65532
       allowPrivilegeEscalation: false
       seccompProfile:
         type: RuntimeDefault
@@ -768,6 +774,7 @@ controller:
       securityContext:
         runAsNonRoot: true
         runAsUser: 65532
+        runAsGroup: 65532
         allowPrivilegeEscalation: false
         seccompProfile:
           type: RuntimeDefault
@@ -788,6 +795,7 @@ controller:
       securityContext:
         runAsNonRoot: true
         runAsUser: 65532
+        runAsGroup: 65532
         allowPrivilegeEscalation: false
         seccompProfile:
           type: RuntimeDefault
@@ -963,6 +971,7 @@ defaultBackend:
     runAsNonRoot: true
     # nobody user -> uid 65534
     runAsUser: 65534
+    runAsGroup: 65534
     allowPrivilegeEscalation: false
     seccompProfile:
       type: RuntimeDefault
