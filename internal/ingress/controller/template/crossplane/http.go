@@ -107,9 +107,10 @@ func (c *Template) buildHTTP() {
 	if cfg.HTTP2MaxHeaderSize != "" && cfg.HTTP2MaxFieldSize != "" {
 		httpBlock = append(httpBlock, buildDirective("http2_max_field_size", cfg.HTTP2MaxFieldSize))
 		httpBlock = append(httpBlock, buildDirective("http2_max_header_size", cfg.HTTP2MaxHeaderSize))
-		if cfg.HTTP2MaxRequests > 0 {
-			httpBlock = append(httpBlock, buildDirective("http2_max_requests", cfg.HTTP2MaxRequests))
-		}
+	}
+
+	if cfg.HTTP2MaxRequests > 0 {
+		httpBlock = append(httpBlock, buildDirective("http2_max_requests", cfg.HTTP2MaxRequests))
 	}
 
 	if cfg.UseGzip {
