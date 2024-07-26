@@ -68,6 +68,7 @@ func TestCrossplaneTemplate(t *testing.T) {
 			Cfg: config.NewDefault(),
 		}
 		tplConfig.Cfg.DefaultSSLCertificate = defaultCertificate
+		tplConfig.Cfg.EnableBrotli = true
 
 		tpl := crossplane.NewTemplate()
 		tpl.SetMimeFile(mimeFile.Name())
