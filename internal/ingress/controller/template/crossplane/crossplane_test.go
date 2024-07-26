@@ -71,6 +71,7 @@ func TestCrossplaneTemplate(t *testing.T) {
 	t.Run("it should be able to marshall and unmarshall the default configuration", func(t *testing.T) {
 		tplConfig.Cfg.DefaultSSLCertificate = defaultCertificate
 		tplConfig.Cfg.EnableBrotli = true
+		tplConfig.Cfg.HideHeaders = []string{"x-fake-header", "x-another-fake-header"}
 
 		tpl.SetMimeFile(mimeFile.Name())
 		content, err := tpl.Write(tplConfig)
