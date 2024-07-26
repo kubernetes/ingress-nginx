@@ -91,7 +91,7 @@ func TestCrossplaneTemplate(t *testing.T) {
 
 		tplConfig.Cfg.UseProxyProtocol = true
 
-		tplConfig.Cfg.GRPCBufferSizeKb = 10 //default 0
+		tplConfig.Cfg.GRPCBufferSizeKb = 10 // default 0
 
 		tplConfig.Cfg.HTTP2MaxHeaderSize = "10" // default ""
 		tplConfig.Cfg.HTTP2MaxFieldSize = "10"  // default ""
@@ -114,7 +114,7 @@ func TestCrossplaneTemplate(t *testing.T) {
 
 		tplConfig.Cfg.AllowBackendServerHeader = true                                      // default false
 		tplConfig.Cfg.BlockCIDRs = []string{"192.168.0.0/24", " 200.200.0.0/16 "}          // default 0
-		tplConfig.Cfg.BlockUserAgents = []string{"someuseragent", " another/user-agent  "} //default 0
+		tplConfig.Cfg.BlockUserAgents = []string{"someuseragent", " another/user-agent  "} // default 0
 
 		tpl = crossplane.NewTemplate()
 		tpl.SetMimeFile(mimeFile.Name())
