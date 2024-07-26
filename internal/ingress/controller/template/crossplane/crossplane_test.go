@@ -69,6 +69,7 @@ func TestCrossplaneTemplate(t *testing.T) {
 		}
 		tplConfig.Cfg.DefaultSSLCertificate = defaultCertificate
 		tplConfig.Cfg.EnableBrotli = true
+		tplConfig.Cfg.HideHeaders = []string{"x-fake-header", "x-another-fake-header"}
 
 		tpl := crossplane.NewTemplate()
 		tpl.SetMimeFile(mimeFile.Name())
