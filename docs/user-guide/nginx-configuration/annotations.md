@@ -638,7 +638,9 @@ To preserve the trailing slash in the URI with `ssl-redirect`, set `nginx.ingres
 
 ### Redirect from/to www
 
-In some scenarios is required to redirect from `www.domain.com` to `domain.com` or vice versa.
+In some scenarios is required to redirect from `www.domain.com` to `domain.com` or vice versa,
+which way the redirect is performed depends on the configured `host` value in the Ingress object.
+
 To enable this feature use the annotation `nginx.ingress.kubernetes.io/from-to-www-redirect: "true"`
 
 !!! attention
