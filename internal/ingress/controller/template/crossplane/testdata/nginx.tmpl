@@ -360,18 +360,27 @@ http {
     {{ range $header := $cfg.HideHeaders }}proxy_hide_header {{ $header }};
     {{ end }}
 
-    # END MIGRATED VARIOUS 1
+    # Global filters
+    {{ range $ip := $cfg.BlockCIDRs }}deny {{ trimSpace $ip }};
+    {{ end }}
 
-    {{ buildOpentelemetry $cfg $servers }}
+    {{ if gt (len $cfg.BlockUserAgents) 0 }}
+    map $http_user_agent $block_ua {
+        default 0;
 
-    # Create a variable that contains the literal $ character.
-    # This works because the geo module will not resolve variables.
-    geo $literal_dollar {
-        default "$";
+        {{ range $ua := $cfg.BlockUserAgents }}{{ trimSpace $ua }} 1;
+        {{ end }}
     }
+    {{ end }}
 
-    {{ range $errCode := $cfg.CustomHTTPErrors }}
-    error_page {{ $errCode }} = @custom_upstream-default-backend_{{ $errCode }};{{ end }}
+    {{ if gt (len $cfg.BlockReferers) 0 }}
+    map $http_referer $block_ref {
+        default 0;
+
+        {{ range $ref := $cfg.BlockReferers }}{{ trimSpace $ref }} 1;
+        {{ end }}
+    }
+    {{ end }}
 
     upstream upstream_balancer {
         server 0.0.0.1; # placeholder
@@ -387,6 +396,19 @@ http {
         keepalive_requests {{ $cfg.UpstreamKeepaliveRequests }};
         {{ end }}
     }
+
+    # END MIGRATED VARIOUS 1
+
+    {{ buildOpentelemetry $cfg $servers }}
+
+    # Create a variable that contains the literal $ character.
+    # This works because the geo module will not resolve variables.
+    geo $literal_dollar {
+        default "$";
+    }
+
+    {{ range $errCode := $cfg.CustomHTTPErrors }}
+    error_page {{ $errCode }} = @custom_upstream-default-backend_{{ $errCode }};{{ end }}
 
     {{ range $rl := (filterRateLimits $servers ) }}
     # Ratelimit {{ $rl.Name }}
@@ -409,27 +431,6 @@ http {
     {{ $zone }}
     {{ end }}
 
-    # Global filters
-    {{ range $ip := $cfg.BlockCIDRs }}deny {{ trimSpace $ip }};
-    {{ end }}
-
-    {{ if gt (len $cfg.BlockUserAgents) 0 }}
-    map $http_user_agent $block_ua {
-        default 0;
-
-        {{ range $ua := $cfg.BlockUserAgents }}{{ trimSpace $ua }} 1;
-        {{ end }}
-    }
-    {{ end }}
-
-    {{ if gt (len $cfg.BlockReferers) 0 }}
-    map $http_referer $block_ref {
-        default 0;
-
-        {{ range $ref := $cfg.BlockReferers }}{{ trimSpace $ref }} 1;
-        {{ end }}
-    }
-    {{ end }}
 
     {{/* Build server redirects (from/to www) */}}
     {{ range $redirect := .RedirectServers }}
