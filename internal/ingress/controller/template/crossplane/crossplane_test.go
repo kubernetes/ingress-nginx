@@ -166,11 +166,25 @@ func TestCrossplaneTemplate(t *testing.T) {
 		tplConfig.Cfg.AllowBackendServerHeader = true                                      // default false
 		tplConfig.Cfg.BlockCIDRs = []string{"192.168.0.0/24", " 200.200.0.0/16 "}          // default 0
 		tplConfig.Cfg.BlockUserAgents = []string{"someuseragent", " another/user-agent  "} // default 0
+		tplConfig.Cfg.BlockReferers = []string{"someref", "  anotherref", "escape\nref"}
 
 		tplConfig.AddHeaders = map[string]string{
 			"someheader":    "xpto",
 			"anotherheader": "blabla",
 		}
+
+		tplConfig.Cfg.EnableBrotli = true
+		tplConfig.Cfg.BrotliLevel = 7
+		tplConfig.Cfg.BrotliMinLength = 2
+		tplConfig.Cfg.BrotliTypes = "application/xml+rss application/atom+xml"
+
+		tplConfig.Cfg.HideHeaders = []string{"x-fake-header", "x-another-fake-header"}
+		tplConfig.Cfg.UpstreamKeepaliveConnections = 15
+
+		tplConfig.Cfg.UpstreamKeepaliveConnections = 200
+		tplConfig.Cfg.UpstreamKeepaliveTime = "60s"
+		tplConfig.Cfg.UpstreamKeepaliveTimeout = 200
+		tplConfig.Cfg.UpstreamKeepaliveRequests = 15
 
 		tpl = crossplane.NewTemplate()
 		tpl.SetMimeFile(mimeFile.Name())

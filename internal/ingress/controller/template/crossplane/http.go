@@ -81,6 +81,7 @@ func (c *Template) initHTTPDirectives() ngx_crossplane.Directives {
 	return httpBlock
 }
 
+//nolint:gocyclo
 func (c *Template) buildHTTP() {
 	cfg := c.tplConfig.Cfg
 	httpBlock := c.initHTTPDirectives()
@@ -239,7 +240,7 @@ func (c *Template) buildHTTP() {
 			buildDirective("brotli", "on"),
 			buildDirective("brotli_comp_level", cfg.BrotliLevel),
 			buildDirective("brotli_min_length", cfg.BrotliMinLength),
-			buildDirective("brotli_types", cfg.BrotliTypes),
+			buildDirective("brotli_types", strings.Split(cfg.BrotliTypes, " ")),
 		)
 	}
 
@@ -247,6 +248,40 @@ func (c *Template) buildHTTP() {
 		for k := range cfg.HideHeaders {
 			httpBlock = append(httpBlock, buildDirective("proxy_hide_header", cfg.HideHeaders[k]))
 		}
+	}
+
+	blockUpstreamDirectives := ngx_crossplane.Directives{
+		buildDirective("server", "0.0.0.1"),
+		buildBlockDirective("balancer_by_lua_block", nil, ngx_crossplane.Directives{buildDirective("balancer.balance()")}),
+	}
+	if c.tplConfig.Cfg.UpstreamKeepaliveConnections > 0 {
+		blockUpstreamDirectives = append(blockUpstreamDirectives,
+			buildDirective("keepalive", c.tplConfig.Cfg.UpstreamKeepaliveConnections),
+			buildDirective("keepalive_time", c.tplConfig.Cfg.UpstreamKeepaliveTime),
+			buildDirective("keepalive_timeout", seconds(c.tplConfig.Cfg.UpstreamKeepaliveTimeout)),
+			buildDirective("keepalive_requests", c.tplConfig.Cfg.UpstreamKeepaliveRequests),
+		)
+	}
+	httpBlock = append(httpBlock, buildBlockDirective("upstream", []string{"upstream_balancer"}, blockUpstreamDirectives))
+
+	for i := range cfg.BlockCIDRs {
+		httpBlock = append(httpBlock, buildDirective("deny", strings.TrimSpace(cfg.BlockCIDRs[i])))
+	}
+
+	if len(cfg.BlockUserAgents) > 0 {
+		uaDirectives := ngx_crossplane.Directives{buildDirective("default", 0)}
+		for i := range cfg.BlockUserAgents {
+			uaDirectives = append(uaDirectives, buildDirective(strings.TrimSpace(cfg.BlockUserAgents[i]), 1))
+		}
+		httpBlock = append(httpBlock, buildMapDirective("$http_user_agent", "$block_ua", uaDirectives))
+	}
+
+	if len(cfg.BlockReferers) > 0 {
+		refDirectives := ngx_crossplane.Directives{buildDirective("default", 0)}
+		for i := range cfg.BlockReferers {
+			refDirectives = append(refDirectives, buildDirective(strings.TrimSpace(cfg.BlockReferers[i]), 1))
+		}
+		httpBlock = append(httpBlock, buildMapDirective("$http_referer", "$block_ref", refDirectives))
 	}
 
 	c.config.Parsed = append(c.config.Parsed, &ngx_crossplane.Directive{
