@@ -17,6 +17,8 @@ limitations under the License.
 package crossplane
 
 import (
+	"strings"
+
 	ngx_crossplane "github.com/nginxinc/nginx-go-crossplane"
 )
 
@@ -32,7 +34,7 @@ func (c *Template) buildConfig() {
 		},
 	}
 	if c.tplConfig.Cfg.WorkerCPUAffinity != "" {
-		config.Parsed = append(config.Parsed, buildDirective("worker_cpu_affinity", c.tplConfig.Cfg.WorkerCPUAffinity))
+		config.Parsed = append(config.Parsed, buildDirective("worker_cpu_affinity", strings.Split(c.tplConfig.Cfg.WorkerCPUAffinity, " ")))
 	}
 
 	if c.tplConfig.Cfg.EnableBrotli {
