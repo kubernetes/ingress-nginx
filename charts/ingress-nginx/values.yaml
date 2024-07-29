@@ -31,11 +31,11 @@ controller:
     digestChroot: sha256:7cabe4bd7558bfdf5b707976d7be56fd15ffece735d7c90fc238b6eda290fd8d
     pullPolicy: IfNotPresent
     runAsNonRoot: true
-    # The values for `runAsUser` or `runAsGroup` below should not be changed if your installation
-    # uses the `registry.k8s.io/ingress-nginx/conttroller` container image.
-    # www-data -> uid 101
-    # www-data -> gid 82
+    # -- This value must not be changed using the official image.
+    # uid=101(www-data) gid=82(www-data) groups=82(www-data)
     runAsUser: 101
+    # -- This value must not be changed using the official image.
+    # uid=101(www-data) gid=82(www-data) groups=82(www-data)
     runAsGroup: 82
     allowPrivilegeEscalation: false
     seccompProfile:
