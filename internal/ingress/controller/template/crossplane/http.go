@@ -284,6 +284,11 @@ func (c *Template) buildHTTP() {
 		httpBlock = append(httpBlock, buildMapDirective("$http_referer", "$block_ref", refDirectives))
 	}
 
+	for _, v := range cfg.CustomHTTPErrors {
+		httpBlock = append(httpBlock, buildDirective("error_page", v,
+			fmt.Sprintf("@custom_upstream-default-backend_%d", v)))
+	}
+
 	c.config.Parsed = append(c.config.Parsed, &ngx_crossplane.Directive{
 		Directive: "http",
 		Block:     httpBlock,
