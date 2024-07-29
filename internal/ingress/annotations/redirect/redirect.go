@@ -51,7 +51,7 @@ var redirectAnnotations = parser.Annotation{
 			Validator:     parser.ValidateBool,
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskLow, // Low, as it allows just a set of options
-			Documentation: `In some scenarios is required to redirect from www.domain.com to domain.com or vice versa. To enable this feature use this annotation.`,
+			Documentation: `In some scenarios, it is required to redirect from www.domain.com to domain.com or vice versa, which way the redirect is performed depends on the configured host value in the Ingress object.`,
 		},
 		temporalRedirectAnnotation: {
 			Validator: parser.ValidateRegex(parser.URLIsValidRegex, false),
