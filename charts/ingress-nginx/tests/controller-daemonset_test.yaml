@@ -138,3 +138,12 @@ tests:
                         values:
                           - controller
                   topologyKey: kubernetes.io/hostname
+
+  - it: should create a DaemonSet with `runAsGroup` if `controller.image.runAsGroup` is set
+    set:
+      controller.kind: DaemonSet
+      controller.image.runAsGroup: 1000
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsGroup
+          value: 1000
