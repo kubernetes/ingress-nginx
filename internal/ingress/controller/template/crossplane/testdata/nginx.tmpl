@@ -407,6 +407,7 @@ http {
         default "$";
     }
 
+    # MIGRATED
     {{ range $errCode := $cfg.CustomHTTPErrors }}
     error_page {{ $errCode }} = @custom_upstream-default-backend_{{ $errCode }};{{ end }}
 
