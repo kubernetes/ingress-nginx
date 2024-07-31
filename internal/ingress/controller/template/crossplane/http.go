@@ -285,7 +285,7 @@ func (c *Template) buildHTTP() {
 	}
 
 	for _, v := range cfg.CustomHTTPErrors {
-		httpBlock = append(httpBlock, buildDirective("error_page", v,
+		httpBlock = append(httpBlock, buildDirective("error_page", v, "=",
 			fmt.Sprintf("@custom_upstream-default-backend_%d", v)))
 	}
 

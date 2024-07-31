@@ -186,8 +186,6 @@ func TestCrossplaneTemplate(t *testing.T) {
 		tplConfig.Cfg.UpstreamKeepaliveTimeout = 200
 		tplConfig.Cfg.UpstreamKeepaliveRequests = 15
 
-		tplConfig.Cfg.CustomHTTPErrors = []int{400, 404, 501}
-
 		tpl = crossplane.NewTemplate()
 		tpl.SetMimeFile(mimeFile.Name())
 		content, err := tpl.Write(tplConfig)
