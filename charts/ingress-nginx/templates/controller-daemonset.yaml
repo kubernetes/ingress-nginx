@@ -1,5 +1,4 @@
 {{- if eq .Values.controller.kind "DaemonSet" -}}
-{{- include  "isControllerTagValid" . -}}
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:

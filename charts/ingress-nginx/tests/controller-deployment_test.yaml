@@ -168,3 +168,12 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].securityContext.runAsGroup
           value: 1000
+
+  - it: should create a Deployment with a custom tag if `controller.image.tag` is set
+    set:
+      controller.image.tag: my-little-custom-tag
+      controller.image.digest: sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: registry.k8s.io/ingress-nginx/controller:my-little-custom-tag@sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
