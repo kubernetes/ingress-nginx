@@ -1,5 +1,4 @@
 {{- if eq .Values.controller.kind "Deployment" -}}
-{{- include  "isControllerTagValid" . -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
