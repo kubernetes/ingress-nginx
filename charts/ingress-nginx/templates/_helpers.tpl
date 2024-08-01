@@ -245,15 +245,6 @@ Return the appropriate apiGroup for PodSecurityPolicy.
 {{- end -}}
 
 {{/*
-Check the ingress controller version tag is at most three versions behind the last release
-*/}}
-{{- define "isControllerTagValid" -}}
-{{- if not (semverCompare ">=0.27.0-0" .Values.controller.image.tag) -}}
-{{- fail "Controller container image tag should be 0.27.0 or higher" -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
 Extra modules.
 */}}
 {{- define "extraModules" -}}
