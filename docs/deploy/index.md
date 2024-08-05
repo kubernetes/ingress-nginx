@@ -34,11 +34,11 @@ ingress controller for your particular environment or cloud provider.
   - ... [Bare-metal](#bare-metal-clusters)
 - [Miscellaneous](#miscellaneous)
 
-<!-- TODO: We have subdirectories for kubernetes versions now because of a PR 
-https://github.com/kubernetes/ingress-nginx/pull/8162 . You can see this here 
-https://github.com/kubernetes/ingress-nginx/tree/main/deploy/static/provider/cloud . 
-We need to add documentation here that is clear and unambiguous in guiding users to pick the deployment manifest 
-under a subdirectory, based on the K8S version being used. But until the explicit clear docs land here, users are 
+<!-- TODO: We have subdirectories for kubernetes versions now because of a PR
+https://github.com/kubernetes/ingress-nginx/pull/8162 . You can see this here
+https://github.com/kubernetes/ingress-nginx/tree/main/deploy/static/provider/cloud .
+We need to add documentation here that is clear and unambiguous in guiding users to pick the deployment manifest
+under a subdirectory, based on the K8S version being used. But until the explicit clear docs land here, users are
 free to use those subdirectories and get the manifest(s) related to their K8S version. -->
 
 ## Quick start
@@ -67,7 +67,7 @@ helm show values ingress-nginx --repo https://kubernetes.github.io/ingress-nginx
 
 !!! attention "Helm install on AWS/GCP/Azure/Other providers"
     The *ingress-nginx-controller helm-chart is a generic install out of the box*. The default set of helm values is **not** configured for installation on any infra provider. The annotations that are applicable to the cloud provider must be customized by the users.<br/>
-    See [AWS LB Constroller](https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.2/guide/service/annotations/).<br/>
+    See [AWS LB Controller](https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.2/guide/service/annotations/).<br/>
     Examples of some annotations needed for the service resource of `--type LoadBalancer` on AWS are below:
     ```yaml
       annotations:
@@ -338,7 +338,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
     `10254/tcp` to also allow access to port `8443/tcp`. More information can be found in the
     [Official GCP Documentation](https://cloud.google.com/load-balancing/docs/tcp/setting-up-tcp#config-hc-firewall).
 
-    See the [GKE documentation](https://cloud.google.com/kubernetes-engine/docs/how-to/private-clusters#add_firewall_rules) 
+    See the [GKE documentation](https://cloud.google.com/kubernetes-engine/docs/how-to/private-clusters#add_firewall_rules)
     on adding rules and the [Kubernetes issue](https://github.com/kubernetes/kubernetes/issues/79739) for more detail.
 
 Proxy-protocol is supported in GCE check the [Official Documentations on how to enable.](https://cloud.google.com/load-balancing/docs/tcp/setting-up-tcp#proxy-protocol)
