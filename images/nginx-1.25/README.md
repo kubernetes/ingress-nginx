@@ -35,7 +35,7 @@ The next steps will be:
     [And also there are some issues even with client side](https://github.com/openssl/openssl/discussions/23339)
 
     Due to this, we currently have incomplete HTTP/3 support, without important security and performance features.\
-    But the good news is that [OpenSSL plans to add server-side support in 3.4](https://www.openssl.org/roadmap.html):
+    But the good news is that [OpenSSL plans to add server-side support in 3.4](https://github.com/openssl/web/blob/master/roadmap.md):
 
     > Server-side QUIC support
     
