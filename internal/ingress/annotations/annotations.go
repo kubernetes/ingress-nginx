@@ -209,7 +209,8 @@ func (e Extractor) Extract(ing *networking.Ingress) (*Ingress, error) {
 				val = nil
 			}
 
-			_, alreadyDenied := data[DeniedKeyName]
+			return nil, err
+			/* _, alreadyDenied := data[DeniedKeyName]
 			if !alreadyDenied {
 				errString := err.Error()
 				data[DeniedKeyName] = &errString
@@ -217,7 +218,7 @@ func (e Extractor) Extract(ing *networking.Ingress) (*Ingress, error) {
 				continue
 			}
 
-			klog.V(5).ErrorS(err, "error reading Ingress annotation", "name", name, "ingress", klog.KObj(ing))
+			klog.V(5).ErrorS(err, "error reading Ingress annotation", "name", name, "ingress", klog.KObj(ing)) */
 		}
 
 		if val != nil {
