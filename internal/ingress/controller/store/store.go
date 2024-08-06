@@ -938,9 +938,11 @@ func (s *k8sStore) syncIngress(ing *networkingv1.Ingress) {
 
 	parsed, err := s.annotations.Extract(ing)
 	if err != nil {
-		s.recorder.Eventf(ing, corev1.EventTypeWarning, "AnnotationParsingFailed", fmt.Sprintf("Error parsing annotations: %v", err))
 		klog.Error(err)
 		return
+	}
+	if parsed.Denied != nil {
+		s.recorder.Eventf(ing, corev1.EventTypeWarning, "AnnotationParsingFailed", fmt.Sprintf("Error parsing annotations: %v", *parsed.Denied))
 	}
 	err = s.listers.IngressWithAnnotation.Update(&ingress.Ingress{
 		Ingress:           *copyIng,
