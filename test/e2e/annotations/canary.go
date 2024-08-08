@@ -86,6 +86,54 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				NotContains(canaryService)
 		})
 
+		// issue: https://github.com/kubernetes/ingress-nginx/issues/9944
+		// canary routing should not overwrite custom errors
+		ginkgo.It("should respond with a 401 status from the custom errors backend when canary responds with a 401",
+			func() {
+				host := "foo"
+				annotations := map[string]string{
+					"nginx.ingress.kubernetes.io/custom-http-errors": "401",
+					"nginx.ingress.kubernetes.io/default-backend":    framework.DefaultBackendService,
+				}
+
+				f.NewDefaultBackendDeployment()
+
+				f.EnsureIngress(framework.NewSingleIngress(
+					host,
+					"/",
+					host,
+					f.Namespace,
+					framework.HTTPBunService,
+					80,
+					annotations,
+				))
+
+				f.WaitForNginxServer(host, func(server string) bool {
+					return strings.Contains(server, "server_name foo")
+				})
+
+				f.EnsureIngress(framework.NewSingleIngress(
+					canaryService,
+					"/",
+					host,
+					f.Namespace,
+					canaryService,
+					80,
+					map[string]string{
+						"nginx.ingress.kubernetes.io/canary":           "true",
+						"nginx.ingress.kubernetes.io/canary-by-header": "CanaryByHeader",
+					},
+				))
+
+				f.HTTPTestClient().
+					GET("/status/401").
+					WithHeader("Host", host).
+					Expect().
+					Status(http.StatusUnauthorized).
+					Body().
+					Contains("401")
+			})
+
 		ginkgo.It("should return 404 status for requests to the canary if no matching ingress is found", func() {
 			host := fooHost
 

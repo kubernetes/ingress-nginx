@@ -72,6 +72,8 @@ local function get_implementation(backend)
   return implementation
 end
 
+-- used to get the IP address of the upstream to set as the
+-- backends endpoint to route to
 local function resolve_external_names(original_backend)
   local backend = util.deepcopy(original_backend)
   local endpoints = {}
@@ -181,6 +183,7 @@ local function sync_backends()
   backends_last_synced_at = raw_backends_last_synced_at
 end
 
+-- logic used to pick up if request should be routed to an alternative backend
 local function route_to_alternative_balancer(balancer)
   if balancer.is_affinitized(balancer) then
     -- If request is already affinitized to a primary balancer, keep the primary balancer.
@@ -218,7 +221,6 @@ local function route_to_alternative_balancer(balancer)
             "of backend: ", tostring(backend_name))
     return false
   end
-
   local target_header = util.replace_special_char(traffic_shaping_policy.header,
                                                   "-", "_")
   local header = ngx.var["http_" .. target_header]
@@ -278,14 +280,15 @@ local function get_balancer()
   local backend_name = ngx.var.proxy_upstream_name
 
   local balancer = balancers[backend_name]
+
   if not balancer then
     return nil
   end
 
-  if route_to_alternative_balancer(balancer) then
+  --we should not overwrite balancer when it is the default backend
+  if route_to_alternative_balancer(balancer) and not balancer.is_default_backend then
     local alternative_backend_name = balancer.alternative_backends[1]
     ngx.var.proxy_alternative_upstream_name = alternative_backend_name
-
     balancer = balancers[alternative_backend_name]
   end
 
@@ -318,6 +321,7 @@ end
 
 function _M.rewrite()
   local balancer = get_balancer()
+
   if not balancer then
     ngx.status = ngx.HTTP_SERVICE_UNAVAILABLE
     return ngx.exit(ngx.status)
@@ -344,6 +348,7 @@ function _M.balance()
   ngx_balancer.set_more_tries(1)
 
   local ok, err = ngx_balancer.set_current_peer(peer)
+
   if not ok then
     ngx.log(ngx.ERR, "error while setting current upstream peer ", peer,
             ": ", err)
@@ -361,6 +366,16 @@ function _M.log()
   end
 
   balancer:after_balance()
+end
+
+--this is used to check if we are routing to the
+--default backend for sepcific error codes so that we do not overwrite it with
+--alternative routes
+--https://github.com/kubernetes/ingress-nginx/issues/9944
+function _M.is_default_backend()
+  if ngx.ctx.balancer then
+    ngx.ctx.balancer.is_default_backend = true
+  end
 end
 
 setmetatable(_M, {__index = {
