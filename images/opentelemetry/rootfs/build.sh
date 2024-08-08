@@ -117,7 +117,7 @@ install_nginx()
 {
 
   # Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp-contrib/compare/2656a4...main
-  export OPENTELEMETRY_CONTRIB_COMMIT=aaa51e2297bcb34297f3c7aa44fa790497d2f7f3
+  export OPENTELEMETRY_CONTRIB_COMMIT=415f1824df55d8c35793c72af68742d7f999b3e2
 
   mkdir -p /etc/nginx
   cd "$BUILD_PATH"
