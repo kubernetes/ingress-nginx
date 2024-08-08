@@ -1,25 +1,18 @@
-# See https://cloud.google.com/cloud-build/docs/build-config
-
-timeout: 18000s
+timeout: 1800s
 options:
   substitution_option: ALLOW_LOOSE
 steps:
-  - name: 'gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:v20211118-2f2d816b90'
-    entrypoint: bash
-    env:
-      - DOCKER_CLI_EXPERIMENTAL=enabled
-      - REGISTRY=gcr.io/k8s-staging-ingress-nginx
-      - REPO_INFO=https://github.com/kubernetes/ingress-nginx
-      - COMMIT_SHA=$_PULL_BASE_SHA
-      - BUILD_ID=$BUILD_ID
-      - HOME=/root
-      - USER=root
-    args:
-    - -c
-    - |
-      gcloud auth configure-docker \
-      && make release
+- name: gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:v20240523-a15ad90fc9
+  env:
+  - REGISTRY=gcr.io/k8s-staging-ingress-nginx
+  - REPO_INFO=https://github.com/kubernetes/ingress-nginx
+  - COMMIT_SHA=$_PULL_BASE_SHA
+  - BUILD_ID=$BUILD_ID
+  entrypoint: bash
+  args:
+  - -c
+  - gcloud auth configure-docker && make release
 substitutions:
   _GIT_TAG: "12345"
-  _PULL_BASE_REF: "main"
-  _PULL_BASE_SHA: '12345'
+  _PULL_BASE_REF: main
+  _PULL_BASE_SHA: "12345"
