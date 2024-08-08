@@ -32,6 +32,7 @@ import (
 	_ "k8s.io/ingress-nginx/test/e2e/admission"
 	_ "k8s.io/ingress-nginx/test/e2e/annotations"
 	_ "k8s.io/ingress-nginx/test/e2e/annotations/modsecurity"
+	_ "k8s.io/ingress-nginx/test/e2e/cgroups"
 	_ "k8s.io/ingress-nginx/test/e2e/dbg"
 	_ "k8s.io/ingress-nginx/test/e2e/defaultbackend"
 	_ "k8s.io/ingress-nginx/test/e2e/disableleaderelection"
