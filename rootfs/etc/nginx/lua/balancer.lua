@@ -77,8 +77,10 @@ local function resolve_external_names(original_backend)
   local endpoints = {}
   for _, endpoint in ipairs(backend.endpoints) do
     local ips = dns_lookup(endpoint.address)
-    for _, ip in ipairs(ips) do
-      table.insert(endpoints, { address = ip, port = endpoint.port })
+    if #ips ~= 1 or ips[1] ~= endpoint.address then
+      for _, ip in ipairs(ips) do
+        table.insert(endpoints, { address = ip, port = endpoint.port })
+      end
     end
   end
   backend.endpoints = endpoints
@@ -104,13 +106,13 @@ local function is_backend_with_external_name(backend)
 end
 
 local function sync_backend(backend)
+  if is_backend_with_external_name(backend) then
+    backend = resolve_external_names(backend)
+  end
+
   if not backend.endpoints or #backend.endpoints == 0 then
     balancers[backend.name] = nil
     return
-  end
-
-  if is_backend_with_external_name(backend) then
-    backend = resolve_external_names(backend)
   end
 
   backend.endpoints = format_ipv6_endpoints(backend.endpoints)
