@@ -71,6 +71,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/permanent-redirect](#permanent-redirect)|string|
 |[nginx.ingress.kubernetes.io/permanent-redirect-code](#permanent-redirect-code)|number|
 |[nginx.ingress.kubernetes.io/temporal-redirect](#temporal-redirect)|string|
+|[nginx.ingress.kubernetes.io/temporal-redirect-code](#temporal-redirect-code)|number|
 |[nginx.ingress.kubernetes.io/preserve-trailing-slash](#server-side-https-enforcement-through-redirect)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/proxy-body-size](#custom-max-body-size)|string|
 |[nginx.ingress.kubernetes.io/proxy-cookie-domain](#proxy-cookie-domain)|string|
@@ -609,6 +610,10 @@ This annotation allows you to modify the status code used for permanent redirect
 
 ### Temporal Redirect
 This annotation allows you to return a temporal redirect (Return Code 302) instead of sending data to the upstream. For example `nginx.ingress.kubernetes.io/temporal-redirect: https://www.google.com` would redirect everything to Google with a Return Code of 302 (Moved Temporarily)
+
+### Temporal Redirect Code
+
+This annotation allows you to modify the status code used for temporal redirects.  For example `nginx.ingress.kubernetes.io/temporal-redirect-code: '307'` would return your temporal-redirect with a 307.
 
 ### SSL Passthrough
 
