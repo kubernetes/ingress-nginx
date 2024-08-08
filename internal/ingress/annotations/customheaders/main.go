@@ -18,6 +18,7 @@ package customheaders
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
 
 	"k8s.io/klog/v2"
@@ -33,6 +34,18 @@ import (
 // Config returns the custom response headers for an Ingress rule
 type Config struct {
 	Headers map[string]string `json:"headers,omitempty"`
+}
+
+// Equal tests for equality between two Config types
+func (c1 *Config) Equal(c2 *Config) bool {
+	if c1 == c2 {
+		return true
+	}
+	if c1 == nil || c2 == nil {
+		return false
+	}
+
+	return reflect.DeepEqual(c1.Headers, c2.Headers)
 }
 
 var (
