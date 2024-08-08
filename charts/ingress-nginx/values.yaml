@@ -1156,6 +1156,13 @@ defaultBackend:
     loadBalancerSourceRanges: []
     servicePort: 80
     type: ClusterIP
+
+    # -- Additional ports to expose for defaultBackend pods
+    extraPorts: []
+    #  - name: metrics
+    #    port: 9090
+    #    protocol: TCP
+    #    targetPort: 9090
   priorityClassName: ""
   # -- Labels to be added to the default backend resources
   labels: {}

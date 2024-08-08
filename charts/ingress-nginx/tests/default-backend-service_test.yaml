@@ -30,3 +30,20 @@ tests:
       - equal:
           path: spec.ports[0].port
           value: 80
+
+  - it: should create a Service with extraPorts if `defaultBackend.service.extraPorts` is set
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.service.extraPorts[0]:
+        name: example
+        port: 8888
+        protocol: TCP
+        targetPort: 65535
+    asserts:
+      - contains:
+          path: spec.ports
+          content:
+            name: example
+            port: 8888
+            protocol: TCP
+            targetPort: 65535
