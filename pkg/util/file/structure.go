@@ -45,7 +45,7 @@ func CreateRequiredDirectories() error {
 		_, err := os.Stat(directory)
 		if err != nil {
 			if os.IsNotExist(err) {
-				err = os.MkdirAll(directory, ReadWriteByUser)
+				err = os.MkdirAll(directory, ReadWriteExecuteByUser)
 				if err != nil {
 					return fmt.Errorf("creating directory %s: %w", directory, err)
 				}

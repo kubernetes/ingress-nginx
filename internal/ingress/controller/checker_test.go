@@ -75,7 +75,7 @@ func TestNginxCheck(t *testing.T) {
 			})
 
 			// create pid file
-			if err := os.MkdirAll("/tmp/nginx", file.ReadWriteByUser); err != nil {
+			if err := os.MkdirAll("/tmp/nginx", file.ReadWriteExecuteByUser); err != nil {
 				t.Errorf("unexpected error creating pid file: %v", err)
 			}
 
