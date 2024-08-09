@@ -75,6 +75,9 @@ spec:
     {{- if .Values.controller.admissionWebhooks.patch.tolerations }}
       tolerations: {{ toYaml .Values.controller.admissionWebhooks.patch.tolerations | nindent 8 }}
     {{- end }}
+    {{- if .Values.controller.admissionWebhooks.patch.affinity }}
+      affinity: {{ toYaml .Values.controller.admissionWebhooks.patch.affinity | nindent 8 }}
+    {{- end }}
     {{- if .Values.controller.admissionWebhooks.patch.securityContext }}
       securityContext: {{ toYaml .Values.controller.admissionWebhooks.patch.securityContext | nindent 8 }}
     {{- end }}

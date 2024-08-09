@@ -252,6 +252,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.admissionWebhooks.name | string | `"admission"` |  |
 | controller.admissionWebhooks.namespaceSelector | object | `{}` |  |
 | controller.admissionWebhooks.objectSelector | object | `{}` |  |
+| controller.admissionWebhooks.patch.affinity | object | `{}` |  |
 | controller.admissionWebhooks.patch.enabled | bool | `true` |  |
 | controller.admissionWebhooks.patch.image.digest | string | `"sha256:36d05b4077fb8e3d13663702fa337f124675ba8667cbd949c03a8e8ea6fa4366"` |  |
 | controller.admissionWebhooks.patch.image.image | string | `"ingress-nginx/kube-webhook-certgen"` |  |

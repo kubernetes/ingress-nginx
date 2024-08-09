@@ -826,6 +826,30 @@ controller:
       nodeSelector:
         kubernetes.io/os: linux
       tolerations: []
+      # Affinity for patch webhook
+      ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+      affinity: {}
+      # # An example of preferred pod anti-affinity, weight is in the range 1-100
+      # podAntiAffinity:
+      #   preferredDuringSchedulingIgnoredDuringExecution:
+      #   - weight: 100
+      #     podAffinityTerm:
+      #       labelSelector:
+      #         matchExpressions:
+      #         - key: app.kubernetes.io/name
+      #           operator: In
+      #           values:
+      #           - '{{ include "ingress-nginx.name" . }}'
+      #       topologyKey: kubernetes.io/hostname
+      # # An example of required pod nodeAffinity
+      # nodeAffinity:
+      #  requiredDuringSchedulingIgnoredDuringExecution:
+      #    nodeSelectorTerms:
+      #    - matchExpressions:
+      #      - key: app
+      #        operator: In
+      #        values:
+      #        - nginx
       # -- Labels to be added to patch job resources
       labels: {}
       # -- Security context for secret creation & webhook patch pods
