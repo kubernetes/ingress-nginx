@@ -1,5 +1,3 @@
-options:
-  substitution_option: ALLOW_LOOSE
 steps:
   - name: gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:v20240523-a15ad90fc9
     env:
