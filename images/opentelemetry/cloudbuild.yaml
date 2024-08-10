@@ -1,5 +1,4 @@
 options:
-  substitution_option: ALLOW_LOOSE
   # Increase machine type for multi-arch builds.
   machineType: E2_HIGHCPU_8
 steps:
