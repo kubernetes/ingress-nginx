@@ -632,6 +632,11 @@ http {
         }
         {{ end }}
 
+        header_filter_by_lua_block {
+            lua_ingress.header()
+            plugins.run()
+        }
+
         set_by_lua_block $redirect_to {
             local request_uri = ngx.var.request_uri
             if string.sub(request_uri, -1) == "/" then
