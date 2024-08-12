@@ -8,4 +8,4 @@ steps:
     entrypoint: bash
     args:
       - -c
-      - gcloud auth configure-docker && cd images && make NAME=ext-auth-example-authsvc push
+      - gcloud auth configure-docker && cd images && make NAME=e2e-test-echo push
