@@ -50,7 +50,7 @@ jobs:
           make kind-e2e-test
 
       - name: Upload e2e junit-reports ${{ inputs.variation }}
-        uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
         if: success() || failure()
         with:
           name: e2e-test-reports-${{ inputs.k8s-version }}${{ inputs.variation }}
