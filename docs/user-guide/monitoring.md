@@ -386,10 +386,6 @@ Prometheus metrics are exposed on port 10254.
   The number of bytes sent to a client. **Deprecated**, use `nginx_ingress_controller_response_size`\
   nginx var: `bytes_sent`
 
-* `nginx_ingress_controller_ingress_upstream_latency_seconds` Summary\
-  Upstream service latency per Ingress. **Deprecated**, use `nginx_ingress_controller_connect_duration_seconds`\
-  nginx var: `upstream_connect_time`
-
 ```
 # HELP nginx_ingress_controller_bytes_sent The number of bytes sent to a client. DEPRECATED! Use nginx_ingress_controller_response_size
 # TYPE nginx_ingress_controller_bytes_sent histogram
@@ -397,8 +393,6 @@ Prometheus metrics are exposed on port 10254.
 # TYPE nginx_ingress_controller_connect_duration_seconds nginx_ingress_controller_connect_duration_seconds
 * HELP nginx_ingress_controller_header_duration_seconds The time spent on receiving first header from the upstream server
 # TYPE nginx_ingress_controller_header_duration_seconds histogram
-# HELP nginx_ingress_controller_ingress_upstream_latency_seconds Upstream service latency per Ingress DEPRECATED! Use nginx_ingress_controller_connect_duration_seconds
-# TYPE nginx_ingress_controller_ingress_upstream_latency_seconds summary
 # HELP nginx_ingress_controller_request_duration_seconds The request processing time in milliseconds
 # TYPE nginx_ingress_controller_request_duration_seconds histogram
 # HELP nginx_ingress_controller_request_size The request length (including request line, header, and request body)
