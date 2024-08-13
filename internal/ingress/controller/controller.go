@@ -1594,7 +1594,11 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 			altEqualsPri := false
 
 			for _, loc := range servers[defServerName].Locations {
-				priUps := upstreams[loc.Backend]
+				priUps, ok := upstreams[loc.Backend]
+				if !ok {
+					klog.Warningf("cannot find primary backend %s for location %s%s", loc.Backend, servers[defServerName].Hostname, loc.Path)
+					continue
+				}
 				altEqualsPri = altUps.Name == priUps.Name
 				if altEqualsPri {
 					klog.Warningf("alternative upstream %s in Ingress %s/%s is primary upstream in Other Ingress for location %s%s!",
@@ -1653,7 +1657,11 @@ func mergeAlternativeBackends(ing *ingress.Ingress, upstreams map[string]*ingres
 
 			// find matching paths
 			for _, loc := range server.Locations {
-				priUps := upstreams[loc.Backend]
+				priUps, ok := upstreams[loc.Backend]
+				if !ok {
+					klog.Warningf("cannot find primary backend %s for location %s%s", loc.Backend, server.Hostname, loc.Path)
+					continue
+				}
 				altEqualsPri = altUps.Name == priUps.Name
 				if altEqualsPri {
 					klog.Warningf("alternative upstream %s in Ingress %s/%s is primary upstream in Other Ingress for location %s%s!",
