@@ -152,7 +152,7 @@ To install the example and collectors run:
     ```yaml
       opentelemetry:
         enabled: true
-        image: registry.k8s.io/ingress-nginx/opentelemetry:v20230527@sha256:fd7ec835f31b7b37187238eb4fdad4438806e69f413a203796263131f4f02ed0
+        image: registry.k8s.io/ingress-nginx/opentelemetry-1.25.3:v20240813-b933310d@sha256:f7604ac0547ed64d79b98d92133234e66c2c8aade3c1f4809fed5eec1fb7f922
         containerSecurityContext:
         allowPrivilegeEscalation: false
     ```
