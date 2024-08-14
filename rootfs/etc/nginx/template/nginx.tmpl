@@ -68,59 +68,22 @@ http {
 
     {{ buildLuaSharedDictionaries $cfg $servers }}
 
+    lua_shared_dict luaconfig 5m;
+
+    {{/* We need to keep this lua block inline, because init_worker_by_lua_file does not support using arguments */}}
     init_by_lua_block {
-        collectgarbage("collect")
-
-        -- init modules
-        local ok, res
-
-        ok, res = pcall(require, "lua_ingress")
-        if not ok then
-          error("require failed: " .. tostring(res))
-        else
-          lua_ingress = res
-          lua_ingress.set_config({{ configForLua $all }})
-        end
-
-        ok, res = pcall(require, "configuration")
-        if not ok then
-          error("require failed: " .. tostring(res))
-        else
-          configuration = res
-          configuration.prohibited_localhost_port = '{{ .StatusPort }}'
-        end
-
-        ok, res = pcall(require, "balancer")
-        if not ok then
-          error("require failed: " .. tostring(res))
-        else
-          balancer = res
-        end
-
-        {{ if $all.EnableMetrics }}
-        ok, res = pcall(require, "monitor")
-        if not ok then
-          error("require failed: " .. tostring(res))
-        else
-          monitor = res
-        end
-        {{ end }}
-
-        ok, res = pcall(require, "certificate")
-        if not ok then
-          error("require failed: " .. tostring(res))
-        else
-          certificate = res
-          certificate.is_ocsp_stapling_enabled = {{ $cfg.EnableOCSP }}
-        end
+        local luaconfig = ngx.shared.luaconfig
+        local ingresscfg =  {{ configForLua $all }}
+        luaconfig:set("enablemetrics", {{ $all.EnableMetrics }})
+        luaconfig:set("listen_https_ports", '{{ $all.ListenPorts.HTTPS }}')
+        luaconfig:set("use_forwarded_headers", {{ $cfg.UseForwardedHeaders }})
+        local ngx_conf_init = require('ngx_conf_init')
+        ngx_conf_init.initialize_ingress('{{ .StatusPort }}', {{ $all.EnableMetrics }}, {{ $cfg.EnableOCSP }}, ingresscfg)
     }
 
     init_worker_by_lua_block {
-        lua_ingress.init_worker()
-        balancer.init_worker()
-        {{ if $all.EnableMetrics }}
-        monitor.init_worker({{ $all.MonitorMaxBatchSize }})
-        {{ end }}
+        local ngx_conf_init_worker = require('ngx_conf_init_worker')
+        ngx_conf_init_worker.initialize_worker({{ $all.EnableMetrics }}, {{ $all.MonitorMaxBatchSize }})
     }
 
     {{/* Enable the real_ip module only if we use either X-Forwarded headers or Proxy Protocol. */}}
@@ -539,9 +502,7 @@ http {
 
         server 0.0.0.1; # placeholder
 
-        balancer_by_lua_block {
-          balancer.balance()
-        }
+        balancer_by_lua_file /etc/nginx/lua/nginx/ngx_conf_balancer.lua;
 
         {{ if (gt $cfg.UpstreamKeepaliveConnections 0) }}
         keepalive {{ $cfg.UpstreamKeepaliveConnections }};
@@ -606,9 +567,7 @@ http {
         {{ buildHTTPListener  $all $redirect.From }}
         {{ buildHTTPSListener $all $redirect.From }}
 
-        ssl_certificate_by_lua_block {
-            certificate.call()
-        }
+        ssl_certificate_by_lua_file /etc/nginx/lua/nginx/ngx_conf_certificate.lua;
 
         {{ if gt (len $cfg.BlockUserAgents) 0 }}
         if ($block_ua) {
@@ -621,30 +580,7 @@ http {
         }
         {{ end }}
 
-        set_by_lua_block $redirect_to {
-            local request_uri = ngx.var.request_uri
-            if string.sub(request_uri, -1) == "/" then
-                request_uri = string.sub(request_uri, 1, -2)
-            end
-
-            {{ if $cfg.UseForwardedHeaders }}
-            local redirectScheme
-            if not ngx.var.http_x_forwarded_proto then
-                redirectScheme = ngx.var.scheme
-            else
-                redirectScheme = ngx.var.http_x_forwarded_proto
-            end
-            {{ else }}
-            local redirectScheme = ngx.var.scheme
-            {{ end }}
-
-            {{ if ne $all.ListenPorts.HTTPS 443 }}
-            {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }}
-            return string.format("%s://%s%s%s", redirectScheme, "{{ $redirect.To }}", "{{ $redirect_port }}", request_uri)
-            {{ else }}
-            return string.format("%s://%s%s", redirectScheme, "{{ $redirect.To }}", request_uri)
-            {{ end }}
-        }
+        set_by_lua_file $redirect_to /etc/nginx/lua/nginx/ngx_srv_redirect.lua {{ $redirect.To }}; 
 
         return {{ $all.Cfg.HTTPRedirectCode }} $redirect_to;
     }
@@ -739,17 +675,7 @@ http {
         }
 
         location /is-dynamic-lb-initialized {
-            content_by_lua_block {
-                local configuration = require("configuration")
-                local backend_data = configuration.get_backends_data()
-                if not backend_data then
-                    ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
-                    return
-                end
-
-                ngx.say("OK")
-                ngx.exit(ngx.HTTP_OK)
-            }
+            content_by_lua_file /etc/nginx/lua/nginx/ngx_conf_is_dynamic_lb_initialized.lua;
         }
 
         location {{ .StatusPath }} {
@@ -761,15 +687,11 @@ http {
             client_body_buffer_size                 {{ luaConfigurationRequestBodySize $cfg }};
             proxy_buffering                         off;
 
-            content_by_lua_block {
-              configuration.call()
-            }
+            content_by_lua_file /etc/nginx/lua/nginx/ngx_conf_configuration.lua;
         }
 
         location / {
-            content_by_lua_block {
-                ngx.exit(ngx.HTTP_NOT_FOUND)
-            }
+            content_by_lua_file /etc/nginx/lua/nginx/ngx_not_found.lua;
         }
     }
 }
@@ -782,38 +704,11 @@ stream {
     {{ buildResolvers $cfg.Resolver $cfg.DisableIpv6DNS }}
 
     init_by_lua_block {
-        collectgarbage("collect")
-
-        -- init modules
-        local ok, res
-
-        ok, res = pcall(require, "configuration")
-        if not ok then
-          error("require failed: " .. tostring(res))
-        else
-          configuration = res
-        end
-
-        ok, res = pcall(require, "tcp_udp_configuration")
-        if not ok then
-          error("require failed: " .. tostring(res))
-        else
-          tcp_udp_configuration = res
-          tcp_udp_configuration.prohibited_localhost_port = '{{ .StatusPort }}'
-
-        end
-
-        ok, res = pcall(require, "tcp_udp_balancer")
-        if not ok then
-          error("require failed: " .. tostring(res))
-        else
-          tcp_udp_balancer = res
-        end
+        local ngx_conf_init_stream = require('ngx_conf_init_stream')
+        ngx_conf_init_stream.initialize_stream('{{ .StatusPort }}')
     }
 
-    init_worker_by_lua_block {
-        tcp_udp_balancer.init_worker()
-    }
+    init_worker_by_lua_file /etc/nginx/lua/nginx/ngx_conf_init_tcp_udp.lua;
 
     lua_add_variable $proxy_upstream_name;
 
@@ -835,10 +730,7 @@ stream {
 
     upstream upstream_balancer {
         server 0.0.0.1:1234; # placeholder
-
-        balancer_by_lua_block {
-          tcp_udp_balancer.balance()
-        }
+        balancer_by_lua_file /etc/nginx/lua/nginx/ngx_conf_balancer_tcp_udp.lua;
     }
 
     server {
@@ -846,9 +738,7 @@ stream {
 
         access_log off;
 
-        content_by_lua_block {
-          tcp_udp_configuration.call()
-        }
+        content_by_lua_file /etc/nginx/lua/nginx/ngx_conf_content_tcp_udp.lua;
     }
 
     # TCP services
@@ -948,11 +838,9 @@ stream {
             rewrite                (.*) / break;
 
             proxy_pass            http://upstream_balancer;
-            log_by_lua_block {
-                {{ if $enableMetrics }}
-                monitor.call()
-                {{ end }}
-            }
+            {{ if $enableMetrics }}
+            log_by_lua_file /etc/nginx/lua/nginx/ngx_conf_log.lua;
+            {{ end }}
         }
         {{ end }}
 {{ end }}
@@ -1012,9 +900,7 @@ stream {
         ssl_reject_handshake {{ if $all.Cfg.SSLRejectHandshake }}on{{ else }}off{{ end }};
         {{ end }}
 
-        ssl_certificate_by_lua_block {
-            certificate.call()
-        }
+        ssl_certificate_by_lua_file /etc/nginx/lua/nginx/ngx_conf_certificate.lua;
 
         {{ if not (empty $server.AuthTLSError) }}
         # {{ $server.AuthTLSError }}
@@ -1115,9 +1001,7 @@ stream {
             set $tmp_cache_key '{{ $server.Hostname }}{{ $authPath }}{{ $externalAuth.AuthCacheKey }}';
             set $cache_key '';
 
-            rewrite_by_lua_block {
-                ngx.var.cache_key = ngx.encode_base64(ngx.sha1_bin(ngx.var.tmp_cache_key))
-            }
+            rewrite_by_lua_file /etc/nginx/lua/nginx/ngx_conf_rewrite_auth.lua;
 
             proxy_cache auth_cache;
 
@@ -1255,12 +1139,9 @@ stream {
                 balancer.rewrite()
             }
 
-            # be careful with `access_by_lua_block` and `satisfy any` directives as satisfy any
-            # will always succeed when there's `access_by_lua_block` that does not have any lua code doing `ngx.exit(ngx.DECLINED)`
-            # other authentication method such as basic auth or external auth useless - all requests will be allowed.
-            #access_by_lua_block {
-            #}
+            header_filter_by_lua_file /etc/nginx/lua/nginx/ngx_conf_srv_hdr_filter.lua;
 
+<<<<<<< HEAD
             header_filter_by_lua_block {
                 lua_ingress.header()
             }
@@ -1271,6 +1152,29 @@ stream {
                 monitor.call()
                 {{ end }}
             }
+||||||| parent of b65dae6b8 (Remove inline lua script from template)
+            header_filter_by_lua_block {
+                lua_ingress.header()
+                plugins.run()
+            }
+
+            body_filter_by_lua_block {
+                plugins.run()
+            }
+
+            log_by_lua_block {
+                balancer.log()
+                {{ if $all.EnableMetrics }}
+                monitor.call()
+                {{ end }}
+
+                plugins.run()
+            }
+=======
+            body_filter_by_lua_file /etc/nginx/lua/nginx/ngx_conf_srv_body_filter.lua;
+
+            log_by_lua_file /etc/nginx/lua/nginx/ngx_conf_log_block.lua;
+>>>>>>> b65dae6b8 (Remove inline lua script from template)
 
             {{ if not $location.Logs.Access }}
             access_log off;

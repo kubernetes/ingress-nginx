@@ -107,10 +107,6 @@ var _ = framework.DescribeSetting("OCSP", func() {
 		err = framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, "ocspserve", f.Namespace, 1)
 		assert.Nil(ginkgo.GinkgoT(), err, "waiting for endpoints to become ready")
 
-		f.WaitForNginxConfiguration(func(cfg string) bool {
-			return strings.Contains(cfg, "certificate.is_ocsp_stapling_enabled = true")
-		})
-
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, fmt.Sprintf(`server_name %v`, host))

@@ -48,7 +48,7 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic configuration", func() {
 
 	ginkgo.It("configures balancer Lua middleware correctly", func() {
 		f.WaitForNginxConfiguration(func(cfg string) bool {
-			return strings.Contains(cfg, "balancer.init_worker()") && strings.Contains(cfg, "balancer.balance()")
+			return strings.Contains(cfg, "balancer.init_worker()") && strings.Contains(cfg, "balancer_by_lua_file /etc/nginx/lua/nginx/ngx_conf_balancer.lua")
 		})
 
 		host := "foo.com"
