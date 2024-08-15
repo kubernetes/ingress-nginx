@@ -81,8 +81,9 @@ type SocketCollector struct {
 
 	hosts sets.Set[string]
 
-	metricsPerHost      bool
-	reportStatusClasses bool
+	metricsPerHost          bool
+	metricsPerUndefinedHost bool
+	reportStatusClasses     bool
 }
 
 var requestTags = []string{
@@ -99,7 +100,7 @@ var requestTags = []string{
 
 // NewSocketCollector creates a new SocketCollector instance using
 // the ingress watch namespace and class used by the controller
-func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStatusClasses bool, buckets HistogramBuckets, bucketFactor float64, maxBuckets uint32, excludeMetrics []string) (*SocketCollector, error) {
+func NewSocketCollector(pod, namespace, class string, metricsPerHost, metricsPerUndefinedHost, reportStatusClasses bool, buckets HistogramBuckets, bucketFactor float64, maxBuckets uint32, excludeMetrics []string) (*SocketCollector, error) {
 	socket := "/tmp/nginx/prometheus-nginx.socket"
 	// unix sockets must be unlink()ed before being used
 	//nolint:errcheck // Ignore unlink error
@@ -139,8 +140,9 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 	sc := &SocketCollector{
 		listener: listener,
 
-		metricsPerHost:      metricsPerHost,
-		reportStatusClasses: reportStatusClasses,
+		metricsPerHost:          metricsPerHost,
+		metricsPerUndefinedHost: metricsPerUndefinedHost,
+		reportStatusClasses:     reportStatusClasses,
 
 		connectTime: histogramMetric(
 			&prometheus.HistogramOpts{
@@ -306,8 +308,8 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 
 	for i := range statsBatch {
 		stats := &statsBatch[i]
-		if sc.metricsPerHost && !sc.hosts.Has(stats.Host) {
-			klog.V(3).InfoS("Skipping metric for host not being served", "host", stats.Host)
+		if sc.metricsPerHost && !sc.hosts.Has(stats.Host) && !sc.metricsPerUndefinedHost {
+			klog.V(3).InfoS("Skipping metric for host not explicity defined in an ingress", "host", stats.Host)
 			continue
 		}
 
