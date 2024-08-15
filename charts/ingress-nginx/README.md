@@ -253,11 +253,11 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.admissionWebhooks.namespaceSelector | object | `{}` |  |
 | controller.admissionWebhooks.objectSelector | object | `{}` |  |
 | controller.admissionWebhooks.patch.enabled | bool | `true` |  |
-| controller.admissionWebhooks.patch.image.digest | string | `"sha256:36d05b4077fb8e3d13663702fa337f124675ba8667cbd949c03a8e8ea6fa4366"` |  |
+| controller.admissionWebhooks.patch.image.digest | string | `"sha256:a320a50cc91bd15fd2d6fa6de58bd98c1bd64b9a6f926ce23a600d87043455a3"` |  |
 | controller.admissionWebhooks.patch.image.image | string | `"ingress-nginx/kube-webhook-certgen"` |  |
 | controller.admissionWebhooks.patch.image.pullPolicy | string | `"IfNotPresent"` |  |
 | controller.admissionWebhooks.patch.image.registry | string | `"registry.k8s.io"` |  |
-| controller.admissionWebhooks.patch.image.tag | string | `"v1.4.1"` |  |
+| controller.admissionWebhooks.patch.image.tag | string | `"v1.4.3"` |  |
 | controller.admissionWebhooks.patch.labels | object | `{}` | Labels to be added to patch job resources |
 | controller.admissionWebhooks.patch.networkPolicy.enabled | bool | `false` | Enable 'networkPolicy' or not |
 | controller.admissionWebhooks.patch.nodeSelector."kubernetes.io/os" | string | `"linux"` |  |
@@ -402,11 +402,11 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.opentelemetry.containerSecurityContext.runAsUser | int | `65532` | The image's default user, inherited from its base image `cgr.dev/chainguard/static`. |
 | controller.opentelemetry.containerSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
 | controller.opentelemetry.enabled | bool | `false` |  |
-| controller.opentelemetry.image.digest | string | `"sha256:13bee3f5223883d3ca62fee7309ad02d22ec00ff0d7033e3e9aca7a9f60fd472"` |  |
+| controller.opentelemetry.image.digest | string | `"sha256:f7604ac0547ed64d79b98d92133234e66c2c8aade3c1f4809fed5eec1fb7f922"` |  |
 | controller.opentelemetry.image.distroless | bool | `true` |  |
-| controller.opentelemetry.image.image | string | `"ingress-nginx/opentelemetry"` |  |
+| controller.opentelemetry.image.image | string | `"ingress-nginx/opentelemetry-1.25.3"` |  |
 | controller.opentelemetry.image.registry | string | `"registry.k8s.io"` |  |
-| controller.opentelemetry.image.tag | string | `"v20230721-3e2062ee5"` |  |
+| controller.opentelemetry.image.tag | string | `"v20240813-b933310d"` |  |
 | controller.opentelemetry.name | string | `"opentelemetry"` |  |
 | controller.opentelemetry.resources | object | `{}` |  |
 | controller.podAnnotations | object | `{}` | Annotations to be added to controller pods # |
