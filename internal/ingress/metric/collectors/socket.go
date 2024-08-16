@@ -309,7 +309,7 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 	for i := range statsBatch {
 		stats := &statsBatch[i]
 		if sc.metricsPerHost && !sc.hosts.Has(stats.Host) && !sc.metricsPerUndefinedHost {
-			klog.V(3).InfoS("Skipping metric for host not explicity defined in an ingress", "host", stats.Host)
+			klog.V(3).InfoS("Skipping metric for host not explicitly defined in an ingress", "host", stats.Host)
 			continue
 		}
 
