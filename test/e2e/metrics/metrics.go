@@ -36,6 +36,7 @@ const waitForMetrics = 2 * time.Second
 var _ = framework.IngressNginxDescribe("[metrics] exported prometheus metrics", func() {
 	f := framework.NewDefaultFramework("metrics")
 	host := "foo.com"
+	wildcardHost := "wildcard." + host
 
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
@@ -90,5 +91,51 @@ var _ = framework.IngressNginxDescribe("[metrics] exported prometheus metrics", 
 		mf, err := f.GetMetric("nginx_ingress_controller_request_size", ip)
 		assert.Nil(ginkgo.GinkgoT(), err)
 		assert.NotNil(ginkgo.GinkgoT(), mf)
+	})
+	ginkgo.It("request metrics per undefined host are present when flag is set", func() {
+		err := f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
+			args := deployment.Spec.Template.Spec.Containers[0].Args
+			args = append(args, "--metrics-per-undefined-host=true")
+			deployment.Spec.Template.Spec.Containers[0].Args = args
+			_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
+			return err
+		})
+		assert.Nil(ginkgo.GinkgoT(), err, "updating deployment")
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", wildcardHost).
+			Expect().
+			Status(http.StatusNotFound)
+		time.Sleep(waitForMetrics)
+
+		ip := f.GetNginxPodIP()
+		reqMetrics, err := f.GetMetric("nginx_ingress_controller_requests", ip)
+		assert.Nil(ginkgo.GinkgoT(), err)
+		assert.NotNil(ginkgo.GinkgoT(), reqMetrics.Metric)
+		assert.Len(ginkgo.GinkgoT(), reqMetrics.Metric, 1)
+
+		containedLabel := false
+		for _, label := range reqMetrics.Metric[0].Label {
+			if *label.Name == "host" && *label.Value == wildcardHost {
+				containedLabel = true
+				break
+			}
+		}
+
+		assert.Truef(ginkgo.GinkgoT(), containedLabel, "expected reqMetrics to contain label with \"name\"=\"host\" \"value\"=%q, but it did not: %s", wildcardHost, reqMetrics.String())
+	})
+	ginkgo.It("request metrics per undefined host are not present when flag is not set", func() {
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", wildcardHost).
+			Expect().
+			Status(http.StatusNotFound)
+		time.Sleep(waitForMetrics)
+
+		ip := f.GetNginxPodIP()
+		reqMetrics, err := f.GetMetric("nginx_ingress_controller_requests", ip)
+		assert.EqualError(ginkgo.GinkgoT(), err, "there is no metric with name nginx_ingress_controller_requests")
+		assert.Nil(ginkgo.GinkgoT(), reqMetrics)
 	})
 })
