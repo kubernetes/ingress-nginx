@@ -64,11 +64,10 @@ type metricMapping map[string]prometheus.Collector
 type SocketCollector struct {
 	prometheus.Collector
 
-	upstreamLatency *prometheus.SummaryVec // TODO: DEPRECATED, remove
-	connectTime     *prometheus.HistogramVec
-	headerTime      *prometheus.HistogramVec
-	requestTime     *prometheus.HistogramVec
-	responseTime    *prometheus.HistogramVec
+	connectTime  *prometheus.HistogramVec
+	headerTime   *prometheus.HistogramVec
+	requestTime  *prometheus.HistogramVec
+	responseTime *prometheus.HistogramVec
 
 	requestLength  *prometheus.HistogramVec
 	responseLength *prometheus.HistogramVec
@@ -97,10 +96,6 @@ var requestTags = []string{
 	"service",
 	"canary",
 }
-
-// DefObjectives was removed in https://github.com/prometheus/client_golang/pull/262
-// updating the library to latest version changed the output of the metrics
-var defObjectives = map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001}
 
 // NewSocketCollector creates a new SocketCollector instance using
 // the ingress watch namespace and class used by the controller
@@ -248,19 +243,6 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 			em,
 			mm,
 		),
-
-		upstreamLatency: summaryMetric(
-			&prometheus.SummaryOpts{
-				Name:        "ingress_upstream_latency_seconds",
-				Help:        "DEPRECATED Upstream service latency per Ingress",
-				Namespace:   PrometheusNamespace,
-				ConstLabels: constLabels,
-				Objectives:  defObjectives,
-			},
-			[]string{"ingress", "namespace", "service", "canary"},
-			em,
-			mm,
-		),
 	}
 
 	sc.metricMapping = mm
@@ -273,18 +255,6 @@ func containsMetric(excludeMetrics map[string]struct{}, name string) bool {
 		return true
 	}
 	return false
-}
-
-func summaryMetric(opts *prometheus.SummaryOpts, requestTags []string, excludeMetrics map[string]struct{}, metricMapping metricMapping) *prometheus.SummaryVec {
-	if containsMetric(excludeMetrics, opts.Name) {
-		return nil
-	}
-	m := prometheus.NewSummaryVec(
-		*opts,
-		requestTags,
-	)
-	metricMapping[prometheus.BuildFQName(PrometheusNamespace, "", opts.Name)] = m
-	return m
 }
 
 func counterMetric(opts *prometheus.CounterOpts, requestTags []string, excludeMetrics map[string]struct{}, metricMapping metricMapping) *prometheus.CounterVec {
@@ -358,13 +328,6 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 			collectorLabels["host"] = stats.Host
 		}
 
-		latencyLabels := prometheus.Labels{
-			"namespace": stats.Namespace,
-			"ingress":   stats.Ingress,
-			"service":   stats.Service,
-			"canary":    stats.Canary,
-		}
-
 		if sc.requests != nil {
 			requestsMetric, err := sc.requests.GetMetricWith(collectorLabels)
 			if err != nil {
@@ -381,15 +344,6 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 					klog.ErrorS(err, "Error fetching connect time metric")
 				} else {
 					connectTimeMetric.Observe(stats.Latency)
-				}
-			}
-
-			if sc.upstreamLatency != nil {
-				latencyMetric, err := sc.upstreamLatency.GetMetricWith(latencyLabels)
-				if err != nil {
-					klog.ErrorS(err, "Error fetching latency metric")
-				} else {
-					latencyMetric.Observe(stats.Latency)
 				}
 			}
 		}
