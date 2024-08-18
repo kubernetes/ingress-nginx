@@ -113,15 +113,6 @@ http {
           certificate = res
           certificate.is_ocsp_stapling_enabled = {{ $cfg.EnableOCSP }}
         end
-
-        ok, res = pcall(require, "plugins")
-        if not ok then
-          error("require failed: " .. tostring(res))
-        else
-          plugins = res
-        end
-        -- load all plugins that'll be used here
-        plugins.init({ {{ range  $idx, $plugin := $cfg.Plugins }}{{ if $idx }},{{ end }}{{ $plugin | quote }}{{ end }} })
     }
 
     init_worker_by_lua_block {
@@ -130,8 +121,6 @@ http {
         {{ if $all.EnableMetrics }}
         monitor.init_worker({{ $all.MonitorMaxBatchSize }})
         {{ end }}
-
-        plugins.run()
     }
 
     {{/* Enable the real_ip module only if we use either X-Forwarded headers or Proxy Protocol. */}}
@@ -1265,7 +1254,6 @@ stream {
             rewrite_by_lua_block {
                 lua_ingress.rewrite({{ locationConfigForLua $location $all }})
                 balancer.rewrite()
-                plugins.run()
             }
 
             # be careful with `access_by_lua_block` and `satisfy any` directives as satisfy any
@@ -1276,11 +1264,6 @@ stream {
 
             header_filter_by_lua_block {
                 lua_ingress.header()
-                plugins.run()
-            }
-
-            body_filter_by_lua_block {
-                plugins.run()
             }
 
             log_by_lua_block {
@@ -1288,8 +1271,6 @@ stream {
                 {{ if $all.EnableMetrics }}
                 monitor.call()
                 {{ end }}
-
-                plugins.run()
             }
 
             {{ if not $location.Logs.Access }}
