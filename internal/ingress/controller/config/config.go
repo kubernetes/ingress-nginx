@@ -781,10 +781,10 @@ func NewDefault() Configuration {
 
 	cfg := Configuration{
 		AllowSnippetAnnotations:          false,
-		AllowCrossNamespaceResources:     true,
+		AllowCrossNamespaceResources:     false,
 		AllowBackendServerHeader:         false,
 		AnnotationValueWordBlocklist:     "",
-		AnnotationsRiskLevel:             "Critical",
+		AnnotationsRiskLevel:             "High",
 		AccessLogPath:                    "/var/log/nginx/access.log",
 		AccessLogParams:                  "",
 		EnableAccessLogForDefaultBackend: false,
@@ -929,7 +929,7 @@ func NewDefault() Configuration {
 		GlobalRateLimitMemcachedPoolSize:       50,
 		GlobalRateLimitStatusCode:              429,
 		DebugConnections:                       []string{},
-		StrictValidatePathType:                 false, // TODO: This will be true in future releases
+		StrictValidatePathType:                 true,
 		GRPCBufferSizeKb:                       0,
 	}
 
