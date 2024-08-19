@@ -17,7 +17,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.20.0
 	github.com/opencontainers/runc v1.1.13
 	github.com/pmezard/go-difflib v1.0.0
-	github.com/prometheus/client_golang v1.19.1
+	github.com/prometheus/client_golang v1.20.0
 	github.com/prometheus/client_model v0.6.1
 	github.com/prometheus/common v0.55.0
 	github.com/spf13/cobra v1.8.1
@@ -44,6 +44,8 @@ require (
 	sigs.k8s.io/controller-runtime v0.18.4
 	sigs.k8s.io/mdtoc v1.1.0
 )
+
+require github.com/klauspost/compress v1.17.9 // indirect
 
 require (
 	github.com/Anddd7/pb v0.0.0-20240425032658-369b0f6a404c
