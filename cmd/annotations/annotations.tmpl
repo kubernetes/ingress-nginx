@@ -1,0 +1,7 @@
+# Annotations Scope and Risk
+
+|Group   |Annotation        | Risk | Scope |
+|--------|------------------|------|-------|
+{{- range $doc := . }}
+| {{ $doc.Group }} | {{ $doc.Annotation }} | {{ $doc.Risk }} | {{ $doc.Scope }} |
+{{- end }}
