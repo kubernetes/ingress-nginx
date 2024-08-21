@@ -318,11 +318,6 @@ type Configuration struct {
 	NginxStatusIpv4Whitelist []string `json:"nginx-status-ipv4-whitelist,omitempty"`
 	NginxStatusIpv6Whitelist []string `json:"nginx-status-ipv6-whitelist,omitempty"`
 
-	// Plugins configures plugins to use placed in the directory /etc/nginx/lua/plugins.
-	// Every plugin has to have main.lua in the root. Every plugin has to bundle all of its dependencies.
-	// The execution order follows the definition.
-	Plugins []string `json:"plugins,omitempty"`
-
 	// If UseProxyProtocol is enabled ProxyRealIPCIDR defines the default the IP/network address
 	// of your external load balancer
 	ProxyRealIPCIDR []string `json:"proxy-real-ip-cidr,omitempty"`
