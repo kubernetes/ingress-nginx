@@ -3,7 +3,7 @@ module k8s.io/ingress-nginx
 go 1.22.6
 
 require (
-	dario.cat/mergo v1.0.0
+	dario.cat/mergo v1.0.1
 	github.com/armon/go-proxyproto v0.1.0
 	github.com/eapache/channels v1.1.0
 	github.com/fsnotify/fsnotify v1.7.0
