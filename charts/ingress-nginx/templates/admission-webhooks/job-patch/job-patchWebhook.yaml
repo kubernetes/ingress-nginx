@@ -68,7 +68,7 @@ spec:
           resources: {{ toYaml .Values.controller.admissionWebhooks.patchWebhookJob.resources | nindent 12 }}
           {{- end }}
       restartPolicy: OnFailure
-      serviceAccountName: {{ include "ingress-nginx.admissionWebhooks.fullname" . }}
+      serviceAccountName: {{ include "ingress-nginx.admissionWebhooks.patch.serviceAccountName" . }}
     {{- if .Values.controller.admissionWebhooks.patch.nodeSelector }}
       nodeSelector: {{ toYaml .Values.controller.admissionWebhooks.patch.nodeSelector | nindent 8 }}
     {{- end }}

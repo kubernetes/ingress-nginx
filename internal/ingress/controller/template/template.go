@@ -136,6 +136,13 @@ func cleanConf(in, out *bytes.Buffer) error {
 			case ' ', '\t':
 				needOutput = lineStarted
 			case '\r':
+				rest := in.Bytes()
+				if len(rest) > 0 {
+					if rest[0] != '\n' {
+						c = ' '
+						needOutput = lineStarted
+					}
+				}
 			case '\n':
 				needOutput = !(!lineStarted && emptyLineWritten)
 				nextLineStarted = false
@@ -150,6 +157,13 @@ func cleanConf(in, out *bytes.Buffer) error {
 		case stateComment:
 			switch c {
 			case '\r':
+				rest := in.Bytes()
+				if len(rest) > 0 {
+					if rest[0] != '\n' {
+						c = ' '
+						needOutput = lineStarted
+					}
+				}
 			case '\n':
 				needOutput = true
 				nextLineStarted = false
@@ -413,7 +427,7 @@ func configForLua(input interface{}) string {
 		all.Cfg.GlobalRateLimitMemcachedConnectTimeout,
 		all.Cfg.GlobalRateLimitMemcachedMaxIdleTimeout,
 		all.Cfg.GlobalRateLimitMemcachedPoolSize,
-		all.Cfg.GlobalRateLimitStatucCode,
+		all.Cfg.GlobalRateLimitStatusCode,
 	)
 }
 

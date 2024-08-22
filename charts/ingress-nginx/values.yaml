@@ -26,13 +26,17 @@ controller:
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
-    tag: "v1.10.0"
-    digest: sha256:42b3f0e5d0846876b1791cd3afeb5f1cbbe4259d6f35651dcc1b5c980925379c
-    digestChroot: sha256:7eb46ff733429e0e46892903c7394aff149ac6d284d92b3946f3baf7ff26a096
+    tag: "v1.11.2"
+    digest: sha256:d5f8217feeac4887cb1ed21f27c2674e58be06bd8f5184cacea2a69abaf78dce
+    digestChroot: sha256:21b55a2f0213a18b91612a8c0850167e00a8e34391fd595139a708f9c047e7a8
     pullPolicy: IfNotPresent
     runAsNonRoot: true
-    # www-data -> uid 101
+    # -- This value must not be changed using the official image.
+    # uid=101(www-data) gid=82(www-data) groups=82(www-data)
     runAsUser: 101
+    # -- This value must not be changed using the official image.
+    # uid=101(www-data) gid=82(www-data) groups=82(www-data)
+    runAsGroup: 82
     allowPrivilegeEscalation: false
     seccompProfile:
       type: RuntimeDefault
@@ -45,7 +49,8 @@ controller:
   containerPort:
     http: 80
     https: 443
-  # -- Will add custom configuration options to Nginx https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/
+  # -- Global configuration passed to the ConfigMap consumed by the controller. Values may contain Helm templates.
+  # Ref.: https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/
   config: {}
   # -- Annotations to be added to the controller config configuration configmap.
   configAnnotations: {}
@@ -85,6 +90,8 @@ controller:
   enableTopologyAwareRouting: false
   # -- This configuration disable Nginx Controller Leader Election
   disableLeaderElection: false
+  # -- Duration a leader election is valid before it's getting re-elected, e.g. `15s`, `10m` or `1h`. (Default: 30s)
+  electionTTL: ""
   # -- This configuration defines if Ingress Controller should allow users to set
   # their own *-snippet annotations, otherwise this is forbidden / dropped
   # when users add those annotations.
@@ -122,6 +129,8 @@ controller:
     # Ingress creation gets rejected if there are multiple default IngressClasses.
     # Ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#default-ingress-class
     default: false
+    # -- Annotations to be added to the IngressClass resource.
+    annotations: {}
     # -- Controller of the IngressClass. An Ingress Controller looks for IngressClasses it should reconcile by this value.
     # This value is also being set as the `--controller-class` argument of this Ingress Controller.
     # Ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-class
@@ -255,11 +264,11 @@ controller:
   #         - key: app.kubernetes.io/name
   #           operator: In
   #           values:
-  #           - ingress-nginx
+  #           - '{{ include "ingress-nginx.name" . }}'
   #         - key: app.kubernetes.io/instance
   #           operator: In
   #           values:
-  #           - ingress-nginx
+  #           - '{{ .Release.Name }}'
   #         - key: app.kubernetes.io/component
   #           operator: In
   #           values:
@@ -274,16 +283,16 @@ controller:
   #       - key: app.kubernetes.io/name
   #         operator: In
   #         values:
-  #         - ingress-nginx
+  #         - '{{ include "ingress-nginx.name" . }}'
   #       - key: app.kubernetes.io/instance
   #         operator: In
   #         values:
-  #         - ingress-nginx
+  #         - '{{ .Release.Name }}'
   #       - key: app.kubernetes.io/component
   #         operator: In
   #         values:
   #         - controller
-  #     topologyKey: "kubernetes.io/hostname"
+  #     topologyKey: kubernetes.io/hostname
 
   # -- Topology spread constraints rely on node labels to identify the topology domain(s) that each Node is in.
   ## Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
@@ -683,6 +692,7 @@ controller:
   #   containerSecurityContext:
   #     runAsNonRoot: true
   #     runAsUser: <user-id>
+  #     runAsGroup: <group-id>
   #     allowPrivilegeEscalation: false
   #     seccompProfile:
   #       type: RuntimeDefault
@@ -701,17 +711,18 @@ controller:
     name: opentelemetry
     image:
       registry: registry.k8s.io
-      image: ingress-nginx/opentelemetry
+      image: ingress-nginx/opentelemetry-1.25.3
       ## for backwards compatibility consider setting the full image url via the repository value below
       ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
       ## repository:
-      tag: "v20230721-3e2062ee5"
-      digest: sha256:13bee3f5223883d3ca62fee7309ad02d22ec00ff0d7033e3e9aca7a9f60fd472
+      tag: v20240813-b933310d
+      digest: sha256:f7604ac0547ed64d79b98d92133234e66c2c8aade3c1f4809fed5eec1fb7f922
       distroless: true
     containerSecurityContext:
       runAsNonRoot: true
       # -- The image's default user, inherited from its base image `cgr.dev/chainguard/static`.
       runAsUser: 65532
+      runAsGroup: 65532
       allowPrivilegeEscalation: false
       seccompProfile:
         type: RuntimeDefault
@@ -763,6 +774,7 @@ controller:
       securityContext:
         runAsNonRoot: true
         runAsUser: 65532
+        runAsGroup: 65532
         allowPrivilegeEscalation: false
         seccompProfile:
           type: RuntimeDefault
@@ -783,6 +795,7 @@ controller:
       securityContext:
         runAsNonRoot: true
         runAsUser: 65532
+        runAsGroup: 65532
         allowPrivilegeEscalation: false
         seccompProfile:
           type: RuntimeDefault
@@ -799,8 +812,8 @@ controller:
         ## for backwards compatibility consider setting the full image url via the repository value below
         ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
         ## repository:
-        tag: v1.4.0
-        digest: sha256:44d1d0e9f19c63f58b380c5fddaca7cf22c7cee564adeff365225a5df5ef3334
+        tag: v1.4.3
+        digest: sha256:a320a50cc91bd15fd2d6fa6de58bd98c1bd64b9a6f926ce23a600d87043455a3
         pullPolicy: IfNotPresent
       # -- Provide a priority class name to the webhook patching job
       ##
@@ -817,6 +830,18 @@ controller:
       labels: {}
       # -- Security context for secret creation & webhook patch pods
       securityContext: {}
+      # -- Admission webhook patch job RBAC
+      rbac:
+        # -- Create RBAC or not
+        create: true
+      # -- Admission webhook patch job service account
+      serviceAccount:
+        # -- Create a service account or not
+        create: true
+        # -- Custom service account name
+        name: ""
+        # -- Auto-mount service account token or not
+        automountServiceAccountToken: true
     # Use certmanager to generate webhook certs
     certManager:
       enabled: false
@@ -946,6 +971,7 @@ defaultBackend:
     runAsNonRoot: true
     # nobody user -> uid 65534
     runAsUser: 65534
+    runAsGroup: 65534
     allowPrivilegeEscalation: false
     seccompProfile:
       type: RuntimeDefault
@@ -994,7 +1020,68 @@ defaultBackend:
   #    value: "value"
   #    effect: "NoSchedule|PreferNoSchedule|NoExecute(1.6 only)"
 
+  # -- Affinity and anti-affinity rules for server scheduling to nodes
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
   affinity: {}
+  # # An example of preferred pod anti-affinity, weight is in the range 1-100
+  # podAntiAffinity:
+  #   preferredDuringSchedulingIgnoredDuringExecution:
+  #   - weight: 100
+  #     podAffinityTerm:
+  #       labelSelector:
+  #         matchExpressions:
+  #         - key: app.kubernetes.io/name
+  #           operator: In
+  #           values:
+  #           - '{{ include "ingress-nginx.name" . }}'
+  #         - key: app.kubernetes.io/instance
+  #           operator: In
+  #           values:
+  #           - '{{ .Release.Name }}'
+  #         - key: app.kubernetes.io/component
+  #           operator: In
+  #           values:
+  #           - default-backend
+  #       topologyKey: kubernetes.io/hostname
+
+  # # An example of required pod anti-affinity
+  # podAntiAffinity:
+  #   requiredDuringSchedulingIgnoredDuringExecution:
+  #   - labelSelector:
+  #       matchExpressions:
+  #       - key: app.kubernetes.io/name
+  #         operator: In
+  #         values:
+  #         - '{{ include "ingress-nginx.name" . }}'
+  #       - key: app.kubernetes.io/instance
+  #         operator: In
+  #         values:
+  #         - '{{ .Release.Name }}'
+  #       - key: app.kubernetes.io/component
+  #         operator: In
+  #         values:
+  #         - default-backend
+  #     topologyKey: kubernetes.io/hostname
+
+  # -- Topology spread constraints rely on node labels to identify the topology domain(s) that each Node is in.
+  # Ref.: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
+  topologySpreadConstraints: []
+  # - labelSelector:
+  #     matchLabels:
+  #       app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
+  #       app.kubernetes.io/instance: '{{ .Release.Name }}'
+  #       app.kubernetes.io/component: default-backend
+  #   topologyKey: topology.kubernetes.io/zone
+  #   maxSkew: 1
+  #   whenUnsatisfiable: ScheduleAnyway
+  # - labelSelector:
+  #     matchLabels:
+  #       app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
+  #       app.kubernetes.io/instance: '{{ .Release.Name }}'
+  #       app.kubernetes.io/component: default-backend
+  #   topologyKey: kubernetes.io/hostname
+  #   maxSkew: 1
+  #   whenUnsatisfiable: ScheduleAnyway
   # -- Security context for default backend pods
   podSecurityContext: {}
   # -- Security context for default backend containers

@@ -18,7 +18,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.25.3
+export NGINX_VERSION=1.25.5
 
 # Check for recent changes: https://github.com/vision5/ngx_devel_kit/compare/v0.3.3...master
 export NDK_VERSION=v0.3.3
@@ -41,43 +41,43 @@ export MODSECURITY_VERSION=v1.0.3
 # Check for recent changes: https://github.com/SpiderLabs/ModSecurity/compare/v3.0.8...v3/master
 export MODSECURITY_LIB_VERSION=v3.0.12
 
-# Check for recent changes: https://github.com/coreruleset/coreruleset/compare/v3.3.2...v3.3/master
-export OWASP_MODSECURITY_CRS_VERSION=v3.3.5
+# Check for recent changes: https://github.com/coreruleset/coreruleset/compare/v3.3.5...v4.0/main
+export OWASP_MODSECURITY_CRS_VERSION=v4.4.0
 
-# Check for recent changes: https://github.com/openresty/lua-nginx-module/compare/v0.10.25...master
+# Check for recent changes: https://github.com/openresty/lua-nginx-module/compare/v0.10.26``...master
 export LUA_NGX_VERSION=v0.10.26
 
-# Check for recent changes: https://github.com/openresty/stream-lua-nginx-module/compare/v0.0.13...master
-export LUA_STREAM_NGX_VERSION=v0.0.14
+# Check for recent changes: https://github.com/openresty/stream-lua-nginx-module/compare/bea8a0c0de94cede71554f53818ac0267d675d63...master
+export LUA_STREAM_NGX_VERSION=bea8a0c0de94cede71554f53818ac0267d675d63
 
 # Check for recent changes: https://github.com/openresty/lua-upstream-nginx-module/compare/8aa93ead98ba2060d4efd594ae33a35d153589bf...master
 export LUA_UPSTREAM_VERSION=542be0893543a4e42d89f6dd85372972f5ff2a36
 
-# Check for recent changes: https://github.com/openresty/lua-cjson/compare/2.1.0.11...openresty:master
+# Check for recent changes: https://github.com/openresty/lua-cjson/compare/2.1.0.13...openresty:master
 export LUA_CJSON_VERSION=2.1.0.13
 
-# Check for recent changes: https://github.com/leev/ngx_http_geoip2_module/compare/3.4...master
+# Check for recent changes: https://github.com/leev/ngx_http_geoip2_module/compare/a607a41a8115fecfc05b5c283c81532a3d605425...master
 export GEOIP2_VERSION=a607a41a8115fecfc05b5c283c81532a3d605425
 
-# Check for recent changes: https://github.com/openresty/luajit2/compare/v2.1-20230410...v2.1-agentzh
-export LUAJIT_VERSION=v2.1-20231117
+# Check for recent changes: https://github.com/openresty/luajit2/compare/v2.1-20240314...v2.1-agentzh
+export LUAJIT_VERSION=v2.1-20240314
 
-# Check for recent changes: https://github.com/openresty/lua-resty-balancer/compare/v0.04...master
+# Check for recent changes: https://github.com/openresty/lua-resty-balancer/compare/1cd4363c0a239afe4765ec607dcfbbb4e5900eea...master
 export LUA_RESTY_BALANCER=1cd4363c0a239afe4765ec607dcfbbb4e5900eea
 
-# Check for recent changes: https://github.com/openresty/lua-resty-lrucache/compare/v0.13...master
+# Check for recent changes: https://github.com/openresty/lua-resty-lrucache/compare/99e7578465b40f36f596d099b82eab404f2b42ed...master
 export LUA_RESTY_CACHE=99e7578465b40f36f596d099b82eab404f2b42ed
 
 # Check for recent changes: https://github.com/openresty/lua-resty-core/compare/v0.1.27...master
 export LUA_RESTY_CORE=v0.1.28
 
-# Check for recent changes: https://github.com/cloudflare/lua-resty-cookie/compare/v0.1.0...master
+# Check for recent changes: https://github.com/cloudflare/lua-resty-cookie/compare/f418d77082eaef48331302e84330488fdc810ef4...master
 export LUA_RESTY_COOKIE_VERSION=f418d77082eaef48331302e84330488fdc810ef4
 
-# Check for recent changes: https://github.com/openresty/lua-resty-dns/compare/v0.22...master
+# Check for recent changes: https://github.com/openresty/lua-resty-dns/compare/8bb53516e2933e61c317db740a9b7c2048847c2f...master
 export LUA_RESTY_DNS=8bb53516e2933e61c317db740a9b7c2048847c2f
 
-# Check for recent changes: https://github.com/ledgetech/lua-resty-http/compare/v0.16.1...master
+# Check for recent changes: https://github.com/ledgetech/lua-resty-http/compare/v0.17.1...master
 export LUA_RESTY_HTTP=v0.17.1
 
 # Check for recent changes: https://github.com/openresty/lua-resty-lock/compare/v0.09...master
@@ -101,8 +101,8 @@ export LUA_RESTY_IPMATCHER_VERSION=3e93c53eb8c9884efe939ef070486a0e507cc5be
 # Check for recent changes: https://github.com/ElvinEfendi/lua-resty-global-throttle/compare/v0.2.0...main
 export LUA_RESTY_GLOBAL_THROTTLE_VERSION=v0.2.0
 
-# Check for recent changes:  https://github.com/microsoft/mimalloc/compare/v1.7.6...master
-export MIMALOC_VERSION=v2.1.2
+# Check for recent changes:  https://github.com/microsoft/mimalloc/compare/v2.1.7...master
+export MIMALOC_VERSION=v2.1.7
 
 # Check on https://github.com/open-telemetry/opentelemetry-cpp
 export OPENTELEMETRY_CPP_VERSION="v1.11.0"
@@ -181,7 +181,7 @@ apk add \
   c-ares-dev \
   re2-dev \
   grpc-dev \
-  protobuf-dev 
+  protobuf-dev
 
 # apk add -X http://dl-cdn.alpinelinux.org/alpine/edge/testing opentelemetry-cpp-dev
 
@@ -388,17 +388,13 @@ mv rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf.example rules/REQUEST-900-E
 mv rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf.example rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
 cd ..
 
-# OWASP CRS v3 rules
+# OWASP CRS v4 rules
 echo "
 Include /etc/nginx/owasp-modsecurity-crs/crs-setup.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-901-INITIALIZATION.conf
-Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-903.9001-DRUPAL-EXCLUSION-RULES.conf
-Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-903.9002-WORDPRESS-EXCLUSION-RULES.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-905-COMMON-EXCEPTIONS.conf
-Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-910-IP-REPUTATION.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-911-METHOD-ENFORCEMENT.conf
-Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-912-DOS-PROTECTION.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-913-SCANNER-DETECTION.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-920-PROTOCOL-ENFORCEMENT.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-921-PROTOCOL-ATTACK.conf
@@ -407,7 +403,7 @@ Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-930-APPLICATION-ATTACK-LF
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-931-APPLICATION-ATTACK-RFI.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-932-APPLICATION-ATTACK-RCE.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-933-APPLICATION-ATTACK-PHP.conf
-Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-934-APPLICATION-ATTACK-NODEJS.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-934-APPLICATION-ATTACK-GENERIC.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-941-APPLICATION-ATTACK-XSS.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-942-APPLICATION-ATTACK-SQLI.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/REQUEST-943-APPLICATION-ATTACK-SESSION-FIXATION.conf
@@ -418,6 +414,7 @@ Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-951-DATA-LEAKAGES-SQL.co
 Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-952-DATA-LEAKAGES-JAVA.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-953-DATA-LEAKAGES-PHP.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-954-DATA-LEAKAGES-IIS.conf
+Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-955-WEB-SHELLS.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-959-BLOCKING-EVALUATION.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-980-CORRELATION.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
@@ -447,6 +444,7 @@ WITH_FLAGS="--with-debug \
   --with-http_gzip_static_module \
   --with-http_sub_module \
   --with-http_v2_module \
+  --with-http_v3_module \
   --with-stream \
   --with-stream_ssl_module \
   --with-stream_realip_module \
@@ -624,7 +622,7 @@ for dir in "${writeDirs[@]}"; do
 done
 
 rm -rf /etc/nginx/owasp-modsecurity-crs/.git
-rm -rf /etc/nginx/owasp-modsecurity-crs/util/regression-tests
+rm -rf /etc/nginx/owasp-modsecurity-crs/tests
 
 # remove .a files
 find /usr/local -name "*.a" -print | xargs /bin/rm

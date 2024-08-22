@@ -465,10 +465,8 @@ make install
 
 # Get Brotli source and deps
 cd "$BUILD_PATH"
-git clone --depth=100 https://github.com/google/ngx_brotli.git
+git clone --depth=1 https://github.com/google/ngx_brotli.git
 cd ngx_brotli
-# https://github.com/google/ngx_brotli/issues/156
-git reset --hard 63ca02abdcf79c9e788d2eedcc388d2335902e52
 git submodule init
 git submodule update
 
@@ -737,7 +735,7 @@ for dir in "${writeDirs[@]}"; do
 done
 
 rm -rf /etc/nginx/owasp-modsecurity-crs/.git
-rm -rf /etc/nginx/owasp-modsecurity-crs/util/regression-tests
+rm -rf /etc/nginx/owasp-modsecurity-crs/tests
 
 # remove .a files
 find /usr/local -name "*.a" -print | xargs /bin/rm

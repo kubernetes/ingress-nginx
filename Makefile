@@ -110,7 +110,7 @@ clean-chroot-image: ## Removes local image
 
 .PHONY: build
 build:  ## Build ingress controller, debug tool and pre-stop hook.
-	E2E_IMAGE=golang:$(GO_VERSION)-alpine3.19 USE_SHELL=/bin/sh build/run-in-docker.sh \
+	E2E_IMAGE=golang:$(GO_VERSION)-alpine3.20 USE_SHELL=/bin/sh build/run-in-docker.sh \
 		MAC_OS=$(MAC_OS) \
 		PKG=$(PKG) \
 		ARCH=$(ARCH) \
@@ -124,6 +124,9 @@ build:  ## Build ingress controller, debug tool and pre-stop hook.
 clean: ## Remove .gocache directory.
 	rm -rf bin/ .gocache/ .cache/
 
+.PHONY: verify-docs
+verify-docs: ## Verify doc generation
+	hack/verify-annotation-docs.sh
 
 .PHONY: static-check
 static-check: ## Run verification script for boilerplate, codegen, gofmt, golint, lualint and chart-lint.

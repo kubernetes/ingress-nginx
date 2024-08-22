@@ -113,15 +113,6 @@ http {
           certificate = res
           certificate.is_ocsp_stapling_enabled = {{ $cfg.EnableOCSP }}
         end
-
-        ok, res = pcall(require, "plugins")
-        if not ok then
-          error("require failed: " .. tostring(res))
-        else
-          plugins = res
-        end
-        -- load all plugins that'll be used here
-        plugins.init({ {{ range  $idx, $plugin := $cfg.Plugins }}{{ if $idx }},{{ end }}{{ $plugin | quote }}{{ end }} })
     }
 
     init_worker_by_lua_block {
@@ -130,8 +121,6 @@ http {
         {{ if $all.EnableMetrics }}
         monitor.init_worker({{ $all.MonitorMaxBatchSize }})
         {{ end }}
-
-        plugins.run()
     }
 
     {{/* Enable the real_ip module only if we use either X-Forwarded headers or Proxy Protocol. */}}
@@ -202,7 +191,7 @@ http {
     geoip2 /etc/ingress-controller/geoip/GeoLite2-City.mmdb {
         {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
         auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
-        {{ end }}    
+        {{ end }}
         $geoip2_city_country_code source=$remote_addr country iso_code;
         $geoip2_city_country_name source=$remote_addr country names en;
         $geoip2_city_country_geoname_id source=$remote_addr country geoname_id;
@@ -228,7 +217,7 @@ http {
     geoip2 /etc/ingress-controller/geoip/GeoIP2-City.mmdb {
         {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
         auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
-        {{ end }}    
+        {{ end }}
         $geoip2_city_country_code source=$remote_addr country iso_code;
         $geoip2_city_country_name source=$remote_addr country names en;
         $geoip2_city_country_geoname_id source=$remote_addr country geoname_id;
@@ -254,7 +243,7 @@ http {
     geoip2 /etc/ingress-controller/geoip/GeoLite2-ASN.mmdb {
         {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
         auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
-        {{ end }}    
+        {{ end }}
         $geoip2_asn source=$remote_addr autonomous_system_number;
         $geoip2_org source=$remote_addr autonomous_system_organization;
     }
@@ -264,7 +253,7 @@ http {
     geoip2 /etc/ingress-controller/geoip/GeoIP2-ASN.mmdb {
         {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
         auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
-        {{ end }}    
+        {{ end }}
         $geoip2_asn source=$remote_addr autonomous_system_number;
         $geoip2_org source=$remote_addr autonomous_system_organization;
     }
@@ -274,7 +263,7 @@ http {
     geoip2 /etc/ingress-controller/geoip/GeoIP2-ISP.mmdb {
         {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
         auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
-        {{ end }}    
+        {{ end }}
         $geoip2_isp source=$remote_addr isp;
         $geoip2_isp_org source=$remote_addr organization;
         $geoip2_asn source=$remote_addr default=0 autonomous_system_number;
@@ -291,7 +280,7 @@ http {
     geoip2 /etc/ingress-controller/geoip/GeoIP2-Anonymous-IP.mmdb {
         {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
         auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
-        {{ end }}    
+        {{ end }}
         $geoip2_is_anon source=$remote_addr is_anonymous;
         $geoip2_is_anonymous source=$remote_addr default=0 is_anonymous;
         $geoip2_is_anonymous_vpn source=$remote_addr default=0 is_anonymous_vpn;
@@ -330,6 +319,10 @@ http {
     large_client_header_buffers     {{ $cfg.LargeClientHeaderBuffers }};
     client_body_buffer_size         {{ $cfg.ClientBodyBufferSize }};
     client_body_timeout             {{ $cfg.ClientBodyTimeout }}s;
+
+    {{ if gt $cfg.GRPCBufferSizeKb 0 }}
+    grpc_buffer_size {{ $cfg.GRPCBufferSizeKb }}k;
+    {{ end }}
 
     {{ if and (ne $cfg.HTTP2MaxHeaderSize "") (ne $cfg.HTTP2MaxFieldSize "") }}
     http2_max_field_size            {{ $cfg.HTTP2MaxFieldSize }};
@@ -1261,7 +1254,6 @@ stream {
             rewrite_by_lua_block {
                 lua_ingress.rewrite({{ locationConfigForLua $location $all }})
                 balancer.rewrite()
-                plugins.run()
             }
 
             # be careful with `access_by_lua_block` and `satisfy any` directives as satisfy any
@@ -1272,11 +1264,6 @@ stream {
 
             header_filter_by_lua_block {
                 lua_ingress.header()
-                plugins.run()
-            }
-
-            body_filter_by_lua_block {
-                plugins.run()
             }
 
             log_by_lua_block {
@@ -1284,8 +1271,6 @@ stream {
                 {{ if $all.EnableMetrics }}
                 monitor.call()
                 {{ end }}
-
-                plugins.run()
             }
 
             {{ if not $location.Logs.Access }}
@@ -1477,12 +1462,26 @@ stream {
             proxy_next_upstream_timeout             {{ $location.Proxy.NextUpstreamTimeout }};
             proxy_next_upstream_tries               {{ $location.Proxy.NextUpstreamTries }};
 
+            {{ if or (eq $location.BackendProtocol "GRPC") (eq $location.BackendProtocol "GRPCS") }}
+            # Grpc settings
+            grpc_connect_timeout                    {{ $location.Proxy.ConnectTimeout }}s;
+            grpc_send_timeout                       {{ $location.Proxy.SendTimeout }}s;
+            grpc_read_timeout                       {{ $location.Proxy.ReadTimeout }}s;
+            {{ end }}
+
             {{/* Add any additional configuration defined */}}
             {{ $location.ConfigurationSnippet }}
 
             {{ if not (empty $all.Cfg.LocationSnippet) }}
             # Custom code snippet configured in the configuration configmap
             {{ $all.Cfg.LocationSnippet }}
+            {{ end }}
+
+            {{ if $location.CustomHeaders }}
+            # Custom Response Headers
+            {{ range $k, $v := $location.CustomHeaders.Headers }}
+            more_set_headers {{ printf "%s: %s" $k $v | escapeLiteralDollar | quote }};
+            {{ end }}
             {{ end }}
 
             {{/* if we are sending the request to a custom default backend, we add the required headers */}}

@@ -1,0 +1,11 @@
+suite: Admission Webhooks > Patch Job > ClusterRole
+templates:
+  - admission-webhooks/job-patch/clusterrole.yaml
+
+tests:
+  - it: should not create a ClusterRole if `controller.admissionWebhooks.patch.rbac.create` is false
+    set:
+      controller.admissionWebhooks.patch.rbac.create: false
+    asserts:
+      - hasDocuments:
+          count: 0

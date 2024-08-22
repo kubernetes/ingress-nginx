@@ -1,7 +1,7 @@
 ARG E2E_BASE_IMAGE
 FROM ${E2E_BASE_IMAGE} AS BASE
 
-FROM alpine:3.19.1
+FROM alpine:3.20.0
 
 RUN apk update \
 	&& apk upgrade && apk add -U --no-cache \
@@ -9,7 +9,8 @@ RUN apk update \
   bash \
   tzdata \
   libc6-compat \
-  openssl
+  openssl \
+  sqlite-dev
 
 COPY --from=BASE /go/bin/ginkgo /usr/local/bin/
 COPY --from=BASE /usr/local/bin/helm /usr/local/bin/

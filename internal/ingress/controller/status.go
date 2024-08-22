@@ -36,7 +36,8 @@ import (
 type leaderElectionConfig struct {
 	Client clientset.Interface
 
-	ElectionID string
+	ElectionID  string
+	ElectionTTL time.Duration
 
 	OnStartedLeading func(chan struct{})
 	OnStoppedLeading func()
@@ -107,13 +108,11 @@ func setupLeaderElection(config *leaderElectionConfig) {
 		LockConfig: resourceLockConfig,
 	}
 
-	ttl := 30 * time.Second
-
 	elector, err = leaderelection.NewLeaderElector(leaderelection.LeaderElectionConfig{
 		Lock:          lock,
-		LeaseDuration: ttl,
-		RenewDeadline: ttl / 2,
-		RetryPeriod:   ttl / 4,
+		LeaseDuration: config.ElectionTTL,
+		RenewDeadline: config.ElectionTTL / 2,
+		RetryPeriod:   config.ElectionTTL / 4,
 
 		Callbacks: callbacks,
 	})

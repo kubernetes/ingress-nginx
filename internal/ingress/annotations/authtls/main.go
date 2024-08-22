@@ -41,7 +41,7 @@ const (
 )
 
 var (
-	authVerifyClientRegex = regexp.MustCompile(`on|off|optional|optional_no_ca`)
+	authVerifyClientRegex = regexp.MustCompile(`^(on|off|optional|optional_no_ca)$`)
 	redirectRegex         = regexp.MustCompile(`^((https?://)?[A-Za-z0-9\-.]*(:\d+)?/[A-Za-z0-9\-.]*)?$`)
 )
 
@@ -120,6 +120,9 @@ func (assl1 *Config) Equal(assl2 *Config) bool {
 		return false
 	}
 	if assl1.PassCertToUpstream != assl2.PassCertToUpstream {
+		return false
+	}
+	if assl1.MatchCN != assl2.MatchCN {
 		return false
 	}
 

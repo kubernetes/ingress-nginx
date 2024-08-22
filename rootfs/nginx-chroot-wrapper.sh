@@ -15,4 +15,4 @@
 # limitations under the License.
 
 cat /etc/resolv.conf > /chroot/etc/resolv.conf
-unshare  -S 101 -R /chroot nginx "$@"
+unshare -S 101 -R /chroot nginx "$@"
