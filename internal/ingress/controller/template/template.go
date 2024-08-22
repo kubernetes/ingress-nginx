@@ -194,6 +194,15 @@ func cleanConf(in, out *bytes.Buffer) error {
 	}
 }
 
+type LuaConfigs struct {
+	EnableMetrics       bool   `json:"enable_metrics"`
+	HTTPSPort           string `json:"httpsPort"`
+	StatusPort          string `json:"status_port"`
+	UseForwardedPorts   bool   `json:"use_forwarded_ports"`
+	EnableOCSP          bool   `json:"enable_ocsp"`
+	MonitorBatchMaxSize int    `json:"monitor_batch_max_size"`
+}
+
 // Write populates a buffer using a template with NGINX configuration
 // and the servers and upstreams created by Ingress rules
 func (t *Template) Write(conf *config.TemplateConfig) ([]byte, error) {
