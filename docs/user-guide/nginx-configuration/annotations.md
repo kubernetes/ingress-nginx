@@ -22,7 +22,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/auth-realm](#authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-secret](#authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-secret-type](#authentication)|string|
-|[nginx.ingress.kubernetes.io/auth-type](#authentication)|basic or digest|
+|[nginx.ingress.kubernetes.io/auth-type](#authentication)|"basic" or "digest"|
 |[nginx.ingress.kubernetes.io/auth-tls-secret](#client-certificate-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-tls-verify-depth](#client-certificate-authentication)|number|
 |[nginx.ingress.kubernetes.io/auth-tls-verify-client](#client-certificate-authentication)|string|
@@ -33,12 +33,13 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/auth-cache-key](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-cache-duration](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-keepalive](#external-authentication)|number|
+|[nginx.ingress.kubernetes.io/auth-keepalive-share-vars](#external-authentication)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/auth-keepalive-requests](#external-authentication)|number|
 |[nginx.ingress.kubernetes.io/auth-keepalive-timeout](#external-authentication)|number|
 |[nginx.ingress.kubernetes.io/auth-proxy-set-headers](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-snippet](#external-authentication)|string|
 |[nginx.ingress.kubernetes.io/enable-global-auth](#external-authentication)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/backend-protocol](#backend-protocol)|string|HTTP,HTTPS,GRPC,GRPCS,AJP|
+|[nginx.ingress.kubernetes.io/backend-protocol](#backend-protocol)|string|
 |[nginx.ingress.kubernetes.io/canary](#canary)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/canary-by-header](#canary)|string|
 |[nginx.ingress.kubernetes.io/canary-by-header-value](#canary)|string|
@@ -49,6 +50,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
 |[nginx.ingress.kubernetes.io/configuration-snippet](#configuration-snippet)|string|
 |[nginx.ingress.kubernetes.io/custom-http-errors](#custom-http-errors)|[]int|
+|[nginx.ingress.kubernetes.io/custom-headers](#custom-headers)|string|
 |[nginx.ingress.kubernetes.io/default-backend](#default-backend)|string|
 |[nginx.ingress.kubernetes.io/enable-cors](#enable-cors)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/cors-allow-origin](#enable-cors)|string|
@@ -96,12 +98,15 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/server-alias](#server-alias)|string|
 |[nginx.ingress.kubernetes.io/server-snippet](#server-snippet)|string|
 |[nginx.ingress.kubernetes.io/service-upstream](#service-upstream)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/session-cookie-name](#cookie-affinity)|string|
-|[nginx.ingress.kubernetes.io/session-cookie-path](#cookie-affinity)|string|
-|[nginx.ingress.kubernetes.io/session-cookie-domain](#cookie-affinity)|string|
 |[nginx.ingress.kubernetes.io/session-cookie-change-on-failure](#cookie-affinity)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/session-cookie-samesite](#cookie-affinity)|string|
 |[nginx.ingress.kubernetes.io/session-cookie-conditional-samesite-none](#cookie-affinity)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/session-cookie-domain](#cookie-affinity)|string|
+|[nginx.ingress.kubernetes.io/session-cookie-expires](#cookie-affinity)|string|
+|[nginx.ingress.kubernetes.io/session-cookie-max-age](#cookie-affinity)|string|
+|[nginx.ingress.kubernetes.io/session-cookie-name](#cookie-affinity)|string|default "INGRESSCOOKIE"|
+|[nginx.ingress.kubernetes.io/session-cookie-path](#cookie-affinity)|string|
+|[nginx.ingress.kubernetes.io/session-cookie-samesite](#cookie-affinity)|string|"None", "Lax" or "Strict"|
+|[nginx.ingress.kubernetes.io/session-cookie-secure](#cookie-affinity)|string|
 |[nginx.ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/ssl-passthrough](#ssl-passthrough)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/stream-snippet](#stream-snippet)|string|
@@ -119,13 +124,8 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/ssl-prefer-server-ciphers](#ssl-ciphers)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/connection-proxy-header](#connection-proxy-header)|string|
 |[nginx.ingress.kubernetes.io/enable-access-log](#enable-access-log)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/enable-opentracing](#enable-opentracing)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/opentracing-trust-incoming-span](#opentracing-trust-incoming-span)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/enable-influxdb](#influxdb)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/influxdb-measurement](#influxdb)|string|
-|[nginx.ingress.kubernetes.io/influxdb-port](#influxdb)|string|
-|[nginx.ingress.kubernetes.io/influxdb-host](#influxdb)|string|
-|[nginx.ingress.kubernetes.io/influxdb-server-name](#influxdb)|string|
+|[nginx.ingress.kubernetes.io/enable-opentelemetry](#enable-opentelemetry)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/opentelemetry-trust-incoming-span](#opentelemetry-trust-incoming-spans)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/use-regex](#use-regex)|bool|
 |[nginx.ingress.kubernetes.io/enable-modsecurity](#modsecurity)|bool|
 |[nginx.ingress.kubernetes.io/enable-owasp-core-rules](#modsecurity)|bool|
@@ -195,6 +195,12 @@ Use `nginx.ingress.kubernetes.io/session-cookie-domain` to set the `Domain` attr
 
 Use `nginx.ingress.kubernetes.io/session-cookie-samesite` to apply a `SameSite` attribute to the sticky cookie. Browser accepted values are `None`, `Lax`, and `Strict`. Some browsers reject cookies with `SameSite=None`, including those created before the `SameSite=None` specification (e.g. Chrome 5X). Other browsers mistakenly treat `SameSite=None` cookies as `SameSite=Strict` (e.g. Safari running on OSX 14). To omit `SameSite=None` from browsers with these incompatibilities, add the annotation `nginx.ingress.kubernetes.io/session-cookie-conditional-samesite-none: "true"`.
 
+Use `nginx.ingress.kubernetes.io/session-cookie-expires` to control the cookie expires, its value is a number of seconds until the cookie expires.
+
+Use `nginx.ingress.kubernetes.io/session-cookie-path` to control the cookie path when use-regex is set to true.
+
+Use `nginx.ingress.kubernetes.io/session-cookie-change-on-failure` to control the cookie change after request failure.
+
 ### Authentication
 
 It is possible to add authentication by adding additional annotations in the Ingress rule. The source of the authentication is a secret that contains usernames and passwords.
@@ -239,7 +245,7 @@ To enable consistent hashing for a backend:
 
 `nginx.ingress.kubernetes.io/upstream-hash-by`: the nginx variable, text value or any combination thereof to use for consistent hashing. For example: `nginx.ingress.kubernetes.io/upstream-hash-by: "$request_uri"` or `nginx.ingress.kubernetes.io/upstream-hash-by: "$request_uri$host"` or `nginx.ingress.kubernetes.io/upstream-hash-by: "${request_uri}-text-value"` to consistently hash upstream requests by the current request URI.
 
-"subset" hashing can be enabled setting `nginx.ingress.kubernetes.io/upstream-hash-by-subset`: "true". This maps requests to subset of nodes instead of a single one. `upstream-hash-by-subset-size` determines the size of each subset (default 3).
+"subset" hashing can be enabled setting `nginx.ingress.kubernetes.io/upstream-hash-by-subset`: "true". This maps requests to subset of nodes instead of a single one. `nginx.ingress.kubernetes.io/upstream-hash-by-subset-size` determines the size of each subset (default 3).
 
 Please check the [chashsubset](../../examples/chashsubset/deployment.yaml) example.
 
@@ -330,6 +336,22 @@ Example usage:
 ```
 nginx.ingress.kubernetes.io/custom-http-errors: "404,415"
 ```
+
+### Custom Headers
+This annotation is of the form `nginx.ingress.kubernetes.io/custom-headers: custom-headers-configmap` to specify a configmap name that contains custom headers. This annotation uses `more_set_headers` nginx directive.
+
+Example configmap:
+```yaml
+apiVersion: v1
+data:
+  Content-Type: application/json
+kind: ConfigMap
+metadata:
+  name: custom-headers-configmap
+```
+
+!!! attention
+  First define the allowed response headers in [global-allowed-response-headers](https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/configmap.md#global-allowed-response-headers).
 
 ### Default Backend
 
@@ -470,6 +492,9 @@ Additionally it is possible to set:
 > Note: does not work with HTTP/2 listener because of a limitation in Lua [subrequests](https://github.com/openresty/lua-nginx-module#spdy-mode-not-fully-supported).
 > [UseHTTP2](./configmap.md#use-http2) configuration should be disabled!
 
+* `nginx.ingress.kubernetes.io/auth-keepalive-share-vars`:
+  Whether to share Nginx variables among the current request and the auth request. Example use case is to track requests: when set to "true" X-Request-ID HTTP header will be the same for the backend and the auth request.
+  Defaults to "false".
 * `nginx.ingress.kubernetes.io/auth-keepalive-requests`:
   `<Requests>` to specify the maximum number of requests that can be served through one keepalive connection.
   Defaults to `1000` and only applied if `auth-keepalive` is set to higher than `0`.
@@ -601,7 +626,7 @@ the User guide.
 
 ### Service Upstream
 
-By default the NGINX ingress controller uses a list of all endpoints (Pod IP/port) in the NGINX upstream configuration.
+By default the Ingress-Nginx Controller uses a list of all endpoints (Pod IP/port) in the NGINX upstream configuration.
 
 The `nginx.ingress.kubernetes.io/service-upstream` annotation disables that behavior and instead uses a single upstream in NGINX, the service's Cluster IP and port.
 
@@ -630,7 +655,10 @@ To preserve the trailing slash in the URI with `ssl-redirect`, set `nginx.ingres
 
 ### Redirect from/to www
 
-In some scenarios is required to redirect from `www.domain.com` to `domain.com` or vice versa.
+In some scenarios, it is required to redirect from `www.domain.com` to `domain.com` or vice versa, which way the redirect is performed depends on the configured `host` value in the Ingress object.
+
+For example, if `.spec.rules.host` is configured with a value like `www.example.com`, then this annotation will redirect from `example.com` to `www.example.com`. If `.spec.rules.host` is configured with a value like `example.com`, so without a `www`, then this annotation will redirect from `www.example.com` to `example.com` instead.
+
 To enable this feature use the annotation `nginx.ingress.kubernetes.io/from-to-www-redirect: "true"`
 
 !!! attention
@@ -672,6 +700,12 @@ In some scenarios is required to have different values. To allow this we provide
 - `nginx.ingress.kubernetes.io/proxy-next-upstream-timeout`
 - `nginx.ingress.kubernetes.io/proxy-next-upstream-tries`
 - `nginx.ingress.kubernetes.io/proxy-request-buffering`
+
+If you indicate [Backend Protocol](#backend-protocol) as `GRPC` or `GRPCS`, the following grpc values will be set and inherited from proxy timeouts:
+
+- [`grpc_connect_timeout=5s`](https://nginx.org/en/docs/http/ngx_http_grpc_module.html#grpc_connect_timeout), from `nginx.ingress.kubernetes.io/proxy-connect-timeout`
+- [`grpc_send_timeout=60s`](https://nginx.org/en/docs/http/ngx_http_grpc_module.html#grpc_send_timeout), from `nginx.ingress.kubernetes.io/proxy-send-timeout`
+- [`grpc_read_timeout=60s`](https://nginx.org/en/docs/http/ngx_http_grpc_module.html#grpc_read_timeout), from `nginx.ingress.kubernetes.io/proxy-read-timeout`
 
 Note: All timeout values are unitless and in seconds e.g. `nginx.ingress.kubernetes.io/proxy-read-timeout: "120"` sets a valid 120 seconds proxy read timeout.
 
@@ -803,22 +837,22 @@ Note that rewrite logs are sent to the error_log file at the notice level. To en
 nginx.ingress.kubernetes.io/enable-rewrite-log: "true"
 ```
 
-### Enable Opentracing
+### Enable Opentelemetry
 
-Opentracing can be enabled or disabled globally through the ConfigMap but this will sometimes need to be overridden
-to enable it or disable it for a specific ingress (e.g. to turn off tracing of external health check endpoints)
+Opentelemetry can be enabled or disabled globally through the ConfigMap but this will sometimes need to be overridden
+to enable it or disable it for a specific ingress (e.g. to turn off telemetry of external health check endpoints)
 
 ```yaml
-nginx.ingress.kubernetes.io/enable-opentracing: "true"
+nginx.ingress.kubernetes.io/enable-opentelemetry: "true"
 ```
 
-### Opentracing Trust Incoming Span
+### Opentelemetry Trust Incoming Span
 
 The option to trust incoming trace spans can be enabled or disabled globally through the ConfigMap but this will
 sometimes need to be overridden to enable it or disable it for a specific ingress (e.g. only enable on a private endpoint)
 
 ```yaml
-nginx.ingress.kubernetes.io/opentracing-trust-incoming-span: "true"
+nginx.ingress.kubernetes.io/opentelemetry-trust-incoming-spans: "true"
 ```
 
 ### X-Forwarded-Prefix Header
@@ -876,33 +910,10 @@ nginx.ingress.kubernetes.io/modsecurity-snippet: |
 Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
 ```
 
-### InfluxDB
-
-Using `influxdb-*` annotations we can monitor requests passing through a Location by sending them to an InfluxDB backend exposing the UDP socket
-using the [nginx-influxdb-module](https://github.com/influxdata/nginx-influxdb-module/).
-
-```yaml
-nginx.ingress.kubernetes.io/enable-influxdb: "true"
-nginx.ingress.kubernetes.io/influxdb-measurement: "nginx-reqs"
-nginx.ingress.kubernetes.io/influxdb-port: "8089"
-nginx.ingress.kubernetes.io/influxdb-host: "127.0.0.1"
-nginx.ingress.kubernetes.io/influxdb-server-name: "nginx-ingress"
-```
-
-For the `influxdb-host` parameter you have two options:
-
-- Use an InfluxDB server configured with the  [UDP protocol](https://docs.influxdata.com/influxdb/v1.5/supported_protocols/udp/) enabled.
-- Deploy Telegraf as a sidecar proxy to the Ingress controller configured to listen UDP with the [socket listener input](https://github.com/influxdata/telegraf/tree/release-1.6/plugins/inputs/socket_listener) and to write using
-anyone of the [outputs plugins](https://github.com/influxdata/telegraf/tree/release-1.7/plugins/outputs) like InfluxDB, Apache Kafka,
-Prometheus, etc.. (recommended)
-
-It's important to remember that there's no DNS resolver at this stage so you will have to configure
-an ip address to `nginx.ingress.kubernetes.io/influxdb-host`. If you deploy Influx or Telegraf as sidecar (another container in the same pod) this becomes straightforward since you can directly use `127.0.0.1`.
-
 ### Backend Protocol
 
 Using `backend-protocol` annotations is possible to indicate how NGINX should communicate with the backend service. (Replaces `secure-backends` in older versions)
-Valid Values: HTTP, HTTPS, GRPC, GRPCS, AJP and FCGI
+Valid Values: HTTP, HTTPS, AUTO_HTTP, GRPC, GRPCS and FCGI
 
 By default NGINX uses `HTTP`.
 
@@ -950,7 +961,7 @@ Enables a request to be mirrored to a mirror backend. Responses by mirror backen
 The mirror backend can be set by applying:
 
 ```yaml
-nginx.ingress.kubernetes.io/mirror-target: https://test.env.com/$request_uri
+nginx.ingress.kubernetes.io/mirror-target: https://test.env.com$request_uri
 ```
 
 By default the request-body is sent to the mirror backend, but can be turned off by applying:
@@ -962,7 +973,7 @@ nginx.ingress.kubernetes.io/mirror-request-body: "off"
 Also by default header Host for mirrored requests will be set the same as a host part of uri in the "mirror-target" annotation. You can override it by "mirror-host" annotation:
 
 ```yaml
-nginx.ingress.kubernetes.io/mirror-target: https://1.2.3.4/$request_uri
+nginx.ingress.kubernetes.io/mirror-target: https://1.2.3.4$request_uri
 nginx.ingress.kubernetes.io/mirror-host: "test.env.com"
 ```
 

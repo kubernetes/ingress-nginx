@@ -4,13 +4,18 @@ kind: ServiceMonitor
 metadata:
   name: {{ include "ingress-nginx.controller.fullname" . }}
 {{- if .Values.controller.metrics.serviceMonitor.namespace }}
-  namespace: {{ .Values.controller.metrics.serviceMonitor.namespace | quote }}
+  namespace: {{ .Values.controller.metrics.serviceMonitor.namespace }}
+{{- else }}
+  namespace: {{ include "ingress-nginx.namespace" . }}
 {{- end }}
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: controller
   {{- if .Values.controller.metrics.serviceMonitor.additionalLabels }}
     {{- toYaml .Values.controller.metrics.serviceMonitor.additionalLabels | nindent 4 }}
+  {{- end }}
+  {{- if .Values.controller.metrics.serviceMonitor.annotations }}
+  annotations: {{ toYaml .Values.controller.metrics.serviceMonitor.annotations | nindent 4 }}
   {{- end }}
 spec:
   endpoints:
@@ -33,7 +38,7 @@ spec:
 {{- else }}
   namespaceSelector:
     matchNames:
-      - {{ .Release.Namespace }}
+      - {{ include "ingress-nginx.namespace" . }}
 {{- end }}
 {{- if .Values.controller.metrics.serviceMonitor.targetLabels }}
   targetLabels:

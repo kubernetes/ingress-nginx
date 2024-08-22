@@ -18,6 +18,7 @@ package settings
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/onsi/ginkgo/v2"
@@ -29,11 +30,27 @@ import (
 var _ = framework.DescribeSetting("gzip", func() {
 	f := framework.NewDefaultFramework("gzip")
 
+	host := "gzip"
+
+	ginkgo.BeforeEach(func() {
+		f.NewHttpbunDeployment()
+		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.HTTPBunService, 80, nil))
+	})
+
 	ginkgo.It("should be disabled by default", func() {
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
 				return !strings.Contains(cfg, "gzip on;")
-			})
+			},
+		)
+
+		f.HTTPTestClient().
+			GET("/xml").
+			WithHeader("Host", host).
+			WithHeader("Accept-Encoding", "gzip").
+			Expect().
+			Status(http.StatusOK).
+			ContentEncoding()
 	})
 
 	ginkgo.It("should be enabled with default settings", func() {
@@ -50,7 +67,16 @@ var _ = framework.DescribeSetting("gzip", func() {
 					strings.Contains(cfg, fmt.Sprintf("gzip_types %s;", defaultCfg.GzipTypes)) &&
 					strings.Contains(cfg, "gzip_proxied any;") &&
 					strings.Contains(cfg, "gzip_vary on;")
-			})
+			},
+		)
+
+		f.HTTPTestClient().
+			GET("/xml").
+			WithHeader("Host", host).
+			WithHeader("Accept-Encoding", "gzip").
+			Expect().
+			Status(http.StatusOK).
+			ContentEncoding("gzip")
 	})
 
 	ginkgo.It("should set gzip_comp_level to 4", func() {
@@ -61,7 +87,16 @@ var _ = framework.DescribeSetting("gzip", func() {
 			func(cfg string) bool {
 				return strings.Contains(cfg, "gzip on;") &&
 					strings.Contains(cfg, "gzip_comp_level 4;")
-			})
+			},
+		)
+
+		f.HTTPTestClient().
+			GET("/xml").
+			WithHeader("Host", host).
+			WithHeader("Accept-Encoding", "gzip").
+			Expect().
+			Status(http.StatusOK).
+			ContentEncoding("gzip")
 	})
 
 	ginkgo.It("should set gzip_disable to msie6", func() {
@@ -72,28 +107,87 @@ var _ = framework.DescribeSetting("gzip", func() {
 			func(cfg string) bool {
 				return strings.Contains(cfg, "gzip on;") &&
 					strings.Contains(cfg, `gzip_disable "msie6";`)
-			})
+			},
+		)
+
+		f.HTTPTestClient().
+			GET("/xml").
+			WithHeader("Host", host).
+			WithHeader("Accept-Encoding", "gzip").
+			WithHeader("User-Agent", "Mozilla/4.8 [en] (Windows NT 5.1; U)").
+			Expect().
+			Status(http.StatusOK).
+			ContentEncoding("gzip")
+
+		f.HTTPTestClient().
+			GET("/xml").
+			WithHeader("Host", host).
+			WithHeader("Accept-Encoding", "gzip").
+			WithHeader("User-Agent", "Mozilla/45.0 (compatible; MSIE 6.0; Windows NT 5.1)").
+			Expect().
+			Status(http.StatusOK).
+			ContentEncoding()
 	})
 
 	ginkgo.It("should set gzip_min_length to 100", func() {
 		f.UpdateNginxConfigMapData("use-gzip", "true")
 		f.UpdateNginxConfigMapData("gzip-min-length", "100")
+		f.UpdateNginxConfigMapData("gzip-types", "application/octet-stream")
 
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
 				return strings.Contains(cfg, "gzip on;") &&
-					strings.Contains(cfg, "gzip_min_length 100;")
-			})
+					strings.Contains(cfg, "gzip_min_length 100;") &&
+					strings.Contains(cfg, "gzip_types application/octet-stream;")
+			},
+		)
+
+		f.HTTPTestClient().
+			GET("/bytes/99").
+			WithHeader("Host", host).
+			WithHeader("Accept-Encoding", "gzip").
+			Expect().
+			Status(http.StatusOK).
+			ContentType("application/octet-stream").
+			ContentEncoding()
+
+		f.HTTPTestClient().
+			GET("/bytes/100").
+			WithHeader("Host", host).
+			WithHeader("Accept-Encoding", "gzip").
+			Expect().
+			Status(http.StatusOK).
+			ContentType("application/octet-stream").
+			ContentEncoding("gzip")
 	})
 
-	ginkgo.It("should set gzip_types to application/javascript", func() {
+	ginkgo.It("should set gzip_types to text/html", func() {
 		f.UpdateNginxConfigMapData("use-gzip", "true")
-		f.UpdateNginxConfigMapData("gzip-types", "application/javascript")
+		f.UpdateNginxConfigMapData("gzip-types", "text/html")
 
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
 				return strings.Contains(cfg, "gzip on;") &&
-					strings.Contains(cfg, "gzip_types application/javascript;")
-			})
+					strings.Contains(cfg, "gzip_types text/html;")
+			},
+		)
+
+		f.HTTPTestClient().
+			GET("/xml").
+			WithHeader("Host", host).
+			WithHeader("Accept-Encoding", "gzip").
+			Expect().
+			Status(http.StatusOK).
+			ContentType("application/xml").
+			ContentEncoding()
+
+		f.HTTPTestClient().
+			GET("/html").
+			WithHeader("Host", host).
+			WithHeader("Accept-Encoding", "gzip").
+			Expect().
+			Status(http.StatusOK).
+			ContentType("text/html").
+			ContentEncoding("gzip")
 	})
 })

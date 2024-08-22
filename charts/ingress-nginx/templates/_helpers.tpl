@@ -30,25 +30,41 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 {{- end -}}
 
+{{/*
+Expand the namespace of the release.
+Allows overriding it for multi-namespace deployments in combined charts.
+*/}}
+{{- define "ingress-nginx.namespace" -}}
+{{- default .Release.Namespace .Values.namespaceOverride | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
 
 {{/*
-Container SecurityContext.
+Controller container security context.
 */}}
-{{- define "controller.containerSecurityContext" -}}
+{{- define "ingress-nginx.controller.containerSecurityContext" -}}
 {{- if .Values.controller.containerSecurityContext -}}
 {{- toYaml .Values.controller.containerSecurityContext -}}
 {{- else -}}
+runAsNonRoot: {{ .Values.controller.image.runAsNonRoot }}
+runAsUser: {{ .Values.controller.image.runAsUser }}
+runAsGroup: {{ .Values.controller.image.runAsGroup }}
+allowPrivilegeEscalation: {{ or .Values.controller.image.allowPrivilegeEscalation .Values.controller.image.chroot }}
+{{- if .Values.controller.image.seccompProfile }}
+seccompProfile: {{ toYaml .Values.controller.image.seccompProfile | nindent 2 }}
+{{- end }}
 capabilities:
   drop:
   - ALL
   add:
   - NET_BIND_SERVICE
   {{- if .Values.controller.image.chroot }}
+  {{- if .Values.controller.image.seccompProfile }}
+  - SYS_ADMIN
+  {{- end }}
   - SYS_CHROOT
   {{- end }}
-runAsUser: {{ .Values.controller.image.runAsUser }}
-allowPrivilegeEscalation: {{ .Values.controller.image.allowPrivilegeEscalation }}
-{{- end }}
+readOnlyRootFilesystem: {{ .Values.controller.image.readOnlyRootFilesystem }}
+{{- end -}}
 {{- end -}}
 
 {{/*
@@ -102,20 +118,11 @@ By convention this will simply use the <namespace>/<controller-name> to match th
 service generated.
 
 Users can provide an override for an explicit service they want bound via `.Values.controller.publishService.pathOverride`
-
 */}}
 {{- define "ingress-nginx.controller.publishServicePath" -}}
 {{- $defServiceName := printf "%s/%s" "$(POD_NAMESPACE)" (include "ingress-nginx.controller.fullname" .) -}}
 {{- $servicePath := default $defServiceName .Values.controller.publishService.pathOverride }}
 {{- print $servicePath | trimSuffix "-" -}}
-{{- end -}}
-
-{{/*
-Create a default fully qualified default backend name.
-We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
-*/}}
-{{- define "ingress-nginx.defaultBackend.fullname" -}}
-{{- printf "%s-%s" (include "ingress-nginx.fullname" .) .Values.defaultBackend.name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
@@ -154,6 +161,49 @@ Create the name of the controller service account to use
 {{- end -}}
 
 {{/*
+Create a default fully qualified admission webhook name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+*/}}
+{{- define "ingress-nginx.admissionWebhooks.fullname" -}}
+{{- printf "%s-%s" (include "ingress-nginx.fullname" .) .Values.controller.admissionWebhooks.name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
+Create the name of the admission webhook patch job service account to use
+*/}}
+{{- define "ingress-nginx.admissionWebhooks.patch.serviceAccountName" -}}
+{{- if .Values.controller.admissionWebhooks.patch.serviceAccount.create -}}
+    {{ default (include "ingress-nginx.admissionWebhooks.fullname" .) .Values.controller.admissionWebhooks.patch.serviceAccount.name }}
+{{- else -}}
+    {{ default "default" .Values.controller.admissionWebhooks.patch.serviceAccount.name }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Create a default fully qualified admission webhook secret creation job name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+*/}}
+{{- define "ingress-nginx.admissionWebhooks.createSecretJob.fullname" -}}
+{{- printf "%s-%s" (include "ingress-nginx.admissionWebhooks.fullname" .) .Values.controller.admissionWebhooks.createSecretJob.name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
+Create a default fully qualified admission webhook patch job name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+*/}}
+{{- define "ingress-nginx.admissionWebhooks.patchWebhookJob.fullname" -}}
+{{- printf "%s-%s" (include "ingress-nginx.admissionWebhooks.fullname" .) .Values.controller.admissionWebhooks.patchWebhookJob.name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
+Create a default fully qualified default backend name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+*/}}
+{{- define "ingress-nginx.defaultBackend.fullname" -}}
+{{- printf "%s-%s" (include "ingress-nginx.fullname" .) .Values.defaultBackend.name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
 Create the name of the backend service account to use - only used when podsecuritypolicy is also enabled
 */}}
 {{- define "ingress-nginx.defaultBackend.serviceAccountName" -}}
@@ -161,6 +211,27 @@ Create the name of the backend service account to use - only used when podsecuri
     {{ default (printf "%s-backend" (include "ingress-nginx.fullname" .)) .Values.defaultBackend.serviceAccount.name }}
 {{- else -}}
     {{ default "default-backend" .Values.defaultBackend.serviceAccount.name }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Default backend container security context.
+*/}}
+{{- define "ingress-nginx.defaultBackend.containerSecurityContext" -}}
+{{- if .Values.defaultBackend.containerSecurityContext -}}
+{{- toYaml .Values.defaultBackend.containerSecurityContext -}}
+{{- else -}}
+runAsNonRoot: {{ .Values.defaultBackend.image.runAsNonRoot }}
+runAsUser: {{ .Values.defaultBackend.image.runAsUser }}
+runAsGroup: {{ .Values.defaultBackend.image.runAsGroup }}
+allowPrivilegeEscalation: {{ .Values.defaultBackend.image.allowPrivilegeEscalation }}
+{{- if .Values.defaultBackend.image.seccompProfile }}
+seccompProfile: {{ toYaml .Values.defaultBackend.image.seccompProfile | nindent 2 }}
+{{- end }}
+capabilities:
+  drop:
+  - ALL
+readOnlyRootFilesystem: {{ .Values.defaultBackend.image.readOnlyRootFilesystem }}
 {{- end -}}
 {{- end -}}
 
@@ -176,37 +247,28 @@ Return the appropriate apiGroup for PodSecurityPolicy.
 {{- end -}}
 
 {{/*
-Check the ingress controller version tag is at most three versions behind the last release
-*/}}
-{{- define "isControllerTagValid" -}}
-{{- if not (semverCompare ">=0.27.0-0" .Values.controller.image.tag) -}}
-{{- fail "Controller container image tag should be 0.27.0 or higher" -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-IngressClass parameters.
-*/}}
-{{- define "ingressClass.parameters" -}}
-  {{- if .Values.controller.ingressClassResource.parameters -}}
-          parameters:
-{{ toYaml .Values.controller.ingressClassResource.parameters | indent 4}}
-  {{ end }}
-{{- end -}}
-
-{{/*
 Extra modules.
 */}}
 {{- define "extraModules" -}}
-
 - name: {{ .name }}
-  image: {{ .image }}
-  command: ['sh', '-c', '/usr/local/bin/init_module.sh']
-  {{- if (.containerSecurityContext) }}
-  securityContext: {{ .containerSecurityContext | toYaml | nindent 4 }}
+  {{- with .image }}
+  image: {{ if .repository }}{{ .repository }}{{ else }}{{ .registry }}/{{ .image }}{{ end }}:{{ .tag }}{{ if .digest }}@{{ .digest }}{{ end }}
+  command:
+  {{- if .distroless }}
+    - /init_module
+  {{- else }}
+    - sh
+    - -c
+    - /usr/local/bin/init_module.sh
+  {{- end }}
+  {{- end }}
+  {{- if .containerSecurityContext }}
+  securityContext: {{ toYaml .containerSecurityContext | nindent 4 }}
+  {{- end }}
+  {{- if .resources }}
+  resources: {{ toYaml .resources | nindent 4 }}
   {{- end }}
   volumeMounts:
-    - name: {{ toYaml "modules"}}
-      mountPath: {{ toYaml "/modules_mount"}}
-
+    - name: modules
+      mountPath: /modules_mount
 {{- end -}}

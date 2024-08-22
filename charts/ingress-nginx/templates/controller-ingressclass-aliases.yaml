@@ -1,0 +1,23 @@
+{{- if .Values.controller.ingressClassResource.enabled -}}
+{{- range .Values.controller.ingressClassResource.aliases }}
+---
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  labels:
+    {{- include "ingress-nginx.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: controller
+    {{- with $.Values.controller.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  name: {{ . }}
+  {{- if $.Values.controller.ingressClassResource.annotations }}
+  annotations: {{ toYaml $.Values.controller.ingressClassResource.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  controller: {{ $.Values.controller.ingressClassResource.controllerValue }}
+  {{- with $.Values.controller.ingressClassResource.parameters }}
+  parameters: {{ toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}

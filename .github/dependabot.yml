@@ -9,6 +9,10 @@ updates:
       - "area/dependency"
       - "release-note-none"
       - "ok-to-test"
+    groups:
+      all:
+        update-types:
+          - "patch"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -17,3 +21,21 @@ updates:
       - "area/dependency"
       - "release-note-none"
       - "ok-to-test"
+    groups:
+      all:
+        update-types:
+          - "minor"
+          - "patch"
+  - package-ecosystem: "docker"
+    directory: "/images"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "area/dependency"
+      - "release-note-none"
+      - "ok-to-test"
+    groups:
+      actions:
+        update-types:
+          - "minor"
+          - "patch"

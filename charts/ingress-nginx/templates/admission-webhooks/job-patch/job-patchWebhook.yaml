@@ -2,8 +2,8 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "ingress-nginx.fullname" . }}-admission-patch
-  namespace: {{ .Release.Namespace }}
+  name: {{ include "ingress-nginx.admissionWebhooks.patchWebhookJob.fullname" . }}
+  namespace: {{ include "ingress-nginx.namespace" . }}
   annotations:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -23,7 +23,7 @@ spec:
 {{- end }}
   template:
     metadata:
-      name: {{ include "ingress-nginx.fullname" . }}-admission-patch
+      name: {{ include "ingress-nginx.admissionWebhooks.patchWebhookJob.fullname" . }}
     {{- if .Values.controller.admissionWebhooks.patch.podAnnotations }}
       annotations: {{ toYaml .Values.controller.admissionWebhooks.patch.podAnnotations | nindent 8 }}
     {{- end }}
@@ -43,15 +43,15 @@ spec:
       containers:
         - name: patch
           {{- with .Values.controller.admissionWebhooks.patch.image }}
-          image: "{{- if .repository -}}{{ .repository }}{{ else }}{{ .registry }}/{{ .image }}{{- end -}}:{{ .tag }}{{- if (.digest) -}} @{{.digest}} {{- end -}}"
+          image: {{ if .repository }}{{ .repository }}{{ else }}{{ .registry }}/{{ .image }}{{ end }}:{{ .tag }}{{ if .digest }}@{{ .digest }}{{ end }}
           {{- end }}
           imagePullPolicy: {{ .Values.controller.admissionWebhooks.patch.image.pullPolicy }}
           args:
             - patch
-            - --webhook-name={{ include "ingress-nginx.fullname" . }}-admission
+            - --webhook-name={{ include "ingress-nginx.admissionWebhooks.fullname" . }}
             - --namespace=$(POD_NAMESPACE)
             - --patch-mutating=false
-            - --secret-name={{ include "ingress-nginx.fullname" . }}-admission
+            - --secret-name={{ include "ingress-nginx.admissionWebhooks.fullname" . }}
             - --patch-failure-policy={{ .Values.controller.admissionWebhooks.failurePolicy }}
           env:
             - name: POD_NAMESPACE
@@ -68,15 +68,14 @@ spec:
           resources: {{ toYaml .Values.controller.admissionWebhooks.patchWebhookJob.resources | nindent 12 }}
           {{- end }}
       restartPolicy: OnFailure
-      serviceAccountName: {{ include "ingress-nginx.fullname" . }}-admission
+      serviceAccountName: {{ include "ingress-nginx.admissionWebhooks.patch.serviceAccountName" . }}
     {{- if .Values.controller.admissionWebhooks.patch.nodeSelector }}
       nodeSelector: {{ toYaml .Values.controller.admissionWebhooks.patch.nodeSelector | nindent 8 }}
     {{- end }}
     {{- if .Values.controller.admissionWebhooks.patch.tolerations }}
       tolerations: {{ toYaml .Values.controller.admissionWebhooks.patch.tolerations | nindent 8 }}
     {{- end }}
-      {{- if .Values.controller.admissionWebhooks.patch.securityContext }}
-      securityContext:
-        {{- toYaml .Values.controller.admissionWebhooks.patch.securityContext | nindent 8 }}
-      {{- end }}
+    {{- if .Values.controller.admissionWebhooks.patch.securityContext }}
+      securityContext: {{ toYaml .Values.controller.admissionWebhooks.patch.securityContext | nindent 8 }}
+    {{- end }}
 {{- end }}

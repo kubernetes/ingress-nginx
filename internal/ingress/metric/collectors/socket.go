@@ -21,6 +21,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"strings"
 	"syscall"
 
 	jsoniter "github.com/json-iterator/go"
@@ -43,14 +44,11 @@ type socketData struct {
 	Latency      float64 `json:"upstreamLatency"`
 	HeaderTime   float64 `json:"upstreamHeaderTime"`
 	ResponseTime float64 `json:"upstreamResponseTime"`
-	//ResponseLength float64 `json:"upstreamResponseLength"`
-	//Status         string  `json:"upstreamStatus"`
-
-	Namespace string `json:"namespace"`
-	Ingress   string `json:"ingress"`
-	Service   string `json:"service"`
-	Canary    string `json:"canary"`
-	Path      string `json:"path"`
+	Namespace    string  `json:"namespace"`
+	Ingress      string  `json:"ingress"`
+	Service      string  `json:"service"`
+	Canary       string  `json:"canary"`
+	Path         string  `json:"path"`
 }
 
 // HistogramBuckets allow customizing prometheus histogram buckets values
@@ -60,15 +58,16 @@ type HistogramBuckets struct {
 	SizeBuckets   []float64
 }
 
+type metricMapping map[string]prometheus.Collector
+
 // SocketCollector stores prometheus metrics and ingress meta-data
 type SocketCollector struct {
 	prometheus.Collector
 
-	upstreamLatency *prometheus.SummaryVec // TODO: DEPRECATED, remove
-	connectTime     *prometheus.HistogramVec
-	headerTime      *prometheus.HistogramVec
-	requestTime     *prometheus.HistogramVec
-	responseTime    *prometheus.HistogramVec
+	connectTime  *prometheus.HistogramVec
+	headerTime   *prometheus.HistogramVec
+	requestTime  *prometheus.HistogramVec
+	responseTime *prometheus.HistogramVec
 
 	requestLength  *prometheus.HistogramVec
 	responseLength *prometheus.HistogramVec
@@ -78,37 +77,32 @@ type SocketCollector struct {
 
 	listener net.Listener
 
-	metricMapping map[string]interface{}
+	metricMapping metricMapping
 
-	hosts sets.String
+	hosts sets.Set[string]
 
 	metricsPerHost      bool
 	reportStatusClasses bool
 }
 
-var (
-	requestTags = []string{
-		"status",
+var requestTags = []string{
+	"status",
 
-		"method",
-		"path",
+	"method",
+	"path",
 
-		"namespace",
-		"ingress",
-		"service",
-		"canary",
-	}
-)
-
-// DefObjectives was removed in https://github.com/prometheus/client_golang/pull/262
-// updating the library to latest version changed the output of the metrics
-var defObjectives = map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001}
+	"namespace",
+	"ingress",
+	"service",
+	"canary",
+}
 
 // NewSocketCollector creates a new SocketCollector instance using
 // the ingress watch namespace and class used by the controller
-func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStatusClasses bool, buckets HistogramBuckets) (*SocketCollector, error) {
+func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStatusClasses bool, buckets HistogramBuckets, excludeMetrics []string) (*SocketCollector, error) {
 	socket := "/tmp/nginx/prometheus-nginx.socket"
 	// unix sockets must be unlink()ed before being used
+	//nolint:errcheck // Ignore unlink error
 	_ = syscall.Unlink(socket)
 
 	listener, err := net.Listen("unix", socket)
@@ -116,7 +110,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 		return nil, err
 	}
 
-	err = os.Chmod(socket, 0777) // #nosec
+	err = os.Chmod(socket, 0o777) // #nosec
 	if err != nil {
 		return nil, err
 	}
@@ -132,14 +126,24 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 		requestTags = append(requestTags, "host")
 	}
 
+	em := make(map[string]struct{}, len(excludeMetrics))
+	for _, m := range excludeMetrics {
+		// remove potential nginx_ingress_controller prefix from the metric name
+		// TBD: how to handle fully qualified histogram metrics e.g. _buckets and _sum. Should we just remove the suffix and remove the histogram metric or ignore it?
+		em[strings.TrimPrefix(m, "nginx_ingress_controller_")] = struct{}{}
+	}
+
+	// create metric mapping with only the metrics that are not excluded
+	mm := make(metricMapping)
+
 	sc := &SocketCollector{
 		listener: listener,
 
 		metricsPerHost:      metricsPerHost,
 		reportStatusClasses: reportStatusClasses,
 
-		connectTime: prometheus.NewHistogramVec(
-			prometheus.HistogramOpts{
+		connectTime: histogramMetric(
+			&prometheus.HistogramOpts{
 				Name:        "connect_duration_seconds",
 				Help:        "The time spent on establishing a connection with the upstream server",
 				Namespace:   PrometheusNamespace,
@@ -147,9 +151,12 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 				Buckets:     buckets.TimeBuckets,
 			},
 			requestTags,
+			em,
+			mm,
 		),
-		headerTime: prometheus.NewHistogramVec(
-			prometheus.HistogramOpts{
+
+		headerTime: histogramMetric(
+			&prometheus.HistogramOpts{
 				Name:        "header_duration_seconds",
 				Help:        "The time spent on receiving first header from the upstream server",
 				Namespace:   PrometheusNamespace,
@@ -157,9 +164,11 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 				Buckets:     buckets.TimeBuckets,
 			},
 			requestTags,
+			em,
+			mm,
 		),
-		responseTime: prometheus.NewHistogramVec(
-			prometheus.HistogramOpts{
+		responseTime: histogramMetric(
+			&prometheus.HistogramOpts{
 				Name:        "response_duration_seconds",
 				Help:        "The time spent on receiving the response from the upstream server",
 				Namespace:   PrometheusNamespace,
@@ -167,9 +176,12 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 				Buckets:     buckets.TimeBuckets,
 			},
 			requestTags,
+			em,
+			mm,
 		),
-		requestTime: prometheus.NewHistogramVec(
-			prometheus.HistogramOpts{
+
+		requestTime: histogramMetric(
+			&prometheus.HistogramOpts{
 				Name:        "request_duration_seconds",
 				Help:        "The request processing time in milliseconds",
 				Namespace:   PrometheusNamespace,
@@ -177,10 +189,12 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 				Buckets:     buckets.TimeBuckets,
 			},
 			requestTags,
+			em,
+			mm,
 		),
 
-		responseLength: prometheus.NewHistogramVec(
-			prometheus.HistogramOpts{
+		responseLength: histogramMetric(
+			&prometheus.HistogramOpts{
 				Name:        "response_size",
 				Help:        "The response length (including request line, header, and request body)",
 				Namespace:   PrometheusNamespace,
@@ -188,30 +202,37 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 				Buckets:     buckets.LengthBuckets,
 			},
 			requestTags,
+			em,
+			mm,
 		),
-		requestLength: prometheus.NewHistogramVec(
-			prometheus.HistogramOpts{
+
+		requestLength: histogramMetric(
+			&prometheus.HistogramOpts{
 				Name:        "request_size",
 				Help:        "The request length (including request line, header, and request body)",
 				Namespace:   PrometheusNamespace,
-				Buckets:     buckets.LengthBuckets,
 				ConstLabels: constLabels,
+				Buckets:     buckets.LengthBuckets,
 			},
 			requestTags,
+			em,
+			mm,
 		),
 
-		requests: prometheus.NewCounterVec(
-			prometheus.CounterOpts{
+		requests: counterMetric(
+			&prometheus.CounterOpts{
 				Name:        "requests",
 				Help:        "The total number of client requests",
 				Namespace:   PrometheusNamespace,
 				ConstLabels: constLabels,
 			},
 			requestTags,
+			em,
+			mm,
 		),
 
-		bytesSent: prometheus.NewHistogramVec(
-			prometheus.HistogramOpts{
+		bytesSent: histogramMetric(
+			&prometheus.HistogramOpts{
 				Name:        "bytes_sent",
 				Help:        "DEPRECATED The number of bytes sent to a client",
 				Namespace:   PrometheusNamespace,
@@ -219,37 +240,45 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, reportStat
 				ConstLabels: constLabels,
 			},
 			requestTags,
-		),
-
-		upstreamLatency: prometheus.NewSummaryVec(
-			prometheus.SummaryOpts{
-				Name:        "ingress_upstream_latency_seconds",
-				Help:        "DEPRECATED Upstream service latency per Ingress",
-				Namespace:   PrometheusNamespace,
-				ConstLabels: constLabels,
-				Objectives:  defObjectives,
-			},
-			[]string{"ingress", "namespace", "service", "canary"},
+			em,
+			mm,
 		),
 	}
 
-	sc.metricMapping = map[string]interface{}{
-		prometheus.BuildFQName(PrometheusNamespace, "", "requests"): sc.requests,
-
-		prometheus.BuildFQName(PrometheusNamespace, "", "connect_duration_seconds"):  sc.connectTime,
-		prometheus.BuildFQName(PrometheusNamespace, "", "header_duration_seconds"):   sc.headerTime,
-		prometheus.BuildFQName(PrometheusNamespace, "", "response_duration_seconds"): sc.responseTime,
-		prometheus.BuildFQName(PrometheusNamespace, "", "request_duration_seconds"):  sc.requestTime,
-
-		prometheus.BuildFQName(PrometheusNamespace, "", "request_size"):  sc.requestLength,
-		prometheus.BuildFQName(PrometheusNamespace, "", "response_size"): sc.responseLength,
-
-		prometheus.BuildFQName(PrometheusNamespace, "", "bytes_sent"): sc.bytesSent,
-
-		prometheus.BuildFQName(PrometheusNamespace, "", "ingress_upstream_latency_seconds"): sc.upstreamLatency,
-	}
-
+	sc.metricMapping = mm
 	return sc, nil
+}
+
+func containsMetric(excludeMetrics map[string]struct{}, name string) bool {
+	if _, ok := excludeMetrics[name]; ok {
+		klog.V(3).InfoS("Skipping metric", "metric", name)
+		return true
+	}
+	return false
+}
+
+func counterMetric(opts *prometheus.CounterOpts, requestTags []string, excludeMetrics map[string]struct{}, metricMapping metricMapping) *prometheus.CounterVec {
+	if containsMetric(excludeMetrics, opts.Name) {
+		return nil
+	}
+	m := prometheus.NewCounterVec(
+		*opts,
+		requestTags,
+	)
+	metricMapping[prometheus.BuildFQName(PrometheusNamespace, "", opts.Name)] = m
+	return m
+}
+
+func histogramMetric(opts *prometheus.HistogramOpts, requestTags []string, excludeMetrics map[string]struct{}, metricMapping metricMapping) *prometheus.HistogramVec {
+	if containsMetric(excludeMetrics, opts.Name) {
+		return nil
+	}
+	m := prometheus.NewHistogramVec(
+		*opts,
+		requestTags,
+	)
+	metricMapping[prometheus.BuildFQName(PrometheusNamespace, "", opts.Name)] = m
+	return m
 }
 
 func (sc *SocketCollector) handleMessage(msg []byte) {
@@ -263,13 +292,14 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 		return
 	}
 
-	for _, stats := range statsBatch {
+	for i := range statsBatch {
+		stats := &statsBatch[i]
 		if sc.metricsPerHost && !sc.hosts.Has(stats.Host) {
 			klog.V(3).InfoS("Skipping metric for host not being served", "host", stats.Host)
 			continue
 		}
 
-		if sc.reportStatusClasses && len(stats.Status) > 0 {
+		if sc.reportStatusClasses && stats.Status != "" {
 			stats.Status = fmt.Sprintf("%cxx", stats.Status[0])
 		}
 
@@ -298,37 +328,27 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 			collectorLabels["host"] = stats.Host
 		}
 
-		latencyLabels := prometheus.Labels{
-			"namespace": stats.Namespace,
-			"ingress":   stats.Ingress,
-			"service":   stats.Service,
-			"canary":    stats.Canary,
-		}
-
-		requestsMetric, err := sc.requests.GetMetricWith(collectorLabels)
-		if err != nil {
-			klog.ErrorS(err, "Error fetching requests metric")
-		} else {
-			requestsMetric.Inc()
+		if sc.requests != nil {
+			requestsMetric, err := sc.requests.GetMetricWith(collectorLabels)
+			if err != nil {
+				klog.ErrorS(err, "Error fetching requests metric")
+			} else {
+				requestsMetric.Inc()
+			}
 		}
 
 		if stats.Latency != -1 {
-			connectTimeMetric, err := sc.connectTime.GetMetricWith(requestLabels)
-			if err != nil {
-				klog.ErrorS(err, "Error fetching connect time metric")
-			} else {
-				connectTimeMetric.Observe(stats.Latency)
-			}
-
-			latencyMetric, err := sc.upstreamLatency.GetMetricWith(latencyLabels)
-			if err != nil {
-				klog.ErrorS(err, "Error fetching latency metric")
-			} else {
-				latencyMetric.Observe(stats.Latency)
+			if sc.connectTime != nil {
+				connectTimeMetric, err := sc.connectTime.GetMetricWith(requestLabels)
+				if err != nil {
+					klog.ErrorS(err, "Error fetching connect time metric")
+				} else {
+					connectTimeMetric.Observe(stats.Latency)
+				}
 			}
 		}
 
-		if stats.HeaderTime != -1 {
+		if stats.HeaderTime != -1 && sc.headerTime != nil {
 			headerTimeMetric, err := sc.headerTime.GetMetricWith(requestLabels)
 			if err != nil {
 				klog.ErrorS(err, "Error fetching header time metric")
@@ -337,7 +357,7 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 			}
 		}
 
-		if stats.RequestTime != -1 {
+		if stats.RequestTime != -1 && sc.requestTime != nil {
 			requestTimeMetric, err := sc.requestTime.GetMetricWith(requestLabels)
 			if err != nil {
 				klog.ErrorS(err, "Error fetching request duration metric")
@@ -346,7 +366,7 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 			}
 		}
 
-		if stats.RequestLength != -1 {
+		if stats.RequestLength != -1 && sc.requestLength != nil {
 			requestLengthMetric, err := sc.requestLength.GetMetricWith(requestLabels)
 			if err != nil {
 				klog.ErrorS(err, "Error fetching request length metric")
@@ -355,7 +375,7 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 			}
 		}
 
-		if stats.ResponseTime != -1 {
+		if stats.ResponseTime != -1 && sc.responseTime != nil {
 			responseTimeMetric, err := sc.responseTime.GetMetricWith(requestLabels)
 			if err != nil {
 				klog.ErrorS(err, "Error fetching upstream response time metric")
@@ -365,18 +385,22 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 		}
 
 		if stats.ResponseLength != -1 {
-			bytesSentMetric, err := sc.bytesSent.GetMetricWith(requestLabels)
-			if err != nil {
-				klog.ErrorS(err, "Error fetching bytes sent metric")
-			} else {
-				bytesSentMetric.Observe(stats.ResponseLength)
+			if sc.bytesSent != nil {
+				bytesSentMetric, err := sc.bytesSent.GetMetricWith(requestLabels)
+				if err != nil {
+					klog.ErrorS(err, "Error fetching bytes sent metric")
+				} else {
+					bytesSentMetric.Observe(stats.ResponseLength)
+				}
 			}
 
-			responseSizeMetric, err := sc.responseLength.GetMetricWith(requestLabels)
-			if err != nil {
-				klog.ErrorS(err, "Error fetching bytes sent metric")
-			} else {
-				responseSizeMetric.Observe(stats.ResponseLength)
+			if sc.responseLength != nil {
+				responseSizeMetric, err := sc.responseLength.GetMetricWith(requestLabels)
+				if err != nil {
+					klog.ErrorS(err, "Error fetching bytes sent metric")
+				} else {
+					responseSizeMetric.Observe(stats.ResponseLength)
+				}
 			}
 		}
 	}
@@ -470,42 +494,22 @@ func (sc *SocketCollector) RemoveMetrics(ingresses []string, registry prometheus
 }
 
 // Describe implements prometheus.Collector
-func (sc SocketCollector) Describe(ch chan<- *prometheus.Desc) {
-	sc.connectTime.Describe(ch)
-	sc.headerTime.Describe(ch)
-	sc.responseTime.Describe(ch)
-	sc.requestTime.Describe(ch)
-
-	sc.requestLength.Describe(ch)
-	sc.responseLength.Describe(ch)
-
-	sc.requests.Describe(ch)
-
-	sc.upstreamLatency.Describe(ch)
-
-	sc.bytesSent.Describe(ch)
+func (sc *SocketCollector) Describe(ch chan<- *prometheus.Desc) {
+	for _, metric := range sc.metricMapping {
+		metric.Describe(ch)
+	}
 }
 
 // Collect implements the prometheus.Collector interface.
-func (sc SocketCollector) Collect(ch chan<- prometheus.Metric) {
-	sc.connectTime.Collect(ch)
-	sc.headerTime.Collect(ch)
-	sc.responseTime.Collect(ch)
-	sc.requestTime.Collect(ch)
-
-	sc.requestLength.Collect(ch)
-	sc.responseLength.Collect(ch)
-
-	sc.requests.Collect(ch)
-
-	sc.upstreamLatency.Collect(ch)
-
-	sc.bytesSent.Collect(ch)
+func (sc *SocketCollector) Collect(ch chan<- prometheus.Metric) {
+	for _, metric := range sc.metricMapping {
+		metric.Collect(ch)
+	}
 }
 
 // SetHosts sets the hostnames that are being served by the ingress controller
 // This set of hostnames is used to filter the metrics to be exposed
-func (sc *SocketCollector) SetHosts(hosts sets.String) {
+func (sc *SocketCollector) SetHosts(hosts sets.Set[string]) {
 	sc.hosts = hosts
 }
 

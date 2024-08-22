@@ -18,27 +18,13 @@ package ingress
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 
-	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/net/ssl"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 	"k8s.io/klog/v2"
-)
-
-const (
-	alphaNumericChars = `A-Za-z0-9\-\.\_\~\/` // This is the default allowed set on paths
-)
-
-var (
-	// pathAlphaNumeric is a regex validation that allows only (0-9, a-z, A-Z, "-", ".", "_", "~", "/")
-	pathAlphaNumericRegex = regexp.MustCompile("^[" + alphaNumericChars + "]*$").MatchString
-
-	// default path type is Prefix to not break existing definitions
-	defaultPathType = networkingv1.PathTypePrefix
 )
 
 func GetRemovedHosts(rucfg, newcfg *ingress.Configuration) []string {
@@ -60,7 +46,7 @@ func GetRemovedHosts(rucfg, newcfg *ingress.Configuration) []string {
 	return oldSet.Difference(newSet).List()
 }
 
-// GetRemovedCertificateSerialNumber extracts the difference of certificates between two configurations
+// GetRemovedCertificateSerialNumbers extracts the difference of certificates between two configurations
 func GetRemovedCertificateSerialNumbers(rucfg, newcfg *ingress.Configuration) []string {
 	oldCertificates := sets.NewString()
 	newCertificates := sets.NewString()
@@ -128,7 +114,7 @@ func GetRemovedIngresses(rucfg, newcfg *ingress.Configuration) []string {
 
 // IsDynamicConfigurationEnough returns whether a Configuration can be
 // dynamically applied, without reloading the backend.
-func IsDynamicConfigurationEnough(newcfg *ingress.Configuration, oldcfg *ingress.Configuration) bool {
+func IsDynamicConfigurationEnough(newcfg, oldcfg *ingress.Configuration) bool {
 	copyOfRunningConfig := *oldcfg
 	copyOfPcfg := *newcfg
 
@@ -147,21 +133,21 @@ func IsDynamicConfigurationEnough(newcfg *ingress.Configuration, oldcfg *ingress
 // clearL4serviceEndpoints is a helper function to clear endpoints from the ingress configuration since they should be ignored when
 // checking if the new configuration changes can be applied dynamically.
 func clearL4serviceEndpoints(config *ingress.Configuration) {
-	var clearedTCPL4Services []ingress.L4Service
-	var clearedUDPL4Services []ingress.L4Service
-	for _, service := range config.TCPEndpoints {
+	clearedTCPL4Services := make([]ingress.L4Service, 0, len(config.TCPEndpoints))
+	clearedUDPL4Services := make([]ingress.L4Service, 0, len(config.UDPEndpoints))
+	for i := range config.TCPEndpoints {
 		copyofService := ingress.L4Service{
-			Port:      service.Port,
-			Backend:   service.Backend,
+			Port:      config.TCPEndpoints[i].Port,
+			Backend:   config.TCPEndpoints[i].Backend,
 			Endpoints: []ingress.Endpoint{},
 			Service:   nil,
 		}
 		clearedTCPL4Services = append(clearedTCPL4Services, copyofService)
 	}
-	for _, service := range config.UDPEndpoints {
+	for i := range config.UDPEndpoints {
 		copyofService := ingress.L4Service{
-			Port:      service.Port,
-			Backend:   service.Backend,
+			Port:      config.UDPEndpoints[i].Port,
+			Backend:   config.UDPEndpoints[i].Backend,
 			Endpoints: []ingress.Endpoint{},
 			Service:   nil,
 		}
@@ -174,7 +160,7 @@ func clearL4serviceEndpoints(config *ingress.Configuration) {
 // clearCertificates is a helper function to clear Certificates from the ingress configuration since they should be ignored when
 // checking if the new configuration changes can be applied dynamically if dynamic certificates is on
 func clearCertificates(config *ingress.Configuration) {
-	var clearedServers []*ingress.Server
+	clearedServers := make([]*ingress.Server, 0, len(config.Servers))
 	for _, server := range config.Servers {
 		copyOfServer := *server
 		copyOfServer.SSLCert = nil
@@ -183,16 +169,16 @@ func clearCertificates(config *ingress.Configuration) {
 	config.Servers = clearedServers
 }
 
-type redirect struct {
+type Redirect struct {
 	From    string
 	To      string
 	SSLCert *ingress.SSLCert
 }
 
 // BuildRedirects build the redirects of servers based on configurations and certificates
-func BuildRedirects(servers []*ingress.Server) []*redirect {
-	names := sets.String{}
-	redirectServers := make([]*redirect, 0)
+func BuildRedirects(servers []*ingress.Server) []*Redirect {
+	names := sets.Set[string]{}
+	redirectServers := make([]*Redirect, 0)
 
 	for _, srv := range servers {
 		if !srv.RedirectFromToWWW {
@@ -226,7 +212,7 @@ func BuildRedirects(servers []*ingress.Server) []*redirect {
 			continue
 		}
 
-		r := &redirect{
+		r := &Redirect{
 			From: from,
 			To:   to,
 		}
@@ -244,47 +230,4 @@ func BuildRedirects(servers []*ingress.Server) []*redirect {
 	}
 
 	return redirectServers
-}
-
-func ValidateIngressPath(copyIng *networkingv1.Ingress, disablePathTypeValidation bool, additionalChars string) error {
-
-	if copyIng == nil {
-		return nil
-	}
-
-	escapedAdditionalChars := regexp.QuoteMeta(additionalChars)
-	regexPath, err := regexp.Compile("^[" + alphaNumericChars + escapedAdditionalChars + "]*$")
-	if err != nil {
-		return fmt.Errorf("ingress has misconfigured validation regex on configmap: %s - %w", additionalChars, err)
-	}
-
-	for _, rule := range copyIng.Spec.Rules {
-		if rule.HTTP == nil {
-			continue
-		}
-		if err := checkPath(rule.HTTP.Paths, disablePathTypeValidation, regexPath); err != nil {
-			return fmt.Errorf("error validating ingressPath: %w", err)
-		}
-	}
-	return nil
-}
-
-func checkPath(paths []networkingv1.HTTPIngressPath, disablePathTypeValidation bool, regexSpecificChars *regexp.Regexp) error {
-	for _, path := range paths {
-		if path.PathType == nil {
-			path.PathType = &defaultPathType
-		}
-
-		if disablePathTypeValidation || *path.PathType == networkingv1.PathTypeImplementationSpecific {
-			if !regexSpecificChars.MatchString(path.Path) {
-				return fmt.Errorf("path %s of type %s contains invalid characters", path.Path, *path.PathType)
-			}
-			continue
-		}
-
-		if !pathAlphaNumericRegex(path.Path) {
-			return fmt.Errorf("path %s of type %s contains invalid characters", path.Path, *path.PathType)
-		}
-	}
-	return nil
 }

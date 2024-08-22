@@ -6,14 +6,14 @@ Two different methods to install and configure Prometheus and Grafana are descri
 
 ## Prometheus and Grafana installation using Pod Annotations
 
-This tutorial will show you how to install [Prometheus](https://prometheus.io/) and [Grafana](https://grafana.com/) for scraping the metrics of the NGINX Ingress controller.
+This tutorial will show you how to install [Prometheus](https://prometheus.io/) and [Grafana](https://grafana.com/) for scraping the metrics of the Ingress-Nginx Controller.
 
 !!! important
     This example uses `emptyDir` volumes for Prometheus and Grafana. This means once the pod gets terminated you will lose all the data.
 
 ### Before You Begin
 
-- The NGINX Ingress controller should already be deployed according to the deployment instructions [here](../deploy/index.md).
+- The Ingress-Nginx Controller should already be deployed according to the deployment instructions [here](../deploy/index.md).
 
 - The controller should be configured for exporting metrics. This requires 3 configurations to the controller. These configurations are :
   1. controller.metrics.enabled=true
@@ -39,10 +39,9 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
   controller:
     metrics:
       enabled: true
-      service:
-        annotations:
-          prometheus.io/port: "10254"
-          prometheus.io/scrape: "true"
+    podAnnotations:
+      prometheus.io/port: "10254"
+      prometheus.io/scrape: "true"
   ..
   ```
    - If you are **not using helm**, you will have to edit your manifests like this:
@@ -50,10 +49,6 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
        ```
        apiVersion: v1
        kind: Service
-       metadata:
-        annotations:
-          prometheus.io/scrape: "true"
-          prometheus.io/port: "10254"
        ..
        spec:
          ports:
@@ -67,16 +62,20 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
          ```
          apiVersion: v1
          kind: Deployment
-         metadata:
-          annotations:
-            prometheus.io/scrape: "true"
-            prometheus.io/port: "10254"
          ..
          spec:
-           ports:
-             - name: prometheus
-               containerPort: 10254
-               ..
+           template:
+             metadata:
+               annotations:
+                 prometheus.io/scrape: "true"
+                 prometheus.io/port: "10254"
+             spec:
+               containers:
+                 - name: controller
+                   ports:
+                     - name: prometheus
+                       containerPort: 10254
+                     ..
          ```
 
 
@@ -170,7 +169,7 @@ According to the above example, this URL will be http://10.192.0.3:31086
   - By default request metrics are labeled with the hostname. When you have a wildcard domain ingress, then there will be no metrics for that ingress (to prevent the metrics from exploding in cardinality). To get metrics in this case you need to run the ingress controller with `--metrics-per-host=false` (you will lose labeling by hostname, but still have labeling by ingress).
 
 ### Grafana dashboard using ingress resource
-  - If you want to expose the dashboard for grafana using a ingress resource, then you can :
+  - If you want to expose the dashboard for grafana using an ingress resource, then you can :
     - change the service type of the prometheus-server service and the grafana service to "ClusterIP" like this :
     ```
     kubectl -n ingress-nginx edit svc grafana
@@ -178,15 +177,15 @@ According to the above example, this URL will be http://10.192.0.3:31086
     - This will open the currently deployed service grafana in the default editor configured in your shell (vi/nvim/nano/other)
     - scroll down to line 34 that looks like "type: NodePort"
     - change it to look like "type: ClusterIP". Save and exit.
-    - create a ingress resource with backend as "grafana" and port as "3000"
-  - Similarly, you can edit the service "prometheus-server" and add a ingress resource.
+    - create an ingress resource with backend as "grafana" and port as "3000"
+  - Similarly, you can edit the service "prometheus-server" and add an ingress resource.
 
 ## Prometheus and Grafana installation using Service Monitors
 This document assumes you're using helm and using the kube-prometheus-stack package to install Prometheus and Grafana.
 
-### Verify NGINX Ingress controller is installed
+### Verify Ingress-Nginx Controller is installed
 
-- The NGINX Ingress controller should already be deployed according to the deployment instructions [here](../deploy/index.md).
+- The Ingress-Nginx Controller should already be deployed according to the deployment instructions [here](../deploy/index.md).
 
 - To check if Ingress controller is deployed,
   ```
@@ -214,7 +213,7 @@ This document assumes you're using helm and using the kube-prometheus-stack pack
 
 - If prometheus is not installed, then you can install from [here](https://artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack)
 
-### Re-configure NGINX Ingress controller
+### Re-configure Ingress-Nginx Controller
 
 - The Ingress NGINX controller needs to be reconfigured for exporting metrics. This requires 3 additional configurations to the controller. These configurations are :
   ```
@@ -387,10 +386,6 @@ Prometheus metrics are exposed on port 10254.
   The number of bytes sent to a client. **Deprecated**, use `nginx_ingress_controller_response_size`\
   nginx var: `bytes_sent`
 
-* `nginx_ingress_controller_ingress_upstream_latency_seconds` Summary\
-  Upstream service latency per Ingress. **Deprecated**, use `nginx_ingress_controller_connect_duration_seconds`\
-  nginx var: `upstream_connect_time`
-
 ```
 # HELP nginx_ingress_controller_bytes_sent The number of bytes sent to a client. DEPRECATED! Use nginx_ingress_controller_response_size
 # TYPE nginx_ingress_controller_bytes_sent histogram
@@ -398,8 +393,6 @@ Prometheus metrics are exposed on port 10254.
 # TYPE nginx_ingress_controller_connect_duration_seconds nginx_ingress_controller_connect_duration_seconds
 * HELP nginx_ingress_controller_header_duration_seconds The time spent on receiving first header from the upstream server
 # TYPE nginx_ingress_controller_header_duration_seconds histogram
-# HELP nginx_ingress_controller_ingress_upstream_latency_seconds Upstream service latency per Ingress DEPRECATED! Use nginx_ingress_controller_connect_duration_seconds
-# TYPE nginx_ingress_controller_ingress_upstream_latency_seconds summary
 # HELP nginx_ingress_controller_request_duration_seconds The request processing time in milliseconds
 # TYPE nginx_ingress_controller_request_duration_seconds histogram
 # HELP nginx_ingress_controller_request_size The request length (including request line, header, and request body)

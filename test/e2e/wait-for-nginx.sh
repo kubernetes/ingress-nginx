@@ -23,6 +23,8 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 export NAMESPACE=$1
 export NAMESPACE_OVERLAY=$2
+export IS_CHROOT=$3
+export ENABLE_VALIDATIONS=$4
 
 echo "deploying NGINX Ingress controller in namespace $NAMESPACE"
 
@@ -57,9 +59,10 @@ else
 # TODO: remove the need to use fullnameOverride
 fullnameOverride: nginx-ingress
 controller:
+  enableAnnotationValidations: ${ENABLE_VALIDATIONS}
   image:
     repository: ingress-controller/controller
-    chroot: true
+    chroot: ${IS_CHROOT}
     tag: 1.0.0-dev
     digest:
     digestChroot:
@@ -86,6 +89,8 @@ controller:
   terminationGracePeriodSeconds: 1
   admissionWebhooks:
     enabled: false
+  metrics:
+    enabled: true
 
   # ulimit -c unlimited
   # mkdir -p /tmp/coredump
@@ -99,6 +104,8 @@ controller:
     - name: coredump
       hostPath:
         path: /tmp/coredump
+
+${OTEL_MODULE}
 
 rbac:
   create: true

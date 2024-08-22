@@ -23,22 +23,51 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
+const (
+	portsInRedirectAnnotation = "use-port-in-redirects"
+)
+
+var portsInRedirectAnnotations = parser.Annotation{
+	Group: "redirect",
+	Annotations: parser.AnnotationFields{
+		portsInRedirectAnnotation: {
+			Validator:     parser.ValidateBool,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow, // Low, as it allows just a set of options
+			Documentation: `Enables or disables specifying the port in absolute redirects issued by nginx.`,
+		},
+	},
+}
+
 type portInRedirect struct {
-	r resolver.Resolver
+	r                resolver.Resolver
+	annotationConfig parser.Annotation
 }
 
 // NewParser creates a new port in redirect annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return portInRedirect{r}
+	return portInRedirect{
+		r:                r,
+		annotationConfig: portsInRedirectAnnotations,
+	}
 }
 
 // Parse parses the annotations contained in the ingress
 // rule used to indicate if the redirects must
 func (a portInRedirect) Parse(ing *networking.Ingress) (interface{}, error) {
-	up, err := parser.GetBoolAnnotation("use-port-in-redirects", ing)
+	up, err := parser.GetBoolAnnotation(portsInRedirectAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		return a.r.GetDefaultBackend().UsePortInRedirects, nil
 	}
 
 	return up, nil
+}
+
+func (a portInRedirect) GetDocumentation() parser.AnnotationFields {
+	return a.annotationConfig.Annotations
+}
+
+func (a portInRedirect) Validate(anns map[string]string) error {
+	maxrisk := parser.StringRiskToRisk(a.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+	return parser.CheckAnnotationRisk(anns, maxrisk, portsInRedirectAnnotations.Annotations)
 }

@@ -76,66 +76,62 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 		}
 	}
 
-	if c1.BackendConfigChecksum != c2.BackendConfigChecksum {
-		return false
-	}
-
-	return true
+	return c1.BackendConfigChecksum == c2.BackendConfigChecksum
 }
 
 // Equal tests for equality between two Backend types
-func (b1 *Backend) Equal(b2 *Backend) bool {
-	if b1 == b2 {
+func (b *Backend) Equal(newB *Backend) bool {
+	if b == newB {
 		return true
 	}
-	if b1 == nil || b2 == nil {
+	if b == nil || newB == nil {
 		return false
 	}
-	if b1.Name != b2.Name {
+	if b.Name != newB.Name {
 		return false
 	}
-	if b1.NoServer != b2.NoServer {
-		return false
-	}
-
-	if b1.Service != b2.Service {
-		if b1.Service == nil || b2.Service == nil {
-			return false
-		}
-		if b1.Service.GetNamespace() != b2.Service.GetNamespace() {
-			return false
-		}
-		if b1.Service.GetName() != b2.Service.GetName() {
-			return false
-		}
-	}
-
-	if b1.Port != b2.Port {
-		return false
-	}
-	if b1.SSLPassthrough != b2.SSLPassthrough {
-		return false
-	}
-	if !(&b1.SessionAffinity).Equal(&b2.SessionAffinity) {
-		return false
-	}
-	if b1.UpstreamHashBy != b2.UpstreamHashBy {
-		return false
-	}
-	if b1.LoadBalancing != b2.LoadBalancing {
+	if b.NoServer != newB.NoServer {
 		return false
 	}
 
-	match := compareEndpoints(b1.Endpoints, b2.Endpoints)
+	if b.Service != newB.Service {
+		if b.Service == nil || newB.Service == nil {
+			return false
+		}
+		if b.Service.GetNamespace() != newB.Service.GetNamespace() {
+			return false
+		}
+		if b.Service.GetName() != newB.Service.GetName() {
+			return false
+		}
+	}
+
+	if b.Port != newB.Port {
+		return false
+	}
+	if b.SSLPassthrough != newB.SSLPassthrough {
+		return false
+	}
+	if !(&b.SessionAffinity).Equal(&newB.SessionAffinity) {
+		return false
+	}
+	if b.UpstreamHashBy != newB.UpstreamHashBy {
+		return false
+	}
+	if b.LoadBalancing != newB.LoadBalancing {
+		return false
+	}
+
+	match := compareEndpoints(b.Endpoints, newB.Endpoints)
 	if !match {
 		return false
 	}
 
-	if !b1.TrafficShapingPolicy.Equal(b2.TrafficShapingPolicy) {
+	if !b.TrafficShapingPolicy.Equal(&newB.TrafficShapingPolicy) {
 		return false
 	}
 
-	return sets.StringElementsMatch(b1.AlternativeBackends, b2.AlternativeBackends)
+	return sets.StringElementsMatch(b.AlternativeBackends, newB.AlternativeBackends)
 }
 
 // Equal tests for equality between two SessionAffinityConfig types
@@ -247,7 +243,7 @@ func (e1 *Endpoint) Equal(e2 *Endpoint) bool {
 }
 
 // Equal checks for equality between two TrafficShapingPolicies
-func (tsp1 TrafficShapingPolicy) Equal(tsp2 TrafficShapingPolicy) bool {
+func (tsp1 *TrafficShapingPolicy) Equal(tsp2 *TrafficShapingPolicy) bool {
 	if tsp1.Weight != tsp2.Weight {
 		return false
 	}
@@ -339,6 +335,8 @@ func (s1 *Server) Equal(s2 *Server) bool {
 }
 
 // Equal tests for equality between two Location types
+//
+//nolint:gocyclo // Ignore function complexity error
 func (l1 *Location) Equal(l2 *Location) bool {
 	if l1 == l2 {
 		return true
@@ -404,7 +402,7 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	if !(&l1.Denylist).Equal(&l2.Denylist) {
 		return false
 	}
-	if !(&l1.Whitelist).Equal(&l2.Whitelist) {
+	if !(&l1.Allowlist).Equal(&l2.Allowlist) {
 		return false
 	}
 	if !(&l1.Proxy).Equal(&l2.Proxy) {
@@ -435,10 +433,6 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 
-	if !(&l1.InfluxDB).Equal(&l2.InfluxDB) {
-		return false
-	}
-
 	if l1.BackendProtocol != l2.BackendProtocol {
 		return false
 	}
@@ -464,11 +458,15 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 
-	if !l1.Opentracing.Equal(&l2.Opentracing) {
+	if !l1.Opentelemetry.Equal(&l2.Opentelemetry) {
 		return false
 	}
 
 	if !l1.Mirror.Equal(&l2.Mirror) {
+		return false
+	}
+
+	if l1.DisableProxyInterceptErrors != l2.DisableProxyInterceptErrors {
 		return false
 	}
 
@@ -554,39 +552,39 @@ func (l4b1 *L4Backend) Equal(l4b2 *L4Backend) bool {
 }
 
 // Equal tests for equality between two SSLCert types
-func (s1 *SSLCert) Equal(s2 *SSLCert) bool {
-	if s1 == s2 {
+func (s *SSLCert) Equal(newS *SSLCert) bool {
+	if s == newS {
 		return true
 	}
-	if s1 == nil || s2 == nil {
+	if s == nil || newS == nil {
 		return false
 	}
-	if s1.CASHA != s2.CASHA {
+	if s.CASHA != newS.CASHA {
 		return false
 	}
-	if s1.CRLSHA != s2.CRLSHA {
+	if s.CRLSHA != newS.CRLSHA {
 		return false
 	}
-	if s1.PemSHA != s2.PemSHA {
+	if s.PemSHA != newS.PemSHA {
 		return false
 	}
-	if s1.CAFileName != s2.CAFileName {
+	if s.CAFileName != newS.CAFileName {
 		return false
 	}
-	if s1.CRLFileName != s2.CRLFileName {
+	if s.CRLFileName != newS.CRLFileName {
 		return false
 	}
-	if !s1.ExpireTime.Equal(s2.ExpireTime) {
+	if !s.ExpireTime.Equal(newS.ExpireTime) {
 		return false
 	}
-	if s1.PemCertKey != s2.PemCertKey {
+	if s.PemCertKey != newS.PemCertKey {
 		return false
 	}
-	if s1.UID != s2.UID {
+	if s.UID != newS.UID {
 		return false
 	}
 
-	return sets.StringElementsMatch(s1.CN, s2.CN)
+	return sets.StringElementsMatch(s.CN, newS.CN)
 }
 
 var compareEndpointsFunc = func(e1, e2 interface{}) bool {

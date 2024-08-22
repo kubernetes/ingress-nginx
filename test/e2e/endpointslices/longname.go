@@ -36,7 +36,6 @@ var _ = framework.IngressNginxDescribe("[Endpointslices] long service name", fun
 	})
 
 	ginkgo.It("should return 200 when service name has max allowed number of characters 63", func() {
-
 		annotations := make(map[string]string)
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, name, 80, annotations)
 		f.EnsureIngress(ing)

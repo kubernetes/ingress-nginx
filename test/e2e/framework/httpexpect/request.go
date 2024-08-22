@@ -65,7 +65,7 @@ func (h *HTTPRequest) DoRequest(method, rpath string) *HTTPRequest {
 
 	var request *http.Request
 	uri.Path = path.Join(uri.Path, rpath)
-	if request, err = http.NewRequest(method, uri.String(), nil); err != nil {
+	if request, err = http.NewRequest(method, uri.String(), http.NoBody); err != nil {
 		h.chain.fail(err.Error())
 	}
 
@@ -93,7 +93,7 @@ func (h *HTTPRequest) ForceResolve(ip string, port uint16) *HTTPRequest {
 		return h
 	}
 	newTransport := oldTransport.Clone()
-	newTransport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+	newTransport.DialContext = func(ctx context.Context, network, _ string) (net.Conn, error) {
 		return dialer.DialContext(ctx, network, resolveAddr)
 	}
 	h.client.Transport = newTransport
@@ -110,6 +110,7 @@ func (h *HTTPRequest) Expect() *HTTPResponse {
 	if err != nil {
 		h.chain.fail(err.Error())
 	}
+	defer response.Body.Close()
 
 	h.HTTPResponse.Response = response // set the HTTP response
 

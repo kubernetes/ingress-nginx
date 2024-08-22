@@ -52,6 +52,10 @@ var _ = framework.DescribeSetting("OCSP", func() {
 		f.UpdateNginxConfigMapData("enable-ocsp", "true")
 
 		err := prepareCertificates(f.Namespace)
+		if err != nil {
+			ginkgo.By(fmt.Sprintf("Prepare Certs error %v", err.Error()))
+		}
+
 		assert.Nil(ginkgo.GinkgoT(), err)
 
 		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, nil)
@@ -68,7 +72,7 @@ var _ = framework.DescribeSetting("OCSP", func() {
 
 		var pemCertBuffer bytes.Buffer
 		pemCertBuffer.Write(leafCert)
-		pemCertBuffer.Write([]byte("\n"))
+		pemCertBuffer.WriteString("\n")
 		pemCertBuffer.Write(intermediateCa)
 
 		f.EnsureSecret(&corev1.Secret{
@@ -85,7 +89,7 @@ var _ = framework.DescribeSetting("OCSP", func() {
 		cfsslDB, err := os.ReadFile("empty.db")
 		assert.Nil(ginkgo.GinkgoT(), err)
 
-		cmap, err := f.EnsureConfigMap(&corev1.ConfigMap{
+		f.EnsureConfigMap(&corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "ocspserve",
 				Namespace: f.Namespace,
@@ -95,8 +99,6 @@ var _ = framework.DescribeSetting("OCSP", func() {
 				"db-config.json": []byte(`{"driver":"sqlite3","data_source":"/data/empty.db"}`),
 			},
 		})
-		assert.Nil(ginkgo.GinkgoT(), err)
-		assert.NotNil(ginkgo.GinkgoT(), cmap)
 
 		d, s := ocspserveDeployment(f.Namespace)
 		f.EnsureDeployment(d)
@@ -114,7 +116,7 @@ var _ = framework.DescribeSetting("OCSP", func() {
 				return strings.Contains(server, fmt.Sprintf(`server_name %v`, host))
 			})
 
-		tlsConfig := &tls.Config{ServerName: host, InsecureSkipVerify: true}
+		tlsConfig := &tls.Config{ServerName: host, InsecureSkipVerify: true} //nolint:gosec // Ignore the gosec error in testing
 		f.HTTPTestClientWithTLSConfig(tlsConfig).
 			GET("/").
 			WithURL(f.GetURL(framework.HTTPS)).
@@ -197,7 +199,8 @@ const configTemplate = `
 
 func prepareCertificates(namespace string) error {
 	config := fmt.Sprintf(configTemplate, namespace)
-	err := os.WriteFile("cfssl_config.json", []byte(config), 0644)
+	//nolint:gosec // Not change permission to avoid possible issues
+	err := os.WriteFile("cfssl_config.json", []byte(config), 0o644)
 	if err != nil {
 		return fmt.Errorf("creating cfssl_config.json file: %v", err)
 	}
@@ -292,7 +295,7 @@ func ocspserveDeployment(namespace string) (*appsv1.Deployment, *corev1.Service)
 						Containers: []corev1.Container{
 							{
 								Name:  name,
-								Image: "registry.k8s.io/ingress-nginx/e2e-test-cfssl@sha256:c1b273763048944dd7d22d37adfc65be4fa6a5f6068204292573c6cdc5ea3457",
+								Image: "registry.k8s.io/ingress-nginx/cfssl:v1.0.0@sha256:fffd36e2f1c8fd485ec6fd24c6d55f0817b54352274293d2a247b8a0d924c5b0",
 								Command: []string{
 									"/bin/bash",
 									"-c",

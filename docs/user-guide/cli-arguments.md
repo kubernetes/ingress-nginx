@@ -15,16 +15,20 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--default-backend-service`        | Service used to serve HTTP requests not matching any known server name (catch-all). Takes the form "namespace/name". The controller configures NGINX to forward requests to the first port of this Service. |
 | `--default-server-port`            | Port to use for exposing the default server (catch-all). (default 8181) |
 | `--default-ssl-certificate`        | Secret containing a SSL certificate to be used by the default HTTPS server (catch-all). Takes the form "namespace/name". |
+| `--enable-annotation-validation`  | If true, will enable the annotation validation feature. This value will be defaulted to true on a future release. |
 | `--disable-catch-all`              | Disable support for catch-all Ingresses. (default false) |
 | `--disable-full-test` | Disable full test of all merged ingresses at the admission stage and tests the template of the ingress being created or updated  (full test of all ingresses is enabled by default). |
 | `--disable-svc-external-name` | Disable support for Services of type ExternalName. (default false) |
 | `--disable-sync-events` | Disables the creation of 'Sync' Event resources, but still logs them |
 | `--dynamic-configuration-retries` | Number of times to retry failed dynamic configuration before failing to sync an ingress. (default 15) |
 | `--election-id`                    | Election id to use for Ingress status updates. (default "ingress-controller-leader") |
+| `--election-ttl`                  | Duration a leader election is valid before it's getting re-elected, e.g. `15s`, `10m` or `1h`. (Default: 30s) |
 | `--enable-metrics`                 | Enables the collection of NGINX metrics. (default true) |
 | `--enable-ssl-chain-completion`    | Autocomplete SSL certificate chains with missing intermediate CA certificates. Certificates uploaded to Kubernetes must have the "Authority Information Access" X.509 v3 extension for this to succeed. (default false)|
 | `--enable-ssl-passthrough`         | Enable SSL Passthrough. (default false) |
-| `--enable-topology-aware-routing`  | Enable topology aware hints feature, needs service object annotation service.kubernetes.io/topology-aware-hints sets to auto. (default false) |
+| `--disable-leader-election`        | Disable Leader Election on Nginx Controller. (default false) |
+| `--enable-topology-aware-routing`  | Enable topology aware routing feature, needs service object annotation service.kubernetes.io/topology-mode sets to auto. (default false) |
+| `--exclude-socket-metrics`         | Set of socket request metrics to exclude which won't be exported nor being calculated. The possible socket request metrics to exclude are documented in the monitoring guide e.g. 'nginx_ingress_controller_request_duration_seconds,nginx_ingress_controller_response_size'|
 | `--health-check-path`              | URL path of the health check endpoint. Configured inside the NGINX status server. All requests received on the port defined by the healthz-port parameter are forwarded internally to this path. (default "/healthz") |
 | `--health-check-timeout`           | Time limit, in seconds, for a probe to health-check-path to succeed. (default 10) |
 | `--healthz-port`                   | Port to use for the healthz endpoint. (default 10254) |
@@ -67,7 +71,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--validating-webhook`             | The address to start an admission controller on to validate incoming ingresses. Takes the form "<host>:port". If not provided, no admission controller is started. |
 | `--validating-webhook-certificate` | The path of the validating webhook certificate PEM. |
 | `--validating-webhook-key`         | The path of the validating webhook key PEM. |
-| `--version`                        | Show release information about the NGINX Ingress controller and exit. |
+| `--version`                        | Show release information about the Ingress-Nginx Controller and exit. |
 | `--watch-ingress-without-class`                        | Define if Ingress Controller should also watch for Ingresses without an IngressClass or the annotation specified. (default false) |
 | `--watch-namespace`                | Namespace the controller watches for updates to Kubernetes objects. This includes Ingresses, Services and all configuration resources. All namespaces are watched if this parameter is left empty. |
 | `--watch-namespace-selector`       | The controller will watch namespaces whose labels match the given selector. This flag only takes effective when `--watch-namespace` is empty. |

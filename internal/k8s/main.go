@@ -33,7 +33,7 @@ import (
 )
 
 // ParseNameNS parses a string searching a namespace and name
-func ParseNameNS(input string) (string, string, error) {
+func ParseNameNS(input string) (ns, name string, err error) {
 	nsName := strings.Split(input, "/")
 	if len(nsName) != 2 {
 		return "", "", fmt.Errorf("invalid format (namespace/name) found in '%v'", input)
@@ -78,7 +78,7 @@ func GetNodeIPOrName(kubeClient clientset.Interface, name string, useInternalIP 
 var (
 	// IngressPodDetails hold information about the ingress-nginx pod
 	IngressPodDetails *PodInfo
-	// IngressNodeDetails old information about the node running ingress-nginx pod
+	// IngressNodeDetails hold information about the node running ingress-nginx pod
 	IngressNodeDetails *NodeInfo
 )
 
@@ -148,7 +148,10 @@ const IngressNGINXController = "k8s.io/ingress-nginx"
 // NetworkingIngressAvailable checks if the package "k8s.io/api/networking/v1"
 // is available or not and if Ingress V1 is supported (k8s >= v1.19.0)
 func NetworkingIngressAvailable(client clientset.Interface) bool {
-	version119, _ := version.ParseGeneric("v1.19.0")
+	version119, err := version.ParseGeneric("v1.19.0")
+	if err != nil {
+		return false
+	}
 
 	serverVersion, err := client.Discovery().ServerVersion()
 	if err != nil {
@@ -180,6 +183,9 @@ func SetDefaultNGINXPathType(ing *networkingv1.Ingress) {
 				p.PathType = &defaultPathType
 			}
 
+			if *p.PathType == networkingv1.PathTypeImplementationSpecific {
+				p.PathType = &defaultPathType
+			}
 		}
 	}
 }

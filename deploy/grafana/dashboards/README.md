@@ -4,7 +4,7 @@ Ingress-nginx supports a rich collection of prometheus metrics.  If you have pro
 
 This folder contains two dashboards that you can import.
 
-## 1. NGINX Ingress Controller
+## 1. Ingress-Nginx Controller
 
 ![Dashboard](screenshot.png)
 
@@ -19,7 +19,7 @@ This folder contains two dashboards that you can import.
 
 ### Requirements
 
-- **Grafana v5.2.0** (or newer)
+- **Grafana v10.4.3** (or newer)
 
 ## 2. Request Handling Performance
 
@@ -36,4 +36,4 @@ This folder contains two dashboards that you can import.
 
 ### Requirements
 
-- **Grafana v6.6.0** (or newer)
+- **Grafana v10.4.3** (or newer)

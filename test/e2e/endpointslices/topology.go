@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os/exec"
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,11 +28,10 @@ import (
 	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 
-	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.IngressNginxDescribe("[TopologyHints] topology aware routing", func() {
+var _ = framework.IngressNginxDescribeSerial("[TopologyHints] topology aware routing", func() {
 	f := framework.NewDefaultFramework("topology")
 	host := "topology-svc.foo.com"
 
@@ -41,14 +39,7 @@ var _ = framework.IngressNginxDescribe("[TopologyHints] topology aware routing",
 		f.NewEchoDeployment(framework.WithDeploymentReplicas(2), framework.WithSvcTopologyAnnotations())
 	})
 
-	ginkgo.AfterEach(func() {
-		// we need to uninstall chart because of clusterRole which is not destroyed with namespace
-		err := uninstallChart(f)
-		assert.Nil(ginkgo.GinkgoT(), err, "uninstalling helm chart")
-	})
-
 	ginkgo.It("should return 200 when service has topology hints", func() {
-
 		annotations := make(map[string]string)
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
@@ -79,11 +70,12 @@ var _ = framework.IngressNginxDescribe("[TopologyHints] topology aware routing",
 			}
 		}
 
-		curlCmd := fmt.Sprintf("curl --fail --silent http://localhost:%v/configuration/backends", nginx.StatusPort)
-		status, err := f.ExecIngressPod(curlCmd)
+		dbgCmd := "/dbg backends all"
+		status, err := f.ExecIngressPod(dbgCmd)
 		assert.Nil(ginkgo.GinkgoT(), err)
 		var backends []map[string]interface{}
-		json.Unmarshal([]byte(status), &backends)
+		err = json.Unmarshal([]byte(status), &backends)
+		assert.Nil(ginkgo.GinkgoT(), err, "unexpected error unmarshalling backends")
 		gotBackends := 0
 		for _, bck := range backends {
 			if strings.Contains(bck["name"].(string), "topology") {
@@ -92,7 +84,7 @@ var _ = framework.IngressNginxDescribe("[TopologyHints] topology aware routing",
 		}
 
 		if gotHints {
-			//we have 2 replics, if there is just one backend it means that we are routing according slices hints to same zone as controller is
+			// we have 2 replics, if there is just one backend it means that we are routing according slices hints to same zone as controller is
 			assert.Equal(ginkgo.GinkgoT(), 1, gotBackends)
 		} else {
 			// two replicas should have two endpoints without topology hints
@@ -100,13 +92,3 @@ var _ = framework.IngressNginxDescribe("[TopologyHints] topology aware routing",
 		}
 	})
 })
-
-func uninstallChart(f *framework.Framework) error {
-	cmd := exec.Command("helm", "uninstall", "--namespace", f.Namespace, "nginx-ingress")
-	_, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("unexpected error uninstalling ingress-nginx release: %v", err)
-	}
-
-	return nil
-}

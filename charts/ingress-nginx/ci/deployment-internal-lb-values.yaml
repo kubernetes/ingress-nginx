@@ -11,3 +11,9 @@ controller:
       enabled: true
       annotations:
         service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+      ports:
+        http: 443
+        https: 80
+      targetPorts:
+        http: 443
+        https: 80

@@ -24,7 +24,8 @@ project(
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "-O2")
+set(CMAKE_CXX_FLAGS "-O2 -fpic")
+set(CMAKE_VERBOSE_MAKEFILE ON CACHE BOOL "ON" FORCE)
 
 set(CMAKE_BUILD_TYPE
     Release
@@ -63,31 +64,9 @@ find_package(OpenSSL REQUIRED)
 message("OpenSSL include dir: ${OPENSSL_INCLUDE_DIR}")
 message("OpenSSL libraries: ${OPENSSL_LIBRARIES}")
 
-set(GRPC_GIT_TAG
-    "v1.45.2"
-    CACHE STRING "gRPC version")
-
-include(ExternalProject)
-ExternalProject_Add(
-  gRPC
-  GIT_REPOSITORY https://github.com/grpc/grpc.git
-  GIT_TAG ${GRPC_GIT_TAG}
-  GIT_SHALLOW 1
-  UPDATE_COMMAND ""
-  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${STAGED_INSTALL_PREFIX}
-             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-             -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-             -DgRPC_SSL_PROVIDER=package
-             -DOPENSSL_ROOT_DIR=OpenSSL
-             -DgRPC_BUILD_TESTS=OFF
-             -DBUILD_SHARED_LIBS=OFF
-             -DgRPC_INSTALL=ON
-  CMAKE_CACHE_ARGS -DCMAKE_CXX_FLAGS:STRING=${CMAKE_CXX_FLAGS}
-  TEST_AFTER_INSTALL 0
-  DOWNLOAD_NO_PROGRESS 1
-  LOG_CONFIGURE 1
-  LOG_BUILD 0
-  LOG_INSTALL 1)
+find_package(Protobuf REQUIRED)
+find_package(gRPC REQUIRED)
+find_package(OpentelemetryCPP REQUIRED)
 
 install(
   DIRECTORY ${STAGED_INSTALL_PREFIX}/

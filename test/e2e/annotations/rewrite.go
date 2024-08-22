@@ -24,14 +24,13 @@ import (
 	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 
-	networking "k8s.io/api/networking/v1"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
+const rewriteHost = "rewrite.bar.com"
+
 var _ = framework.DescribeAnnotation("rewrite-target use-regex enable-rewrite-log", func() {
 	f := framework.NewDefaultFramework("rewrite")
-
-	pathImpl := networking.PathTypeImplementationSpecific
 
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
@@ -40,7 +39,7 @@ var _ = framework.DescribeAnnotation("rewrite-target use-regex enable-rewrite-lo
 	ginkgo.It("should write rewrite logs", func() {
 		ginkgo.By("setting enable-rewrite-log annotation")
 
-		host := "rewrite.bar.com"
+		host := rewriteHost
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/rewrite-target":     "/",
 			"nginx.ingress.kubernetes.io/enable-rewrite-log": "true",
@@ -67,7 +66,7 @@ var _ = framework.DescribeAnnotation("rewrite-target use-regex enable-rewrite-lo
 	})
 
 	ginkgo.It("should use correct longest path match", func() {
-		host := "rewrite.bar.com"
+		host := rewriteHost
 
 		ginkgo.By("creating a regular ingress definition")
 		ing := framework.NewSingleIngress("kube-lego", "/.well-known/acme/challenge", host, f.Namespace, framework.EchoService, 80, nil)
@@ -112,10 +111,10 @@ var _ = framework.DescribeAnnotation("rewrite-target use-regex enable-rewrite-lo
 	})
 
 	ginkgo.It("should use ~* location modifier if regex annotation is present", func() {
-		host := "rewrite.bar.com"
+		host := rewriteHost
 
 		ginkgo.By("creating a regular ingress definition")
-		ing := framework.NewSingleIngress("foo", "/foo", host, f.Namespace, framework.EchoService, 80, nil)
+		ing := framework.NewSingleIngress(fooHost, "/foo", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -129,7 +128,6 @@ var _ = framework.DescribeAnnotation("rewrite-target use-regex enable-rewrite-lo
 			"nginx.ingress.kubernetes.io/rewrite-target": "/new/backend",
 		}
 		ing = framework.NewSingleIngress("regex", "/foo.+", host, f.Namespace, framework.EchoService, 80, annotations)
-		ing.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &pathImpl
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -160,10 +158,10 @@ var _ = framework.DescribeAnnotation("rewrite-target use-regex enable-rewrite-lo
 	})
 
 	ginkgo.It("should fail to use longest match for documented warning", func() {
-		host := "rewrite.bar.com"
+		host := rewriteHost
 
 		ginkgo.By("creating a regular ingress definition")
-		ing := framework.NewSingleIngress("foo", "/foo/bar/bar", host, f.Namespace, framework.EchoService, 80, nil)
+		ing := framework.NewSingleIngress(fooHost, "/foo/bar/bar", host, f.Namespace, framework.EchoService, 80, nil)
 		f.EnsureIngress(ing)
 
 		ginkgo.By(`creating an ingress definition with the use-regex annotation`)
@@ -172,8 +170,6 @@ var _ = framework.DescribeAnnotation("rewrite-target use-regex enable-rewrite-lo
 			"nginx.ingress.kubernetes.io/rewrite-target": "/new/backend",
 		}
 		ing = framework.NewSingleIngress("regex", "/foo/bar/[a-z]{3}", host, f.Namespace, framework.EchoService, 80, annotations)
-		ing.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &pathImpl
-
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,
@@ -194,7 +190,7 @@ var _ = framework.DescribeAnnotation("rewrite-target use-regex enable-rewrite-lo
 	})
 
 	ginkgo.It("should allow for custom rewrite parameters", func() {
-		host := "rewrite.bar.com"
+		host := rewriteHost
 
 		ginkgo.By(`creating an ingress definition with the use-regex annotation`)
 		annotations := map[string]string{
@@ -202,8 +198,6 @@ var _ = framework.DescribeAnnotation("rewrite-target use-regex enable-rewrite-lo
 			"nginx.ingress.kubernetes.io/rewrite-target": "/new/backend/$1",
 		}
 		ing := framework.NewSingleIngress("regex", "/foo/bar/(.+)", host, f.Namespace, framework.EchoService, 80, annotations)
-		ing.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &pathImpl
-
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host,

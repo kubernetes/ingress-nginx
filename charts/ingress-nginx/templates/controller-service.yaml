@@ -4,7 +4,7 @@ kind: Service
 metadata:
   annotations:
   {{- range $key, $value := .Values.controller.service.annotations }}
-    {{ $key }}: {{ $value | quote }}
+    {{ $key }}: {{ tpl ($value | toString) $ | quote }}
   {{- end }}
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
@@ -13,7 +13,7 @@ metadata:
     {{- toYaml .Values.controller.service.labels | nindent 4 }}
   {{- end }}
   name: {{ include "ingress-nginx.controller.fullname" . }}
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ include "ingress-nginx.namespace" . }}
 spec:
   type: {{ .Values.controller.service.type }}
 {{- if .Values.controller.service.clusterIP }}
@@ -28,6 +28,12 @@ spec:
 {{- if .Values.controller.service.loadBalancerSourceRanges }}
   loadBalancerSourceRanges: {{ toYaml .Values.controller.service.loadBalancerSourceRanges | nindent 4 }}
 {{- end }}
+{{- if .Values.controller.service.loadBalancerClass }}
+  loadBalancerClass: {{ .Values.controller.service.loadBalancerClass }}
+{{- end }}
+{{- if hasKey .Values.controller.service "allocateLoadBalancerNodePorts" }}
+  allocateLoadBalancerNodePorts: {{ .Values.controller.service.allocateLoadBalancerNodePorts }}
+{{- end }}
 {{- if .Values.controller.service.externalTrafficPolicy }}
   externalTrafficPolicy: {{ .Values.controller.service.externalTrafficPolicy }}
 {{- end }}
@@ -41,8 +47,6 @@ spec:
 {{- if .Values.controller.service.ipFamilyPolicy }}
   ipFamilyPolicy: {{ .Values.controller.service.ipFamilyPolicy }}
 {{- end }}
-{{- end }}
-{{- if semverCompare ">=1.21.0-0" .Capabilities.KubeVersion.Version -}}
 {{- if .Values.controller.service.ipFamilies }}
   ipFamilies: {{ toYaml .Values.controller.service.ipFamilies | nindent 4 }}
 {{- end }}
@@ -54,7 +58,7 @@ spec:
       port: {{ .Values.controller.service.ports.http }}
       protocol: TCP
       targetPort: {{ .Values.controller.service.targetPorts.http }}
-    {{- if and (semverCompare ">=1.20" .Capabilities.KubeVersion.Version) (.Values.controller.service.appProtocol) }}
+    {{- if and (semverCompare ">=1.20.0-0" .Capabilities.KubeVersion.Version) (.Values.controller.service.appProtocol) }}
       appProtocol: http
     {{- end }}
     {{- if (and $setNodePorts (not (empty .Values.controller.service.nodePorts.http))) }}
@@ -66,7 +70,7 @@ spec:
       port: {{ .Values.controller.service.ports.https }}
       protocol: TCP
       targetPort: {{ .Values.controller.service.targetPorts.https }}
-    {{- if and (semverCompare ">=1.20" .Capabilities.KubeVersion.Version) (.Values.controller.service.appProtocol) }}
+    {{- if and (semverCompare ">=1.20.0-0" .Capabilities.KubeVersion.Version) (.Values.controller.service.appProtocol) }}
       appProtocol: https
     {{- end }}
     {{- if (and $setNodePorts (not (empty .Values.controller.service.nodePorts.https))) }}

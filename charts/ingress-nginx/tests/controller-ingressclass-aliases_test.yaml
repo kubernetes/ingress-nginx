@@ -1,0 +1,110 @@
+suite: Controller > IngressClass > Aliases
+templates:
+  - controller-ingressclass-aliases.yaml
+
+tests:
+  - it: should not create IngressClass aliases
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create an IngressClass alias with name "nginx-alias" if `controller.ingressClassResource.aliases` is set
+    set:
+      controller.ingressClassResource.aliases:
+        - nginx-alias
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: IngressClass
+      - equal:
+          path: metadata.name
+          value: nginx-alias
+
+  - it: should create an IngressClass alias without annotation `ingressclass.kubernetes.io/is-default-class` if `controller.ingressClassResource.default` is true
+    set:
+      controller.ingressClassResource.aliases:
+        - nginx-alias
+      controller.ingressClassResource.default: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: IngressClass
+      - equal:
+          path: metadata.name
+          value: nginx-alias
+      - notExists:
+          path: metadata.annotations["ingressclass.kubernetes.io/is-default-class"]
+
+  - it: should create an IngressClass alias with annotations if `controller.ingressClassResource.annotations` is set
+    set:
+      controller.ingressClassResource.aliases:
+        - nginx-alias
+      controller.ingressClassResource.annotations:
+        my-fancy-annotation: has-a-value
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: IngressClass
+      - equal:
+          path: metadata.name
+          value: nginx-alias
+      - equal:
+          path: metadata.annotations.my-fancy-annotation
+          value: has-a-value
+
+  - it: should create an IngressClass alias with controller "k8s.io/ingress-nginx-internal" if `controller.ingressClassResource.controllerValue` is "k8s.io/ingress-nginx-internal"
+    set:
+      controller.ingressClassResource.aliases:
+        - nginx-alias
+      controller.ingressClassResource.controllerValue: k8s.io/ingress-nginx-internal
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: IngressClass
+      - equal:
+          path: metadata.name
+          value: nginx-alias
+      - equal:
+          path: spec.controller
+          value: k8s.io/ingress-nginx-internal
+
+  - it: should create an IngressClass alias with parameters if `controller.ingressClassResource.parameters` is set
+    set:
+      controller.ingressClassResource.aliases:
+        - nginx-alias
+      controller.ingressClassResource.parameters:
+        apiGroup: k8s.example.com
+        kind: IngressParameters
+        name: external-lb
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: IngressClass
+      - equal:
+          path: metadata.name
+          value: nginx-alias
+      - equal:
+          path: spec.parameters
+          value:
+            apiGroup: k8s.example.com
+            kind: IngressParameters
+            name: external-lb
+
+  - it: should create two IngressClass aliases if `controller.ingressClassResource.aliases` has two elements
+    set:
+      controller.ingressClassResource.aliases:
+        - nginx-alias-1
+        - nginx-alias-2
+    asserts:
+      - hasDocuments:
+          count: 2
+      - isKind:
+          of: IngressClass
+      - matchRegex:
+          path: metadata.name
+          pattern: nginx-alias-(1|2)

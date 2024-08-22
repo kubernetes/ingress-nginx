@@ -36,7 +36,8 @@ import (
 type leaderElectionConfig struct {
 	Client clientset.Interface
 
-	ElectionID string
+	ElectionID  string
+	ElectionTTL time.Duration
 
 	OnStartedLeading func(chan struct{})
 	OnStoppedLeading func()
@@ -50,7 +51,7 @@ func setupLeaderElection(config *leaderElectionConfig) {
 
 	var cancelContext context.CancelFunc
 
-	var newLeaderCtx = func(ctx context.Context) context.CancelFunc {
+	newLeaderCtx := func(ctx context.Context) context.CancelFunc {
 		// allow to cancel the context in case we stop being the leader
 		leaderCtx, cancel := context.WithCancel(ctx)
 		go elector.Run(leaderCtx)
@@ -59,7 +60,7 @@ func setupLeaderElection(config *leaderElectionConfig) {
 
 	var stopCh chan struct{}
 	callbacks := leaderelection.LeaderCallbacks{
-		OnStartedLeading: func(ctx context.Context) {
+		OnStartedLeading: func(_ context.Context) {
 			klog.V(2).InfoS("I am the new leader")
 			stopCh = make(chan struct{})
 
@@ -86,8 +87,10 @@ func setupLeaderElection(config *leaderElectionConfig) {
 	}
 
 	broadcaster := record.NewBroadcaster()
-	hostname, _ := os.Hostname()
-
+	hostname, err := os.Hostname()
+	if err != nil {
+		klog.Errorf("unexpected error getting hostname: %v", err)
+	}
 	recorder := broadcaster.NewRecorder(scheme.Scheme, apiv1.EventSource{
 		Component: "ingress-leader-elector",
 		Host:      hostname,
@@ -105,13 +108,11 @@ func setupLeaderElection(config *leaderElectionConfig) {
 		LockConfig: resourceLockConfig,
 	}
 
-	ttl := 30 * time.Second
-
-	elector, err := leaderelection.NewLeaderElector(leaderelection.LeaderElectionConfig{
+	elector, err = leaderelection.NewLeaderElector(leaderelection.LeaderElectionConfig{
 		Lock:          lock,
-		LeaseDuration: ttl,
-		RenewDeadline: ttl / 2,
-		RetryPeriod:   ttl / 4,
+		LeaseDuration: config.ElectionTTL,
+		RenewDeadline: config.ElectionTTL / 2,
+		RetryPeriod:   config.ElectionTTL / 4,
 
 		Callbacks: callbacks,
 	})
