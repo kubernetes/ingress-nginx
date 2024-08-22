@@ -14,6 +14,9 @@ metadata:
   {{- if .Values.controller.metrics.prometheusRule.additionalLabels }}
     {{- toYaml .Values.controller.metrics.prometheusRule.additionalLabels | nindent 4 }}
   {{- end }}
+  {{- if .Values.controller.metrics.prometheusRule.annotations }}
+  annotations: {{ toYaml .Values.controller.metrics.prometheusRule.annotations | nindent 4 }}
+  {{- end }}
 spec:
 {{- if .Values.controller.metrics.prometheusRule.rules }}
   groups:
