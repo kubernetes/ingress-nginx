@@ -2,7 +2,6 @@ local ngx_re_split = require("ngx.re").split
 
 local certificate_configured_for_current_request =
   require("certificate").configured_for_current_request
-local global_throttle = require("global_throttle")
 
 local ngx = ngx
 local io = io
@@ -164,7 +163,6 @@ function _M.rewrite(location_config)
     return ngx_redirect(uri, config.http_redirect_code)
   end
 
-  global_throttle.throttle(config.global_throttle, location_config.global_throttle)
 end
 
 function _M.header()

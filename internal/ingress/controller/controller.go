@@ -379,10 +379,6 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 		if !cfg.AllowSnippetAnnotations && strings.HasSuffix(key, "-snippet") {
 			return fmt.Errorf("%s annotation cannot be used. Snippet directives are disabled by the Ingress administrator", key)
 		}
-
-		if cfg.GlobalRateLimitMemcachedHost == "" && strings.HasPrefix(key, fmt.Sprintf("%s/%s", parser.AnnotationsPrefix, "global-rate-limit")) {
-			return fmt.Errorf("'global-rate-limit*' annotations require 'global-rate-limit-memcached-host' settings configured in the global configmap")
-		}
 	}
 
 	k8s.SetDefaultNGINXPathType(ing)
@@ -1516,7 +1512,6 @@ func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) 
 	loc.Proxy = anns.Proxy
 	loc.ProxySSL = anns.ProxySSL
 	loc.RateLimit = anns.RateLimit
-	loc.GlobalRateLimit = anns.GlobalRateLimit
 	loc.Redirect = anns.Redirect
 	loc.Rewrite = anns.Rewrite
 	loc.UpstreamVhost = anns.UpstreamVhost
