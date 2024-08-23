@@ -33,14 +33,8 @@ var _ = framework.DescribeAnnotation("server-snippet", func() {
 	})
 
 	ginkgo.It(`add valid directives to server via server snippet`, func() {
-		f.SetNginxConfigMapData(map[string]string{
-			"allow-snippet-annotations": "true",
-		})
-		defer func() {
-			f.SetNginxConfigMapData(map[string]string{
-				"allow-snippet-annotations": "false",
-			})
-		}()
+		disableSnippet := f.AllowSnippetConfiguration()
+		defer disableSnippet()
 
 		host := "serversnippet.foo.com"
 		annotations := map[string]string{
@@ -68,14 +62,8 @@ var _ = framework.DescribeAnnotation("server-snippet", func() {
 	})
 
 	ginkgo.It(`drops server snippet if disabled by the administrator`, func() {
-		f.SetNginxConfigMapData(map[string]string{
-			"allow-snippet-annotations": "true",
-		})
-		defer func() {
-			f.SetNginxConfigMapData(map[string]string{
-				"allow-snippet-annotations": "false",
-			})
-		}()
+		f.UpdateNginxConfigMapData("annotations-risk-level", "Critical") // To enable snippet configurations
+		defer f.UpdateNginxConfigMapData("annotations-risk-level", "High")
 
 		host := "noserversnippet.foo.com"
 		annotations := map[string]string{
@@ -85,11 +73,6 @@ var _ = framework.DescribeAnnotation("server-snippet", func() {
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.UpdateNginxConfigMapData("allow-snippet-annotations", "false")
-		defer func() {
-			// Return to the original value
-			f.UpdateNginxConfigMapData("allow-snippet-annotations", "true")
-		}()
 		// Sleep a while just to guarantee that the configmap is applied
 		framework.Sleep()
 		f.EnsureIngress(ing)

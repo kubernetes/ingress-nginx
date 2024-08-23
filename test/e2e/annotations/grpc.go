@@ -193,14 +193,8 @@ var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 	ginkgo.It("should return OK for service with backend protocol GRPCS", func() {
 		f.NewGRPCBinDeployment()
 
-		f.SetNginxConfigMapData(map[string]string{
-			"allow-snippet-annotations": "true",
-		})
-		defer func() {
-			f.SetNginxConfigMapData(map[string]string{
-				"allow-snippet-annotations": "false",
-			})
-		}()
+		disableSnippet := f.AllowSnippetConfiguration()
+		defer disableSnippet()
 
 		host := echoHost
 

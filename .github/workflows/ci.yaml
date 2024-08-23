@@ -258,7 +258,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.26.15, v1.27.13, v1.28.9, v1.29.4, v1.30.0]
+        k8s: [v1.28.13, v1.29.8, v1.30.4, v1.31.0]
 
     steps:
       - name: Checkout
@@ -309,25 +309,10 @@ jobs:
       (needs.changes.outputs.go == 'true') || (needs.changes.outputs.baseimage == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
     strategy:
       matrix:
-        k8s: [v1.26.15, v1.27.13, v1.28.9, v1.29.4, v1.30.0]
+        k8s: [v1.28.13, v1.29.8, v1.30.4, v1.31.0]
     uses: ./.github/workflows/zz-tmpl-k8s-e2e.yaml
     with:
       k8s-version: ${{ matrix.k8s }}
-
-  kubernetes-validations:
-    name: Kubernetes with Validations
-    needs:
-      - changes
-      - build
-    if: |
-      (needs.changes.outputs.go == 'true') || (needs.changes.outputs.baseimage == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
-    strategy:
-      matrix:
-        k8s: [v1.26.15, v1.27.13, v1.28.9, v1.29.4, v1.30.0]
-    uses: ./.github/workflows/zz-tmpl-k8s-e2e.yaml
-    with:
-      k8s-version: ${{ matrix.k8s }}
-      variation: "VALIDATIONS"
 
   kubernetes-chroot:
     name: Kubernetes chroot
@@ -338,7 +323,7 @@ jobs:
       (needs.changes.outputs.go == 'true') || (needs.changes.outputs.baseimage == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
     strategy:
       matrix:
-        k8s: [v1.26.15, v1.27.13, v1.28.9, v1.29.4, v1.30.0]
+        k8s: [v1.28.13, v1.29.8, v1.30.4, v1.31.0]
     uses: ./.github/workflows/zz-tmpl-k8s-e2e.yaml
     with:
       k8s-version: ${{ matrix.k8s }}

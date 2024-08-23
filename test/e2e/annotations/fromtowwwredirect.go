@@ -62,14 +62,8 @@ var _ = framework.DescribeAnnotation("from-to-www-redirect", func() {
 	})
 
 	ginkgo.It("should redirect from www HTTPS to HTTPS", func() {
-		f.SetNginxConfigMapData(map[string]string{
-			"allow-snippet-annotations": "true",
-		})
-		defer func() {
-			f.SetNginxConfigMapData(map[string]string{
-				"allow-snippet-annotations": "false",
-			})
-		}()
+		disableSnippet := f.AllowSnippetConfiguration()
+		defer disableSnippet()
 
 		ginkgo.By("setting up server for redirect from www")
 
