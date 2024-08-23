@@ -83,6 +83,9 @@ func TestCollector(t *testing.T) {
 		prometheus.ExponentialBuckets(10, 10, 7),
 	}
 
+	bucketFactor := 1.1
+	maxBuckets := uint32(100)
+
 	cases := []struct {
 		name             string
 		data             []string
@@ -594,7 +597,7 @@ func TestCollector(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			registry := prometheus.NewPedanticRegistry()
 
-			sc, err := NewSocketCollector("pod", "default", "ingress", true, c.useStatusClasses, buckets, c.excludeMetrics)
+			sc, err := NewSocketCollector("pod", "default", "ingress", true, c.useStatusClasses, buckets, bucketFactor, maxBuckets, c.excludeMetrics)
 			if err != nil {
 				t.Errorf("%v: unexpected error creating new SocketCollector: %v", c.name, err)
 			}
