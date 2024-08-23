@@ -23,3 +23,14 @@ tests:
       - equal:
           path: metadata.name
           value: RELEASE-NAME-ingress-nginx-controller-internal
+
+  - it: should create an internal Service with internalTrafficPolicy set to "Local" if `controller.service.internal.enabled` is true and `controller.service.internal.internalTrafficPolicy` is "Local"
+    set:
+      controller.service.internal.enabled: true
+      controller.service.internal.internalTrafficPolicy: Local
+      controller.service.internal.annotations:
+        test.annotation: "true"
+    asserts:
+      - equal:
+          path: spec.internalTrafficPolicy
+          value: Local

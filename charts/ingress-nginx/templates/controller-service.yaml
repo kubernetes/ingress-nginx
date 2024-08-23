@@ -37,6 +37,9 @@ spec:
 {{- if .Values.controller.service.externalTrafficPolicy }}
   externalTrafficPolicy: {{ .Values.controller.service.externalTrafficPolicy }}
 {{- end }}
+{{- if .Values.controller.service.internalTrafficPolicy }}
+  internalTrafficPolicy: {{ .Values.controller.service.internalTrafficPolicy }}
+{{- end }}
 {{- if .Values.controller.service.sessionAffinity }}
   sessionAffinity: {{ .Values.controller.service.sessionAffinity }}
 {{- end }}

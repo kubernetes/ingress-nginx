@@ -30,3 +30,12 @@ tests:
       - equal:
           path: spec.type
           value: NodePort
+    
+  - it: should create a Service with internalTrafficPolicy set to "Local" if `controller.service.external.enabled` is true and `controller.service.external.internalTrafficPolicy` is "Local"
+    set:
+      controller.service.external.enabled: true
+      controller.service.internalTrafficPolicy: Local
+    asserts:
+      - equal:
+          path: spec.internalTrafficPolicy
+          value: Local
