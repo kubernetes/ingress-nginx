@@ -277,6 +277,11 @@ local function get_balancer()
 
   local backend_name = ngx.var.proxy_upstream_name
 
+  if backend_name == '-' then
+    ngx.status = ngx.HTTP_FORBIDDEN
+    return ngx.exit(ngx.status)                                                     
+  end
+
   local balancer = balancers[backend_name]
   if not balancer then
     return nil
