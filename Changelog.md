@@ -2057,7 +2057,7 @@ _Breaking Changes:_
 
   ```
   Due to upcoming data privacy regulations, we are making significant changes to how you access free GeoLite2 databases starting December 30, 2019.
-  Learn more on our blog https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases/
+  Learn more on our blog https://blog.maxmind.com/2019/12/significant-changes-to-accessing-and-using-geolite2-databases/
   ```
 
   Because of this change, it is not clear we can provide the databases directly from the docker image.
