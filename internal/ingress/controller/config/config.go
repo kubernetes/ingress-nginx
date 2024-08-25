@@ -718,31 +718,6 @@ type Configuration struct {
 	// Default: text/html
 	DefaultType string `json:"default-type"`
 
-	// GlobalRateLimitMemcachedHost configures memcached host.
-	GlobalRateLimitMemcachedHost string `json:"global-rate-limit-memcached-host"`
-
-	// GlobalRateLimitMemcachedPort configures memcached port.
-	GlobalRateLimitMemcachedPort int `json:"global-rate-limit-memcached-port"`
-
-	// GlobalRateLimitMemcachedConnectTimeout configures timeout when connecting to memcached.
-	// The unit is millisecond.
-	GlobalRateLimitMemcachedConnectTimeout int `json:"global-rate-limit-memcached-connect-timeout"`
-
-	// GlobalRateLimitMemcachedMaxIdleTimeout configured how long connections
-	// should be kept alive in idle state. The unit is millisecond.
-	GlobalRateLimitMemcachedMaxIdleTimeout int `json:"global-rate-limit-memcached-max-idle-timeout"`
-
-	// GlobalRateLimitMemcachedPoolSize configures how many connections
-	// should be kept alive in the pool.
-	// Note that this is per NGINX worker. Make sure your memcached server can
-	// handle `MemcachedPoolSize * <nginx worker count> * <nginx replica count>`
-	// simultaneous connections.
-	GlobalRateLimitMemcachedPoolSize int `json:"global-rate-limit-memcached-pool-size"`
-
-	// GlobalRateLimitStatusCode determines the HTTP status code to return
-	// when limit is exceeding during global rate limiting.
-	GlobalRateLimitStatusCode int `json:"global-rate-limit-status-code"`
-
 	// DebugConnections Enables debugging log for selected client connections
 	// http://nginx.org/en/docs/ngx_core_module.html#debug_connection
 	// Default: ""
@@ -893,39 +868,34 @@ func NewDefault() Configuration {
 			ServiceUpstream:             false,
 			AllowedResponseHeaders:      []string{},
 		},
-		UpstreamKeepaliveConnections:           320,
-		UpstreamKeepaliveTime:                  "1h",
-		UpstreamKeepaliveTimeout:               60,
-		UpstreamKeepaliveRequests:              10000,
-		LimitConnZoneVariable:                  defaultLimitConnZoneVariable,
-		BindAddressIpv4:                        defBindAddress,
-		BindAddressIpv6:                        defBindAddress,
-		OpentelemetryTrustIncomingSpan:         true,
-		OpentelemetryConfig:                    "/etc/ingress-controller/telemetry/opentelemetry.toml",
-		OtlpCollectorPort:                      "4317",
-		OtelServiceName:                        "nginx",
-		OtelSampler:                            "AlwaysOn",
-		OtelSamplerRatio:                       0.01,
-		OtelSamplerParentBased:                 true,
-		OtelScheduleDelayMillis:                5000,
-		OtelMaxExportBatchSize:                 512,
-		OtelMaxQueueSize:                       2048,
-		LimitReqStatusCode:                     503,
-		LimitConnStatusCode:                    503,
-		SyslogPort:                             514,
-		NoTLSRedirectLocations:                 "/.well-known/acme-challenge",
-		NoAuthLocations:                        "/.well-known/acme-challenge",
-		GlobalExternalAuth:                     defGlobalExternalAuth,
-		ProxySSLLocationOnly:                   false,
-		DefaultType:                            "text/html",
-		GlobalRateLimitMemcachedPort:           11211,
-		GlobalRateLimitMemcachedConnectTimeout: 50,
-		GlobalRateLimitMemcachedMaxIdleTimeout: 10000,
-		GlobalRateLimitMemcachedPoolSize:       50,
-		GlobalRateLimitStatusCode:              429,
-		DebugConnections:                       []string{},
-		StrictValidatePathType:                 true,
-		GRPCBufferSizeKb:                       0,
+		UpstreamKeepaliveConnections:   320,
+		UpstreamKeepaliveTime:          "1h",
+		UpstreamKeepaliveTimeout:       60,
+		UpstreamKeepaliveRequests:      10000,
+		LimitConnZoneVariable:          defaultLimitConnZoneVariable,
+		BindAddressIpv4:                defBindAddress,
+		BindAddressIpv6:                defBindAddress,
+		OpentelemetryTrustIncomingSpan: true,
+		OpentelemetryConfig:            "/etc/ingress-controller/telemetry/opentelemetry.toml",
+		OtlpCollectorPort:              "4317",
+		OtelServiceName:                "nginx",
+		OtelSampler:                    "AlwaysOn",
+		OtelSamplerRatio:               0.01,
+		OtelSamplerParentBased:         true,
+		OtelScheduleDelayMillis:        5000,
+		OtelMaxExportBatchSize:         512,
+		OtelMaxQueueSize:               2048,
+		LimitReqStatusCode:             503,
+		LimitConnStatusCode:            503,
+		SyslogPort:                     514,
+		NoTLSRedirectLocations:         "/.well-known/acme-challenge",
+		NoAuthLocations:                "/.well-known/acme-challenge",
+		GlobalExternalAuth:             defGlobalExternalAuth,
+		ProxySSLLocationOnly:           false,
+		DefaultType:                    "text/html",
+		DebugConnections:               []string{},
+		StrictValidatePathType:         true,
+		GRPCBufferSizeKb:               0,
 	}
 
 	if klog.V(5).Enabled() {

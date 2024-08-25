@@ -29,7 +29,6 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/customheaders"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/fastcgi"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/globalratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipallowlist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipdenylist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
@@ -285,10 +284,6 @@ type Location struct {
 	// The Redirect annotation precedes RateLimit
 	// +optional
 	RateLimit ratelimit.Config `json:"rateLimit,omitempty"`
-	// GlobalRateLimit similar to RateLimit
-	// but this is applied globally across multiple replicas.
-	// +optional
-	GlobalRateLimit globalratelimit.Config `json:"globalRateLimit,omitempty"`
 	// Redirect describes a temporal o permanent redirection this location.
 	// +optional
 	Redirect redirect.Config `json:"redirect,omitempty"`

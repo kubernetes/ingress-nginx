@@ -7,7 +7,6 @@ Do not try to edit it manually.
 
 
 ### [[Admission] admission controller](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/admission/admission.go#L39)
-- [reject ingress with global-rate-limit annotations when memcached is not configured](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/admission/admission.go#L47)
 - [should not allow overlaps of host and paths without canary annotations](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/admission/admission.go#L74)
 - [should allow overlaps of host and paths with canary annotation](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/admission/admission.go#L91)
 - [should block ingress with invalid path](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/admission/admission.go#L112)
@@ -173,8 +172,6 @@ Do not try to edit it manually.
 ### [from-to-www-redirect](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/annotations/fromtowwwredirect.go#L31)
 - [should redirect from www HTTP to HTTP](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/annotations/fromtowwwredirect.go#L38)
 - [should redirect from www HTTPS to HTTPS](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/annotations/fromtowwwredirect.go#L64)
-### [annotation-global-rate-limit](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/annotations/globalratelimit.go#L30)
-- [generates correct configuration](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/annotations/globalratelimit.go#L38)
 ### [backend-protocol - GRPC](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/annotations/grpc.go#L45)
 - [should use grpc_pass in the configuration file](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/annotations/grpc.go#L48)
 - [should return OK for service with backend protocol GRPC](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/annotations/grpc.go#L71)
@@ -420,8 +417,6 @@ Do not try to edit it manually.
 ### [global-options](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/settings/global_options.go#L28)
 - [should have worker_rlimit_nofile option](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/settings/global_options.go#L31)
 - [should have worker_rlimit_nofile option and be independent on amount of worker processes](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/settings/global_options.go#L37)
-### [settings-global-rate-limit](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/settings/globalratelimit.go#L30)
-- [generates correct NGINX configuration](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/settings/globalratelimit.go#L38)
 ### [GRPC](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/settings/grpc.go#L39)
 - [should set the correct GRPC Buffer Size](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/settings/grpc.go#L42)
 ### [gzip](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/settings/gzip.go#L30)

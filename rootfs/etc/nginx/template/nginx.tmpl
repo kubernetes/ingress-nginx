@@ -1242,7 +1242,6 @@ stream {
             set $service_name   {{ $ing.Service | quote }};
             set $service_port   {{ $ing.ServicePort | quote }};
             set $location_path  {{ $ing.Path | escapeLiteralDollar | quote }};
-            set $global_rate_limit_exceeding n;
 
             {{ buildOpentelemetryForLocation $all.Cfg.EnableOpentelemetry $all.Cfg.OpentelemetryTrustIncomingSpan $location }}
 

@@ -82,7 +82,6 @@ var (
 		"balancer_ewma_locks":           1024,
 		"certificate_servers":           5120,
 		"ocsp_response_cache":           5120, // keep this same as certificate_servers
-		"global_throttle_cache":         10240,
 	}
 	defaultGlobalAuthRedirectParam = "rd"
 )

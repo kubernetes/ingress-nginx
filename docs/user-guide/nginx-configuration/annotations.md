@@ -64,10 +64,6 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/http2-push-preload](#http2-push-preload)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/limit-connections](#rate-limiting)|number|
 |[nginx.ingress.kubernetes.io/limit-rps](#rate-limiting)|number|
-|[nginx.ingress.kubernetes.io/global-rate-limit](#global-rate-limiting)|number|
-|[nginx.ingress.kubernetes.io/global-rate-limit-window](#global-rate-limiting)|duration|
-|[nginx.ingress.kubernetes.io/global-rate-limit-key](#global-rate-limiting)|string|
-|[nginx.ingress.kubernetes.io/global-rate-limit-ignored-cidrs](#global-rate-limiting)|string|
 |[nginx.ingress.kubernetes.io/permanent-redirect](#permanent-redirect)|string|
 |[nginx.ingress.kubernetes.io/permanent-redirect-code](#permanent-redirect-code)|number|
 |[nginx.ingress.kubernetes.io/temporal-redirect](#temporal-redirect)|string|
@@ -559,46 +555,6 @@ If you specify multiple annotations in a single Ingress rule, limits are applied
 To configure settings globally for all Ingress rules, the `limit-rate-after` and `limit-rate` values may be set in the [NGINX ConfigMap](./configmap.md#limit-rate).  The value set in an Ingress annotation will override the global setting.
 
 The client IP address will be set based on the use of [PROXY protocol](./configmap.md#use-proxy-protocol) or from the `X-Forwarded-For` header value when [use-forwarded-headers](./configmap.md#use-forwarded-headers) is enabled.
-
-### Global Rate Limiting
-
-**Note:** Be careful when configuring both (Local) Rate Limiting and Global Rate Limiting at the same time.
-They are two completely different rate limiting implementations. Whichever limit exceeds first will reject the
-requests. It might be a good idea to configure both of them to ease load on Global Rate Limiting backend
-in cases of spike in traffic.
-
-The stock NGINX rate limiting does not share its counters among different NGINX instances.
-Given that most ingress-nginx deployments are elastic and number of replicas can change any day
-it is impossible to configure a proper rate limit using stock NGINX functionalities.
-Global Rate Limiting overcome this by using [lua-resty-global-throttle](https://github.com/ElvinEfendi/lua-resty-global-throttle). `lua-resty-global-throttle` shares its counters via a central store such as `memcached`.
-The obvious shortcoming of this is users have to deploy and operate a `memcached` instance
-in order to benefit from this functionality. Configure the `memcached`
-using [these configmap settings](./configmap.md#global-rate-limit).
-
-**Here are a few remarks for ingress-nginx integration of `lua-resty-global-throttle`:**
-
-1. We minimize `memcached` access by caching exceeding limit decisions. The expiry of
-cache entry is the desired delay `lua-resty-global-throttle` calculates for us.
-The Lua Shared Dictionary used for that is `global_throttle_cache`. Currently its size defaults to 10M.
-Customize it as per your needs using [lua-shared-dicts](./configmap.md#lua-shared-dicts).
-When we fail to cache the exceeding limit decision then we log an NGINX error. You can monitor
-for that error to decide if you need to bump the cache size. Without cache the cost of processing a
-request is two memcached commands: `GET`, and `INCR`. With the cache it is only `INCR`.
-1. Log NGINX variable `$global_rate_limit_exceeding`'s value to have some visibility into
-what portion of requests are rejected (value `y`), whether they are rejected using cached decision (value `c`),
-or if they are not rejected (default value `n`). You can use [log-format-upstream](./configmap.md#log-format-upstream)
-to include that in access logs.
-1. In case of an error it will log the error message and **fail open**.
-1. The annotations below creates Global Rate Limiting instance per ingress.
-That means if there are multiple paths configured under the same ingress,
-the Global Rate Limiting will count requests to all the paths under the same counter.
-Extract a path out into its own ingress if you need to isolate a certain path.
-
-
-* `nginx.ingress.kubernetes.io/global-rate-limit`: Configures maximum allowed number of requests per window. Required.
-* `nginx.ingress.kubernetes.io/global-rate-limit-window`: Configures a time window (i.e `1m`) that the limit is applied. Required.
-* `nginx.ingress.kubernetes.io/global-rate-limit-key`: Configures a key for counting the samples. Defaults to `$remote_addr`. You can also combine multiple NGINX variables here, like `${remote_addr}-${http_x_api_client}` which would mean the limit will be applied to requests coming from the same API client (indicated by `X-API-Client` HTTP request header) with the same source IP address.
-* `nginx.ingress.kubernetes.io/global-rate-limit-ignored-cidrs`: comma separated list of IPs and CIDRs to match client IP against. When there's a match request is not considered for rate limiting.
 
 ### Permanent Redirect
 
