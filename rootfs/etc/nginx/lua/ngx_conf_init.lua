@@ -41,17 +41,6 @@ local function initialize_ingress(statusport, enablemetrics, ocsp, ingress)
       certificate = res
       certificate.is_ocsp_stapling_enabled = ocsp
     end
-
-    ok, res = pcall(require, "plugins")
-    if not ok then
-      error("require failed: " .. tostring(res))
-    else
-      plugins = res
-    end
-
-    -- TODO: Re-enable 3rd party plugins
-    --plugins.init({ {{ range  $idx, $plugin := $cfg.Plugins }}{{ if $idx }},{{ end }}{{ $plugin | quote }}{{ end }} })
-    plugins.init({})
 end
 
 return { initialize_ingress = initialize_ingress }

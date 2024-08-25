@@ -1141,40 +1141,7 @@ stream {
 
             header_filter_by_lua_file /etc/nginx/lua/nginx/ngx_conf_srv_hdr_filter.lua;
 
-<<<<<<< HEAD
-            header_filter_by_lua_block {
-                lua_ingress.header()
-            }
-
-            log_by_lua_block {
-                balancer.log()
-                {{ if $all.EnableMetrics }}
-                monitor.call()
-                {{ end }}
-            }
-||||||| parent of b65dae6b8 (Remove inline lua script from template)
-            header_filter_by_lua_block {
-                lua_ingress.header()
-                plugins.run()
-            }
-
-            body_filter_by_lua_block {
-                plugins.run()
-            }
-
-            log_by_lua_block {
-                balancer.log()
-                {{ if $all.EnableMetrics }}
-                monitor.call()
-                {{ end }}
-
-                plugins.run()
-            }
-=======
-            body_filter_by_lua_file /etc/nginx/lua/nginx/ngx_conf_srv_body_filter.lua;
-
             log_by_lua_file /etc/nginx/lua/nginx/ngx_conf_log_block.lua;
->>>>>>> b65dae6b8 (Remove inline lua script from template)
 
             {{ if not $location.Logs.Access }}
             access_log off;
