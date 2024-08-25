@@ -70,21 +70,9 @@ http {
 
     lua_shared_dict luaconfig 5m;
 
-    {{/* We need to keep this lua block inline, because init_worker_by_lua_file does not support using arguments */}}
-    init_by_lua_block {
-        local luaconfig = ngx.shared.luaconfig
-        local ingresscfg =  {{ configForLua $all }}
-        luaconfig:set("enablemetrics", {{ $all.EnableMetrics }})
-        luaconfig:set("listen_https_ports", '{{ $all.ListenPorts.HTTPS }}')
-        luaconfig:set("use_forwarded_headers", {{ $cfg.UseForwardedHeaders }})
-        local ngx_conf_init = require('ngx_conf_init')
-        ngx_conf_init.initialize_ingress('{{ .StatusPort }}', {{ $all.EnableMetrics }}, {{ $cfg.EnableOCSP }}, ingresscfg)
-    }
+    init_by_lua_file /etc/nginx/lua/ngx_conf_init.lua;
 
-    init_worker_by_lua_block {
-        local ngx_conf_init_worker = require('ngx_conf_init_worker')
-        ngx_conf_init_worker.initialize_worker({{ $all.EnableMetrics }}, {{ $all.MonitorMaxBatchSize }})
-    }
+    init_worker_by_lua_file /etc/nginx/lua/ngx_conf_init_worker.lua;
 
     {{/* Enable the real_ip module only if we use either X-Forwarded headers or Proxy Protocol. */}}
     {{/* we use the value of the real IP for the geo_ip module */}}
@@ -703,10 +691,7 @@ stream {
     
     {{ buildResolvers $cfg.Resolver $cfg.DisableIpv6DNS }}
 
-    init_by_lua_block {
-        local ngx_conf_init_stream = require('ngx_conf_init_stream')
-        ngx_conf_init_stream.initialize_stream('{{ .StatusPort }}')
-    }
+    init_by_lua_file /etc/nginx/lua/ngx_conf_init_stream.lua;
 
     init_worker_by_lua_file /etc/nginx/lua/nginx/ngx_conf_init_tcp_udp.lua;
 
@@ -1134,10 +1119,9 @@ stream {
             mirror_request_body {{ $location.Mirror.RequestBody }};
             {{ end }}
 
-            rewrite_by_lua_block {
-                lua_ingress.rewrite({{ locationConfigForLua $location $all }})
-                balancer.rewrite()
-            }
+            {{ locationConfigForLua $location $all }}
+
+            rewrite_by_lua_file /etc/nginx/lua/nginx/ngx_rewrite.lua;
 
             header_filter_by_lua_file /etc/nginx/lua/nginx/ngx_conf_srv_hdr_filter.lua;
 

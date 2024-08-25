@@ -1,46 +1,54 @@
-local function initialize_ingress(statusport, enablemetrics, ocsp, ingress)
-    collectgarbage("collect")
-    -- init modules
-    local ok, res
-    ok, res = pcall(require, "lua_ingress")
-    if not ok then
-      error("require failed: " .. tostring(res))
-    else
-      lua_ingress = res
-      lua_ingress.set_config(ingress)
-    end
+local cjson = require("cjson.safe")
 
-    ok, res = pcall(require, "configuration")
-    if not ok then
-      error("require failed: " .. tostring(res))
-    else
-      configuration = res
-      configuration.prohibited_localhost_port = statusport
-    end
+collectgarbage("collect")
+local f = io.open("/etc/nginx/lua/cfg.json", "r")
+local content = f:read("*a")
+f:close()
+local configfile = cjson.decode(content)
 
-    ok, res = pcall(require, "balancer")
+local luaconfig = ngx.shared.luaconfig
+luaconfig:set("enablemetrics", configfile.enable_metrics)
+luaconfig:set("listen_https_ports", configfile.listen_ports.https)
+luaconfig:set("use_forwarded_headers", configfile.use_forwarded_headers)
+-- init modules
+local ok, res
+ok, res = pcall(require, "lua_ingress")
+if not ok then
+  error("require failed: " .. tostring(res))
+else
+  lua_ingress = res
+  lua_ingress.set_config(configfile)
+end
+ok, res = pcall(require, "configuration")
+if not ok then
+  error("require failed: " .. tostring(res))
+else
+  configuration = res
+  if not configfile.listen_ports.status_port then
+    error("required status port not found")
+  end
+  configuration.prohibited_localhost_port = configfile.listen_ports.status_port
+end
+ok, res = pcall(require, "balancer")
+if not ok then
+  error("require failed: " .. tostring(res))
+else
+  balancer = res
+end
+if configfile.enable_metrics then
+    ok, res = pcall(require, "monitor")
     if not ok then
-      error("require failed: " .. tostring(res))
+        error("require failed: " .. tostring(res))
     else
-      balancer = res
-    end
-
-    if enablemetrics then
-        ok, res = pcall(require, "monitor")
-        if not ok then
-            error("require failed: " .. tostring(res))
-        else
-            monitor = res
-        end
-    end
-
-    ok, res = pcall(require, "certificate")
-    if not ok then
-      error("require failed: " .. tostring(res))
-    else
-      certificate = res
-      certificate.is_ocsp_stapling_enabled = ocsp
+        monitor = res
     end
 end
-
-return { initialize_ingress = initialize_ingress }
+ok, res = pcall(require, "certificate")
+if not ok then
+  error("require failed: " .. tostring(res))
+else
+  certificate = res
+  if configfile.enable_ocsp then
+    certificate.is_ocsp_stapling_enabled = configfile.enable_ocsp
+  end
+end

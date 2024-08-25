@@ -690,6 +690,10 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		return err
 	}
 
+	err = n.createLuaConfig(&cfg)
+	if err != nil {
+		return err
+	}
 	err = createOpentelemetryCfg(&cfg)
 	if err != nil {
 		return err
@@ -1077,6 +1081,32 @@ func createOpentelemetryCfg(cfg *ngx_config.Configuration) error {
 	}
 
 	return os.WriteFile(cfg.OpentelemetryConfig, tmplBuf.Bytes(), file.ReadWriteByUser)
+}
+
+func (n *NGINXController) createLuaConfig(cfg *ngx_config.Configuration) error {
+	luaconfigs := &ngx_template.LuaConfig{
+		EnableMetrics: n.cfg.EnableMetrics,
+		ListenPorts: ngx_template.LuaListenPorts{
+			HTTPSPort:    strconv.Itoa(n.cfg.ListenPorts.HTTPS),
+			StatusPort:   strconv.Itoa(nginx.StatusPort),
+			SSLProxyPort: strconv.Itoa(n.cfg.ListenPorts.SSLProxy),
+		},
+		UseProxyProtocol:        cfg.UseProxyProtocol,
+		UseForwardedHeaders:     cfg.UseForwardedHeaders,
+		IsSSLPassthroughEnabled: n.cfg.EnableSSLPassthrough,
+		HTTPRedirectCode:        cfg.HTTPRedirectCode,
+		EnableOCSP:              cfg.EnableOCSP,
+		MonitorBatchMaxSize:     n.cfg.MonitorMaxBatchSize,
+		HSTS:                    cfg.HSTS,
+		HSTSMaxAge:              cfg.HSTSMaxAge,
+		HSTSIncludeSubdomains:   cfg.HSTSIncludeSubdomains,
+		HSTSPreload:             cfg.HSTSPreload,
+	}
+	jsonCfg, err := json.Marshal(luaconfigs)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(luaCfgPath, jsonCfg, file.ReadWriteByUser)
 }
 
 func cleanTempNginxCfg() error {

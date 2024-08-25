@@ -194,13 +194,39 @@ func cleanConf(in, out *bytes.Buffer) error {
 	}
 }
 
-type LuaConfigs struct {
-	EnableMetrics       bool   `json:"enable_metrics"`
-	HTTPSPort           string `json:"httpsPort"`
-	StatusPort          string `json:"status_port"`
-	UseForwardedPorts   bool   `json:"use_forwarded_ports"`
-	EnableOCSP          bool   `json:"enable_ocsp"`
-	MonitorBatchMaxSize int    `json:"monitor_batch_max_size"`
+/* LuaConfig defines the structure that will be written as a config for lua scripts
+The json format should follow what's expected by lua:
+		use_forwarded_headers = %t,
+		use_proxy_protocol = %t,
+		is_ssl_passthrough_enabled = %t,
+		http_redirect_code = %v,
+		listen_ports = { ssl_proxy = "%v", https = "%v" },
+
+		hsts = %t,
+		hsts_max_age = %v,
+		hsts_include_subdomains = %t,
+		hsts_preload = %t,
+*/
+
+type LuaConfig struct {
+	EnableMetrics           bool           `json:"enable_metrics"`
+	ListenPorts             LuaListenPorts `json:"listen_ports"`
+	UseForwardedHeaders     bool           `json:"use_forwarded_headers"`
+	UseProxyProtocol        bool           `json:"use_proxy_protocol"`
+	IsSSLPassthroughEnabled bool           `json:"is_ssl_passthrough_enabled"`
+	HTTPRedirectCode        int            `json:"http_redirect_code"`
+	EnableOCSP              bool           `json:"enable_ocsp"`
+	MonitorBatchMaxSize     int            `json:"monitor_batch_max_size"`
+	HSTS                    bool           `json:"hsts"`
+	HSTSMaxAge              string         `json:"hsts_max_age"`
+	HSTSIncludeSubdomains   bool           `json:"hsts_include_subdomains"`
+	HSTSPreload             bool           `json:"hsts_preload"`
+}
+
+type LuaListenPorts struct {
+	HTTPSPort    string `json:"https"`
+	StatusPort   string `json:"status_port"`
+	SSLProxyPort string `json:"ssl_proxy"`
 }
 
 // Write populates a buffer using a template with NGINX configuration
@@ -441,13 +467,21 @@ func locationConfigForLua(l, a interface{}) string {
 		return "{}"
 	}
 
-	return fmt.Sprintf(`{
-		force_ssl_redirect = %t,
-		ssl_redirect = %t,
-		force_no_ssl_redirect = %t,
-		preserve_trailing_slash = %t,
-		use_port_in_redirects = %t,
-	}`,
+	/* Lua expects the following vars
+		force_ssl_redirect = string_to_bool(ngx.var.force_ssl_redirect),
+	    ssl_redirect = string_to_bool(ngx.var.ssl_redirect),
+	    force_no_ssl_redirect = string_to_bool(ngx.var.force_no_ssl_redirect),
+	    preserve_trailing_slash = string_to_bool(ngx.var.preserve_trailing_slash),
+	    use_port_in_redirects = string_to_bool(ngx.var.use_port_in_redirects),
+	*/
+
+	return fmt.Sprintf(`
+	    set $force_ssl_redirect "%t";
+	    set $ssl_redirect "%t";
+	    set $force_no_ssl_redirect "%t";
+	    set $preserve_trailing_slash "%t";
+	    set $use_port_in_redirects "%t";
+	`,
 		location.Rewrite.ForceSSLRedirect,
 		location.Rewrite.SSLRedirect,
 		isLocationInLocationList(l, all.Cfg.NoTLSRedirectLocations),
