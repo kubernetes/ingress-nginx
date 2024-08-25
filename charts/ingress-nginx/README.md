@@ -356,7 +356,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.livenessProbe.periodSeconds | int | `10` |  |
 | controller.livenessProbe.successThreshold | int | `1` |  |
 | controller.livenessProbe.timeoutSeconds | int | `1` |  |
-| controller.maxmindLicenseKey | string | `""` | Maxmind license key to download GeoLite2 Databases. # https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases |
+| controller.maxmindLicenseKey | string | `""` | Maxmind license key to download GeoLite2 Databases. # https://blog.maxmind.com/2019/12/significant-changes-to-accessing-and-using-geolite2-databases/ |
 | controller.metrics.enabled | bool | `false` |  |
 | controller.metrics.port | int | `10254` |  |
 | controller.metrics.portName | string | `"metrics"` |  |

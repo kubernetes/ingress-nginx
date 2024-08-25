@@ -721,7 +721,7 @@ _**default:**_ true
 ## use-geoip2
 
 Enables the [geoip2 module](https://github.com/leev/ngx_http_geoip2_module) for NGINX.
-Since `0.27.0` and due to a [change in the MaxMind databases](https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases) a license is required to have access to the databases.
+Since `0.27.0` and due to a [change in the MaxMind databases](https://blog.maxmind.com/2019/12/significant-changes-to-accessing-and-using-geolite2-databases/) a license is required to have access to the databases.
 For this reason, it is required to define a new flag `--maxmind-license-key` in the ingress controller deployment to download the databases needed during the initialization of the ingress controller.
 Alternatively, it is possible to use a volume to mount the files `/etc/ingress-controller/geoip/GeoLite2-City.mmdb` and `/etc/ingress-controller/geoip/GeoLite2-ASN.mmdb`, avoiding the overhead of the download.
 
