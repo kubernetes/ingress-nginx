@@ -29,7 +29,7 @@ The following table shows a configuration option's name, type, and the default v
 |:--------------------------------------------------------------------------------|:-------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:------------------------------------------------------------------------------------|
 | [add-headers](#add-headers)                                                     | string       | ""                                                                                                                                                                                                                                                                                                                                                           |                                                                                     |
 | [allow-backend-server-header](#allow-backend-server-header)                     | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
-| [allow-cross-namespace-resources](#allow-cross-namespace-resources)             | bool         | "true"                                                                                                                                                                                                                                                                                                                                                       |                                                                                     |
+| [allow-cross-namespace-resources](#allow-cross-namespace-resources)             | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
 | [allow-snippet-annotations](#allow-snippet-annotations)                         | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
 | [annotations-risk-level](#annotations-risk-level)                               | string       | Critical                                                                                                                                                                                                                                                                                                                                                     |                                                                                     |
 | [annotation-value-word-blocklist](#annotation-value-word-blocklist)             | string array | ""                                                                                                                                                                                                                                                                                                                                                           |                                                                                     |
@@ -234,17 +234,15 @@ Enables the return of the header Server from the backend instead of the generic 
 
 ## allow-cross-namespace-resources
 
-Enables users to consume cross namespace resource on annotations, when was previously enabled . _**default:**_ true
+Enables users to consume cross namespace resource on annotations, when was previously enabled . _**default:**_ false
 
 **Annotations that may be impacted with this change**:
+
 * `auth-secret`
 * `auth-proxy-set-header`
 * `auth-tls-secret`
 * `fastcgi-params-configmap`
 * `proxy-ssl-secret`
-
-
-**This option will be defaulted to false in the next major release**
 
 ## allow-snippet-annotations
 
