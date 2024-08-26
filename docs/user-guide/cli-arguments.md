@@ -41,7 +41,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--maxmind-edition-ids`            | Maxmind edition ids to download GeoLite2 Databases. (default "GeoLite2-City,GeoLite2-ASN") |
 | `--maxmind-retries-timeout`        | Maxmind downloading delay between 1st and 2nd attempt, 0s - do not retry to download if something went wrong. (default 0s) |
 | `--maxmind-retries-count`          | Number of attempts to download the GeoIP DB. (default 1) |
-| `--maxmind-license-key`            | Maxmind license key to download GeoLite2 Databases. https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases . |
+| `--maxmind-license-key`            | Maxmind license key to download GeoLite2 Databases. https://blog.maxmind.com/2019/12/significant-changes-to-accessing-and-using-geolite2-databases/ . |
 | `--maxmind-mirror`            | Maxmind mirror url (example: http://geoip.local/databases. |
 | `--metrics-per-host`               | Export metrics per-host. (default true) |
 | `--monitor-max-batch-size`               | Max batch size of NGINX metrics. (default 10000)|
