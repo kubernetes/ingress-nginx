@@ -221,7 +221,7 @@ The following table shows a configuration option's name, type, and the default v
 | [service-upstream](#service-upstream)                                           | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
 | [ssl-reject-handshake](#ssl-reject-handshake)                                   | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
 | [debug-connections](#debug-connections)                                         | []string     | "127.0.0.1,1.1.1.1/24"                                                                                                                                                                                                                                                                                                                                       |                                                                                     |
-| [strict-validate-path-type](#strict-validate-path-type)                         | bool         | "false" (v1.7.x)                                                                                                                                                                                                                                                                                                                                             |                                                                                     |
+| [strict-validate-path-type](#strict-validate-path-type)                         | bool         | "true"                                                                                                                                                                                                                                                                                                                                                       |                                                                                     |
 | [grpc-buffer-size-kb](#grpc-buffer-size-kb)                                     | int          | 0                                                                                                                                                                                                                                                                                                                                                            |                                                                                     |
 
 ## add-headers
@@ -1362,6 +1362,7 @@ _References:_
 [http://nginx.org/en/docs/ngx_core_module.html#debug_connection](http://nginx.org/en/docs/ngx_core_module.html#debug_connection)
 
 ## strict-validate-path-type
+
 Ingress objects contains a field called pathType that defines the proxy behavior. It can be `Exact`, `Prefix` and `ImplementationSpecific`.
 
 When pathType is configured as `Exact` or `Prefix`, there should be a more strict validation, allowing only paths starting with "/" and
@@ -1374,6 +1375,8 @@ This means that Ingress objects that rely on paths containing regex characters s
 
 The cluster admin should establish validation rules using mechanisms like [Open Policy Agent](https://www.openpolicyagent.org/) to 
 validate that only authorized users can use `ImplementationSpecific` pathType and that only the authorized characters can be used.
+
+_**default:**_ "true"
 
 ## grpc-buffer-size-kb
 
