@@ -251,8 +251,6 @@ Enables Ingress to parse and add *-snippet annotations/directives created by the
 Warning: We recommend enabling this option only if you TRUST users with permission to create Ingress objects, as this
 may allow a user to add restricted configurations to the final nginx.conf file
 
-**This option will be defaulted to false in the next major release**
-
 ## annotations-risk-level
 
 Represents the risk accepted on an annotation. If the risk is, for instance `Medium`, annotations with risk High and Critical will not be accepted.
