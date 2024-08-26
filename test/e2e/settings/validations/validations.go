@@ -31,14 +31,8 @@ var _ = framework.IngressNginxDescribeSerial("annotation validations", func() {
 	f := framework.NewDefaultFramework("validations")
 	//nolint:dupl // Ignore dupl errors for similar test case
 	ginkgo.It("should allow ingress based on their risk on webhooks", func() {
-		f.SetNginxConfigMapData(map[string]string{
-			"allow-snippet-annotations": "true",
-		})
-		defer func() {
-			f.SetNginxConfigMapData(map[string]string{
-				"allow-snippet-annotations": "false",
-			})
-		}()
+		disableSnippet := f.AllowSnippetConfiguration()
+		defer disableSnippet()
 
 		host := "annotation-validations"
 
@@ -66,14 +60,9 @@ var _ = framework.IngressNginxDescribeSerial("annotation validations", func() {
 	})
 	//nolint:dupl // Ignore dupl errors for similar test case
 	ginkgo.It("should allow ingress based on their risk on webhooks", func() {
-		f.SetNginxConfigMapData(map[string]string{
-			"allow-snippet-annotations": "true",
-		})
-		defer func() {
-			f.SetNginxConfigMapData(map[string]string{
-				"allow-snippet-annotations": "false",
-			})
-		}()
+		disableSnippet := f.AllowSnippetConfiguration()
+		defer disableSnippet()
+
 		host := "annotation-validations"
 
 		// Low and Medium Risk annotations should be allowed, the rest should be denied
