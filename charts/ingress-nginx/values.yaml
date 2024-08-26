@@ -847,6 +847,7 @@ controller:
     serviceMonitor:
       enabled: false
       additionalLabels: {}
+      # -- Annotations to be added to the ServiceMonitor.
       annotations: {}
       ## The label to use to retrieve the job name from.
       ## jobLabel: "app.kubernetes.io/name"
