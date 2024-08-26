@@ -16,8 +16,16 @@ tests:
   - it: should create a ConfigMap with templated values if `controller.config` contains templates
     set:
       controller.config:
-        use-gzip: true
+        template: "test.{{ .Release.Namespace }}.svc.kubernetes.local"
+        integer: 12345
+        boolean: true
     asserts:
       - equal:
-          path: data.use-gzip
+          path: data.template
+          value: test.NAMESPACE.svc.kubernetes.local
+      - equal:
+          path: data.integer
+          value: "12345"
+      - equal:
+          path: data.boolean
           value: "true"
