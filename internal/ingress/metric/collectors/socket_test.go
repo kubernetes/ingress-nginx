@@ -86,14 +86,15 @@ func TestCollector(t *testing.T) {
 	}
 
 	cases := []struct {
-		name             string
-		data             []string
-		metrics          []string
-		useStatusClasses bool
-		excludeMetrics   []string
-		wantBefore       string
-		removeIngresses  []string
-		wantAfter        string
+		name                    string
+		data                    []string
+		metrics                 []string
+		metricsPerUndefinedHost bool
+		useStatusClasses        bool
+		excludeMetrics          []string
+		wantBefore              string
+		removeIngresses         []string
+		wantAfter               string
 	}{
 		{
 			name: "invalid metric object should not increase prometheus metrics",
