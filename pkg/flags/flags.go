@@ -160,7 +160,7 @@ Requires the update-status parameter.`)
 			`Prefix of the Ingress annotations specific to the NGINX controller.`)
 
 		enableAnnotationValidation = flags.Bool("enable-annotation-validation", true,
-			`If true, will enable the annotation validation feature. This value will be defaulted to true on a future release`)
+			`If true, will enable the annotation validation feature. Defaults to true`)
 
 		enableSSLChainCompletion = flags.Bool("enable-ssl-chain-completion", false,
 			`Autocomplete SSL certificate chains with missing intermediate CA certificates.
