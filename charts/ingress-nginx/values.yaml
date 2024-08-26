@@ -899,6 +899,8 @@ controller:
     prometheusRule:
       enabled: false
       additionalLabels: {}
+      # -- Annotations to be added to the PrometheusRule.
+      annotations: {}
       # namespace: ""
       rules: []
       # # These are just examples rules, please adapt them to your needs

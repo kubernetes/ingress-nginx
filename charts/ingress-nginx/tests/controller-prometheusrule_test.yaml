@@ -15,3 +15,15 @@ tests:
       - equal:
           path: metadata.name
           value: RELEASE-NAME-ingress-nginx-controller
+
+  - it: should create a PrometheusRule with annotations if `controller.metrics.prometheusRule.annotations` is set
+    set:
+      controller.metrics.enabled: true
+      controller.metrics.prometheusRule.enabled: true
+      controller.metrics.prometheusRule.annotations:
+        my-little-annotation: test-value
+    asserts:
+      - equal:
+          path: metadata.annotations
+          value:
+            my-little-annotation: test-value
