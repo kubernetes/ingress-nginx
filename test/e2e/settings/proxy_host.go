@@ -58,16 +58,8 @@ var _ = framework.IngressNginxDescribe("Dynamic $proxy_host", func() {
 	})
 
 	ginkgo.It("should exist a proxy_host using the upstream-vhost annotation value", func() {
-		f.SetNginxConfigMapData(map[string]string{
-			"allow-snippet-annotations": "true",
-			"annotations-risk-level":    "Critical", // To allow Configuration Snippet
-		})
-		defer func() {
-			f.SetNginxConfigMapData(map[string]string{
-				"allow-snippet-annotations": "false",
-				"annotations-risk-level":    "High",
-			})
-		}()
+		disableSnippet := f.AllowSnippetConfiguration()
+		defer disableSnippet()
 
 		upstreamName := fmt.Sprintf("%v-%v-80", f.Namespace, framework.EchoService)
 		upstreamVHost := "different.host"
