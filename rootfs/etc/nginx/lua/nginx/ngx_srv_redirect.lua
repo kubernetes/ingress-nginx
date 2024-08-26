@@ -22,9 +22,7 @@ else
     redirectScheme = ngx.var.scheme
 end
 
-if listen_https_ports == '443' then
-    return string.format("%s://%s%s", redirectScheme, redirect_to, request_uri)
-else
-    return string.format("%s://%s:%s%s", redirectScheme,
-        redirect_to, listen_https_ports, request_uri)
-end
+
+return string.format("%s://%s:%s%s", redirectScheme,
+    redirect_to, listen_https_ports, request_uri)
+
