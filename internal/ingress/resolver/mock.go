@@ -39,7 +39,7 @@ func (m Mock) GetDefaultBackend() defaults.Backend {
 func (m Mock) GetSecurityConfiguration() defaults.SecurityConfiguration {
 	defRisk := m.AnnotationsRiskLevel
 	if defRisk == "" {
-		defRisk = "Critical"
+		defRisk = "High"
 	}
 	return defaults.SecurityConfiguration{
 		AnnotationsRiskLevel:         defRisk,
