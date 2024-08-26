@@ -495,8 +495,6 @@ Do not try to edit it manually.
 - [should include opentelemetry_trust_incoming_spans on directive when enabled](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/settings/opentelemetry.go#L76)
 - [should not exists opentelemetry_operation_name directive when is empty](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/settings/opentelemetry.go#L91)
 - [should exists opentelemetry_operation_name directive when is configured](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/settings/opentelemetry.go#L106)
-### [plugins](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/settings/plugins.go#L28)
-- [should exist a x-hello-world header](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/settings/plugins.go#L35)
 ### [proxy-connect-timeout](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/settings/proxy_connect_timeout.go#L29)
 - [should set valid proxy timeouts using configmap values](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/settings/proxy_connect_timeout.go#L37)
 - [should not set invalid proxy timeouts using configmap values](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/settings/proxy_connect_timeout.go#L53)
