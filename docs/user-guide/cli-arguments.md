@@ -48,6 +48,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--maxmind-license-key`            | Maxmind license key to download GeoLite2 Databases. https://blog.maxmind.com/2019/12/significant-changes-to-accessing-and-using-geolite2-databases/ . |
 | `--maxmind-mirror`            | Maxmind mirror url (example: http://geoip.local/databases. |
 | `--metrics-per-host`               | Export metrics per-host. (default true) |
+| `--metrics-per-undefined-host`     | Export metrics per-host even if the host is not defined in an ingress. Requires --metrics-per-host to be set to true. (default false) |
 | `--monitor-max-batch-size`               | Max batch size of NGINX metrics. (default 10000)|
 | `--post-shutdown-grace-period`     | Additional delay in seconds before controller container exits. (default 10) |
 | `--profiler-port`                  | Port to use for expose the ingress controller Go profiler when it is enabled. (default 10245) |

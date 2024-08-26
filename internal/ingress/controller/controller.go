@@ -105,13 +105,14 @@ type Configuration struct {
 
 	EnableProfiling bool
 
-	EnableMetrics        bool
-	MetricsPerHost       bool
-	MetricsBuckets       *collectors.HistogramBuckets
-	MetricsBucketFactor  float64
-	MetricsMaxBuckets    uint32
-	ReportStatusClasses  bool
-	ExcludeSocketMetrics []string
+	EnableMetrics           bool
+	MetricsPerHost          bool
+	MetricsPerUndefinedHost bool
+	MetricsBuckets          *collectors.HistogramBuckets
+	MetricsBucketFactor     float64
+	MetricsMaxBuckets       uint32
+	ReportStatusClasses     bool
+	ExcludeSocketMetrics    []string
 
 	FakeCertificate *ingress.SSLCert
 

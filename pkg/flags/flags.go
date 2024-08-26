@@ -17,6 +17,7 @@ limitations under the License.
 package flags
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"net"
@@ -177,6 +178,8 @@ Requires the update-status parameter.`)
 			`Enables the collection of NGINX metrics.`)
 		metricsPerHost = flags.Bool("metrics-per-host", true,
 			`Export metrics per-host.`)
+		metricsPerUndefinedHost = flags.Bool("metrics-per-undefined-host", false,
+			`Export metrics per-host even if the host is not defined in an ingress. Requires --metrics-per-host to be set to true.`)
 		reportStatusClasses = flags.Bool("report-status-classes", false,
 			`Use status classes (2xx, 3xx, 4xx and 5xx) instead of status codes in metrics.`)
 
@@ -319,6 +322,10 @@ https://blog.maxmind.com/2019/12/significant-changes-to-accessing-and-using-geol
 		}
 	}
 
+	if *metricsPerUndefinedHost && !*metricsPerHost {
+		return false, nil, errors.New("--metrics-per-undefined-host=true must be passed with --metrics-per-host=true")
+	}
+
 	if *electionTTL <= 0 {
 		*electionTTL = 30 * time.Second
 	}
@@ -340,6 +347,7 @@ https://blog.maxmind.com/2019/12/significant-changes-to-accessing-and-using-geol
 		EnableProfiling:             *profiling,
 		EnableMetrics:               *enableMetrics,
 		MetricsPerHost:              *metricsPerHost,
+		MetricsPerUndefinedHost:     *metricsPerUndefinedHost,
 		MetricsBuckets:              histogramBuckets,
 		MetricsBucketFactor:         *bucketFactor,
 		MetricsMaxBuckets:           *maxBuckets,
