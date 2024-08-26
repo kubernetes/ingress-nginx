@@ -56,6 +56,11 @@ func TestValidateArrayOfServerName(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name:    "should allow comma seperated query params",
+			value:   "https://oauth.example/oauth2/auth?allowed_groups=gid1,gid2",
+			wantErr: false,
+		},
+		{
 			name:    "should deny names with weird characters",
 			value:   "something.com,lolo;xpto.com,nothing.com",
 			wantErr: true,
