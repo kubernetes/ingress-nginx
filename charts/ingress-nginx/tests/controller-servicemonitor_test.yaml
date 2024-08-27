@@ -1,0 +1,29 @@
+suite: Controller > ServiceMonitor
+templates:
+  - controller-servicemonitor.yaml
+
+tests:
+  - it: should create a ServiceMonitor if `controller.metrics.serviceMonitor.enabled` is true
+    set:
+      controller.metrics.enabled: true
+      controller.metrics.serviceMonitor.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ServiceMonitor
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-controller
+
+  - it: should create a ServiceMonitor with annotations if `controller.metrics.serviceMonitor.annotations` is set
+    set:
+      controller.metrics.enabled: true
+      controller.metrics.serviceMonitor.enabled: true
+      controller.metrics.serviceMonitor.annotations:
+        my-little-annotation: test-value
+    asserts:
+      - equal:
+          path: metadata.annotations
+          value:
+            my-little-annotation: test-value
