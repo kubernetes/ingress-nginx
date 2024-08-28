@@ -22,6 +22,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/validation"
@@ -84,6 +85,7 @@ func getEndpointsFromSlices(s *corev1.Service, port *corev1.ServicePort, proto c
 	}
 	// loop over all endpointSlices generated for service
 	for _, eps := range epss {
+		time.Sleep(100 * time.Millisecond)
 		var ports []int32
 		if len(eps.Ports) == 0 && port.TargetPort.Type == intstr.Int {
 			// When ports is empty, it indicates that there are no defined ports, using svc targePort if it's a number
