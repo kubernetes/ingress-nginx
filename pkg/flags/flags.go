@@ -17,6 +17,7 @@ limitations under the License.
 package flags
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"net"
@@ -158,8 +159,8 @@ Requires the update-status parameter.`)
 		annotationsPrefix = flags.String("annotations-prefix", parser.DefaultAnnotationsPrefix,
 			`Prefix of the Ingress annotations specific to the NGINX controller.`)
 
-		enableAnnotationValidation = flags.Bool("enable-annotation-validation", false,
-			`If true, will enable the annotation validation feature. This value will be defaulted to true on a future release`)
+		enableAnnotationValidation = flags.Bool("enable-annotation-validation", true,
+			`If true, will enable the annotation validation feature. Defaults to true`)
 
 		enableSSLChainCompletion = flags.Bool("enable-ssl-chain-completion", false,
 			`Autocomplete SSL certificate chains with missing intermediate CA certificates.
@@ -177,12 +178,16 @@ Requires the update-status parameter.`)
 			`Enables the collection of NGINX metrics.`)
 		metricsPerHost = flags.Bool("metrics-per-host", true,
 			`Export metrics per-host.`)
+		metricsPerUndefinedHost = flags.Bool("metrics-per-undefined-host", false,
+			`Export metrics per-host even if the host is not defined in an ingress. Requires --metrics-per-host to be set to true.`)
 		reportStatusClasses = flags.Bool("report-status-classes", false,
 			`Use status classes (2xx, 3xx, 4xx and 5xx) instead of status codes in metrics.`)
 
 		timeBuckets          = flags.Float64Slice("time-buckets", prometheus.DefBuckets, "Set of buckets which will be used for prometheus histogram metrics such as RequestTime, ResponseTime.")
 		lengthBuckets        = flags.Float64Slice("length-buckets", prometheus.LinearBuckets(10, 10, 10), "Set of buckets which will be used for prometheus histogram metrics such as RequestLength, ResponseLength.")
 		sizeBuckets          = flags.Float64Slice("size-buckets", prometheus.ExponentialBuckets(10, 10, 7), "Set of buckets which will be used for prometheus histogram metrics such as BytesSent.")
+		bucketFactor         = flags.Float64("bucket-factor", 0, "Bucket factor for native histograms. Value must be > 1 for enabling native histograms.")
+		maxBuckets           = flags.Uint32("max-buckets", 100, "Maximum number of buckets for native histograms.")
 		excludeSocketMetrics = flags.StringSlice("exclude-socket-metrics", []string{}, "et of socket request metrics to exclude which won't be exported nor being calculated. E.g. 'nginx_ingress_controller_success,nginx_ingress_controller_header_duration_seconds'.")
 		monitorMaxBatchSize  = flags.Int("monitor-max-batch-size", 10000, "Max batch size of NGINX metrics.")
 
@@ -232,7 +237,7 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 
 	flags.StringVar(&nginx.MaxmindMirror, "maxmind-mirror", "", `Maxmind mirror url (example: http://geoip.local/databases.`)
 	flags.StringVar(&nginx.MaxmindLicenseKey, "maxmind-license-key", "", `Maxmind license key to download GeoLite2 Databases.
-https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases .`)
+https://blog.maxmind.com/2019/12/significant-changes-to-accessing-and-using-geolite2-databases/ .`)
 	flags.StringVar(&nginx.MaxmindEditionIDs, "maxmind-edition-ids", "GeoLite2-City,GeoLite2-ASN", `Maxmind edition ids to download GeoLite2 Databases.`)
 	flags.IntVar(&nginx.MaxmindRetriesCount, "maxmind-retries-count", 1, "Number of attempts to download the GeoIP DB.")
 	flags.DurationVar(&nginx.MaxmindRetriesTimeout, "maxmind-retries-timeout", time.Second*0, "Maxmind downloading delay between 1st and 2nd attempt, 0s - do not retry to download if something went wrong.")
@@ -317,6 +322,10 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		}
 	}
 
+	if *metricsPerUndefinedHost && !*metricsPerHost {
+		return false, nil, errors.New("--metrics-per-undefined-host=true must be passed with --metrics-per-host=true")
+	}
+
 	if *electionTTL <= 0 {
 		*electionTTL = 30 * time.Second
 	}
@@ -338,7 +347,10 @@ https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-g
 		EnableProfiling:             *profiling,
 		EnableMetrics:               *enableMetrics,
 		MetricsPerHost:              *metricsPerHost,
+		MetricsPerUndefinedHost:     *metricsPerUndefinedHost,
 		MetricsBuckets:              histogramBuckets,
+		MetricsBucketFactor:         *bucketFactor,
+		MetricsMaxBuckets:           *maxBuckets,
 		ReportStatusClasses:         *reportStatusClasses,
 		ExcludeSocketMetrics:        *excludeSocketMetrics,
 		MonitorMaxBatchSize:         *monitorMaxBatchSize,

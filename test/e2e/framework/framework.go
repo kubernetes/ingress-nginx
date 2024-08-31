@@ -383,6 +383,20 @@ func (f *Framework) SetNginxConfigMapData(cmData map[string]string) {
 	f.WaitForReload(fn)
 }
 
+// SetNginxConfigMapData sets ingress-nginx's nginx-ingress-controller configMap data
+func (f *Framework) AllowSnippetConfiguration() func() {
+	f.SetNginxConfigMapData(map[string]string{
+		"allow-snippet-annotations": "true",
+		"annotations-risk-level":    "Critical", // To enable snippet configurations
+	})
+	return func() {
+		f.SetNginxConfigMapData(map[string]string{
+			"allow-snippet-annotations": "false",
+			"annotations-risk-level":    "High",
+		})
+	}
+}
+
 // CreateConfigMap creates a new configmap in the current namespace
 func (f *Framework) CreateConfigMap(name string, data map[string]string) {
 	_, err := f.KubeClientSet.CoreV1().ConfigMaps(f.Namespace).Create(context.TODO(), &v1.ConfigMap{

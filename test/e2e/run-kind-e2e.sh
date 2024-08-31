@@ -39,7 +39,6 @@ fi
 
 KIND_LOG_LEVEL="1"
 IS_CHROOT="${IS_CHROOT:-false}"
-ENABLE_VALIDATIONS="${ENABLE_VALIDATIONS:-false}"
 export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-ingress-nginx-dev}
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Use 1.0.0-dev to make sure we use the latest configuration in the helm template
@@ -96,7 +95,7 @@ fi
 
 if [ "${SKIP_E2E_IMAGE_CREATION}" = "false" ]; then
   if ! command -v ginkgo &> /dev/null; then
-    go install github.com/onsi/ginkgo/v2/ginkgo@v2.20.0
+    go install github.com/onsi/ginkgo/v2/ginkgo@v2.20.2
   fi
 
   echo "[dev-env] .. done building controller images"

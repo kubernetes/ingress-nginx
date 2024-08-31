@@ -55,10 +55,6 @@
 | ExternalAuth | auth-url | High | location |
 | FastCGI | fastcgi-index | Medium | location |
 | FastCGI | fastcgi-params-configmap | Medium | location |
-| GlobalRateLimit | global-rate-limit | Low | ingress |
-| GlobalRateLimit | global-rate-limit-ignored-cidrs | Medium | ingress |
-| GlobalRateLimit | global-rate-limit-key | High | ingress |
-| GlobalRateLimit | global-rate-limit-window | Low | ingress |
 | HTTP2PushPreload | http2-push-preload | Low | location |
 | LoadBalancing | load-balance | Low | location |
 | Logs | enable-access-log | Low | location |
@@ -108,6 +104,7 @@
 | Redirect | permanent-redirect | Medium | location |
 | Redirect | permanent-redirect-code | Low | location |
 | Redirect | temporal-redirect | Medium | location |
+| Redirect | temporal-redirect-code | Low | location |
 | Rewrite | app-root | Medium | location |
 | Rewrite | force-ssl-redirect | Medium | location |
 | Rewrite | preserve-trailing-slash | Medium | location |

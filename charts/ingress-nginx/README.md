@@ -304,7 +304,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.dnsPolicy | string | `"ClusterFirst"` | Optionally change this to ClusterFirstWithHostNet in case you have 'hostNetwork: true'. By default, while using host network, name resolution uses the host's DNS. If you wish nginx-controller to keep resolving names inside the k8s network, use ClusterFirstWithHostNet. |
 | controller.electionID | string | `""` | Election ID to use for status update, by default it uses the controller name combined with a suffix of 'leader' |
 | controller.electionTTL | string | `""` | Duration a leader election is valid before it's getting re-elected, e.g. `15s`, `10m` or `1h`. (Default: 30s) |
-| controller.enableAnnotationValidations | bool | `false` |  |
+| controller.enableAnnotationValidations | bool | `true` |  |
 | controller.enableMimalloc | bool | `true` | Enable mimalloc as a drop-in replacement for malloc. # ref: https://github.com/microsoft/mimalloc # |
 | controller.enableTopologyAwareRouting | bool | `false` | This configuration enables Topology Aware Routing feature, used together with service annotation service.kubernetes.io/topology-mode="auto" Defaults to false |
 | controller.existingPsp | string | `""` | Use an existing PSP instead of creating one |
@@ -367,11 +367,12 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.livenessProbe.periodSeconds | int | `10` |  |
 | controller.livenessProbe.successThreshold | int | `1` |  |
 | controller.livenessProbe.timeoutSeconds | int | `1` |  |
-| controller.maxmindLicenseKey | string | `""` | Maxmind license key to download GeoLite2 Databases. # https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases |
+| controller.maxmindLicenseKey | string | `""` | Maxmind license key to download GeoLite2 Databases. # https://blog.maxmind.com/2019/12/significant-changes-to-accessing-and-using-geolite2-databases/ |
 | controller.metrics.enabled | bool | `false` |  |
 | controller.metrics.port | int | `10254` |  |
 | controller.metrics.portName | string | `"metrics"` |  |
 | controller.metrics.prometheusRule.additionalLabels | object | `{}` |  |
+| controller.metrics.prometheusRule.annotations | object | `{}` | Annotations to be added to the PrometheusRule. |
 | controller.metrics.prometheusRule.enabled | bool | `false` |  |
 | controller.metrics.prometheusRule.rules | list | `[]` |  |
 | controller.metrics.service.annotations | object | `{}` |  |
@@ -381,7 +382,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.metrics.service.servicePort | int | `10254` |  |
 | controller.metrics.service.type | string | `"ClusterIP"` |  |
 | controller.metrics.serviceMonitor.additionalLabels | object | `{}` |  |
-| controller.metrics.serviceMonitor.annotations | object | `{}` |  |
+| controller.metrics.serviceMonitor.annotations | object | `{}` | Annotations to be added to the ServiceMonitor. |
 | controller.metrics.serviceMonitor.enabled | bool | `false` |  |
 | controller.metrics.serviceMonitor.metricRelabelings | list | `[]` |  |
 | controller.metrics.serviceMonitor.namespace | string | `""` |  |

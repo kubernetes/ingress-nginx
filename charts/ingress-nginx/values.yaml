@@ -17,7 +17,7 @@ commonLabels: {}
 
 controller:
   name: controller
-  enableAnnotationValidations: false
+  enableAnnotationValidations: true
   image:
     ## Keep false as default for now!
     chroot: false
@@ -198,7 +198,7 @@ controller:
     # -- Annotations to be added to the udp config configmap
     annotations: {}
   # -- Maxmind license key to download GeoLite2 Databases.
-  ## https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases
+  ## https://blog.maxmind.com/2019/12/significant-changes-to-accessing-and-using-geolite2-databases/
   maxmindLicenseKey: ""
   # -- Additional command line arguments to pass to Ingress-Nginx Controller
   # E.g. to specify the default SSL certificate you can use
@@ -881,6 +881,7 @@ controller:
     serviceMonitor:
       enabled: false
       additionalLabels: {}
+      # -- Annotations to be added to the ServiceMonitor.
       annotations: {}
       ## The label to use to retrieve the job name from.
       ## jobLabel: "app.kubernetes.io/name"
@@ -898,6 +899,8 @@ controller:
     prometheusRule:
       enabled: false
       additionalLabels: {}
+      # -- Annotations to be added to the PrometheusRule.
+      annotations: {}
       # namespace: ""
       rules: []
       # # These are just examples rules, please adapt them to your needs

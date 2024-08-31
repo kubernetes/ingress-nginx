@@ -29,9 +29,9 @@ The following table shows a configuration option's name, type, and the default v
 |:--------------------------------------------------------------------------------|:-------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:------------------------------------------------------------------------------------|
 | [add-headers](#add-headers)                                                     | string       | ""                                                                                                                                                                                                                                                                                                                                                           |                                                                                     |
 | [allow-backend-server-header](#allow-backend-server-header)                     | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
-| [allow-cross-namespace-resources](#allow-cross-namespace-resources)             | bool         | "true"                                                                                                                                                                                                                                                                                                                                                       |                                                                                     |
+| [allow-cross-namespace-resources](#allow-cross-namespace-resources)             | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
 | [allow-snippet-annotations](#allow-snippet-annotations)                         | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
-| [annotations-risk-level](#annotations-risk-level)                               | string       | Critical                                                                                                                                                                                                                                                                                                                                                     |                                                                                     |
+| [annotations-risk-level](#annotations-risk-level)                               | string       | High                                                                                                                                                                                                                                                                                                                                                         |                                                                                     |
 | [annotation-value-word-blocklist](#annotation-value-word-blocklist)             | string array | ""                                                                                                                                                                                                                                                                                                                                                           |                                                                                     |
 | [hide-headers](#hide-headers)                                                   | string array | empty                                                                                                                                                                                                                                                                                                                                                        |                                                                                     |
 | [access-log-params](#access-log-params)                                         | string       | ""                                                                                                                                                                                                                                                                                                                                                           |                                                                                     |
@@ -218,16 +218,10 @@ The following table shows a configuration option's name, type, and the default v
 | [block-referers](#block-referers)                                               | []string     | ""                                                                                                                                                                                                                                                                                                                                                           |                                                                                     |
 | [proxy-ssl-location-only](#proxy-ssl-location-only)                             | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
 | [default-type](#default-type)                                                   | string       | "text/html"                                                                                                                                                                                                                                                                                                                                                  |                                                                                     |
-| [global-rate-limit-memcached-host](#global-rate-limit)                          | string       | ""                                                                                                                                                                                                                                                                                                                                                           |                                                                                     |
-| [global-rate-limit-memcached-port](#global-rate-limit)                          | int          | 11211                                                                                                                                                                                                                                                                                                                                                        |                                                                                     |
-| [global-rate-limit-memcached-connect-timeout](#global-rate-limit)               | int          | 50                                                                                                                                                                                                                                                                                                                                                           |                                                                                     |
-| [global-rate-limit-memcached-max-idle-timeout](#global-rate-limit)              | int          | 10000                                                                                                                                                                                                                                                                                                                                                        |                                                                                     |
-| [global-rate-limit-memcached-pool-size](#global-rate-limit)                     | int          | 50                                                                                                                                                                                                                                                                                                                                                           |                                                                                     |
-| [global-rate-limit-status-code](#global-rate-limit)                             | int          | 429                                                                                                                                                                                                                                                                                                                                                          |                                                                                     |
 | [service-upstream](#service-upstream)                                           | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
 | [ssl-reject-handshake](#ssl-reject-handshake)                                   | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
 | [debug-connections](#debug-connections)                                         | []string     | "127.0.0.1,1.1.1.1/24"                                                                                                                                                                                                                                                                                                                                       |                                                                                     |
-| [strict-validate-path-type](#strict-validate-path-type)                         | bool         | "false" (v1.7.x)                                                                                                                                                                                                                                                                                                                                             |                                                                                     |
+| [strict-validate-path-type](#strict-validate-path-type)                         | bool         | "true"                                                                                                                                                                                                                                                                                                                                                       |                                                                                     |
 | [grpc-buffer-size-kb](#grpc-buffer-size-kb)                                     | int          | 0                                                                                                                                                                                                                                                                                                                                                            |                                                                                     |
 
 ## add-headers
@@ -240,17 +234,15 @@ Enables the return of the header Server from the backend instead of the generic 
 
 ## allow-cross-namespace-resources
 
-Enables users to consume cross namespace resource on annotations, when was previously enabled . _**default:**_ true
+Enables users to consume cross namespace resource on annotations, when was previously enabled . _**default:**_ false
 
 **Annotations that may be impacted with this change**:
+
 * `auth-secret`
 * `auth-proxy-set-header`
 * `auth-tls-secret`
 * `fastcgi-params-configmap`
 * `proxy-ssl-secret`
-
-
-**This option will be defaulted to false in the next major release**
 
 ## allow-snippet-annotations
 
@@ -259,15 +251,13 @@ Enables Ingress to parse and add *-snippet annotations/directives created by the
 Warning: We recommend enabling this option only if you TRUST users with permission to create Ingress objects, as this
 may allow a user to add restricted configurations to the final nginx.conf file
 
-**This option will be defaulted to false in the next major release**
-
 ## annotations-risk-level
 
 Represents the risk accepted on an annotation. If the risk is, for instance `Medium`, annotations with risk High and Critical will not be accepted.
 
 Accepted values are `Critical`, `High`, `Medium` and `Low`.
 
-Defaults to `Critical` but will be changed to `High` on the next minor release
+_**default:**_ `High`
 
 ## annotation-value-word-blocklist
 
@@ -720,7 +710,7 @@ _**default:**_ true
 ## use-geoip2
 
 Enables the [geoip2 module](https://github.com/leev/ngx_http_geoip2_module) for NGINX.
-Since `0.27.0` and due to a [change in the MaxMind databases](https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases) a license is required to have access to the databases.
+Since `0.27.0` and due to a [change in the MaxMind databases](https://blog.maxmind.com/2019/12/significant-changes-to-accessing-and-using-geolite2-databases/) a license is required to have access to the databases.
 For this reason, it is required to define a new flag `--maxmind-license-key` in the ingress controller deployment to download the databases needed during the initialization of the ingress controller.
 Alternatively, it is possible to use a volume to mount the files `/etc/ingress-controller/geoip/GeoLite2-City.mmdb` and `/etc/ingress-controller/geoip/GeoLite2-ASN.mmdb`, avoiding the overhead of the download.
 
@@ -1349,22 +1339,6 @@ _**default:**_ text/html
 _References:_
 [https://nginx.org/en/docs/http/ngx_http_core_module.html#default_type](https://nginx.org/en/docs/http/ngx_http_core_module.html#default_type)
 
-## global-rate-limit
-
-* `global-rate-limit-status-code`: configure HTTP status code to return when rejecting requests. Defaults to 429.
-
-Configure `memcached` client for [Global Rate Limiting](https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md#global-rate-limiting).
-
-* `global-rate-limit-memcached-host`: IP/FQDN of memcached server to use. Required to enable Global Rate Limiting.
-* `global-rate-limit-memcached-port`: port of memcached server to use. Defaults default memcached port of `11211`.
-* `global-rate-limit-memcached-connect-timeout`: configure timeout for connect, send and receive operations. Unit is millisecond. Defaults to 50ms.
-* `global-rate-limit-memcached-max-idle-timeout`: configure timeout for cleaning idle connections. Unit is millisecond. Defaults to 50ms.
-* `global-rate-limit-memcached-pool-size`: configure number of max connections to keep alive. Make sure your `memcached` server can handle
-`global-rate-limit-memcached-pool-size * worker-processes * <number of ingress-nginx replicas>` simultaneous connections.
-
-These settings get used by [lua-resty-global-throttle](https://github.com/ElvinEfendi/lua-resty-global-throttle)
-that ingress-nginx includes. Refer to the link to learn more about `lua-resty-global-throttle`.
-
 ## service-upstream
 
 Set if the service's Cluster IP and port should be used instead of a list of all endpoints. This can be overwritten by an annotation on an Ingress rule.
@@ -1386,6 +1360,7 @@ _References:_
 [http://nginx.org/en/docs/ngx_core_module.html#debug_connection](http://nginx.org/en/docs/ngx_core_module.html#debug_connection)
 
 ## strict-validate-path-type
+
 Ingress objects contains a field called pathType that defines the proxy behavior. It can be `Exact`, `Prefix` and `ImplementationSpecific`.
 
 When pathType is configured as `Exact` or `Prefix`, there should be a more strict validation, allowing only paths starting with "/" and
@@ -1398,6 +1373,8 @@ This means that Ingress objects that rely on paths containing regex characters s
 
 The cluster admin should establish validation rules using mechanisms like [Open Policy Agent](https://www.openpolicyagent.org/) to 
 validate that only authorized users can use `ImplementationSpecific` pathType and that only the authorized characters can be used.
+
+_**default:**_ "true"
 
 ## grpc-buffer-size-kb
 

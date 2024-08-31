@@ -119,9 +119,6 @@ export LUA_RESTY_REDIS_VERSION=0.30
 # Check for recent changes: https://github.com/api7/lua-resty-ipmatcher/compare/v0.6.1...master
 export LUA_RESTY_IPMATCHER_VERSION=0.6.1
 
-# Check for recent changes: https://github.com/ElvinEfendi/lua-resty-global-throttle/compare/v0.2.0...main
-export LUA_RESTY_GLOBAL_THROTTLE_VERSION=0.2.0
-
 # Check for recent changes:  https://github.com/microsoft/mimalloc/compare/v1.7.6...master
 export MIMALOC_VERSION=1.7.6
 
@@ -308,9 +305,6 @@ get_src c15aed1a01c88a3a6387d9af67a957dff670357f5fdb4ee182beb44635eef3f1 \
 
 get_src efb767487ea3f6031577b9b224467ddbda2ad51a41c5867a47582d4ad85d609e \
         "https://github.com/api7/lua-resty-ipmatcher/archive/v$LUA_RESTY_IPMATCHER_VERSION.tar.gz"
-
-get_src 0fb790e394510e73fdba1492e576aaec0b8ee9ef08e3e821ce253a07719cf7ea \
-        "https://github.com/ElvinEfendi/lua-resty-global-throttle/archive/v$LUA_RESTY_GLOBAL_THROTTLE_VERSION.tar.gz"
 
 get_src d74f86ada2329016068bc5a243268f1f555edd620b6a7d6ce89295e7d6cf18da \
         "https://github.com/microsoft/mimalloc/archive/refs/tags/v${MIMALOC_VERSION}.tar.gz"
@@ -703,9 +697,6 @@ make install
 
 cd "$BUILD_PATH/lua-resty-ipmatcher-$LUA_RESTY_IPMATCHER_VERSION"
 INST_LUADIR=/usr/local/lib/lua make install
-
-cd "$BUILD_PATH/lua-resty-global-throttle-$LUA_RESTY_GLOBAL_THROTTLE_VERSION"
-make install
 
 cd "$BUILD_PATH/mimalloc-$MIMALOC_VERSION"
 mkdir -p out/release
