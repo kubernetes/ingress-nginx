@@ -34,6 +34,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
@@ -106,6 +107,11 @@ var _ = framework.DescribeSetting("OCSP", func() {
 
 		err = framework.WaitForEndpoints(f.KubeClientSet, framework.DefaultTimeout, "ocspserve", f.Namespace, 1)
 		assert.Nil(ginkgo.GinkgoT(), err, "waiting for endpoints to become ready")
+
+		f.WaitForLuaConfiguration(func(jsonCfg map[string]interface{}) bool {
+			val, ok, err := unstructured.NestedBool(jsonCfg, "enable_ocsp")
+			return err == nil && ok && val
+		})
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {

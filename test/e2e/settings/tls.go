@@ -25,10 +25,11 @@ import (
 	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", func() {
+var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers", func() {
 	f := framework.NewDefaultFramework("settings-tls")
 	host := "settings-tls"
 
@@ -109,6 +110,11 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 		ginkgo.It("setting max-age parameter", func() {
 			f.UpdateNginxConfigMapData(hstsMaxAge, "86400")
 
+			f.WaitForLuaConfiguration(func(jsonCfg map[string]interface{}) bool {
+				val, ok, err := unstructured.NestedString(jsonCfg, "hsts_max_age")
+				return err == nil && ok && val == "86400"
+			})
+
 			f.HTTPTestClientWithTLSConfig(tlsConfig).
 				GET("/").
 				WithURL(f.GetURL(framework.HTTPS)).
@@ -122,6 +128,11 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 			f.SetNginxConfigMapData(map[string]string{
 				hstsMaxAge:            "86400",
 				hstsIncludeSubdomains: "false",
+			})
+
+			f.WaitForLuaConfiguration(func(jsonCfg map[string]interface{}) bool {
+				val, ok, err := unstructured.NestedBool(jsonCfg, "hsts_include_subdomains")
+				return err == nil && ok && !val
 			})
 
 			f.HTTPTestClientWithTLSConfig(tlsConfig).
@@ -138,6 +149,11 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 				hstsMaxAge:            "86400",
 				hstsPreload:           "true",
 				hstsIncludeSubdomains: "false",
+			})
+
+			f.WaitForLuaConfiguration(func(jsonCfg map[string]interface{}) bool {
+				val, ok, err := unstructured.NestedBool(jsonCfg, "hsts_preload")
+				return err == nil && ok && val
 			})
 
 			f.HTTPTestClientWithTLSConfig(tlsConfig).

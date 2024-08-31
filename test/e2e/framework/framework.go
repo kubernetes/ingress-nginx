@@ -16,6 +16,7 @@ package framework
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -283,6 +284,15 @@ func (f *Framework) WaitForNginxConfiguration(matcher func(cfg string) bool) {
 	Sleep(1 * time.Second)
 }
 
+// WaitForLuaConfiguration waits until the nginx configuration contains a particular configuration
+// `cfg` passed to matcher is normalized by replacing all tabs and spaces with single space.
+func (f *Framework) WaitForLuaConfiguration(matcher func(jsonCfg map[string]interface{}) bool) {
+	//nolint:staticcheck // TODO: will replace it since wait.Poll is deprecated
+	err := wait.Poll(Poll, DefaultTimeout, f.matchLuaConditions(matcher))
+	assert.Nil(ginkgo.GinkgoT(), err, "waiting for nginx lua configuration condition/s")
+	Sleep(1 * time.Second)
+}
+
 // WaitForNginxCustomConfiguration waits until the nginx configuration given part (from, to) contains a particular configuration
 func (f *Framework) WaitForNginxCustomConfiguration(from, to string, matcher func(cfg string) bool) {
 	//nolint:staticcheck // TODO: will replace it since wait.Poll is deprecated
@@ -323,6 +333,29 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 		}
 
 		return false, nil
+	}
+}
+
+func (f *Framework) matchLuaConditions(matcher func(jsonCfg map[string]interface{}) bool) wait.ConditionFunc {
+	return func() (bool, error) {
+		cmd := "cat /etc/nginx/lua/cfg.json"
+
+		o, err := f.ExecCommand(f.pod, cmd)
+		if err != nil {
+			return false, nil
+		}
+
+		if klog.V(10).Enabled() && o != "" {
+			klog.InfoS("Lua", "configuration", o)
+		}
+
+		luaConfig := make(map[string]interface{}) // Use unstructured so we can walk through JSON
+		if err := json.Unmarshal([]byte(o), &luaConfig); err != nil {
+			return false, err
+		}
+
+		// passes the lua interface to the function
+		return matcher(luaConfig), nil
 	}
 }
 
