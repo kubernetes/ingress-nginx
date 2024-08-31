@@ -58,7 +58,7 @@ var _ = framework.DescribeAnnotation("from-to-www-redirect", func() {
 			WithHeader("Host", fmt.Sprintf("%s.%s", "www", host)).
 			Expect().
 			Status(http.StatusPermanentRedirect).
-			Header("Location").Equal("http://fromtowwwredirect.bar.com/foo")
+			Header("Location").Equal("http://fromtowwwredirect.bar.com:80/foo")
 	})
 
 	ginkgo.It("should redirect from www HTTPS to HTTPS", func() {
@@ -101,7 +101,7 @@ var _ = framework.DescribeAnnotation("from-to-www-redirect", func() {
 			WithHeader("Host", toHost).
 			Expect().
 			Status(http.StatusPermanentRedirect).
-			Header("Location").Equal(fmt.Sprintf("https://%v", fromHost))
+			Header("Location").Equal(fmt.Sprintf("https://%v:443", fromHost))
 
 		ginkgo.By("sending request to domain should not redirect to www")
 		f.HTTPTestClientWithTLSConfig(&tls.Config{

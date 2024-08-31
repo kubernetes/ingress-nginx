@@ -8,7 +8,6 @@ local configfile = cjson.decode(content)
 
 local luaconfig = ngx.shared.luaconfig
 luaconfig:set("enablemetrics", configfile.enable_metrics)
-luaconfig:set("listen_https_ports", configfile.listen_ports.https)
 luaconfig:set("use_forwarded_headers", configfile.use_forwarded_headers)
 -- init modules
 local ok, res
