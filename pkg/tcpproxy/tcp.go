@@ -75,6 +75,10 @@ func (p *TCPProxy) Handle(conn net.Conn) {
 		proxy = p.Get(hostname)
 	}
 
+	if err != nil {
+		klog.V(4).InfoS("GetHostname cause an", "error", err)
+	}
+
 	if proxy == nil {
 		klog.V(4).InfoS("There is no configured proxy for SSL connections.")
 		return
