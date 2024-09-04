@@ -94,7 +94,7 @@ Images:
 * Chart: Improve IngressClass documentation. (#11104)
 * Chart: Deploy `PodDisruptionBudget` with KEDA. (#11032)
 * Undo #11062 since it breaks the nginx config (#11082)
-* [mTLS] Fix acme verfication when mTLS and Client CN verification is enabled (#11062)
+* [mTLS] Fix acme verification when mTLS and Client CN verification is enabled (#11062)
 * golangci-lint update, ci cleanup, group dependabot updates (#11071)
 * bump golang (#11070)
 * feature(leader_election): flag to disable leader election feature on controller (#11064)

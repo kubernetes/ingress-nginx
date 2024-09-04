@@ -131,7 +131,7 @@ func GetIngressDefinitions(flags *genericclioptions.ConfigFlags, namespace strin
 	return pods.Items, nil
 }
 
-// GetNumEndpoints counts the number of endpointslices adresses for the service with the given name
+// GetNumEndpoints counts the number of endpointslices addresses for the service with the given name
 func GetNumEndpoints(flags *genericclioptions.ConfigFlags, namespace, serviceName string) (*int, error) {
 	epss, err := GetEndpointSlicesByName(flags, namespace, serviceName)
 	if err != nil {

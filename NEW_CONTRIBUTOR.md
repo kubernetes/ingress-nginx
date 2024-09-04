@@ -20,14 +20,14 @@ It all starts with the OSI model...
 ### Approaching the problem
 
 
-Not everybody knows everything. But the factors that help are a love/passion for this to begin. But to move forward, its the approach and not the knowledge that sustains prolonged joy, while working on issues. If the approach is simple and powered by good-wishes-for-community, then info & tools are forthcoming and easy.
+Not everybody knows everything. But the factors that help are a love/passion for this to begin. But to move forward, it's the approach and not the knowledge that sustains prolonged joy, while working on issues. If the approach is simple and powered by good-wishes-for-community, then info & tools are forthcoming and easy.
 
 Here we take a bird's eye-view of the hops in the network plumbing, that a packet takes, from source to destination, when we run `curl`, from a laptop to a nginx webserver process, running in a container, inside a pod, inside a Kubernetes cluster, created using `kind` or `minikube` or any other cluster-management tool.
 
 ### [Kind](https://kind.sigs.k8s.io/) cluster example on a Linux Host
 
 #### TL;DR
-The destination of the packet from the curl command, is looked up, in the `routing table`. Based on the route, the the packet first travels to the virtual bridge `172.18.0.1` interface, created by docker, when we created the kind cluster on a laptop. Next the packet is forwarded to `172.18.0.2`(See below on how we got this IP address), within the kind cluster. The `kube-proxy` container creates iptables rules that make sure the packet goes to the correct pod ip in this case `10.244.0.5`
+The destination of the packet from the curl command, is looked up, in the `routing table`. Based on the route, the packet first travels to the virtual bridge `172.18.0.1` interface, created by docker, when we created the kind cluster on a laptop. Next the packet is forwarded to `172.18.0.2`(See below on how we got this IP address), within the kind cluster. The `kube-proxy` container creates iptables rules that make sure the packet goes to the correct pod ip in this case `10.244.0.5`
 
 Command:
 ```
@@ -435,7 +435,7 @@ virbr0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
 ```
 Output Relevance: From the above output you can see there are two Virtual Bridges created by minikube when we created the cluster on the network. Here, `virbr0` is the default NAT network bridge while `virbr2` is a isolated network bridge on which the pods run.
 
-Minikube creates a Virtual Machine, to enter the virtual machine we can simple do:
+Minikube creates a Virtual Machine, to enter the virtual machine we can simply do:
 ```
 # minikube ssh
 ```
@@ -707,7 +707,7 @@ NAME    TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
 httpd   ClusterIP   10.104.111.0   <none>        80/TCP    13s
 ```
 
-Once we have this we can now create a n ingress using the following
+Once we have this we can now create an ingress using the following
 ```
 kubectl -n httpd create ingress httpd --class nginx --rule httpd.dev.leonnunes.com/"*"=httpd:80
 ```
@@ -771,7 +771,7 @@ Hypertext Transfer Protocol
     [Response in frame: 6]
 
 ```
-The above output shows the information that the `httpd` pod recieves. The `curl` command sends the host header, `Host: httpd.dev.leonnunes.com`, to the nginx controller, that then matches the rule and sends the information to the right controller
+The above output shows the information that the `httpd` pod receives. The `curl` command sends the host header, `Host: httpd.dev.leonnunes.com`, to the nginx controller, that then matches the rule and sends the information to the right controller
 
 The following output shows what is sent via the laptop.
 ```

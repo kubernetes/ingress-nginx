@@ -43,7 +43,7 @@ const HTTPBunService = "httpbun"
 // NipService name of external service using nip.io
 const NIPService = "external-nip"
 
-// HTTPBunImage is the default image that is used to deploy HTTPBun with the framwork
+// HTTPBunImage is the default image that is used to deploy HTTPBun with the framework
 var HTTPBunImage = os.Getenv("HTTPBUN_IMAGE")
 
 // EchoImage is the default image to be used by the echo service
