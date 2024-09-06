@@ -119,7 +119,7 @@ type Configuration struct {
 	// By default this is disabled
 	AllowBackendServerHeader bool `json:"allow-backend-server-header"`
 
-	// AccessLogParams sets additionals params for access_log
+	// AccessLogParams sets additional params for access_log
 	// http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log
 	// By default it's empty
 	AccessLogParams string `json:"access-log-params,omitempty"`
@@ -423,7 +423,7 @@ type Configuration struct {
 	// Example '60s'
 	ProxyProtocolHeaderTimeout time.Duration `json:"proxy-protocol-header-timeout,omitempty"`
 
-	// Enables or disables the directive aio_write that writes files files asynchronously
+	// Enables or disables the directive aio_write that writes files asynchronously
 	// https://nginx.org/en/docs/http/ngx_http_core_module.html#aio_write
 	EnableAioWrite bool `json:"enable-aio-write,omitempty"`
 
@@ -617,7 +617,7 @@ type Configuration struct {
 	// Default: 0.01
 	OtelSamplerRatio float32 `json:"otel-sampler-ratio"`
 
-	// OtelSamplerParentBased specifies the parent based sampler to be use for any traces created
+	// OtelSamplerParentBased specifies the parent based sampler to be used for any traces created
 	// Default: true
 	OtelSamplerParentBased bool `json:"otel-sampler-parent-based"`
 
@@ -714,7 +714,7 @@ type Configuration struct {
 	DefaultSSLCertificate *ingress.SSLCert `json:"-"`
 
 	// ProxySSLLocationOnly controls whether the proxy-ssl parameters defined in the
-	// proxy-ssl-* annotations are applied on on location level only in the nginx.conf file
+	// proxy-ssl-* annotations are applied on location level only in the nginx.conf file
 	// Default is that those are applied on server level, too
 	ProxySSLLocationOnly bool `json:"proxy-ssl-location-only"`
 

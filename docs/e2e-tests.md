@@ -294,7 +294,7 @@ Do not try to edit it manually.
 ### [[Shutdown] Grace period shutdown](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/gracefulshutdown/grace_period.go#L32)
 - [/healthz should return status code 500 during shutdown grace period](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/gracefulshutdown/grace_period.go#L35)
 ### [[Shutdown] ingress controller](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/gracefulshutdown/shutdown.go#L30)
-- [should shutdown in less than 60 secons without pending connections](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/gracefulshutdown/shutdown.go#L40)
+- [should shutdown in less than 60 seconds without pending connections](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/gracefulshutdown/shutdown.go#L40)
 ### [[Shutdown] Graceful shutdown with pending request](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/gracefulshutdown/slow_requests.go#L25)
 - [should let slow requests finish before shutting down](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/gracefulshutdown/slow_requests.go#L33)
 ### [[Ingress] DeepInspection](https://github.com/kubernetes/ingress-nginx/tree/main//test/e2e/ingress/deep_inspection.go#L27)

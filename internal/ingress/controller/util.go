@@ -129,7 +129,7 @@ func NewNginxCommand() NginxCommand {
 	return command
 }
 
-// ExecCommand instanciates an exec.Cmd object to call nginx program
+// ExecCommand instantiates an exec.Cmd object to call nginx program
 func (nc NginxCommand) ExecCommand(args ...string) *exec.Cmd {
 	cmdArgs := []string{}
 
