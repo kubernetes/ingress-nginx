@@ -55,7 +55,7 @@
     end
 
     subgraph otel
-        otc["Otel Collector"] 
+        otc["Otel Collector"]
     end
 
     subgraph observability
@@ -115,7 +115,7 @@
 helm<span class=w> </span>repo<span class=w> </span>add<span class=w> </span>open-telemetry<span class=w> </span>https://open-telemetry.github.io/opentelemetry-helm-charts
 helm<span class=w> </span>repo<span class=w> </span>add<span class=w> </span>grafana<span class=w> </span>https://grafana.github.io/helm-charts
 helm<span class=w> </span>repo<span class=w> </span>update
-<span class=c1># deply cert-manager needed for OpenTelemetry collector operator</span>
+<span class=c1># deploy cert-manager needed for OpenTelemetry collector operator</span>
 kubectl<span class=w> </span>apply<span class=w> </span>-f<span class=w> </span>https://github.com/cert-manager/cert-manager/releases/download/v1.9.1/cert-manager.yaml
 <span class=c1># create observability namespace</span>
 kubectl<span class=w> </span>apply<span class=w> </span>-f<span class=w> </span>https://raw.githubusercontent.com/esigo/nginx-example/main/observability/namespace.yaml
