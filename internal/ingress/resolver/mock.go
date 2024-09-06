@@ -47,7 +47,7 @@ func (m Mock) GetSecurityConfiguration() defaults.SecurityConfiguration {
 	}
 }
 
-// GetSecret searches for secrets contenating the namespace and name using a the character /
+// GetSecret searches for secrets containing the namespace and name using the character /
 func (m Mock) GetSecret(string) (*apiv1.Secret, error) {
 	return nil, nil
 }
@@ -60,12 +60,12 @@ func (m Mock) GetAuthCertificate(string) (*AuthSSLCert, error) {
 	return nil, nil
 }
 
-// GetService searches for services contenating the namespace and name using a the character /
+// GetService searches for services containing the namespace and name using the character /
 func (m Mock) GetService(string) (*apiv1.Service, error) {
 	return nil, nil
 }
 
-// GetConfigMap searches for configMaps contenating the namespace and name using a the character /
+// GetConfigMap searches for configMaps containing the namespace and name using the character /
 func (m Mock) GetConfigMap(name string) (*apiv1.ConfigMap, error) {
 	if v, ok := m.ConfigMaps[name]; ok {
 		return v, nil

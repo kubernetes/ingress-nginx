@@ -1,4 +1,4 @@
-// smotest.js edited after copy/pasting from https://k6.io docs
+// smoketest.js edited after copy/pasting from https://k6.io docs
 // Using this like loadtest because of limited cpu/memory/other
 
 import http from 'k6/http';
@@ -22,7 +22,7 @@ export const options = {
 };
 
 export default function () {
-  // docs of k6 say this is how to adds host header
+  // docs of k6 say this is how to add host header
   // needed as ingress is created with this host value
   const params = {
     headers: {'host': 'test.ingress-nginx-controller.ga'},
@@ -39,7 +39,7 @@ export default function () {
   const req3 = {
 	params: {
 	  headers: {
-	    'Content-Type': 'application/json' 
+	    'Content-Type': 'application/json'
       },
 	},
   	method: 'POST',

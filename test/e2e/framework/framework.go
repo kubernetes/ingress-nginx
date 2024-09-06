@@ -100,7 +100,7 @@ func NewDefaultFramework(baseName string, opts ...func(*Framework)) *Framework {
 }
 
 // NewSimpleFramework makes a new framework that allows the usage of a namespace
-// for arbitraty tests.
+// for arbitrary tests.
 func NewSimpleFramework(baseName string, opts ...func(*Framework)) *Framework {
 	defer ginkgo.GinkgoRecover()
 

@@ -225,7 +225,7 @@ func (cm *Controller) IncCheckErrorCount(namespace, name string) {
 	cm.checkIngressOperationErrors.MustCurryWith(cm.constLabels).With(labels).Inc()
 }
 
-// IncOrphanIngress sets the the orphaned ingress gauge to one
+// IncOrphanIngress sets the orphaned ingress gauge to one
 func (cm *Controller) IncOrphanIngress(namespace, name, orphanityType string) {
 	labels := prometheus.Labels{
 		"namespace": namespace,
@@ -235,7 +235,7 @@ func (cm *Controller) IncOrphanIngress(namespace, name, orphanityType string) {
 	cm.OrphanIngress.MustCurryWith(cm.constLabels).With(labels).Set(1.0)
 }
 
-// DecOrphanIngress sets the the orphaned ingress gauge to zero (all services has their endpoints)
+// DecOrphanIngress sets the orphaned ingress gauge to zero (all services has their endpoints)
 func (cm *Controller) DecOrphanIngress(namespace, name, orphanityType string) {
 	labels := prometheus.Labels{
 		"namespace": namespace,
@@ -311,7 +311,7 @@ func (cm *Controller) SetSSLExpireTime(servers []*ingress.Server) {
 	}
 }
 
-// SetSSLInfo creates a metric with all certificates informations
+// SetSSLInfo creates a metric with all certificate information
 func (cm *Controller) SetSSLInfo(servers []*ingress.Server) {
 	for _, s := range servers {
 		if s.SSLCert == nil || s.SSLCert.Certificate == nil || s.SSLCert.Certificate.SerialNumber == nil {
