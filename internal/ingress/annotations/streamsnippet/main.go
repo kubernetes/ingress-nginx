@@ -33,7 +33,7 @@ var streamSnippetAnnotations = parser.Annotation{
 		streamSnippetAnnotation: {
 			Validator:     parser.ValidateNull,
 			Scope:         parser.AnnotationScopeIngress,
-			Risk:          parser.AnnotationRiskCritical, // Critical, this annotation is not validated at all and allows arbitrary configutations
+			Risk:          parser.AnnotationRiskCritical, // Critical, this annotation is not validated at all and allows arbitrary configurations
 			Documentation: `This annotation allows setting a custom NGINX configuration on a stream block. This annotation does not contain any validation and it's usage is not recommended!`,
 		},
 	},

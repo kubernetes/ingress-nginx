@@ -88,7 +88,7 @@ func TestEndpointSliceLister(t *testing.T) {
 		}
 		eps, err := el.MatchByKey(key)
 		if err != nil {
-			t.Errorf("unexpeted error %v", err)
+			t.Errorf("unexpected error %v", err)
 		}
 		if err == nil && len(eps) != 1 {
 			t.Errorf("expected one slice %v, error, got %d slices", endpointSlice, len(eps))
@@ -130,7 +130,7 @@ func TestEndpointSliceLister(t *testing.T) {
 		}
 		eps, err := el.MatchByKey(key)
 		if err != nil {
-			t.Errorf("unexpeted error %v", err)
+			t.Errorf("unexpected error %v", err)
 		}
 		if len(eps) != 1 {
 			t.Errorf("expected one slice %v, error, got %d slices", endpointSlice, len(eps))

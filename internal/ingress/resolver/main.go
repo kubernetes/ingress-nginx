@@ -29,10 +29,10 @@ type Resolver interface {
 	// GetSecurityConfiguration returns the configuration options from Ingress
 	GetSecurityConfiguration() defaults.SecurityConfiguration
 
-	// GetConfigMap searches for configmap containing the namespace and name usting the character /
+	// GetConfigMap searches for configmap containing the namespace and name using the character /
 	GetConfigMap(string) (*apiv1.ConfigMap, error)
 
-	// GetSecret searches for secrets containing the namespace and name using a the character /
+	// GetSecret searches for secrets containing the namespace and name using the character /
 	GetSecret(string) (*apiv1.Secret, error)
 
 	// GetAuthCertificate resolves a given secret name into an SSL certificate and CRL.
@@ -42,7 +42,7 @@ type Resolver interface {
 	//   ca.crl: contains the revocation list used for authentication
 	GetAuthCertificate(string) (*AuthSSLCert, error)
 
-	// GetService searches for services containing the namespace and name using a the character /
+	// GetService searches for services containing the namespace and name using the character /
 	GetService(string) (*apiv1.Service, error)
 }
 

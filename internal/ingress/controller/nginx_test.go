@@ -410,7 +410,7 @@ func TestCleanTempNginxCfg(t *testing.T) {
 	}
 }
 
-//nolint:unparam // Ingnore `network` always receives `"tcp"` error
+//nolint:unparam // Ignore `network` always receives `"tcp"` error
 func tryListen(network, address string) (l net.Listener, err error) {
 	condFunc := func() (bool, error) {
 		l, err = net.Listen(network, address)

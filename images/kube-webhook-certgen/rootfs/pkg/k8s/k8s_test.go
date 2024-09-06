@@ -186,7 +186,7 @@ func Test_Patching_objects(t *testing.T) {
 		})
 
 		// This is to preserve old behavior and log format, it could be improved.
-		t.Run("diffent_non_empty_names_are_specified_for_validating_and_mutating_webhook", func(t *testing.T) {
+		t.Run("different_non_empty_names_are_specified_for_validating_and_mutating_webhook", func(t *testing.T) {
 			t.Parallel()
 
 			k := testK8sWithUnpatchedObjects()

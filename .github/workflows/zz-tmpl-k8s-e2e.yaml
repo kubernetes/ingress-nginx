@@ -1,5 +1,5 @@
 #### THIS IS A TEMPLATE ####
-# This workflow is created to be a template for every time an e2e teest is required,
+# This workflow is created to be a template for every time an e2e test is required,
 
 on:
   workflow_call:
