@@ -66,7 +66,7 @@ var _ = framework.IngressNginxDescribe("[TCP] tcp-services", func() {
 
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
-				return strings.Contains(cfg, fmt.Sprintf(`ngx.var.proxy_upstream_name="tcp-%v_%v_80"`,
+				return strings.Contains(cfg, fmt.Sprintf(`ngx.var.proxy_upstream_name="tcp-%v-%v-80"`,
 					f.Namespace, framework.EchoService))
 			})
 
