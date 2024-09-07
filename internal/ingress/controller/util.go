@@ -50,13 +50,13 @@ func newUpstream(name string) *ingress.Backend {
 func upstreamName(namespace string, service *networking.IngressServiceBackend) string {
 	if service != nil {
 		if service.Port.Number > 0 {
-			return fmt.Sprintf("%s-%s-%d", namespace, service.Name, service.Port.Number)
+			return fmt.Sprintf("%s_%s_%d", namespace, service.Name, service.Port.Number)
 		}
 		if service.Port.Name != "" {
-			return fmt.Sprintf("%s-%s-%s", namespace, service.Name, service.Port.Name)
+			return fmt.Sprintf("%s_%s_%s", namespace, service.Name, service.Port.Name)
 		}
 	}
-	return fmt.Sprintf("%s-INVALID", namespace)
+	return fmt.Sprintf("%s_INVALID", namespace)
 }
 
 // upstreamServiceNameAndPort verifies if service is not nil, and then return the
