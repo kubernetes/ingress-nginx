@@ -1091,8 +1091,8 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer("_",
 				func(server string) bool {
-					upstreamName := fmt.Sprintf(`set $proxy_upstream_name "%s-%s-%s";`, f.Namespace, framework.HTTPBunService, "80")
-					canaryUpstreamName := fmt.Sprintf(`set $proxy_upstream_name "%s-%s-%s";`, f.Namespace, canaryService, "80")
+					upstreamName := fmt.Sprintf(`set $proxy_upstream_name "%s_%s_%s";`, f.Namespace, framework.HTTPBunService, "80")
+					canaryUpstreamName := fmt.Sprintf(`set $proxy_upstream_name "%s_%s_%s";`, f.Namespace, canaryService, "80")
 
 					return strings.Contains(server, fmt.Sprintf(`set $ingress_name "%v";`, host)) &&
 						!strings.Contains(server, `set $proxy_upstream_name "upstream-default-backend";`) &&
