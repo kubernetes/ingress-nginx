@@ -291,7 +291,6 @@ var funcMap = text_template.FuncMap{
 	"filterRateLimits":                filterRateLimits,
 	"buildRateLimitZones":             buildRateLimitZones,
 	"buildRateLimit":                  buildRateLimit,
-	"configForLua":                    configForLua,
 	"locationConfigForLua":            locationConfigForLua,
 	"buildResolvers":                  buildResolvers,
 	"buildUpstreamName":               buildUpstreamName,
@@ -416,41 +415,6 @@ func luaConfigurationRequestBodySize(c interface{}) string {
 	size += 1024
 
 	return dictKbToStr(size)
-}
-
-// configForLua returns some general configuration as Lua table represented as string
-func configForLua(input interface{}) string {
-	all, ok := input.(config.TemplateConfig)
-	if !ok {
-		klog.Errorf("expected a 'config.TemplateConfig' type but %T was given", input)
-		return "{}"
-	}
-
-	return fmt.Sprintf(`{
-		use_forwarded_headers = %t,
-		use_proxy_protocol = %t,
-		is_ssl_passthrough_enabled = %t,
-		http_redirect_code = %v,
-		listen_ports = { ssl_proxy = "%v", https = "%v" },
-
-		hsts = %t,
-		hsts_max_age = %v,
-		hsts_include_subdomains = %t,
-		hsts_preload = %t,
-
-	}`,
-		all.Cfg.UseForwardedHeaders,
-		all.Cfg.UseProxyProtocol,
-		all.IsSSLPassthroughEnabled,
-		all.Cfg.HTTPRedirectCode,
-		all.ListenPorts.SSLProxy,
-		all.ListenPorts.HTTPS,
-
-		all.Cfg.HSTS,
-		all.Cfg.HSTSMaxAge,
-		all.Cfg.HSTSIncludeSubdomains,
-		all.Cfg.HSTSPreload,
-	)
 }
 
 // locationConfigForLua formats some location specific configuration into Lua table represented as string

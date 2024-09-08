@@ -1,1 +1,0 @@
-ngx.exit(ngx.HTTP_NOT_FOUND)

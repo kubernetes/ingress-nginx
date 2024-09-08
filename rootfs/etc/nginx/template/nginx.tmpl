@@ -679,7 +679,7 @@ http {
         }
 
         location / {
-            content_by_lua_file /etc/nginx/lua/nginx/ngx_not_found.lua;
+            return 404;
         }
     }
 }

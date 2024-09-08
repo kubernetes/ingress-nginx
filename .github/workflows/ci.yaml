@@ -83,10 +83,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       
-      - name: Luacheck linter
+      - name: Lint Lua
         uses: lunarmodules/luacheck@v1
         with:
-          args: --codes --globals lua_ingress --globals configuration --globals balancer --globals monitor --globals certificate --globals plugins --globals tcp_udp_configuration --globals tcp_udp_balancer --no-max-comment-line-length -q rootfs/etc/nginx/lua/
+          args: --codes --globals lua_ingress --globals configuration --globals balancer --globals monitor --globals certificate --globals tcp_udp_configuration --globals tcp_udp_balancer --no-max-comment-line-length -q rootfs/etc/nginx/lua/
 
   test-go:
     runs-on: ubuntu-latest

@@ -147,8 +147,7 @@ function _M.is_blank(str)
 end
 
 function _M.string_to_bool(str)
-  if str == "true" then return true end
-  return false
+  return str == "true"
 end
 
 -- this implementation is taken from:

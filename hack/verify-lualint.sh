@@ -23,7 +23,6 @@ luacheck --codes --globals lua_ingress \
     --globals balancer \
     --globals monitor \
     --globals certificate \
-    --globals plugins \
     --globals tcp_udp_configuration \
     --globals tcp_udp_balancer \
     --no-max-comment-line-length -q rootfs/etc/nginx/lua/
