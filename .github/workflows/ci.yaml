@@ -71,6 +71,22 @@ jobs:
               - 'images/nginx-1.25/**'
             docs:
               - '**/*.md'
+            lua:
+              - '**/*.lua'
+
+  lua-lint:
+    runs-on: ubuntu-latest
+    needs: changes
+    if: |
+      (needs.changes.outputs.lua == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      
+      - name: Lint Lua
+        uses: lunarmodules/luacheck@v1
+        with:
+          args: --codes --globals lua_ingress --globals configuration --globals balancer --globals monitor --globals certificate --globals tcp_udp_configuration --globals tcp_udp_balancer --no-max-comment-line-length -q rootfs/etc/nginx/lua/
 
   test-go:
     runs-on: ubuntu-latest

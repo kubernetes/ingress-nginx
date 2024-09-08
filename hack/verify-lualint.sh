@@ -18,6 +18,13 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-luacheck --codes -q rootfs/etc/nginx/lua/
+luacheck --codes --globals lua_ingress \
+    --globals configuration \
+    --globals balancer \
+    --globals monitor \
+    --globals certificate \
+    --globals tcp_udp_configuration \
+    --globals tcp_udp_balancer \
+    --no-max-comment-line-length -q rootfs/etc/nginx/lua/
 
 find rootfs/etc/nginx/lua/ -name "*.lua" -not -path "*/test/*" -exec lj-releng -L -s {} + && echo "lj-releng validation is success!"
