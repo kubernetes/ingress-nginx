@@ -266,7 +266,6 @@ In AWS, we use a Network load balancer (NLB) to expose the Ingress-Nginx Control
     [Network load balancing on Amazon EKS](https://docs.aws.amazon.com/eks/latest/userguide/network-load-balancing.html)
     with [AWS Load Balancer Controller](https://github.com/kubernetes-sigs/aws-load-balancer-controller).
 
-
 ##### Network Load Balancer (NLB)
 
 ```console
@@ -364,8 +363,8 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 ```console
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.4/deploy/static/provider/scw/deploy.yaml
 ```
-Refer to the [dedicated tutorial](https://www.scaleway.com/en/docs/tutorials/proxy-protocol-v2-load-balancer/#configuring-proxy-protocol-for-ingress-nginx) in the Scaleway documentation for configuring the proxy protocol for ingress-nginx with the Scaleway load balancer.
 
+Refer to the [dedicated tutorial](https://www.scaleway.com/en/docs/tutorials/proxy-protocol-v2-load-balancer/#configuring-proxy-protocol-for-ingress-nginx) in the Scaleway documentation for configuring the proxy protocol for ingress-nginx with the Scaleway load balancer.
 
 #### Exoscale
 
@@ -428,7 +427,7 @@ kubectl exec $POD_NAME -n $POD_NAMESPACE -- /nginx-ingress-controller --version
 
 By default, the controller watches Ingress objects from all namespaces. If you want to change this behavior,
 use the flag `--watch-namespace` or check the Helm chart value `controller.scope` to limit the controller to a single
-namespace.
+namespace. Although the use of this flag is not popular, one important fact to note is that the secret containing the default-ssl-certificate needs to also be present in the watched namespace(s).
 
 See also
 [“How to easily install multiple instances of the Ingress NGINX controller in the same cluster”](https://kubernetes.github.io/ingress-nginx/#how-to-easily-install-multiple-instances-of-the-ingress-nginx-controller-in-the-same-cluster)
