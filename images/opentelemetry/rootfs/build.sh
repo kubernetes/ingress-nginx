@@ -116,8 +116,8 @@ install_otel()
 install_nginx()
 {
 
-  # Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp-contrib/compare/2656a4...main
-  export OPENTELEMETRY_CONTRIB_COMMIT=aaa51e2297bcb34297f3c7aa44fa790497d2f7f3
+  # Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp-contrib/compare/e11348bb400d5472bf1da5d6128bead66fa111ff...main
+  export OPENTELEMETRY_CONTRIB_COMMIT=e11348bb400d5472bf1da5d6128bead66fa111ff
 
   mkdir -p /etc/nginx
   cd "$BUILD_PATH"
