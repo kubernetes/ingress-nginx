@@ -53,7 +53,7 @@ func TestCrossplaneTemplate(t *testing.T) {
 		IgnoreDirectives:         []string{"more_clear_headers", "more_set_headers"}, // TODO: Add more_set_headers
 		DirectiveSources: []ngx_crossplane.MatchFunc{
 			ngx_crossplane.DefaultDirectivesMatchFunc,
-			ngx_crossplane.LuaDirectivesMatchFn,
+			ngx_crossplane.MatchLuaLatest,
 			extramodules.BrotliMatchFn,
 		},
 		LexOptions: ngx_crossplane.LexOptions{
