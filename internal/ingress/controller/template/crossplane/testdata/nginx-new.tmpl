@@ -7,409 +7,468 @@
 {{ $proxyHeaders := .ProxySetHeaders }}
 {{ $addHeaders := .AddHeaders }}
 
-# MIGRATED
-pid {{ .PID }};
+# Configuration checksum: {{ $all.Cfg.Checksum }}
 
-# MODULES ARE NOT MIGRATED YET!
+# setup custom paths that do not require root access
+pid {{ .PID }}; # OK
+
+{{ if $cfg.UseGeoIP2 }}
+load_module /etc/nginx/modules/ngx_http_geoip2_module.so; # OK
+{{ end }}
+
 {{ if $cfg.EnableBrotli }}
-load_module /etc/nginx/modules/ngx_http_brotli_filter_module.so;
-load_module /etc/nginx/modules/ngx_http_brotli_static_module.so;
+load_module /etc/nginx/modules/ngx_http_brotli_filter_module.so; # OK
+load_module /etc/nginx/modules/ngx_http_brotli_static_module.so; # OK
 {{ end }}
 
 {{ if (shouldLoadAuthDigestModule $servers) }}
-load_module /etc/nginx/modules/ngx_http_auth_digest_module.so;
+load_module /etc/nginx/modules/ngx_http_auth_digest_module.so; # OK
 {{ end }}
 
 {{ if (shouldLoadOpentelemetryModule $cfg $servers) }}
-load_module /etc/nginx/modules/otel_ngx_module.so;
+load_module /etc/nginx/modules/otel_ngx_module.so; # OK
 {{ end }}
 
-# MIGRATED 1
-daemon off;
+daemon off; # OK
 
-worker_processes {{ $cfg.WorkerProcesses }};
+worker_processes {{ $cfg.WorkerProcesses }}; # OK
 {{ if gt (len $cfg.WorkerCPUAffinity) 0 }}
-worker_cpu_affinity {{ $cfg.WorkerCPUAffinity }};
+worker_cpu_affinity {{ $cfg.WorkerCPUAffinity }}; # OK
 {{ end }}
 
-worker_rlimit_nofile {{ $cfg.MaxWorkerOpenFiles }};
+worker_rlimit_nofile {{ $cfg.MaxWorkerOpenFiles }}; # OK
 
 {{/* http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout */}}
 {{/* avoid waiting too long during a reload */}}
-worker_shutdown_timeout {{ $cfg.WorkerShutdownTimeout }} ;
+worker_shutdown_timeout {{ $cfg.WorkerShutdownTimeout }} ; # OK
 
 events {
-    multi_accept        {{ if $cfg.EnableMultiAccept }}on{{ else }}off{{ end }};
-    worker_connections  {{ $cfg.MaxWorkerConnections }};
-    use                 epoll;
+    multi_accept        {{ if $cfg.EnableMultiAccept }}on{{ else }}off{{ end }}; # OK
+    worker_connections  {{ $cfg.MaxWorkerConnections }}; # OK
+    use                 epoll; # OK
     {{ range $index , $v := $cfg.DebugConnections }}
-    debug_connection    {{ $v }};
+    debug_connection    {{ $v }}; # OK
     {{ end }}
 }
 
-# END MIGRATED 1
-
 http {
     {{ if (shouldLoadOpentelemetryModule $cfg $servers) }}
-    opentelemetry_config {{ $cfg.OpentelemetryConfig }};
+    opentelemetry_config {{ $cfg.OpentelemetryConfig }}; # OK
     {{ end }}
 
-    # MIGRATED
-    lua_package_path "/etc/nginx/lua/?.lua;;";
+    lua_package_path "/etc/nginx/lua/?.lua;;"; # OK
 
-    # MIGRATED
-    {{ buildLuaSharedDictionaries $cfg $servers }}
+    {{ buildLuaSharedDictionaries $cfg $servers }} # OK
 
-    # NOT MIGRATED
-    init_by_lua_block {
-        collectgarbage("collect")
+    lua_shared_dict luaconfig 5m; # OK
 
-        -- init modules
-        local ok, res
+    init_by_lua_file /etc/nginx/lua/ngx_conf_init.lua; # OK
 
-        ok, res = pcall(require, "lua_ingress")
-        if not ok then
-          error("require failed: " .. tostring(res))
-        else
-          lua_ingress = res
-          lua_ingress.set_config({{ configForLua $all }})
-        end
+    init_worker_by_lua_file /etc/nginx/lua/ngx_conf_init_worker.lua; # OK
 
-        ok, res = pcall(require, "configuration")
-        if not ok then
-          error("require failed: " .. tostring(res))
-        else
-          configuration = res
-          configuration.prohibited_localhost_port = '{{ .StatusPort }}'
-        end
-
-        ok, res = pcall(require, "balancer")
-        if not ok then
-          error("require failed: " .. tostring(res))
-        else
-          balancer = res
-        end
-
-        {{ if $all.EnableMetrics }}
-        ok, res = pcall(require, "monitor")
-        if not ok then
-          error("require failed: " .. tostring(res))
-        else
-          monitor = res
-        end
-        {{ end }}
-
-        ok, res = pcall(require, "certificate")
-        if not ok then
-          error("require failed: " .. tostring(res))
-        else
-          certificate = res
-          certificate.is_ocsp_stapling_enabled = {{ $cfg.EnableOCSP }}
-        end
-
-        ok, res = pcall(require, "plugins")
-        if not ok then
-          error("require failed: " .. tostring(res))
-        else
-          plugins = res
-        end
-        -- load all plugins that'll be used here
-        plugins.init({ {{ range  $idx, $plugin := $cfg.Plugins }}{{ if $idx }},{{ end }}{{ $plugin | quote }}{{ end }} })
-    }
-
-    init_worker_by_lua_block {
-        lua_ingress.init_worker()
-        balancer.init_worker()
-        {{ if $all.EnableMetrics }}
-        monitor.init_worker({{ $all.MonitorMaxBatchSize }})
-        {{ end }}
-
-        plugins.run()
-    }
-
-    # MIGRATED VARIOUS 1
     {{/* Enable the real_ip module only if we use either X-Forwarded headers or Proxy Protocol. */}}
     {{/* we use the value of the real IP for the geo_ip module */}}
     {{ if or (or $cfg.UseForwardedHeaders $cfg.UseProxyProtocol) $cfg.EnableRealIP }}
     {{ if $cfg.UseProxyProtocol }}
-    real_ip_header      proxy_protocol;
+    real_ip_header      proxy_protocol; # OK
     {{ else }}
-    real_ip_header      {{ $cfg.ForwardedForHeader }};
+    real_ip_header      {{ $cfg.ForwardedForHeader }}; # OK
     {{ end }}
 
-    real_ip_recursive   on;
+    real_ip_recursive   on; # OK
     {{ range $trusted_ip := $cfg.ProxyRealIPCIDR }}
-    set_real_ip_from    {{ $trusted_ip }};
+    set_real_ip_from    {{ $trusted_ip }}; # OK
     {{ end }}
     {{ end }}
 
-    aio                 threads;
+    {{ if $cfg.UseGeoIP2 }}
+    # https://github.com/leev/ngx_http_geoip2_module#example-usage
+
+    {{ range $index, $file := $all.MaxmindEditionFiles }}
+    {{ if eq $file "GeoLite2-Country.mmdb" }}
+    geoip2 /etc/ingress-controller/geoip/GeoLite2-Country.mmdb {
+        {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
+        auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
+        {{ end }}
+        $geoip2_country_code source=$remote_addr country iso_code;
+        $geoip2_country_name source=$remote_addr country names en;
+        $geoip2_country_geoname_id source=$remote_addr country geoname_id;
+        $geoip2_continent_code source=$remote_addr continent code;
+        $geoip2_continent_name source=$remote_addr continent names en;
+        $geoip2_continent_geoname_id source=$remote_addr continent geoname_id;
+    }
+    {{ end }}
+
+    {{ if eq $file "GeoIP2-Country.mmdb" }}
+    geoip2 /etc/ingress-controller/geoip/GeoIP2-Country.mmdb {
+        {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
+        auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
+        {{ end }}
+        $geoip2_country_code source=$remote_addr country iso_code;
+        $geoip2_country_name source=$remote_addr country names en;
+        $geoip2_country_geoname_id source=$remote_addr country geoname_id;
+        $geoip2_continent_code source=$remote_addr continent code;
+        $geoip2_continent_name source=$remote_addr continent names en;
+        $geoip2_continent_geoname_id source=$remote_addr continent geoname_id;
+    }
+    {{ end }}
+
+    {{ if eq $file "GeoLite2-City.mmdb" }}
+    geoip2 /etc/ingress-controller/geoip/GeoLite2-City.mmdb {
+        {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
+        auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
+        {{ end }}
+        $geoip2_city_country_code source=$remote_addr country iso_code;
+        $geoip2_city_country_name source=$remote_addr country names en;
+        $geoip2_city_country_geoname_id source=$remote_addr country geoname_id;
+        $geoip2_city source=$remote_addr city names en;
+        $geoip2_city_geoname_id source=$remote_addr city geoname_id;
+        $geoip2_postal_code source=$remote_addr postal code;
+        $geoip2_dma_code source=$remote_addr location metro_code;
+        $geoip2_latitude source=$remote_addr location latitude;
+        $geoip2_longitude source=$remote_addr location longitude;
+        $geoip2_time_zone source=$remote_addr location time_zone;
+        $geoip2_region_code source=$remote_addr subdivisions 0 iso_code;
+        $geoip2_region_name source=$remote_addr subdivisions 0 names en;
+        $geoip2_region_geoname_id source=$remote_addr subdivisions 0 geoname_id;
+        $geoip2_subregion_code source=$remote_addr subdivisions 1 iso_code;
+        $geoip2_subregion_name source=$remote_addr subdivisions 1 names en;
+        $geoip2_subregion_geoname_id source=$remote_addr subdivisions 1 geoname_id;
+        $geoip2_city_continent_code source=$remote_addr continent code;
+        $geoip2_city_continent_name source=$remote_addr continent names en;
+    }
+    {{ end }}
+
+    {{ if eq $file "GeoIP2-City.mmdb" }}
+    geoip2 /etc/ingress-controller/geoip/GeoIP2-City.mmdb {
+        {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
+        auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
+        {{ end }}
+        $geoip2_city_country_code source=$remote_addr country iso_code;
+        $geoip2_city_country_name source=$remote_addr country names en;
+        $geoip2_city_country_geoname_id source=$remote_addr country geoname_id;
+        $geoip2_city source=$remote_addr city names en;
+        $geoip2_city_geoname_id source=$remote_addr city geoname_id;
+        $geoip2_postal_code source=$remote_addr postal code;
+        $geoip2_dma_code source=$remote_addr location metro_code;
+        $geoip2_latitude source=$remote_addr location latitude;
+        $geoip2_longitude source=$remote_addr location longitude;
+        $geoip2_time_zone source=$remote_addr location time_zone;
+        $geoip2_region_code source=$remote_addr subdivisions 0 iso_code;
+        $geoip2_region_name source=$remote_addr subdivisions 0 names en;
+        $geoip2_region_geoname_id source=$remote_addr subdivisions 0 geoname_id;
+        $geoip2_subregion_code source=$remote_addr subdivisions 1 iso_code;
+        $geoip2_subregion_name source=$remote_addr subdivisions 1 names en;
+        $geoip2_subregion_geoname_id source=$remote_addr subdivisions 1 geoname_id;
+        $geoip2_city_continent_code source=$remote_addr continent code;
+        $geoip2_city_continent_name source=$remote_addr continent names en;
+    }
+    {{ end }}
+
+    {{ if eq $file "GeoLite2-ASN.mmdb" }}
+    geoip2 /etc/ingress-controller/geoip/GeoLite2-ASN.mmdb {
+        {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
+        auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
+        {{ end }}
+        $geoip2_asn source=$remote_addr autonomous_system_number;
+        $geoip2_org source=$remote_addr autonomous_system_organization;
+    }
+    {{ end }}
+
+    {{ if eq $file "GeoIP2-ASN.mmdb" }}
+    geoip2 /etc/ingress-controller/geoip/GeoIP2-ASN.mmdb {
+        {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
+        auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
+        {{ end }}
+        $geoip2_asn source=$remote_addr autonomous_system_number;
+        $geoip2_org source=$remote_addr autonomous_system_organization;
+    }
+    {{ end }}
+
+    {{ if eq $file "GeoIP2-ISP.mmdb" }}
+    geoip2 /etc/ingress-controller/geoip/GeoIP2-ISP.mmdb {
+        {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
+        auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
+        {{ end }}
+        $geoip2_isp source=$remote_addr isp;
+        $geoip2_isp_org source=$remote_addr organization;
+        $geoip2_asn source=$remote_addr default=0 autonomous_system_number;
+    }
+    {{ end }}
+
+    {{ if eq $file "GeoIP2-Connection-Type.mmdb" }}
+    geoip2 /etc/ingress-controller/geoip/GeoIP2-Connection-Type.mmdb {
+        $geoip2_connection_type connection_type;
+    }
+    {{ end }}
+
+    {{ if eq $file "GeoIP2-Anonymous-IP.mmdb" }}
+    geoip2 /etc/ingress-controller/geoip/GeoIP2-Anonymous-IP.mmdb {
+        {{ if (gt $cfg.GeoIP2AutoReloadMinutes 0) }}
+        auto_reload {{ $cfg.GeoIP2AutoReloadMinutes }}m;
+        {{ end }}
+        $geoip2_is_anon source=$remote_addr is_anonymous;
+        $geoip2_is_anonymous source=$remote_addr default=0 is_anonymous;
+        $geoip2_is_anonymous_vpn source=$remote_addr default=0 is_anonymous_vpn;
+        $geoip2_is_hosting_provider source=$remote_addr default=0 is_hosting_provider;
+        $geoip2_is_public_proxy source=$remote_addr default=0 is_public_proxy;
+        $geoip2_is_tor_exit_node source=$remote_addr default=0 is_tor_exit_node;
+    }
+    {{ end }}
+
+    {{ end }}
+
+    {{ end }}
+
+    aio                 threads; # OK
 
     {{ if $cfg.EnableAioWrite }}
-    aio_write           on;
+    aio_write           on; # OK
     {{ end }}
 
-    tcp_nopush          on;
-    tcp_nodelay         on;
+    tcp_nopush          on; # OK
+    tcp_nodelay         on; # OK
 
-    log_subrequest      on;
+    log_subrequest      on; # OK
 
-    reset_timedout_connection on;
+    reset_timedout_connection on; # OK
 
-    keepalive_timeout  {{ $cfg.KeepAlive }}s;
-    keepalive_requests {{ $cfg.KeepAliveRequests }};
+    keepalive_timeout  {{ $cfg.KeepAlive }}s; # OK
+    keepalive_requests {{ $cfg.KeepAliveRequests }}; # OK
 
-    client_body_temp_path           /tmp/nginx/client-body;
-    fastcgi_temp_path               /tmp/nginx/fastcgi-temp;
-    proxy_temp_path                 /tmp/nginx/proxy-temp;
+    client_body_temp_path           /tmp/nginx/client-body; # OK
+    fastcgi_temp_path               /tmp/nginx/fastcgi-temp; # OK
+    proxy_temp_path                 /tmp/nginx/proxy-temp; # OK
 
-    client_header_buffer_size       {{ $cfg.ClientHeaderBufferSize }};
-    client_header_timeout           {{ $cfg.ClientHeaderTimeout }}s;
-    large_client_header_buffers     {{ $cfg.LargeClientHeaderBuffers }};
-    client_body_buffer_size         {{ $cfg.ClientBodyBufferSize }};
-    client_body_timeout             {{ $cfg.ClientBodyTimeout }}s;
+    client_header_buffer_size       {{ $cfg.ClientHeaderBufferSize }}; # OK
+    client_header_timeout           {{ $cfg.ClientHeaderTimeout }}s; # OK
+    large_client_header_buffers     {{ $cfg.LargeClientHeaderBuffers }}; # OK
+    client_body_buffer_size         {{ $cfg.ClientBodyBufferSize }}; # OK
+    client_body_timeout             {{ $cfg.ClientBodyTimeout }}s; # OK
 
     {{ if gt $cfg.GRPCBufferSizeKb 0 }}
-    grpc_buffer_size {{ $cfg.GRPCBufferSizeKb }}k;
+    grpc_buffer_size {{ $cfg.GRPCBufferSizeKb }}k; # OK
     {{ end }}
 
-    {{ if and (ne $cfg.HTTP2MaxHeaderSize "") (ne $cfg.HTTP2MaxFieldSize "") }}
-    http2_max_field_size            {{ $cfg.HTTP2MaxFieldSize }};
-    http2_max_header_size           {{ $cfg.HTTP2MaxHeaderSize }};
+    {{ if and (ne $cfg.HTTP2MaxHeaderSize "") (ne $cfg.HTTP2MaxFieldSize "") }} # OK
+    http2_max_field_size            {{ $cfg.HTTP2MaxFieldSize }}; # OK
+    http2_max_header_size           {{ $cfg.HTTP2MaxHeaderSize }}; #  OK
     {{ end }}
 
-    {{ if (gt $cfg.HTTP2MaxRequests 0) }}
-    http2_max_requests              {{ $cfg.HTTP2MaxRequests }};
+    {{ if (gt $cfg.HTTP2MaxRequests 0) }} # OK
+    http2_max_requests              {{ $cfg.HTTP2MaxRequests }}; # OK
     {{ end }}
 
-    http2_max_concurrent_streams    {{ $cfg.HTTP2MaxConcurrentStreams }};
+    http2_max_concurrent_streams    {{ $cfg.HTTP2MaxConcurrentStreams }}; # OK
 
-    types_hash_max_size             2048;
-    server_names_hash_max_size      {{ $cfg.ServerNameHashMaxSize }};
-    server_names_hash_bucket_size   {{ $cfg.ServerNameHashBucketSize }};
-    map_hash_bucket_size            {{ $cfg.MapHashBucketSize }};
+    types_hash_max_size             2048; # OK
+    server_names_hash_max_size      {{ $cfg.ServerNameHashMaxSize }}; # OK
+    server_names_hash_bucket_size   {{ $cfg.ServerNameHashBucketSize }}; # OK
+    map_hash_bucket_size            {{ $cfg.MapHashBucketSize }}; # OK
 
-    proxy_headers_hash_max_size     {{ $cfg.ProxyHeadersHashMaxSize }};
-    proxy_headers_hash_bucket_size  {{ $cfg.ProxyHeadersHashBucketSize }};
+    proxy_headers_hash_max_size     {{ $cfg.ProxyHeadersHashMaxSize }}; # OK
+    proxy_headers_hash_bucket_size  {{ $cfg.ProxyHeadersHashBucketSize }}; # OK
 
-    variables_hash_bucket_size      {{ $cfg.VariablesHashBucketSize }};
-    variables_hash_max_size         {{ $cfg.VariablesHashMaxSize }};
+    variables_hash_bucket_size      {{ $cfg.VariablesHashBucketSize }}; # OK
+    variables_hash_max_size         {{ $cfg.VariablesHashMaxSize }}; # OK
 
-    underscores_in_headers          {{ if $cfg.EnableUnderscoresInHeaders }}on{{ else }}off{{ end }};
-    ignore_invalid_headers          {{ if $cfg.IgnoreInvalidHeaders }}on{{ else }}off{{ end }};
+    underscores_in_headers          {{ if $cfg.EnableUnderscoresInHeaders }}on{{ else }}off{{ end }}; # OK
+    ignore_invalid_headers          {{ if $cfg.IgnoreInvalidHeaders }}on{{ else }}off{{ end }}; # OK
 
-    limit_req_status                {{ $cfg.LimitReqStatusCode }};
-    limit_conn_status               {{ $cfg.LimitConnStatusCode }};
+    limit_req_status                {{ $cfg.LimitReqStatusCode }}; # OK
+    limit_conn_status               {{ $cfg.LimitConnStatusCode }}; # OK
 
-    include /etc/nginx/mime.types;
-    default_type {{ $cfg.DefaultType }};
+    {{ buildOpentelemetry $cfg $servers }}
+
+    include /etc/nginx/mime.types; # OK 
+    default_type {{ $cfg.DefaultType }}; # OK
+
+    {{ if $cfg.EnableBrotli }}
+    brotli on; # OK
+    brotli_comp_level {{ $cfg.BrotliLevel }}; # OK
+    brotli_min_length {{ $cfg.BrotliMinLength }}; # OK
+    brotli_types {{ $cfg.BrotliTypes }}; # OK
+    {{ end }}
 
     {{ if $cfg.UseGzip }}
-    gzip on;
-    gzip_comp_level {{ $cfg.GzipLevel }};
+    gzip on; # OK
+    gzip_comp_level {{ $cfg.GzipLevel }}; # OK
     {{- if $cfg.GzipDisable }}
-    gzip_disable "{{ $cfg.GzipDisable }}";
+    gzip_disable "{{ $cfg.GzipDisable }}"; # OK
     {{- end }}
-    gzip_http_version 1.1;
-    gzip_min_length {{ $cfg.GzipMinLength}};
-    gzip_types {{ $cfg.GzipTypes }};
-    gzip_proxied any;
-    gzip_vary on;
+    gzip_http_version 1.1; # OK
+    gzip_min_length {{ $cfg.GzipMinLength}}; # OK
+    gzip_types {{ $cfg.GzipTypes }}; # OK
+    gzip_proxied any; # OK
+    gzip_vary on; # OK
     {{ end }}
 
     # Custom headers for response
     {{ range $k, $v := $addHeaders }}
-    more_set_headers {{ printf "%s: %s" $k $v | quote }};
+    more_set_headers {{ printf "%s: %s" $k $v | quote }}; # OK
     {{ end }}
 
-    server_tokens {{ if $cfg.ShowServerTokens }}on{{ else }}off{{ end }};
+    server_tokens {{ if $cfg.ShowServerTokens }}on{{ else }}off{{ end }}; # OK
     {{ if not $cfg.ShowServerTokens }}
-    more_clear_headers Server;
+    more_clear_headers Server; # OK
     {{ end }}
 
     # disable warnings
-    uninitialized_variable_warn off;
+    uninitialized_variable_warn off; # OK
 
     # Additional available variables:
     # $namespace
     # $ingress_name
     # $service_name
     # $service_port
-    log_format upstreaminfo {{ if $cfg.LogFormatEscapeNone }}escape=none {{ else if $cfg.LogFormatEscapeJSON }}escape=json {{ end }}'{{ $cfg.LogFormatUpstream }}';
+    log_format upstreaminfo {{ if $cfg.LogFormatEscapeNone }}escape=none {{ else if $cfg.LogFormatEscapeJSON }}escape=json {{ end }}'{{ $cfg.LogFormatUpstream }}'; # OK
 
     {{/* map urls that should not appear in access.log */}}
     {{/* http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log */}}
-    map $request_uri $loggable {
+    map $request_uri $loggable { # OK
         {{ range $reqUri := $cfg.SkipAccessLogURLs }}
-        {{ $reqUri }} 0;{{ end }}
-        default 1;
+        {{ $reqUri }} 0;{{ end }} # OK
+        default 1; # OK
     }
 
     {{ if or $cfg.DisableAccessLog $cfg.DisableHTTPAccessLog }}
-    access_log off;
+    access_log off; # OK
     {{ else }}
     {{ if $cfg.EnableSyslog }}
-    access_log syslog:server={{ $cfg.SyslogHost }}:{{ $cfg.SyslogPort }} upstreaminfo if=$loggable;
+    access_log syslog:server={{ $cfg.SyslogHost }}:{{ $cfg.SyslogPort }} upstreaminfo if=$loggable; # OK
     {{ else }}
-    access_log {{ or $cfg.HTTPAccessLogPath $cfg.AccessLogPath }} upstreaminfo {{ $cfg.AccessLogParams }} if=$loggable;
+    access_log {{ or $cfg.HTTPAccessLogPath $cfg.AccessLogPath }} upstreaminfo {{ $cfg.AccessLogParams }} if=$loggable; # OK
     {{ end }}
     {{ end }}
 
     {{ if $cfg.EnableSyslog }}
-    error_log syslog:server={{ $cfg.SyslogHost }}:{{ $cfg.SyslogPort }} {{ $cfg.ErrorLogLevel }};
+    error_log syslog:server={{ $cfg.SyslogHost }}:{{ $cfg.SyslogPort }} {{ $cfg.ErrorLogLevel }}; # OK
     {{ else }}
-    error_log  {{ $cfg.ErrorLogPath }} {{ $cfg.ErrorLogLevel }};
+    error_log  {{ $cfg.ErrorLogPath }} {{ $cfg.ErrorLogLevel }}; # OK
     {{ end }}
 
-    {{ buildResolvers $cfg.Resolver $cfg.DisableIpv6DNS }}
-
-    server_name_in_redirect off;
-    port_in_redirect        off;
-
-    ssl_protocols {{ $cfg.SSLProtocols }};
-
-    ssl_early_data {{ if $cfg.SSLEarlyData }}on{{ else }}off{{ end }};
-
-    # allow configuring ssl session tickets
-    ssl_session_tickets {{ if $cfg.SSLSessionTickets }}on{{ else }}off{{ end }};
-
-    # slightly reduce the time-to-first-byte
-    ssl_buffer_size {{ $cfg.SSLBufferSize }};
-
-    ssl_ecdh_curve {{ $cfg.SSLECDHCurve }};
-    # PEM sha: {{ $cfg.DefaultSSLCertificate.PemSHA }}
-    ssl_certificate     {{ $cfg.DefaultSSLCertificate.PemFileName }};
-    ssl_certificate_key {{ $cfg.DefaultSSLCertificate.PemFileName }};
-    
-    proxy_ssl_session_reuse on;
+    {{ buildResolvers $cfg.Resolver $cfg.DisableIpv6DNS }} # OK
 
     # See https://www.nginx.com/blog/websocket-nginx
-    map $http_upgrade $connection_upgrade {
-        default          upgrade;
+    map $http_upgrade $connection_upgrade { # OK
+        default          upgrade; # OK
         {{ if (gt $cfg.UpstreamKeepaliveConnections 0) }}
         # See http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive
-        ''               '';
+        ''               ''; # OK
         {{ else }}
-        ''               close;
+        ''               close; # OK
         {{ end }}
     }
 
     # Reverse proxies can detect if a client provides a X-Request-ID header, and pass it on to the backend server.
     # If no such header is provided, it can provide a random value.
-    map $http_x_request_id $req_id {
-        default   $http_x_request_id;
+    map $http_x_request_id $req_id { # OK
+        default   $http_x_request_id; # OK
         {{ if $cfg.GenerateRequestID }}
-        ""        $request_id;
+        ""        $request_id; # OK
         {{ end }}
     }
-
-    # Cache for internal auth checks
-    proxy_cache_path /tmp/nginx/nginx-cache-auth levels=1:2 keys_zone=auth_cache:10m max_size=128m inactive=30m use_temp_path=off;
 
     {{ if and $cfg.UseForwardedHeaders $cfg.ComputeFullForwardedFor }}
     # We can't use $proxy_add_x_forwarded_for because the realip module
     # replaces the remote_addr too soon
-    map $http_x_forwarded_for $full_x_forwarded_for {
+    map $http_x_forwarded_for $full_x_forwarded_for { # OK
         {{ if $all.Cfg.UseProxyProtocol }}
-        default          "$http_x_forwarded_for, $proxy_protocol_addr";
-        ''               "$proxy_protocol_addr";
+        default          "$http_x_forwarded_for, $proxy_protocol_addr"; # OK
+        ''               "$proxy_protocol_addr"; # OK
         {{ else }}
-        default          "$http_x_forwarded_for, $realip_remote_addr";
-        ''               "$realip_remote_addr";
+        default          "$http_x_forwarded_for, $realip_remote_addr"; # OK
+        ''               "$realip_remote_addr"; # OK
         {{ end}}
     }
 
     {{ end }}
 
-        # turn on session caching to drastically improve performance
+    # Create a variable that contains the literal $ character.
+    # This works because the geo module will not resolve variables.
+    geo $literal_dollar { # OK
+        default "$"; # OK
+    }
+
+    server_name_in_redirect off; # OK
+    port_in_redirect        off; # OK
+
+    ssl_protocols {{ $cfg.SSLProtocols }}; # OK
+
+    ssl_early_data {{ if $cfg.SSLEarlyData }}on{{ else }}off{{ end }}; # OK
+
+    # turn on session caching to drastically improve performance
     {{ if $cfg.SSLSessionCache }}
-    ssl_session_cache shared:SSL:{{ $cfg.SSLSessionCacheSize }};
-    ssl_session_timeout {{ $cfg.SSLSessionTimeout }};
+    ssl_session_cache shared:SSL:{{ $cfg.SSLSessionCacheSize }}; # OK
+    ssl_session_timeout {{ $cfg.SSLSessionTimeout }}; # OK
     {{ end }}
 
+    # allow configuring ssl session tickets
+    ssl_session_tickets {{ if $cfg.SSLSessionTickets }}on{{ else }}off{{ end }}; # OK
+
     {{ if not (empty $cfg.SSLSessionTicketKey ) }}
-    ssl_session_ticket_key /etc/ingress-controller/tickets.key;
+    ssl_session_ticket_key /etc/ingress-controller/tickets.key; # OK
     {{ end }}
+
+    # slightly reduce the time-to-first-byte
+    ssl_buffer_size {{ $cfg.SSLBufferSize }}; # OK
 
     {{ if not (empty $cfg.SSLCiphers) }}
     # allow configuring custom ssl ciphers
-    ssl_ciphers '{{ $cfg.SSLCiphers }}';
-    ssl_prefer_server_ciphers on;
+    ssl_ciphers '{{ $cfg.SSLCiphers }}'; # OK
+    ssl_prefer_server_ciphers on; # OK
     {{ end }}
 
     {{ if not (empty $cfg.SSLDHParam) }}
     # allow custom DH file http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam
-    ssl_dhparam {{ $cfg.SSLDHParam }};
+    ssl_dhparam {{ $cfg.SSLDHParam }}; # OK
     {{ end }}
+
+    ssl_ecdh_curve {{ $cfg.SSLECDHCurve }}; # OK
+
+    # PEM sha: {{ $cfg.DefaultSSLCertificate.PemSHA }}
+    ssl_certificate     {{ $cfg.DefaultSSLCertificate.PemFileName }}; # OK
+    ssl_certificate_key {{ $cfg.DefaultSSLCertificate.PemFileName }}; # OK
 
     {{ if and $cfg.CustomHTTPErrors (not $cfg.DisableProxyInterceptErrors) }}
-    proxy_intercept_errors on;
+    proxy_intercept_errors on; # OK
     {{ end }}
 
-    {{ if $cfg.EnableBrotli }}
-    brotli on;
-    brotli_comp_level {{ $cfg.BrotliLevel }};
-    brotli_min_length {{ $cfg.BrotliMinLength }};
-    brotli_types {{ $cfg.BrotliTypes }};
-    {{ end }}
+    {{ range $errCode := $cfg.CustomHTTPErrors }}
+    error_page {{ $errCode }} = @custom_upstream-default-backend_{{ $errCode }};{{ end }} # OK
+
+    proxy_ssl_session_reuse on; # OK
 
     {{ if $cfg.AllowBackendServerHeader }}
-    proxy_pass_header Server;
+    proxy_pass_header Server; # OK
     {{ end }}
 
-    {{ range $header := $cfg.HideHeaders }}proxy_hide_header {{ $header }};
-    {{ end }}
-
-    # Global filters
-    {{ range $ip := $cfg.BlockCIDRs }}deny {{ trimSpace $ip }};
-    {{ end }}
-
-    {{ if gt (len $cfg.BlockUserAgents) 0 }}
-    map $http_user_agent $block_ua {
-        default 0;
-
-        {{ range $ua := $cfg.BlockUserAgents }}{{ trimSpace $ua }} 1;
-        {{ end }}
-    }
-    {{ end }}
-
-    {{ if gt (len $cfg.BlockReferers) 0 }}
-    map $http_referer $block_ref {
-        default 0;
-
-        {{ range $ref := $cfg.BlockReferers }}{{ trimSpace $ref }} 1;
-        {{ end }}
-    }
+    {{ range $header := $cfg.HideHeaders }}proxy_hide_header {{ $header }}; # OK
     {{ end }}
 
     upstream upstream_balancer {
-        server 0.0.0.1; # placeholder
+        ### Attention!!!
+        #
+        # We no longer create "upstream" section for every backend.
+        # Backends are handled dynamically using Lua. If you would like to debug
+        # and see what backends ingress-nginx has in its memory you can
+        # install our kubectl plugin https://kubernetes.github.io/ingress-nginx/kubectl-plugin.
+        # Once you have the plugin you can use "kubectl ingress-nginx backends" command to
+        # inspect current backends.
+        #
+        ###
 
-        balancer_by_lua_block {
-          balancer.balance()
-        }
+        server 0.0.0.1; # OK
+
+        balancer_by_lua_file /etc/nginx/lua/nginx/ngx_conf_balancer.lua; # OK
 
         {{ if (gt $cfg.UpstreamKeepaliveConnections 0) }}
-        keepalive {{ $cfg.UpstreamKeepaliveConnections }};
-        keepalive_time {{ $cfg.UpstreamKeepaliveTime }};
-        keepalive_timeout  {{ $cfg.UpstreamKeepaliveTimeout }}s;
-        keepalive_requests {{ $cfg.UpstreamKeepaliveRequests }};
+        keepalive {{ $cfg.UpstreamKeepaliveConnections }}; # OK
+        keepalive_time {{ $cfg.UpstreamKeepaliveTime }}; # OK
+        keepalive_timeout  {{ $cfg.UpstreamKeepaliveTimeout }}s; # OK
+        keepalive_requests {{ $cfg.UpstreamKeepaliveRequests }}; # OK
         {{ end }}
     }
-
-    # END MIGRATED VARIOUS 1
-
-    {{ buildOpentelemetry $cfg $servers }}
-
-    # Create a variable that contains the literal $ character.
-    # This works because the geo module will not resolve variables.
-    geo $literal_dollar {
-        default "$";
-    }
-
-    # MIGRATED
-    {{ range $errCode := $cfg.CustomHTTPErrors }}
-    error_page {{ $errCode }} = @custom_upstream-default-backend_{{ $errCode }};{{ end }}
 
     {{ range $rl := (filterRateLimits $servers ) }}
     # Ratelimit {{ $rl.Name }}
@@ -432,6 +491,30 @@ http {
     {{ $zone }}
     {{ end }}
 
+    # Cache for internal auth checks
+    proxy_cache_path /tmp/nginx/nginx-cache-auth levels=1:2 keys_zone=auth_cache:10m max_size=128m inactive=30m use_temp_path=off; # OK
+
+    # Global filters
+    {{ range $ip := $cfg.BlockCIDRs }}deny {{ trimSpace $ip }}; # OK
+    {{ end }}
+
+    {{ if gt (len $cfg.BlockUserAgents) 0 }}
+    map $http_user_agent $block_ua { # OK
+        default 0; # OK
+
+        {{ range $ua := $cfg.BlockUserAgents }}{{ trimSpace $ua }} 1; # OK
+        {{ end }}
+    }
+    {{ end }}
+
+    {{ if gt (len $cfg.BlockReferers) 0 }}
+    map $http_referer $block_ref { # OK
+        default 0; # OK
+
+        {{ range $ref := $cfg.BlockReferers }}{{ trimSpace $ref }} 1; # OK
+        {{ end }}
+    }
+    {{ end }}
 
     {{/* Build server redirects (from/to www) */}}
     {{ range $redirect := .RedirectServers }}
@@ -442,9 +525,7 @@ http {
         {{ buildHTTPListener  $all $redirect.From }}
         {{ buildHTTPSListener $all $redirect.From }}
 
-        ssl_certificate_by_lua_block {
-            certificate.call()
-        }
+        ssl_certificate_by_lua_file /etc/nginx/lua/nginx/ngx_conf_certificate.lua;
 
         {{ if gt (len $cfg.BlockUserAgents) 0 }}
         if ($block_ua) {
@@ -457,30 +538,7 @@ http {
         }
         {{ end }}
 
-        set_by_lua_block $redirect_to {
-            local request_uri = ngx.var.request_uri
-            if string.sub(request_uri, -1) == "/" then
-                request_uri = string.sub(request_uri, 1, -2)
-            end
-
-            {{ if $cfg.UseForwardedHeaders }}
-            local redirectScheme
-            if not ngx.var.http_x_forwarded_proto then
-                redirectScheme = ngx.var.scheme
-            else
-                redirectScheme = ngx.var.http_x_forwarded_proto
-            end
-            {{ else }}
-            local redirectScheme = ngx.var.scheme
-            {{ end }}
-
-            {{ if ne $all.ListenPorts.HTTPS 443 }}
-            {{ $redirect_port := (printf ":%v" $all.ListenPorts.HTTPS) }}
-            return string.format("%s://%s%s%s", redirectScheme, "{{ $redirect.To }}", "{{ $redirect_port }}", request_uri)
-            {{ else }}
-            return string.format("%s://%s%s", redirectScheme, "{{ $redirect.To }}", request_uri)
-            {{ end }}
-        }
+        set_by_lua_file $redirect_to /etc/nginx/lua/nginx/ngx_srv_redirect.lua {{ $redirect.To }}; 
 
         return {{ $all.Cfg.HTTPRedirectCode }} $redirect_to;
     }
@@ -528,7 +586,12 @@ http {
 
         {{ template "SERVER" serverConfig $all $server }}
 
-        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps "upstream-default-backend" $cfg.CustomHTTPErrors $all.EnableMetrics) }}
+        {{ if not (empty $cfg.ServerSnippet) }}
+        # Custom code snippet configured in the configuration configmap
+        {{ $cfg.ServerSnippet }}
+        {{ end }}
+
+        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps "upstream-default-backend" $cfg.CustomHTTPErrors $all.EnableMetrics $cfg.EnableModsecurity) }}
     }
     ## end server {{ $server.Hostname }}
 
@@ -549,6 +612,11 @@ http {
 
     # default server, used for NGINX healthcheck and access to nginx stats
     server {
+        # Ensure that modsecurity will not run on an internal location as this is not accessible from outside
+        {{ if $all.Cfg.EnableModsecurity }}
+        modsecurity off;
+        {{ end }}
+
         listen 127.0.0.1:{{ .StatusPort }};
         set $proxy_upstream_name "internal";
 
@@ -565,17 +633,7 @@ http {
         }
 
         location /is-dynamic-lb-initialized {
-            content_by_lua_block {
-                local configuration = require("configuration")
-                local backend_data = configuration.get_backends_data()
-                if not backend_data then
-                    ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
-                    return
-                end
-
-                ngx.say("OK")
-                ngx.exit(ngx.HTTP_OK)
-            }
+            content_by_lua_file /etc/nginx/lua/nginx/ngx_conf_is_dynamic_lb_initialized.lua;
         }
 
         location {{ .StatusPath }} {
@@ -587,26 +645,135 @@ http {
             client_body_buffer_size                 {{ luaConfigurationRequestBodySize $cfg }};
             proxy_buffering                         off;
 
-            content_by_lua_block {
-              configuration.call()
-            }
+            content_by_lua_file /etc/nginx/lua/nginx/ngx_conf_configuration.lua;
         }
 
         location / {
-            content_by_lua_block {
-                ngx.exit(ngx.HTTP_NOT_FOUND)
-            }
+            return 404;
         }
     }
+}
+
+stream {
+    lua_package_path "/etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/?.lua;;";
+
+    lua_shared_dict tcp_udp_configuration_data 5M;
+    
+    {{ buildResolvers $cfg.Resolver $cfg.DisableIpv6DNS }}
+
+    init_by_lua_file /etc/nginx/lua/ngx_conf_init_stream.lua;
+
+    init_worker_by_lua_file /etc/nginx/lua/nginx/ngx_conf_init_tcp_udp.lua;
+
+    lua_add_variable $proxy_upstream_name;
+
+    log_format log_stream '{{ $cfg.LogFormatStream }}';
+
+    {{ if or $cfg.DisableAccessLog $cfg.DisableStreamAccessLog }}
+    access_log off;
+    {{ else }}
+    access_log {{ or $cfg.StreamAccessLogPath $cfg.AccessLogPath }} log_stream {{ $cfg.AccessLogParams }};
+    {{ end }}
+
+
+    error_log  {{ $cfg.ErrorLogPath }} {{ $cfg.ErrorLogLevel }};
+    {{ if $cfg.EnableRealIP }}
+    {{ range $trusted_ip := $cfg.ProxyRealIPCIDR }}
+    set_real_ip_from    {{ $trusted_ip }};
+    {{ end }}
+    {{ end }}
+
+    upstream upstream_balancer {
+        server 0.0.0.1:1234; # placeholder
+        balancer_by_lua_file /etc/nginx/lua/nginx/ngx_conf_balancer_tcp_udp.lua;
+    }
+
+    server {
+        listen 127.0.0.1:{{ .StreamPort }};
+
+        access_log off;
+
+        content_by_lua_file /etc/nginx/lua/nginx/ngx_conf_content_tcp_udp.lua;
+    }
+
+    # TCP services
+    {{ range $tcpServer := .TCPBackends }}
+    server {
+        preread_by_lua_block {
+            ngx.var.proxy_upstream_name="tcp-{{ $tcpServer.Backend.Namespace }}-{{ $tcpServer.Backend.Name }}-{{ $tcpServer.Backend.Port }}";
+        }
+
+        {{ range $address := $all.Cfg.BindAddressIpv4 }}
+        listen                  {{ $address }}:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
+        {{ else }}
+        listen                  {{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
+        {{ end }}
+        {{ if $IsIPV6Enabled }}
+        {{ range $address := $all.Cfg.BindAddressIpv6 }}
+        listen                  {{ $address }}:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
+        {{ else }}
+        listen                  [::]:{{ $tcpServer.Port }}{{ if $tcpServer.Backend.ProxyProtocol.Decode }} proxy_protocol{{ end }};
+        {{ end }}
+        {{ end }}
+        proxy_timeout           {{ $cfg.ProxyStreamTimeout }};
+        proxy_next_upstream     {{ if $cfg.ProxyStreamNextUpstream }}on{{ else }}off{{ end }};
+        proxy_next_upstream_timeout {{ $cfg.ProxyStreamNextUpstreamTimeout }};
+        proxy_next_upstream_tries   {{ $cfg.ProxyStreamNextUpstreamTries }};
+
+        proxy_pass              upstream_balancer;
+        {{ if $tcpServer.Backend.ProxyProtocol.Encode }}
+        proxy_protocol          on;
+        {{ end }}
+    }
+    {{ end }}
+
+    # UDP services
+    {{ range $udpServer := .UDPBackends }}
+    server {
+        preread_by_lua_block {
+            ngx.var.proxy_upstream_name="udp-{{ $udpServer.Backend.Namespace }}-{{ $udpServer.Backend.Name }}-{{ $udpServer.Backend.Port }}";
+        }
+
+        {{ range $address := $all.Cfg.BindAddressIpv4 }}
+        listen                  {{ $address }}:{{ $udpServer.Port }} udp;
+        {{ else }}
+        listen                  {{ $udpServer.Port }} udp;
+        {{ end }}
+        {{ if $IsIPV6Enabled }}
+        {{ range $address := $all.Cfg.BindAddressIpv6 }}
+        listen                  {{ $address }}:{{ $udpServer.Port }} udp;
+        {{ else }}
+        listen                  [::]:{{ $udpServer.Port }} udp;
+        {{ end }}
+        {{ end }}
+        proxy_responses         {{ $cfg.ProxyStreamResponses }};
+        proxy_timeout           {{ $cfg.ProxyStreamTimeout }};
+        proxy_next_upstream     {{ if $cfg.ProxyStreamNextUpstream }}on{{ else }}off{{ end }};
+        proxy_next_upstream_timeout {{ $cfg.ProxyStreamNextUpstreamTimeout }};
+        proxy_next_upstream_tries   {{ $cfg.ProxyStreamNextUpstreamTries }};
+        proxy_pass              upstream_balancer;
+    }
+    {{ end }}
+
+    # Stream Snippets
+    {{ range $snippet := .StreamSnippets }}
+    {{ $snippet }}
+    {{ end }}
 }
 
 {{/* definition of templates to avoid repetitions */}}
 {{ define "CUSTOM_ERRORS" }}
         {{ $enableMetrics := .EnableMetrics }}
+        {{ $modsecurityEnabled := .ModsecurityEnabled }}
         {{ $upstreamName := .UpstreamName }}
         {{ range $errCode := .ErrorCodes }}
         location @custom_{{ $upstreamName }}_{{ $errCode }} {
             internal;
+
+            # Ensure that modsecurity will not run on custom error pages or they might be blocked
+            {{ if $modsecurityEnabled }}
+            modsecurity off;
+            {{ end }}
 
             proxy_intercept_errors off;
 
@@ -626,11 +793,9 @@ http {
             rewrite                (.*) / break;
 
             proxy_pass            http://upstream_balancer;
-            log_by_lua_block {
-                {{ if $enableMetrics }}
-                monitor.call()
-                {{ end }}
-            }
+            {{ if $enableMetrics }}
+            log_by_lua_file /etc/nginx/lua/nginx/ngx_conf_log.lua;
+            {{ end }}
         }
         {{ end }}
 {{ end }}
@@ -690,9 +855,7 @@ http {
         ssl_reject_handshake {{ if $all.Cfg.SSLRejectHandshake }}on{{ else }}off{{ end }};
         {{ end }}
 
-        ssl_certificate_by_lua_block {
-            certificate.call()
-        }
+        ssl_certificate_by_lua_file /etc/nginx/lua/nginx/ngx_conf_certificate.lua;
 
         {{ if not (empty $server.AuthTLSError) }}
         # {{ $server.AuthTLSError }}
@@ -741,8 +904,13 @@ http {
         ssl_prefer_server_ciphers               {{ $server.SSLPreferServerCiphers }};
         {{ end }}
 
+        {{ if not (empty $server.ServerSnippet) }}
+        # Custom code snippet configured for host {{ $server.Hostname }}
+        {{ $server.ServerSnippet }}
+        {{ end }}
+
         {{ range $errorLocation := (buildCustomErrorLocationsPerServer $server) }}
-        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $errorLocation.UpstreamName $errorLocation.Codes $all.EnableMetrics) }}
+        {{ template "CUSTOM_ERRORS" (buildCustomErrorDeps $errorLocation.UpstreamName $errorLocation.Codes $all.EnableMetrics $all.Cfg.EnableModsecurity) }}
         {{ end }}
 
         {{ buildMirrorLocations $server.Locations }}
@@ -779,13 +947,16 @@ http {
             access_log off;
             {{ end }}
 
+            # Ensure that modsecurity will not run on an internal location as this is not accessible from outside
+            {{ if $all.Cfg.EnableModsecurity }}
+            modsecurity off;
+            {{ end }}
+
             {{ if $externalAuth.AuthCacheKey }}
             set $tmp_cache_key '{{ $server.Hostname }}{{ $authPath }}{{ $externalAuth.AuthCacheKey }}';
             set $cache_key '';
 
-            rewrite_by_lua_block {
-                ngx.var.cache_key = ngx.encode_base64(ngx.sha1_bin(ngx.var.tmp_cache_key))
-            }
+            rewrite_by_lua_file /etc/nginx/lua/nginx/ngx_conf_rewrite_auth.lua;
 
             proxy_cache auth_cache;
 
@@ -861,6 +1032,10 @@ http {
             {{ $line }}
             {{- end }}
 
+            {{ if not (empty $externalAuth.AuthSnippet) }}
+            {{ $externalAuth.AuthSnippet }}
+            {{ end }}
+
             {{ if and (eq $applyAuthUpstream true) (eq $applyGlobalAuth false) }}
             {{ $authUpstreamName := buildAuthUpstreamName $location $server.Hostname }}
             # The target is an upstream with HTTP keepalive, that is why the
@@ -889,6 +1064,11 @@ http {
             {{ template "CORS" $location }}
             {{ end }}
 
+            # Ensure that modsecurity will not run on an internal location as this is not accessible from outside
+            {{ if $all.Cfg.EnableModsecurity }}
+            modsecurity off;
+            {{ end }}
+
             return 302 {{ buildAuthSignURL $externalAuth.SigninURL $externalAuth.SigninURLRedirectParam }};
         }
         {{ end }}
@@ -901,7 +1081,6 @@ http {
             set $service_name   {{ $ing.Service | quote }};
             set $service_port   {{ $ing.ServicePort | quote }};
             set $location_path  {{ $ing.Path | escapeLiteralDollar | quote }};
-            set $global_rate_limit_exceeding n;
 
             {{ buildOpentelemetryForLocation $all.Cfg.EnableOpentelemetry $all.Cfg.OpentelemetryTrustIncomingSpan $location }}
 
@@ -910,35 +1089,13 @@ http {
             mirror_request_body {{ $location.Mirror.RequestBody }};
             {{ end }}
 
-            rewrite_by_lua_block {
-                lua_ingress.rewrite({{ locationConfigForLua $location $all }})
-                balancer.rewrite()
-                plugins.run()
-            }
+            {{ locationConfigForLua $location $all }}
 
-            # be careful with `access_by_lua_block` and `satisfy any` directives as satisfy any
-            # will always succeed when there's `access_by_lua_block` that does not have any lua code doing `ngx.exit(ngx.DECLINED)`
-            # other authentication method such as basic auth or external auth useless - all requests will be allowed.
-            #access_by_lua_block {
-            #}
+            rewrite_by_lua_file /etc/nginx/lua/nginx/ngx_rewrite.lua;
 
-            header_filter_by_lua_block {
-                lua_ingress.header()
-                plugins.run()
-            }
+            header_filter_by_lua_file /etc/nginx/lua/nginx/ngx_conf_srv_hdr_filter.lua;
 
-            body_filter_by_lua_block {
-                plugins.run()
-            }
-
-            log_by_lua_block {
-                balancer.log()
-                {{ if $all.EnableMetrics }}
-                monitor.call()
-                {{ end }}
-
-                plugins.run()
-            }
+            log_by_lua_file /etc/nginx/lua/nginx/ngx_conf_log_block.lua;
 
             {{ if not $location.Logs.Access }}
             access_log off;
@@ -969,6 +1126,8 @@ http {
             set $pass_port           $pass_server_port;
 
             set $proxy_alternative_upstream_name "";
+
+            {{ buildModSecurityForLocation $all.Cfg $location }}
 
             {{ if isLocationAllowed $location }}
             {{ if gt (len $location.Denylist.CIDR) 0 }}
@@ -1132,6 +1291,14 @@ http {
             grpc_connect_timeout                    {{ $location.Proxy.ConnectTimeout }}s;
             grpc_send_timeout                       {{ $location.Proxy.SendTimeout }}s;
             grpc_read_timeout                       {{ $location.Proxy.ReadTimeout }}s;
+            {{ end }}
+
+            {{/* Add any additional configuration defined */}}
+            {{ $location.ConfigurationSnippet }}
+
+            {{ if not (empty $all.Cfg.LocationSnippet) }}
+            # Custom code snippet configured in the configuration configmap
+            {{ $all.Cfg.LocationSnippet }}
             {{ end }}
 
             {{ if $location.CustomHeaders }}

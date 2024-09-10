@@ -25,6 +25,7 @@ import (
 
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ing_net "k8s.io/ingress-nginx/internal/net"
+	"k8s.io/ingress-nginx/pkg/apis/ingress"
 )
 
 type seconds int
@@ -111,4 +112,32 @@ func dictKbToStr(size int) string {
 		return fmt.Sprintf("%dM", size/1024)
 	}
 	return fmt.Sprintf("%dK", size)
+}
+
+func shouldLoadAuthDigestModule(servers []*ingress.Server) bool {
+	for _, server := range servers {
+		for _, location := range server.Locations {
+			if !location.BasicDigestAuth.Secured {
+				continue
+			}
+
+			if location.BasicDigestAuth.Type == "digest" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// shouldLoadOpentelemetryModule determines whether or not the Opentelemetry module needs to be loaded.
+// It checks if `enable-opentelemetry` is set in the ConfigMap.
+func shouldLoadOpentelemetryModule(servers []*ingress.Server) bool {
+	for _, server := range servers {
+		for _, location := range server.Locations {
+			if location.Opentelemetry.Enabled {
+				return true
+			}
+		}
+	}
+	return false
 }

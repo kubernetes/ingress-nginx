@@ -44,5 +44,19 @@ func (c *Template) buildConfig() {
 		)
 	}
 
+	if shouldLoadAuthDigestModule(c.tplConfig.Servers) {
+		config.Parsed = append(config.Parsed, buildDirective("load_module", "/etc/nginx/modules/ngx_http_auth_digest_module.so"))
+	}
+
+	if c.tplConfig.Cfg.EnableOpentelemetry || shouldLoadOpentelemetryModule(c.tplConfig.Servers) {
+		config.Parsed = append(config.Parsed, buildDirective("load_module", "/etc/nginx/modules/otel_ngx_module.so"))
+	}
+
+	if c.tplConfig.Cfg.UseGeoIP2 {
+		config.Parsed = append(config.Parsed,
+			buildDirective("load_module", "/etc/nginx/modules/ngx_http_geoip2_module.so"),
+		)
+	}
+
 	c.config = config
 }
