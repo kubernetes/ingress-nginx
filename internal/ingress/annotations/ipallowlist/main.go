@@ -95,6 +95,9 @@ func (a ipallowlist) Parse(ing *networking.Ingress) (interface{}, error) {
 		if err == ing_errors.ErrMissingAnnotations {
 			return &SourceRange{CIDR: defaultAllowlistSourceRange}, nil
 		}
+		if ing_errors.IsValidationError(err) {
+			return &SourceRange{CIDR: defaultAllowlistSourceRange}, err
+		}
 
 		return &SourceRange{CIDR: defaultAllowlistSourceRange}, ing_errors.LocationDeniedError{
 			Reason: err,
