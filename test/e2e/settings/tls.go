@@ -71,7 +71,7 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers", fu
 
 			f.WaitForNginxConfiguration(
 				func(cfg string) bool {
-					return strings.Contains(cfg, fmt.Sprintf("ssl_ciphers '%s';", testCiphers))
+					return strings.Contains(cfg, fmt.Sprintf("ssl_ciphers '%s';", testCiphers)) || strings.Contains(cfg, fmt.Sprintf("ssl_ciphers %s;", testCiphers))
 				})
 
 			resp := f.HTTPTestClientWithTLSConfig(tlsConfig).

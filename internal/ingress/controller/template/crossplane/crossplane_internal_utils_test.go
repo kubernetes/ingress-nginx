@@ -17,6 +17,7 @@ limitations under the License.
 package crossplane
 
 import (
+	"reflect"
 	"testing"
 
 	ngx_crossplane "github.com/nginxinc/nginx-go-crossplane"
@@ -66,4 +67,37 @@ func Test_Internal_buildLuaDictionaries(t *testing.T) {
 	require.Equal(t, []string{"somedict", "1M"}, directives[0].Args)
 	require.Equal(t, "lua_shared_dict", directives[1].Directive)
 	require.Equal(t, []string{"otherdict", "1025K"}, directives[1].Args)
+}
+
+func Test_Internal_buildCorsOriginRegex(t *testing.T) {
+	tests := []struct {
+		name        string
+		corsOrigins []string
+		want        ngx_crossplane.Directives
+	}{
+		{
+			name:        "wildcard returns a single directive",
+			corsOrigins: []string{"*"},
+			want: ngx_crossplane.Directives{
+				buildDirective("set", "$http_origin", "*"),
+				buildDirective("set", "$cors", "true"),
+			},
+		},
+		{
+			name:        "multiple hosts should be changed properly",
+			corsOrigins: []string{"*.xpto.com", "  lalala.com"},
+			want: ngx_crossplane.Directives{
+				buildBlockDirective("if", []string{"$http_origin", "~*", "([A-Za-z0-9\\-]+\\.xpto\\.com)", "|", "(lalala\\.com)"},
+					ngx_crossplane.Directives{buildDirective("set", "$cors", "true")},
+				),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := buildCorsOriginRegex(tt.corsOrigins); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("buildCorsOriginRegex() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

@@ -25,7 +25,7 @@ func (c *Template) buildEvents() {
 		Directive: "events",
 		Block: ngx_crossplane.Directives{
 			buildDirective("worker_connections", c.tplConfig.Cfg.MaxWorkerConnections),
-			buildDirective("use", "epool"),
+			buildDirective("use", "epoll"),
 			buildDirective("multi_accept", c.tplConfig.Cfg.EnableMultiAccept),
 		},
 	}

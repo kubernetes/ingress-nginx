@@ -41,14 +41,15 @@ func Test_Internal_buildEvents(t *testing.T) {
 					Directive: "events",
 					Block: ngx_crossplane.Directives{
 						buildDirective("worker_connections", 16384),
-						buildDirective("use", "epool"),
+						buildDirective("use", "epoll"),
 						buildDirective("multi_accept", true),
 					},
 				},
 			},
 		}
 
-		cplane := NewTemplate()
+		cplane, err := NewTemplate()
+		require.NoError(t, err)
 		cplane.config = &c
 		cplane.tplConfig = tplConfig
 		cplane.buildEvents()
@@ -72,7 +73,7 @@ func Test_Internal_buildEvents(t *testing.T) {
 					Directive: "events",
 					Block: ngx_crossplane.Directives{
 						buildDirective("worker_connections", 50),
-						buildDirective("use", "epool"),
+						buildDirective("use", "epoll"),
 						buildDirective("multi_accept", false),
 						buildDirective("debug_connection", "127.0.0.1/32"),
 						buildDirective("debug_connection", "192.168.0.10"),
@@ -81,7 +82,8 @@ func Test_Internal_buildEvents(t *testing.T) {
 			},
 		}
 
-		cplane := NewTemplate()
+		cplane, err := NewTemplate()
+		require.NoError(t, err)
 		cplane.config = &c
 		cplane.tplConfig = tplConfig
 		cplane.buildEvents()

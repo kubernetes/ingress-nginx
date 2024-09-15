@@ -52,6 +52,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/controller/process"
 	"k8s.io/ingress-nginx/internal/ingress/controller/store"
 	ngx_template "k8s.io/ingress-nginx/internal/ingress/controller/template"
+	"k8s.io/ingress-nginx/internal/ingress/controller/template/crossplane"
 	"k8s.io/ingress-nginx/internal/ingress/metric"
 	"k8s.io/ingress-nginx/internal/ingress/status"
 	ing_net "k8s.io/ingress-nginx/internal/net"
@@ -158,7 +159,7 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 	}
 
 	onTemplateChange := func() {
-		template, err := ngx_template.NewTemplate(nginx.TemplatePath)
+		template, err := crossplane.NewTemplate()
 		if err != nil {
 			// this error is different from the rest because it must be clear why nginx is not working
 			klog.ErrorS(err, "Error loading new template")
@@ -170,7 +171,7 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 		n.syncQueue.EnqueueTask(task.GetDummyObject("template-change"))
 	}
 
-	ngxTpl, err := ngx_template.NewTemplate(nginx.TemplatePath)
+	ngxTpl, err := crossplane.NewTemplate()
 	if err != nil {
 		klog.Fatalf("Invalid NGINX configuration template: %v", err)
 	}
@@ -700,7 +701,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 
 	err = n.testTemplate(content)
 	if err != nil {
-		return err
+		return fmt.Errorf("err %s content %s", err, string(content))
 	}
 
 	if klog.V(2).Enabled() {
@@ -868,13 +869,14 @@ func (n *NGINXController) configureDynamically(pcfg *ingress.Configuration) erro
 		}
 	}
 
-	streamConfigurationChanged := !reflect.DeepEqual(n.runningConfig.TCPEndpoints, pcfg.TCPEndpoints) || !reflect.DeepEqual(n.runningConfig.UDPEndpoints, pcfg.UDPEndpoints)
+	// TODO: (ricardo) - Disable in case this is crossplane, we don't support stream on this mode
+	/*streamConfigurationChanged := !reflect.DeepEqual(n.runningConfig.TCPEndpoints, pcfg.TCPEndpoints) || !reflect.DeepEqual(n.runningConfig.UDPEndpoints, pcfg.UDPEndpoints)
 	if streamConfigurationChanged {
 		err := updateStreamConfiguration(pcfg.TCPEndpoints, pcfg.UDPEndpoints)
 		if err != nil {
 			return err
 		}
-	}
+	}*/
 
 	serversChanged := !reflect.DeepEqual(n.runningConfig.Servers, pcfg.Servers)
 	if serversChanged {

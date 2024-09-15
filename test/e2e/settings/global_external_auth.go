@@ -246,6 +246,9 @@ var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 		})
 
 		ginkgo.It(`should set snippet when global external auth is configured`, func() {
+			if framework.IsCrossplane() {
+				ginkgo.Skip("crossplane does not support snippets")
+			}
 			globalExternalAuthSnippetSetting := "global-auth-snippet"
 			globalExternalAuthSnippet := "proxy_set_header My-Custom-Header 42;"
 

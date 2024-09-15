@@ -18,10 +18,12 @@ package crossplane
 
 import (
 	"bytes"
+	"os"
 
 	ngx_crossplane "github.com/nginxinc/nginx-go-crossplane"
 
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
+	"k8s.io/ingress-nginx/internal/ingress/controller/template/crossplane/extramodules"
 )
 
 /*
@@ -41,7 +43,7 @@ type Template struct {
 	mimeFile  string
 }
 
-func NewTemplate() *Template {
+func NewTemplate() (*Template, error) {
 	lua := ngx_crossplane.Lua{}
 	return &Template{
 		mimeFile: "/etc/nginx/mime.types",
@@ -50,7 +52,7 @@ func NewTemplate() *Template {
 				lua.RegisterBuilder(),
 			},
 		},
-	}
+	}, nil
 }
 
 func (c *Template) SetMimeFile(file string) {
@@ -72,5 +74,49 @@ func (c *Template) Write(conf *config.TemplateConfig) ([]byte, error) {
 	var buf bytes.Buffer
 
 	err := ngx_crossplane.Build(&buf, *c.config, &ngx_crossplane.BuildOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	lua := ngx_crossplane.Lua{}
+	options := ngx_crossplane.ParseOptions{
+		ParseComments:            true,
+		ErrorOnUnknownDirectives: true,
+		StopParsingOnError:       true,
+		DirectiveSources: []ngx_crossplane.MatchFunc{
+			ngx_crossplane.DefaultDirectivesMatchFunc,
+			ngx_crossplane.MatchLuaLatest,
+			ngx_crossplane.MatchHeadersMoreLatest,
+			extramodules.BrotliMatchFn,
+			extramodules.OpentelemetryMatchFn,
+			ngx_crossplane.MatchGeoip2Latest,
+		},
+		LexOptions: ngx_crossplane.LexOptions{
+			Lexers: []ngx_crossplane.RegisterLexer{lua.RegisterLexer()},
+		},
+		// Modules that needs to be ported:
+		// // https://github.com/openresty/set-misc-nginx-module?tab=readme-ov-file#set_escape_uri
+		IgnoreDirectives: []string{"set_escape_uri"},
+	}
+
+	tmpFile, err := os.CreateTemp("", "")
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		_ = os.Remove(tmpFile.Name())
+		_ = tmpFile.Close()
+	}()
+
+	_, err = tmpFile.Write(buf.Bytes())
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = ngx_crossplane.Parse(tmpFile.Name(), &options)
+	if err != nil {
+		return nil, err
+	}
+
 	return buf.Bytes(), err
 }

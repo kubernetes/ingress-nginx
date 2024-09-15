@@ -43,7 +43,8 @@ var _ = framework.DescribeAnnotation("x-forwarded-prefix", func() {
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, host) &&
-					strings.Contains(server, "proxy_set_header X-Forwarded-Prefix \"/test/value\";")
+					(strings.Contains(server, "proxy_set_header X-Forwarded-Prefix \"/test/value\";") ||
+						strings.Contains(server, "proxy_set_header X-Forwarded-Prefix /test/value;"))
 			})
 
 		f.HTTPTestClient().

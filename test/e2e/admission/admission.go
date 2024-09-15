@@ -100,6 +100,9 @@ var _ = framework.IngressNginxDescribeSerial("[Admission] admission controller",
 	})
 
 	ginkgo.It("should return an error if there is an error validating the ingress definition", func() {
+		if framework.IsCrossplane() {
+			ginkgo.Skip("Crossplane does not support snippets")
+		}
 		disableSnippet := f.AllowSnippetConfiguration()
 		defer disableSnippet()
 
@@ -208,6 +211,9 @@ var _ = framework.IngressNginxDescribeSerial("[Admission] admission controller",
 	})
 
 	ginkgo.It("should return an error if the Ingress V1 definition contains invalid annotations", func() {
+		if framework.IsCrossplane() {
+			ginkgo.Skip("Crissplane does not support snippets")
+		}
 		disableSnippet := f.AllowSnippetConfiguration()
 		defer disableSnippet()
 
@@ -222,6 +228,9 @@ var _ = framework.IngressNginxDescribeSerial("[Admission] admission controller",
 	})
 
 	ginkgo.It("should not return an error for an invalid Ingress when it has unknown class", func() {
+		if framework.IsCrossplane() {
+			ginkgo.Skip("Crossplane does not support snippets")
+		}
 		disableSnippet := f.AllowSnippetConfiguration()
 		defer disableSnippet()
 		out, err := createIngress(f.Namespace, invalidV1IngressWithOtherClass)

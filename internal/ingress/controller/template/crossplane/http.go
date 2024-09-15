@@ -22,6 +22,8 @@ import (
 	"strings"
 
 	ngx_crossplane "github.com/nginxinc/nginx-go-crossplane"
+
+	utilingress "k8s.io/ingress-nginx/pkg/util/ingress"
 )
 
 func (c *Template) initHTTPDirectives() ngx_crossplane.Directives {
@@ -124,7 +126,7 @@ func (c *Template) buildHTTP() {
 		httpBlock = append(httpBlock, buildDirective("gzip_comp_level", cfg.GzipLevel))
 		httpBlock = append(httpBlock, buildDirective("gzip_http_version", "1.1"))
 		httpBlock = append(httpBlock, buildDirective("gzip_min_length", cfg.GzipMinLength))
-		httpBlock = append(httpBlock, buildDirective("gzip_types", cfg.GzipTypes))
+		httpBlock = append(httpBlock, buildDirective("gzip_types", strings.Split(cfg.GzipTypes, " ")))
 		httpBlock = append(httpBlock, buildDirective("gzip_proxied", "any"))
 		httpBlock = append(httpBlock, buildDirective("gzip_vary", "on"))
 
@@ -140,8 +142,21 @@ func (c *Template) buildHTTP() {
 		httpBlock = append(httpBlock, buildDirective("brotli_types", cfg.BrotliTypes))
 	}
 
+	if (c.tplConfig.Cfg.EnableOpentelemetry || shouldLoadOpentelemetryModule(c.tplConfig.Servers)) &&
+		cfg.OpentelemetryOperationName != "" {
+		httpBlock = append(httpBlock, buildDirective("opentelemetry_operation_name", cfg.OpentelemetryOperationName))
+	}
+
 	if !cfg.ShowServerTokens {
 		httpBlock = append(httpBlock, buildDirective("more_clear_headers", "Server"))
+	}
+
+	if cfg.UseGeoIP2 && c.tplConfig.MaxmindEditionFiles != nil && len(*c.tplConfig.MaxmindEditionFiles) > 0 {
+		geoipDirectives := buildGeoIPDirectives(cfg.GeoIP2AutoReloadMinutes, *c.tplConfig.MaxmindEditionFiles)
+		// We do this to avoid adding empty blocks
+		if len(geoipDirectives) > 0 {
+			httpBlock = append(httpBlock, geoipDirectives...)
+		}
 	}
 
 	httpBlock = append(httpBlock, buildBlockDirective(
@@ -153,11 +168,9 @@ func (c *Template) buildHTTP() {
 	))
 
 	if len(c.tplConfig.AddHeaders) > 0 {
-		additionalHeaders := make([]string, 0)
 		for headerName, headerValue := range c.tplConfig.AddHeaders {
-			additionalHeaders = append(additionalHeaders, fmt.Sprintf("%s: %s", headerName, headerValue))
+			httpBlock = append(httpBlock, buildDirective("more_set_headers", fmt.Sprintf("%s: %s", headerName, headerValue)))
 		}
-		httpBlock = append(httpBlock, buildDirective("more_set_headers", additionalHeaders))
 	}
 
 	escape := ""
@@ -257,15 +270,6 @@ func (c *Template) buildHTTP() {
 		httpBlock = append(httpBlock, buildDirective("proxy_pass_header", "Server"))
 	}
 
-	if cfg.EnableBrotli {
-		httpBlock = append(httpBlock,
-			buildDirective("brotli", "on"),
-			buildDirective("brotli_comp_level", cfg.BrotliLevel),
-			buildDirective("brotli_min_length", cfg.BrotliMinLength),
-			buildDirective("brotli_types", strings.Split(cfg.BrotliTypes, " ")),
-		)
-	}
-
 	for k := range cfg.HideHeaders {
 		httpBlock = append(httpBlock, buildDirective("proxy_hide_header", cfg.HideHeaders[k]))
 	}
@@ -283,6 +287,30 @@ func (c *Template) buildHTTP() {
 		)
 	}
 	httpBlock = append(httpBlock, buildBlockDirective("upstream", []string{"upstream_balancer"}, blockUpstreamDirectives))
+
+	// Adding Rate limit
+	for _, rl := range filterRateLimits(c.tplConfig.Servers) {
+		id := fmt.Sprintf("$allowlist_%s", rl.ID)
+		httpBlock = append(httpBlock, buildDirective("#", "Ratelimit", rl.Name))
+		rlDirectives := ngx_crossplane.Directives{
+			buildDirective("default", 0),
+		}
+		for _, ip := range rl.Allowlist {
+			rlDirectives = append(rlDirectives, buildDirective(ip, "1"))
+		}
+		mapRateLimitDirective := buildMapDirective(id, fmt.Sprintf("$limit_%s", rl.ID), ngx_crossplane.Directives{
+			buildDirective("0", cfg.LimitConnZoneVariable),
+			buildDirective("1", ""),
+		})
+		httpBlock = append(httpBlock, buildBlockDirective("geo", []string{"$remote_addr", id}, rlDirectives), mapRateLimitDirective)
+	}
+
+	zoneRL := buildRateLimitZones(c.tplConfig.Servers)
+	if len(zoneRL) > 0 {
+		httpBlock = append(httpBlock, zoneRL...)
+	}
+
+	// End of Rate limit configs
 
 	for i := range cfg.BlockCIDRs {
 		httpBlock = append(httpBlock, buildDirective("deny", strings.TrimSpace(cfg.BlockCIDRs[i])))
@@ -308,6 +336,65 @@ func (c *Template) buildHTTP() {
 		httpBlock = append(httpBlock, buildDirective("error_page", v, "=",
 			fmt.Sprintf("@custom_upstream-default-backend_%d", v)))
 	}
+
+	if redirectServers, ok := c.tplConfig.RedirectServers.([]*utilingress.Redirect); ok {
+		for _, server := range redirectServers {
+			httpBlock = append(httpBlock, buildStartServer(server.From))
+			serverBlock := c.buildRedirectServer(server)
+			httpBlock = append(httpBlock, serverBlock)
+			httpBlock = append(httpBlock, buildEndServer(server.From))
+		}
+	}
+
+	/*
+			    {{ range $server := $servers }}
+		    {{ range $location := $server.Locations }}
+		    {{ $applyGlobalAuth := shouldApplyGlobalAuth $location $all.Cfg.GlobalExternalAuth.URL }}
+		    {{ $applyAuthUpstream := shouldApplyAuthUpstream $location $all.Cfg }}
+		    {{ if and (eq $applyAuthUpstream true) (eq $applyGlobalAuth false) }}
+		    ## start auth upstream {{ $server.Hostname }}{{ $location.Path }}
+		    upstream {{ buildAuthUpstreamName $location $server.Hostname }} {
+		        {{- $externalAuth := $location.ExternalAuth }}
+		        server {{ extractHostPort $externalAuth.URL }};
+
+		        keepalive {{ $externalAuth.KeepaliveConnections }};
+		        keepalive_requests {{ $externalAuth.KeepaliveRequests }};
+		        keepalive_timeout {{ $externalAuth.KeepaliveTimeout }}s;
+		    }
+		    ## end auth upstream {{ $server.Hostname }}{{ $location.Path }}
+		    {{ end }}
+		    {{ end }}
+		    {{ end }}
+	*/
+	for _, server := range c.tplConfig.Servers {
+		for _, location := range server.Locations {
+			if shouldApplyAuthUpstream(location, cfg) && !shouldApplyGlobalAuth(location, cfg.GlobalExternalAuth.URL) {
+				authUpstreamBlock := buildBlockDirective("upstream",
+					[]string{buildAuthUpstreamName(location, server.Hostname)}, ngx_crossplane.Directives{
+						buildDirective("server", extractHostPort(location.ExternalAuth.URL)),
+						buildDirective("keepalive", location.ExternalAuth.KeepaliveConnections),
+						buildDirective("keepalive_requests", location.ExternalAuth.KeepaliveRequests),
+						buildDirective("keepalive_timeout", seconds(location.ExternalAuth.KeepaliveTimeout)),
+					},
+				)
+				httpBlock = append(httpBlock,
+					buildStartAuthUpstream(server.Hostname, location.Path),
+					authUpstreamBlock,
+					buildEndAuthUpstream(server.Hostname, location.Path),
+				)
+			}
+		}
+	}
+
+	for _, server := range c.tplConfig.Servers {
+		httpBlock = append(httpBlock, buildStartServer(server.Hostname))
+		serverBlock := c.buildServerDirective(server)
+		httpBlock = append(httpBlock, serverBlock)
+		httpBlock = append(httpBlock, buildEndServer(server.Hostname))
+	}
+
+	httpBlock = append(httpBlock, c.buildDefaultBackend())
+	httpBlock = append(httpBlock, c.buildHealthAndStatsServer())
 
 	c.config.Parsed = append(c.config.Parsed, &ngx_crossplane.Directive{
 		Directive: "http",

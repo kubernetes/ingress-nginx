@@ -6,5 +6,5 @@ The generation of the files is done using go-crossplane generator
 
 ## Brotli
 ```
-go run ./cmd/generate/ -src-path=ngx_brotli/ -directive-map-name=brotliDirectives -match-func-name=BrotliMatchFn > ../ingress-crossplane/internal/ingress/controller/template/crossplane/extramodules/brotli.go
+go run ./cmd/generate/ -src-path=ngx_brotli/ -directive-map-name=brotliDirectives -match-func-name=BrotliMatchFn > ../ingress-nginx/internal/ingress/controller/template/crossplane/extramodules/brotli.go
 ```
