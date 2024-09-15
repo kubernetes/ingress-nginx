@@ -236,17 +236,6 @@ readOnlyRootFilesystem: {{ .Values.defaultBackend.image.readOnlyRootFilesystem }
 {{- end -}}
 
 {{/*
-Return the appropriate apiGroup for PodSecurityPolicy.
-*/}}
-{{- define "podSecurityPolicy.apiGroup" -}}
-{{- if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion -}}
-{{- print "policy" -}}
-{{- else -}}
-{{- print "extensions" -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
 Extra modules.
 */}}
 {{- define "extraModules" -}}

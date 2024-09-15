@@ -41,8 +41,6 @@ controller:
     seccompProfile:
       type: RuntimeDefault
     readOnlyRootFilesystem: false
-  # -- Use an existing PSP instead of creating one
-  existingPsp: ""
   # -- Configures the controller container name
   containerName: controller
   # -- Configures the ports that the nginx-controller listens on
@@ -758,8 +756,6 @@ controller:
     objectSelector: {}
     # -- Labels to be added to admission webhooks
     labels: {}
-    # -- Use an existing PSP instead of creating one
-    existingPsp: ""
     service:
       annotations: {}
       # clusterIP: ""
@@ -979,8 +975,6 @@ defaultBackend:
     seccompProfile:
       type: RuntimeDefault
     readOnlyRootFilesystem: true
-  # -- Use an existing PSP instead of creating one
-  existingPsp: ""
   extraArgs: {}
   serviceAccount:
     create: true
@@ -1166,10 +1160,6 @@ defaultBackend:
 rbac:
   create: true
   scope: false
-## If true, create & use Pod Security Policy resources
-## https://kubernetes.io/docs/concepts/policy/pod-security-policy/
-podSecurityPolicy:
-  enabled: false
 serviceAccount:
   create: true
   name: ""
