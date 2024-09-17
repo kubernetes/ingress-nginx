@@ -29,19 +29,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
-      - name: Run Artifact Hub lint
-        run: |
-          wget https://github.com/artifacthub/hub/releases/download/v1.5.0/ah_1.5.0_linux_amd64.tar.gz
-          echo 'ad0e44c6ea058ab6b85dbf582e88bad9fdbc64ded0d1dd4edbac65133e5c87da *ah_1.5.0_linux_amd64.tar.gz' | shasum -c
-          tar -xzvf ah_1.5.0_linux_amd64.tar.gz ah
-          ./ah lint -p charts/ingress-nginx || exit 1
-          rm -f ./ah ./ah_1.5.0_linux_amd64.tar.gz
-
       - name: Set up chart-testing
         uses: helm/chart-testing-action@e6669bcd63d7cb57cb4380c33043eebe5d111992 # v2.6.1
 
-      - name: Run chart-testing (lint)
-        run: ct lint --target-branch ${{ github.ref_name }} --config ./.ct.yaml
+      - name: Lint chart
+        run: |
+          ct lint --config ./.ct.yaml --target-branch ${{ github.ref_name }}
+
+          curl --silent --show-error --fail --location https://github.com/artifacthub/hub/releases/download/v1.17.0/ah_1.17.0_linux_amd64.tar.gz --remote-name
+          echo "57c184b71a9a5c59192c2158fc08bdddca5c340fb1deeed0158383a665b38bf1  ah_1.17.0_linux_amd64.tar.gz" | shasum --check
+          tar xzf ah_1.17.0_linux_amd64.tar.gz ah
+
+          ./ah lint --path charts/ingress-nginx
+
+          rm ah_1.17.0_linux_amd64.tar.gz ah
 
       - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         id: filter
