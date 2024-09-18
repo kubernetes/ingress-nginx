@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"strings"
 
 	"k8s.io/klog/v2"
 
@@ -46,8 +47,13 @@ func (p *TCPProxy) Get(host string) *TCPServer {
 		return p.Default
 	}
 
+	_, parentHost, hasParentHost := strings.Cut(host, ".")
+
 	for _, s := range p.ServerList {
 		if s.Hostname == host {
+			return s
+		}
+		if strings.HasPrefix(s.Hostname, "*.") && hasParentHost && parentHost == s.Hostname[2:] {
 			return s
 		}
 	}
