@@ -1,5 +1,9 @@
 {{- if .Values.defaultBackend.enabled -}}
-{{- if or (gt (.Values.defaultBackend.replicaCount | int) 1) (gt (.Values.defaultBackend.autoscaling.minReplicas | int) 1) }}
+{{- $replicas := .Values.defaultBackend.replicaCount }}
+{{- if .Values.defaultBackend.autoscaling.enabled }}
+{{- $replicas = .Values.defaultBackend.autoscaling.minReplicas }}
+{{- end }}
+{{- if gt ($replicas | int) 1 }}
 apiVersion: {{ ternary "policy/v1" "policy/v1beta1" (semverCompare ">=1.21.0-0" .Capabilities.KubeVersion.Version) }}
 kind: PodDisruptionBudget
 metadata:

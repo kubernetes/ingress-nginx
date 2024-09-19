@@ -1096,6 +1096,7 @@ defaultBackend:
   ##
   podAnnotations: {}
   replicaCount: 1
+  # -- Minimum available pods set in PodDisruptionBudget.
   minAvailable: 1
   resources: {}
   # limits:
