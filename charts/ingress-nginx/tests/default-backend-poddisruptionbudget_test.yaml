@@ -46,3 +46,20 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+
+  - it: should create a PodDisruptionBudget without `minAvailable` and with `maxUnavailable` if `defaultBackend.minAvailable` and `defaultBackend.maxUnavailable` are set
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.replicaCount: 2
+      defaultBackend.minAvailable: 1
+      defaultBackend.maxUnavailable: 1
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: PodDisruptionBudget
+      - notExists:
+          path: spec.minAvailable
+      - equal:
+          path: spec.maxUnavailable
+          value: 1
