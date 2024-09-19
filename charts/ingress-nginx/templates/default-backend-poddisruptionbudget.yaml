@@ -25,5 +25,8 @@ spec:
   {{- else if .Values.defaultBackend.maxUnavailable }}
   maxUnavailable: {{ .Values.defaultBackend.maxUnavailable }}
   {{- end }}
+  {{- if .Values.defaultBackend.unhealthyPodEvictionPolicy }}
+  unhealthyPodEvictionPolicy: {{ .Values.defaultBackend.unhealthyPodEvictionPolicy }}
+  {{- end }}
 {{- end }}
 {{- end }}

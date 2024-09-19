@@ -374,6 +374,9 @@ controller:
   minAvailable: 1
   # -- Maximum unavailable pods set in PodDisruptionBudget. If set, 'minAvailable' is ignored.
   # maxUnavailable: 1
+  # -- Eviction policy for unhealthy pods guarded by PodDisruptionBudget.
+  # Ref: https://kubernetes.io/blog/2023/01/06/unhealthy-pod-eviction-policy-for-pdbs/
+  unhealthyPodEvictionPolicy: ""
 
   ## Define requests resources to avoid probe issues due to CPU utilization in busy nodes
   ## ref: https://github.com/kubernetes/ingress-nginx/issues/4735#issuecomment-551204903
@@ -1101,6 +1104,9 @@ defaultBackend:
   minAvailable: 1
   # -- Maximum unavailable pods set in PodDisruptionBudget. If set, 'minAvailable' is ignored.
   # maxUnavailable: 1
+  # -- Eviction policy for unhealthy pods guarded by PodDisruptionBudget.
+  # Ref: https://kubernetes.io/blog/2023/01/06/unhealthy-pod-eviction-policy-for-pdbs/
+  unhealthyPodEvictionPolicy: ""
 
   resources: {}
   # limits:
