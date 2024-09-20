@@ -505,7 +505,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | defaultBackend.livenessProbe.periodSeconds | int | `10` |  |
 | defaultBackend.livenessProbe.successThreshold | int | `1` |  |
 | defaultBackend.livenessProbe.timeoutSeconds | int | `5` |  |
-| defaultBackend.minAvailable | int | `1` |  |
+| defaultBackend.minAvailable | int | `1` | Minimum available pods set in PodDisruptionBudget. |
 | defaultBackend.minReadySeconds | int | `0` | `minReadySeconds` to avoid killing pods before we are ready # |
 | defaultBackend.name | string | `"defaultbackend"` |  |
 | defaultBackend.networkPolicy.enabled | bool | `false` | Enable 'networkPolicy' or not |
