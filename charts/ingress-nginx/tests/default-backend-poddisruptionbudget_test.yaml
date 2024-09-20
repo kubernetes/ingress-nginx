@@ -1,0 +1,48 @@
+suite: Default Backend > PodDisruptionBudget
+templates:
+  - default-backend-poddisruptionbudget.yaml
+
+tests:
+  - it: should create a PodDisruptionBudget if `defaultBackend.replicaCount` is greater than 1
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.replicaCount: 2
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: PodDisruptionBudget
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-defaultbackend
+
+  - it: should not create a PodDisruptionBudget if `defaultBackend.replicaCount` is less than or equal 1
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.replicaCount: 1
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create a PodDisruptionBudget if `defaultBackend.autoscaling.enabled` is true and `defaultBackend.autoscaling.minReplicas` is greater than 1
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.autoscaling.enabled: true
+      defaultBackend.autoscaling.minReplicas: 2
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: PodDisruptionBudget
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-defaultbackend
+
+  - it: should not create a PodDisruptionBudget if `defaultBackend.autoscaling.enabled` is true and `defaultBackend.autoscaling.minReplicas` is less than or equal 1
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.autoscaling.enabled: true
+      defaultBackend.autoscaling.minReplicas: 1
+    asserts:
+      - hasDocuments:
+          count: 0
