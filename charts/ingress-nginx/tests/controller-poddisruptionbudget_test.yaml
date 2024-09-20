@@ -87,3 +87,16 @@ tests:
       - equal:
           path: spec.maxUnavailable
           value: 1
+
+  - it: should create a PodDisruptionBudget with `unhealthyPodEvictionPolicy` if `controller.unhealthyPodEvictionPolicy` is set
+    set:
+      controller.replicaCount: 2
+      controller.unhealthyPodEvictionPolicy: IfHealthyBudget
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: PodDisruptionBudget
+      - equal:
+          path: spec.unhealthyPodEvictionPolicy
+          value: IfHealthyBudget
