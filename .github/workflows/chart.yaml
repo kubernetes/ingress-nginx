@@ -54,11 +54,11 @@ jobs:
           ct lint --config .ct.yaml
           ah lint --path charts/ingress-nginx
 
-      - name: Helm Chart Releaser
+      - name: Release chart
         uses: helm/chart-releaser-action@a917fd15b20e8b64b94d9158ad54cd6345335584 # v1.6.0
         env:
+          CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CR_RELEASE_NAME_TEMPLATE: helm-chart-{{ .Version }}
           CR_SKIP_EXISTING: true
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-          CR_RELEASE_NAME_TEMPLATE: "helm-chart-{{ .Version }}"
         with:
           charts_dir: charts
