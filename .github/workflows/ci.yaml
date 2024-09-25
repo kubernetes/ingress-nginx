@@ -224,7 +224,7 @@ jobs:
       - name: Set up Helm Unit Test
         run: helm plugin install https://github.com/helm-unittest/helm-unittest
 
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           fetch-depth: 0
@@ -257,7 +257,7 @@ jobs:
         k8s: [v1.26.15, v1.27.13, v1.28.9, v1.29.4, v1.30.0]
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: cache
