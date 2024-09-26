@@ -213,8 +213,8 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - changes
-    if: |
-      (needs.changes.outputs.charts == 'true') || (needs.changes.outputs.baseimage == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
+
+    if: fromJSON(needs.changes.outputs.charts) || fromJSON(needs.changes.outputs.baseimage) || fromJSON(github.event.workflow_dispatch.run_e2e)
 
     steps:
       - name: Checkout
@@ -269,8 +269,8 @@ jobs:
       - changes
       - build
       - chart-lint
-    if: |
-      (needs.changes.outputs.charts == 'true') || (needs.changes.outputs.baseimage == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
+
+    if: fromJSON(needs.changes.outputs.charts) || fromJSON(needs.changes.outputs.baseimage) || fromJSON(github.event.workflow_dispatch.run_e2e)
 
     strategy:
       matrix:
