@@ -236,6 +236,10 @@ controller:
   #    maxUnavailable: 1
   #  type: RollingUpdate
 
+  # -- Specifies the number of seconds you want to wait for the controller deployment to progress before the system reports back that it has failed.
+  # Ref.: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#progress-deadline-seconds
+  progressDeadlineSeconds: 0
+
   # -- `minReadySeconds` to avoid killing pods before we are ready
   ##
   minReadySeconds: 0
