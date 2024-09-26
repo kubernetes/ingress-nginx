@@ -208,8 +208,8 @@ jobs:
           path: docker.tar.gz
           retention-days: 5
 
-  helm-lint:
-    name: Helm chart lint
+  chart-lint:
+    name: Chart / Lint
     runs-on: ubuntu-latest
     needs:
       - changes
@@ -262,13 +262,13 @@ jobs:
           ./ah lint -p charts/ingress-nginx || exit 1
           rm -f ./ah ./ah_1.5.0_linux_amd64.tar.gz
 
-  helm-test:
-    name: Helm chart testing
+  chart-test:
+    name: Chart / Test
     runs-on: ubuntu-latest
     needs:
       - changes
       - build
-      - helm-lint
+      - chart-lint
     if: |
       (needs.changes.outputs.charts == 'true') || (needs.changes.outputs.baseimage == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
 
