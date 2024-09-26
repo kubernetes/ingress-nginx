@@ -68,13 +68,18 @@ helm show values ingress-nginx --repo https://kubernetes.github.io/ingress-nginx
 !!! attention "Helm install on AWS/GCP/Azure/Other providers"
     The *ingress-nginx-controller helm-chart is a generic install out of the box*. The default set of helm values is **not** configured for installation on any infra provider. The annotations that are applicable to the cloud provider must be customized by the users.<br/>
     See [AWS LB Controller](https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.2/guide/service/annotations/).<br/>
-    Examples of some annotations needed for the service resource of `--type LoadBalancer` on AWS are below:
+    Examples of some annotations recommended (healthecheck ones are required for target-type IP) for the service resource of `--type LoadBalancer` on AWS are below:
     ```yaml
       annotations:
+        service.beta.kubernetes.io/aws-load-balancer-target-group-attributes: deregistration_delay.timeout_seconds=270
+        service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+        service.beta.kubernetes.io/aws-load-balancer-healthcheck-path: /healthz
+        service.beta.kubernetes.io/aws-load-balancer-healthcheck-port: "10254"
+        service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol: http
+        service.beta.kubernetes.io/aws-load-balancer-healthcheck-success-codes: 200-299
         service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
         service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
         service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
-        service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "ip"
         service.beta.kubernetes.io/aws-load-balancer-type: nlb
         service.beta.kubernetes.io/aws-load-balancer-manage-backend-security-group-rules: "true"
         service.beta.kubernetes.io/aws-load-balancer-access-log-enabled: "true"
