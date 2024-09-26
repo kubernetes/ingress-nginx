@@ -1,4 +1,4 @@
-name: Helm
+name: Chart
 
 on:
   push:
@@ -52,12 +52,12 @@ jobs:
               - 'charts/ingress-nginx/Chart.yaml'
               - 'charts/ingress-nginx/values.yaml'
 
-  chart:
-    name: Release Chart
+  release:
+    name: Release
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write # needed to write releases
+      contents: write
 
     needs:
       - changes
