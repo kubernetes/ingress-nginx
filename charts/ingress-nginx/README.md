@@ -310,7 +310,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.extraContainers | list | `[]` | Additional containers to be added to the controller pod. See https://github.com/lemonldap-ng-controller/lemonldap-ng-controller as example. |
 | controller.extraEnvs | list | `[]` | Additional environment variables to set |
 | controller.extraInitContainers | list | `[]` | Containers, which are run before the app containers are started. |
-| controller.extraModules | list | `[]` | Modules, which are mounted into the core nginx image. See values.yaml for a sample to add opentelemetry module |
+| controller.extraModules | list | `[]` | Modules, which are mounted into the core nginx image. |
 | controller.extraVolumeMounts | list | `[]` | Additional volumeMounts to the controller main container. |
 | controller.extraVolumes | list | `[]` | Additional volumes to the controller pod. |
 | controller.healthCheckHost | string | `""` | Address to bind the health check endpoint. It is better to set this option to the internal node address if the Ingress-Nginx Controller is running in the `hostNetwork: true` mode. |
@@ -393,21 +393,6 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 | controller.name | string | `"controller"` |  |
 | controller.networkPolicy.enabled | bool | `false` | Enable 'networkPolicy' or not |
 | controller.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node labels for controller pod assignment # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ # |
-| controller.opentelemetry.containerSecurityContext.allowPrivilegeEscalation | bool | `false` |  |
-| controller.opentelemetry.containerSecurityContext.capabilities.drop[0] | string | `"ALL"` |  |
-| controller.opentelemetry.containerSecurityContext.readOnlyRootFilesystem | bool | `true` |  |
-| controller.opentelemetry.containerSecurityContext.runAsGroup | int | `65532` |  |
-| controller.opentelemetry.containerSecurityContext.runAsNonRoot | bool | `true` |  |
-| controller.opentelemetry.containerSecurityContext.runAsUser | int | `65532` | The image's default user, inherited from its base image `cgr.dev/chainguard/static`. |
-| controller.opentelemetry.containerSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
-| controller.opentelemetry.enabled | bool | `false` |  |
-| controller.opentelemetry.image.digest | string | `"sha256:f7604ac0547ed64d79b98d92133234e66c2c8aade3c1f4809fed5eec1fb7f922"` |  |
-| controller.opentelemetry.image.distroless | bool | `true` |  |
-| controller.opentelemetry.image.image | string | `"ingress-nginx/opentelemetry-1.25.3"` |  |
-| controller.opentelemetry.image.registry | string | `"registry.k8s.io"` |  |
-| controller.opentelemetry.image.tag | string | `"v20240813-b933310d"` |  |
-| controller.opentelemetry.name | string | `"opentelemetry"` |  |
-| controller.opentelemetry.resources | object | `{}` |  |
 | controller.podAnnotations | object | `{}` | Annotations to be added to controller pods # |
 | controller.podLabels | object | `{}` | Labels to add to the pod container metadata |
 | controller.podSecurityContext | object | `{}` | Security context for controller pods |
