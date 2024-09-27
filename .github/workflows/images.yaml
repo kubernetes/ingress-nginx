@@ -37,7 +37,6 @@ jobs:
       ext-auth-example-authsvc: ${{ steps.filter.outputs.ext-auth-example-authsvc }}
       nginx: ${{ steps.filter.outputs.nginx }}
       nginx125: ${{ steps.filter.outputs.nginx125 }}
-      opentelemetry: ${{ steps.filter.outputs.opentelemetry }}
 
     steps:
       - name: Checkout
@@ -65,8 +64,6 @@ jobs:
               - 'images/ext-auth-example-authsvc/**'
             nginx:
               - 'images/nginx/**'
-            opentelemetry:
-              - 'images/opentelemetry/**'
             nginx125:
               - 'images/nginx-1.25/TAG'
 
@@ -165,23 +162,6 @@ jobs:
     - name: image test
       run: |
         cd images/ && make NAME=kube-webhook-certgen test test-e2e
-
-  opentelemetry:
-    runs-on: ubuntu-latest
-    env:
-      PLATFORMS: linux/amd64,linux/arm,linux/arm64
-    needs: changes
-    if: |
-      (needs.changes.outputs.opentelemetry == 'true')
-    strategy:
-      matrix:
-        nginx: ['1.25.3', '1.21.6']
-    steps:
-    - name: Checkout
-      uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-    - name: image build
-      run: |
-        cd images/opentelemetry && make NGINX_VERSION=${{ matrix.nginx }} build
 
   nginx125:
     permissions:
