@@ -3,11 +3,9 @@ controller:
     repository: ingress-controller/controller
     tag: 1.0.0-dev
     digest: null
-  admissionWebhooks:
-    enabled: false
-  addHeaders:
-    X-Frame-Options: deny
-  proxySetHeaders:
-    X-Forwarded-Proto: https
+
   service:
     type: ClusterIP
+
+  addHeaders:
+    X-Frame-Options: deny
