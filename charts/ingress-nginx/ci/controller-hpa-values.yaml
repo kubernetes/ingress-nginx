@@ -1,4 +1,12 @@
 controller:
+  image:
+    repository: ingress-controller/controller
+    tag: 1.0.0-dev
+    digest: null
+
+  service:
+    type: ClusterIP
+
   autoscaling:
     enabled: true
     behavior:
@@ -8,7 +16,3 @@ controller:
         - type: Pods
           value: 1
           periodSeconds: 180
-  admissionWebhooks:
-    enabled: false
-  service:
-    type: ClusterIP
