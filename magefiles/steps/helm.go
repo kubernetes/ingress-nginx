@@ -170,7 +170,7 @@ func runHelmDocs() error {
 	if err != nil {
 		return err
 	}
-	err = sh.RunV("helm-docs", "--chart-search-root=${PWD}/charts")
+	err = sh.RunV("helm-docs", "--chart-search-root", "${PWD}/charts")
 	if err != nil {
 		return err
 	}
@@ -181,7 +181,7 @@ func installHelmDocs() error {
 	utils.Info("HELM Install HelmDocs")
 	g0 := sh.RunCmd("go")
 
-	err := g0("install", "github.com/norwoodj/helm-docs/cmd/helm-docs@v1.11.0")
+	err := g0("install", "github.com/norwoodj/helm-docs/cmd/helm-docs@latest")
 	if err != nil {
 		return err
 	}

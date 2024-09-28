@@ -1,0 +1,30 @@
+controller:
+  image:
+    repository: ingress-controller/controller
+    tag: 1.0.0-dev
+    digest: null
+
+  service:
+    type: ClusterIP
+
+  kind: Deployment
+
+  extraModules:
+  - name: opentelemetry
+    image:
+      registry: registry.k8s.io
+      image: ingress-nginx/opentelemetry-1.25.3
+      tag: v20240813-b933310d
+      digest: sha256:f7604ac0547ed64d79b98d92133234e66c2c8aade3c1f4809fed5eec1fb7f922
+      distroless: true
+    containerSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 65532
+      runAsGroup: 65532
+      allowPrivilegeEscalation: false
+      seccompProfile:
+        type: RuntimeDefault
+      capabilities:
+        drop:
+        - ALL
+      readOnlyRootFilesystem: true

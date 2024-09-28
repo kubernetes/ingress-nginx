@@ -208,112 +208,88 @@ jobs:
           path: docker.tar.gz
           retention-days: 5
 
-  helm-lint:
-    name: Helm chart lint
+  chart-lint:
+    name: Chart / Lint
     runs-on: ubuntu-latest
     needs:
       - changes
-    if: |
-      (needs.changes.outputs.charts == 'true') || (needs.changes.outputs.baseimage == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
+
+    if: fromJSON(needs.changes.outputs.charts) || fromJSON(needs.changes.outputs.baseimage) || fromJSON(github.event.workflow_dispatch.run_e2e)
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - name: Set up Python
+        uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3 # v5.2.0
         with:
-          fetch-depth: 0
+          python-version: 3.x
 
       - name: Set up Helm
         uses: azure/setup-helm@fe7b79cd5ee1e45176fcad797de68ecaf3ca4814 # v4.2.0
 
-      - uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3 # v5.2.0
-        with:
-          python-version: '3.x'
-
-      - name: Set up chart-testing
+      - name: Set up Helm Chart Testing
         uses: helm/chart-testing-action@e6669bcd63d7cb57cb4380c33043eebe5d111992 # v2.6.1
 
-      - name: Install Helm Unit Test Plugin
+      - name: Set up Artifact Hub
         run: |
-          helm plugin install https://github.com/helm-unittest/helm-unittest
+          curl --fail --location https://github.com/artifacthub/hub/releases/download/v1.19.0/ah_1.19.0_linux_amd64.tar.gz --output /tmp/ah.tar.gz
+          echo "0e430493521ce387ca04d79b26646a86f92886dbcceb44985bb71082a9530ca5  /tmp/ah.tar.gz" | shasum --check
+          sudo tar --extract --file /tmp/ah.tar.gz --directory /usr/local/bin ah
 
-      - name: Run Helm Unit Tests
+      - name: Set up Helm Docs
+        uses: gabe565/setup-helm-docs-action@d5c35bdc9133cfbea3b671acadf50a29029e87c2 # v1.0.4
+
+      - name: Set up Helm Unit Test
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest
+
+      - name: Checkout code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          fetch-depth: 0
+
+      - name: Lint chart
         run: |
-          helm unittest charts/ingress-nginx -d
+          ct lint --config .ct.yaml
+          ah lint --path charts/ingress-nginx
 
-      - name: Run chart-testing (lint)
-        run: ct lint --config ./.ct.yaml
-
-      - name: Run helm-docs
+      - name: Check docs
         run: |
-          GOBIN=$PWD GO111MODULE=on go install github.com/norwoodj/helm-docs/cmd/helm-docs@v1.11.0
-          ./helm-docs --chart-search-root=${GITHUB_WORKSPACE}/charts
-          DIFF=$(git diff ${GITHUB_WORKSPACE}/charts/ingress-nginx/README.md)
-          if [ ! -z "$DIFF" ]; then
-            echo "Please use helm-docs in your clone, of your fork, of the project, and commit a updated README.md for the chart. https://github.com/kubernetes/ingress-nginx/blob/main/RELEASE.md#d-edit-the-valuesyaml-and-run-helm-docs"
-          fi
-          git diff --exit-code
-          rm -f ./helm-docs
+          helm-docs --chart-search-root charts
+          git diff --exit-code charts/ingress-nginx/README.md
 
-      - name: Run Artifact Hub lint
-        run: |
-          wget https://github.com/artifacthub/hub/releases/download/v1.5.0/ah_1.5.0_linux_amd64.tar.gz
-          echo 'ad0e44c6ea058ab6b85dbf582e88bad9fdbc64ded0d1dd4edbac65133e5c87da *ah_1.5.0_linux_amd64.tar.gz' | shasum -c
-          tar -xzvf ah_1.5.0_linux_amd64.tar.gz ah
-          ./ah lint -p charts/ingress-nginx || exit 1
-          rm -f ./ah ./ah_1.5.0_linux_amd64.tar.gz
+      - name: Run tests
+        run: helm unittest charts/ingress-nginx
 
-  helm-test:
-    name: Helm chart testing
+  chart-test:
+    name: Chart / Test
     runs-on: ubuntu-latest
     needs:
       - changes
       - build
-      - helm-lint
-    if: |
-      (needs.changes.outputs.charts == 'true') || (needs.changes.outputs.baseimage == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
+      - chart-lint
+
+    if: fromJSON(needs.changes.outputs.charts) || fromJSON(needs.changes.outputs.baseimage) || fromJSON(github.event.workflow_dispatch.run_e2e)
 
     strategy:
       matrix:
         k8s: [v1.28.13, v1.29.8, v1.30.4, v1.31.0]
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
-      - name: Setup Go
-        uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
-        with:
-          go-version: ${{ needs.build.outputs.golangversion }}
-          check-latest: true
-
-      - name: cache
+      - name: Download cache
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           name: docker.tar.gz
 
-      - name: fix permissions
-        run: |
-          sudo mkdir -p $HOME/.kube
-          sudo chmod -R 777 $HOME/.kube
+      - name: Load cache
+        run: gzip --decompress --stdout docker.tar.gz | docker load
 
-      - name: Create Kubernetes ${{ matrix.k8s }} cluster
-        id: kind
-        run: |
-          kind create cluster --image=kindest/node:${{ matrix.k8s }}
-
-      - name: Load images from cache
-        run: |
-          echo "loading docker images..."
-          gzip -dc docker.tar.gz | docker load
-
-      - name: Test
+      - name: Run tests
         env:
-          KIND_CLUSTER_NAME: kind
-          SKIP_CLUSTER_CREATION: true
+          K8S_VERSION: ${{ matrix.k8s }}
           SKIP_IMAGE_CREATION: true
-          SKIP_INGRESS_IMAGE_CREATION: true
         run: |
-          kind get kubeconfig > $HOME/.kube/kind-config-kind
+          sudo mkdir -pm 777 "${HOME}/.kube"
           make kind-e2e-chart-tests
 
   kubernetes:
