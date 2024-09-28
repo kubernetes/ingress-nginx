@@ -135,3 +135,35 @@ tests:
                         values:
                           - default-backend
                   topologyKey: kubernetes.io/hostname
+
+  - it: should create a Deployment with a custom registry if `defaultBackend.image.registry` is set
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.image.registry: custom.registry.io
+      defaultBackend.image.tag: v1.0.0-dev
+      defaultBackend.image.digest: sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: custom.registry.io/defaultbackend-amd64:v1.0.0-dev@sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+
+  - it: should create a Deployment with a custom image if `defaultBackend.image.image` is set
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.image.image: custom-repo/custom-image
+      defaultBackend.image.tag: v1.0.0-dev
+      defaultBackend.image.digest: sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: registry.k8s.io/custom-repo/custom-image:v1.0.0-dev@sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+
+  - it: should create a Deployment with a custom tag if `defaultBackend.image.tag` is set
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.image.tag: custom-tag
+      defaultBackend.image.digest: sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: registry.k8s.io/defaultbackend-amd64:custom-tag@sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd

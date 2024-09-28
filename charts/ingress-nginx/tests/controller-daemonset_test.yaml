@@ -139,12 +139,34 @@ tests:
                           - controller
                   topologyKey: kubernetes.io/hostname
 
-  - it: should create a DaemonSet with a custom tag if `controller.image.tag` is set
+  - it: should create a DaemonSet with a custom registry if `controller.image.registry` is set
     set:
       controller.kind: DaemonSet
-      controller.image.tag: my-little-custom-tag
+      controller.image.registry: custom.registry.io
+      controller.image.tag: v1.0.0-dev
       controller.image.digest: sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: registry.k8s.io/ingress-nginx/controller:my-little-custom-tag@sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+          value: custom.registry.io/ingress-nginx/controller:v1.0.0-dev@sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+
+  - it: should create a DaemonSet with a custom image if `controller.image.image` is set
+    set:
+      controller.kind: DaemonSet
+      controller.image.image: custom-repo/custom-image
+      controller.image.tag: v1.0.0-dev
+      controller.image.digest: sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: registry.k8s.io/custom-repo/custom-image:v1.0.0-dev@sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+
+  - it: should create a DaemonSet with a custom tag if `controller.image.tag` is set
+    set:
+      controller.kind: DaemonSet
+      controller.image.tag: custom-tag
+      controller.image.digest: sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: registry.k8s.io/ingress-nginx/controller:custom-tag@sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
