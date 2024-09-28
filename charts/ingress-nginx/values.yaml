@@ -2,6 +2,11 @@
 ## Ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/index.md
 ##
 
+global:
+  image:
+    # -- Registry host to pull images from.
+    registry: registry.k8s.io
+
 ## Overrides for generated resource names
 # See templates/_helpers.tpl
 # nameOverride:
@@ -21,7 +26,7 @@ controller:
   image:
     ## Keep false as default for now!
     chroot: false
-    registry: registry.k8s.io
+    # registry: registry.k8s.io
     image: ingress-nginx/controller
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
@@ -686,7 +691,7 @@ controller:
   extraModules: []
   # - name: mytestmodule
   #   image:
-  #     registry: registry.k8s.io
+  #     # registry: registry.k8s.io
   #     image: ingress-nginx/mytestmodule
   #     ## for backwards compatibility consider setting the full image url via the repository value below
   #     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
@@ -785,7 +790,7 @@ controller:
     patch:
       enabled: true
       image:
-        registry: registry.k8s.io
+        # registry: registry.k8s.io
         image: ingress-nginx/kube-webhook-certgen
         ## for backwards compatibility consider setting the full image url via the repository value below
         ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
@@ -942,7 +947,7 @@ defaultBackend:
   enabled: false
   name: defaultbackend
   image:
-    registry: registry.k8s.io
+    # registry: registry.k8s.io
     image: defaultbackend-amd64
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
