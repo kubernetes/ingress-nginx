@@ -207,13 +207,6 @@ type IngressChartValue struct {
 		ExtraVolumes          []interface{} `yaml:"extraVolumes"`
 		ExtraInitContainers   []interface{} `yaml:"extraInitContainers"`
 		ExtraModules          []interface{} `yaml:"extraModules"`
-		Opentelemetry         struct {
-			Enabled                  bool   `yaml:"enabled"`
-			Image                    string `yaml:"image"`
-			ContainerSecurityContext struct {
-				AllowPrivilegeEscalation bool `yaml:"allowPrivilegeEscalation"`
-			} `yaml:"containerSecurityContext"`
-		} `yaml:"opentelemetry"`
 		AdmissionWebhooks struct {
 			Annotations          struct{}      `yaml:"annotations"`
 			Enabled              bool          `yaml:"enabled"`
