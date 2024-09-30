@@ -148,6 +148,17 @@ tests:
           path: spec.template.spec.containers[0].securityContext.runAsGroup
           value: 1000
 
+  - it: should create a DaemonSet with a custom registry if `global.image.registry` is set
+    set:
+      global.image.registry: custom.registry.io
+      controller.kind: DaemonSet
+      controller.image.tag: v1.0.0-dev
+      controller.image.digest: sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: custom.registry.io/ingress-nginx/controller:v1.0.0-dev@sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+
   - it: should create a DaemonSet with a custom registry if `controller.image.registry` is set
     set:
       controller.kind: DaemonSet
