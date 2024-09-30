@@ -9,7 +9,7 @@ updates:
       - "release-note-none"
       - "ok-to-test"
     groups:
-      all:
+      actions:
         update-types:
           - "minor"
           - "patch"
@@ -22,7 +22,7 @@ updates:
       - "release-note-none"
       - "ok-to-test"
     groups:
-      actions:
+      docker:
         update-types:
           - "minor"
           - "patch"
@@ -35,6 +35,6 @@ updates:
       - "release-note-none"
       - "ok-to-test"
     groups:
-      all:
+      go:
         update-types:
           - "patch"
