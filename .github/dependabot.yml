@@ -14,7 +14,8 @@ updates:
           - "minor"
           - "patch"
   - package-ecosystem: "docker"
-    directory: "/images"
+    directories:
+      - "**/rootfs"
     schedule:
       interval: "weekly"
     labels:
@@ -27,7 +28,9 @@ updates:
           - "minor"
           - "patch"
   - package-ecosystem: "gomod"
-    directory: "/"
+    directories:
+      - "/"
+      - "**/rootfs"
     schedule:
       interval: "weekly"
     labels:
