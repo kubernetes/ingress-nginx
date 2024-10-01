@@ -9,7 +9,7 @@ on:
       - 'deploy/**'
       - '**.md'
       - 'images/**' # Images changes should be tested on their own workflow
-      - '!images/nginx-1.25/**'
+      - '!images/nginx/**'
 
   push:
     branches:
@@ -68,7 +68,7 @@ jobs:
               - 'NGINX_BASE'
             baseimage:
               - 'NGINX_BASE'
-              - 'images/nginx-1.25/**'
+              - 'images/nginx/**'
             docs:
               - '**/*.md'
 
@@ -164,8 +164,8 @@ jobs:
         if: |
           needs.changes.outputs.baseimage == 'true'
         run: |
-            export TAG=$(cat images/nginx-1.25/TAG)
-            cd images/nginx-1.25/rootfs && docker buildx build --platform=${{ env.PLATFORMS }} --load -t registry.k8s.io/ingress-nginx/nginx-1.25:${TAG} .
+            export TAG=$(cat images/nginx/TAG)
+            cd images/nginx/rootfs && docker buildx build --platform=${{ env.PLATFORMS }} --load -t registry.k8s.io/ingress-nginx/nginx:${TAG} .
 
       - name: Build images
         env:
@@ -174,8 +174,8 @@ jobs:
           REGISTRY: ingress-controller
         run: |
           echo "building images..."
-          export TAGNGINX=$(cat images/nginx-1.25/TAG)
-          make BASE_IMAGE=registry.k8s.io/ingress-nginx/nginx-1.25:${TAGNGINX} clean-image build image image-chroot
+          export TAGNGINX=$(cat images/nginx/TAG)
+          make BASE_IMAGE=registry.k8s.io/ingress-nginx/nginx:${TAGNGINX} clean-image build image image-chroot
           make -C test/e2e-image image
 
           echo "creating images cache..."
