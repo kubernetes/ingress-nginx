@@ -36,7 +36,6 @@ jobs:
       kube-webhook-certgen: ${{ steps.filter.outputs.kube-webhook-certgen }}
       ext-auth-example-authsvc: ${{ steps.filter.outputs.ext-auth-example-authsvc }}
       nginx: ${{ steps.filter.outputs.nginx }}
-      nginx125: ${{ steps.filter.outputs.nginx125 }}
       opentelemetry: ${{ steps.filter.outputs.opentelemetry }}
 
     steps:
@@ -67,8 +66,6 @@ jobs:
               - 'images/nginx/**'
             opentelemetry:
               - 'images/opentelemetry/**'
-            nginx125:
-              - 'images/nginx-1.25/TAG'
 
   #### TODO: Make the below jobs 'less dumb' and use the job name as parameter (the github.job context does not work here)
   cfssl:
@@ -183,14 +180,14 @@ jobs:
       run: |
         cd images/opentelemetry && make NGINX_VERSION=${{ matrix.nginx }} build
 
-  nginx125:
+  nginx:
     permissions:
       contents: write
       packages: write
     runs-on: ubuntu-latest
     needs: changes
     if: |
-      (github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.nginx125 == 'true')
+      (github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.nginx == 'true')
     env:
       PLATFORMS: linux/amd64,linux/arm,linux/arm64,linux/s390x
     steps:
@@ -211,5 +208,5 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: build-image
         run: |
-          export TAG=$(cat images/nginx-1.25/TAG)
-          cd images/nginx-1.25/rootfs && docker buildx build --platform=${{ env.PLATFORMS }} --push -t ingressnginx/nginx-1.25:${TAG} .
+          export TAG=$(cat images/nginx/TAG)
+          cd images/nginx/rootfs && docker buildx build --platform=${{ env.PLATFORMS }} --push -t ingressnginx/nginx:${TAG} .
