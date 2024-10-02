@@ -32,7 +32,7 @@ var logAnnotations = parser.Annotation{
 	Group: "log",
 	Annotations: parser.AnnotationFields{
 		enableAccessLogAnnotation: {
-			Validator:     parser.ValidateBool,
+			Validator:     parser.ValidateOptions([]string{"true", "false", "default"}, true, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskLow,
 			Documentation: `This configuration setting allows you to control if this location should generate an access_log`,
@@ -53,8 +53,8 @@ type log struct {
 
 // Config contains the configuration to be used in the Ingress
 type Config struct {
-	Access  bool `json:"accessLog"`
-	Rewrite bool `json:"rewriteLog"`
+	Access  string `json:"accessLog"`
+	Rewrite bool   `json:"rewriteLog"`
 }
 
 // Equal tests for equality between two Config types
@@ -84,9 +84,9 @@ func (l log) Parse(ing *networking.Ingress) (interface{}, error) {
 	var err error
 	config := &Config{}
 
-	config.Access, err = parser.GetBoolAnnotation(enableAccessLogAnnotation, ing, l.annotationConfig.Annotations)
+	config.Access, err = parser.GetStringAnnotation(enableAccessLogAnnotation, ing, l.annotationConfig.Annotations)
 	if err != nil {
-		config.Access = true
+		config.Access = "default"
 	}
 
 	config.Rewrite, err = parser.GetBoolAnnotation(enableRewriteLogAnnotation, ing, l.annotationConfig.Annotations)

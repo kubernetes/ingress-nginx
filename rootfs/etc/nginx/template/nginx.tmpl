@@ -1127,7 +1127,9 @@ stream {
 
             log_by_lua_file /etc/nginx/lua/nginx/ngx_conf_log_block.lua;
 
-            {{ if not $location.Logs.Access }}
+            {{ if $location.Logs.Access == "true" }}
+            access_log on;
+            {{ else if $location.Logs.Access == "false" }}
             access_log off;
             {{ end }}
 
