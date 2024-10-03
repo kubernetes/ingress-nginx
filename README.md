@@ -17,6 +17,8 @@ balancer.
 
 See the [Getting Started](https://kubernetes.github.io/ingress-nginx/deploy/) document.
 
+Do not use in multi-tenant Kubernetes production installations. This project assumes that users that can create Ingress objects are administrators of the cluster. See the [FAQ](https://kubernetes.github.io/ingress-nginx/faq/#faq) for more.
+
 ## Troubleshooting
 
 If you encounter issues, review the [troubleshooting docs](docs/troubleshooting.md),
