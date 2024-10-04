@@ -174,7 +174,7 @@ extension for this to succeed.`)
 			`Customized address (or addresses, separated by comma) to set as the load-balancer status of Ingress objects this controller satisfies.
 Requires the update-status parameter.`)
 
-		enableMetrics = flags.Bool("enable-metrics", true,
+		enableMetrics = flags.Bool("enable-metrics", false,
 			`Enables the collection of NGINX metrics.`)
 		metricsPerHost = flags.Bool("metrics-per-host", true,
 			`Export metrics per-host.`)

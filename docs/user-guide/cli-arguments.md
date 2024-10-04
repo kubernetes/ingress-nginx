@@ -24,7 +24,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--dynamic-configuration-retries` | Number of times to retry failed dynamic configuration before failing to sync an ingress. (default 15) |
 | `--election-id`                    | Election id to use for Ingress status updates. (default "ingress-controller-leader") |
 | `--election-ttl`                  | Duration a leader election is valid before it's getting re-elected, e.g. `15s`, `10m` or `1h`. (Default: 30s) |
-| `--enable-metrics`                 | Enables the collection of NGINX metrics. (default true) |
+| `--enable-metrics`                 | Enables the collection of NGINX metrics. (Default: false) |
 | `--enable-ssl-chain-completion`    | Autocomplete SSL certificate chains with missing intermediate CA certificates. Certificates uploaded to Kubernetes must have the "Authority Information Access" X.509 v3 extension for this to succeed. (default false)|
 | `--enable-ssl-passthrough`         | Enable SSL Passthrough. (default false) |
 | `--disable-leader-election`        | Disable Leader Election on Nginx Controller. (default false) |

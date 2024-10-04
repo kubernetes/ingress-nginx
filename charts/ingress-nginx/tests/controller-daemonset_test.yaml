@@ -15,23 +15,23 @@ tests:
           path: metadata.name
           value: RELEASE-NAME-ingress-nginx-controller
 
-  - it: should create a DaemonSet with argument `--enable-metrics=false` if `controller.metrics.enabled` is false
-    set:
-      controller.kind: DaemonSet
-      controller.metrics.enabled: false
-    asserts:
-      - contains:
-          path: spec.template.spec.containers[0].args
-          content: --enable-metrics=false
-
-  - it: should create a DaemonSet without argument `--enable-metrics=false` if `controller.metrics.enabled` is true
+  - it: should create a DaemonSet with argument `--enable-metrics=true` if `controller.metrics.enabled` is true
     set:
       controller.kind: DaemonSet
       controller.metrics.enabled: true
     asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --enable-metrics=true
+
+  - it: should create a DaemonSet without argument `--enable-metrics=true` if `controller.metrics.enabled` is false
+    set:
+      controller.kind: DaemonSet
+      controller.metrics.enabled: false
+    asserts:
       - notContains:
           path: spec.template.spec.containers[0].args
-          content: --enable-metrics=false
+          content: --enable-metrics=true
 
   - it: should create a DaemonSet with argument `--controller-class=k8s.io/ingress-nginx-internal` if `controller.ingressClassResource.controllerValue` is "k8s.io/ingress-nginx-internal"
     set:
