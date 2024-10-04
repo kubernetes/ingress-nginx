@@ -1,3 +1,3 @@
 module init-otel
 
-go 1.22.7
+go 1.22.8
