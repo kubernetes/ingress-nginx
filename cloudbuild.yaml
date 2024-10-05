@@ -12,4 +12,3 @@ steps:
     args:
       - -c
       - gcloud auth configure-docker && make release
-timeout: 1800s
