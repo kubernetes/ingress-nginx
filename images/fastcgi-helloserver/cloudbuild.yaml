@@ -9,4 +9,3 @@ steps:
     args:
       - -c
       - gcloud auth configure-docker && cd images && make NAME=fastcgi-helloserver push
-timeout: 3600s
