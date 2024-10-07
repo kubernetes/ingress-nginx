@@ -126,6 +126,7 @@
 | SessionAffinity | session-cookie-expires | Medium | ingress |
 | SessionAffinity | session-cookie-max-age | Medium | ingress |
 | SessionAffinity | session-cookie-name | Medium | ingress |
+| SessionAffinity | session-cookie-partitioned | Low | ingress |
 | SessionAffinity | session-cookie-path | Medium | ingress |
 | SessionAffinity | session-cookie-samesite | Low | ingress |
 | SessionAffinity | session-cookie-secure | Low | ingress |
