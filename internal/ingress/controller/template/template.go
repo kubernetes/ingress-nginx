@@ -136,6 +136,13 @@ func cleanConf(in, out *bytes.Buffer) error {
 			case ' ', '\t':
 				needOutput = lineStarted
 			case '\r':
+				rest := in.Bytes()
+				if len(rest) > 0 {
+					if rest[0] != '\n' {
+						c = ' '
+						needOutput = lineStarted
+					}
+				}
 			case '\n':
 				needOutput = !(!lineStarted && emptyLineWritten)
 				nextLineStarted = false
@@ -150,6 +157,13 @@ func cleanConf(in, out *bytes.Buffer) error {
 		case stateComment:
 			switch c {
 			case '\r':
+				rest := in.Bytes()
+				if len(rest) > 0 {
+					if rest[0] != '\n' {
+						c = ' '
+						needOutput = lineStarted
+					}
+				}
 			case '\n':
 				needOutput = true
 				nextLineStarted = false
@@ -178,6 +192,41 @@ func cleanConf(in, out *bytes.Buffer) error {
 		depth = nextDepth
 		lineStarted = nextLineStarted
 	}
+}
+
+/* LuaConfig defines the structure that will be written as a config for lua scripts
+The json format should follow what's expected by lua:
+		use_forwarded_headers = %t,
+		use_proxy_protocol = %t,
+		is_ssl_passthrough_enabled = %t,
+		http_redirect_code = %v,
+		listen_ports = { ssl_proxy = "%v", https = "%v" },
+
+		hsts = %t,
+		hsts_max_age = %v,
+		hsts_include_subdomains = %t,
+		hsts_preload = %t,
+*/
+
+type LuaConfig struct {
+	EnableMetrics           bool           `json:"enable_metrics"`
+	ListenPorts             LuaListenPorts `json:"listen_ports"`
+	UseForwardedHeaders     bool           `json:"use_forwarded_headers"`
+	UseProxyProtocol        bool           `json:"use_proxy_protocol"`
+	IsSSLPassthroughEnabled bool           `json:"is_ssl_passthrough_enabled"`
+	HTTPRedirectCode        int            `json:"http_redirect_code"`
+	EnableOCSP              bool           `json:"enable_ocsp"`
+	MonitorBatchMaxSize     int            `json:"monitor_batch_max_size"`
+	HSTS                    bool           `json:"hsts"`
+	HSTSMaxAge              string         `json:"hsts_max_age"`
+	HSTSIncludeSubdomains   bool           `json:"hsts_include_subdomains"`
+	HSTSPreload             bool           `json:"hsts_preload"`
+}
+
+type LuaListenPorts struct {
+	HTTPSPort    string `json:"https"`
+	StatusPort   string `json:"status_port"`
+	SSLProxyPort string `json:"ssl_proxy"`
 }
 
 // Write populates a buffer using a template with NGINX configuration
@@ -242,7 +291,6 @@ var funcMap = text_template.FuncMap{
 	"filterRateLimits":                filterRateLimits,
 	"buildRateLimitZones":             buildRateLimitZones,
 	"buildRateLimit":                  buildRateLimit,
-	"configForLua":                    configForLua,
 	"locationConfigForLua":            locationConfigForLua,
 	"buildResolvers":                  buildResolvers,
 	"buildUpstreamName":               buildUpstreamName,
@@ -369,54 +417,6 @@ func luaConfigurationRequestBodySize(c interface{}) string {
 	return dictKbToStr(size)
 }
 
-// configForLua returns some general configuration as Lua table represented as string
-func configForLua(input interface{}) string {
-	all, ok := input.(config.TemplateConfig)
-	if !ok {
-		klog.Errorf("expected a 'config.TemplateConfig' type but %T was given", input)
-		return "{}"
-	}
-
-	return fmt.Sprintf(`{
-		use_forwarded_headers = %t,
-		use_proxy_protocol = %t,
-		is_ssl_passthrough_enabled = %t,
-		http_redirect_code = %v,
-		listen_ports = { ssl_proxy = "%v", https = "%v" },
-
-		hsts = %t,
-		hsts_max_age = %v,
-		hsts_include_subdomains = %t,
-		hsts_preload = %t,
-
-		global_throttle = {
-			memcached = {
-				host = "%v", port = %d, connect_timeout = %d, max_idle_timeout = %d, pool_size = %d,
-			},
-			status_code = %d,
-		}
-	}`,
-		all.Cfg.UseForwardedHeaders,
-		all.Cfg.UseProxyProtocol,
-		all.IsSSLPassthroughEnabled,
-		all.Cfg.HTTPRedirectCode,
-		all.ListenPorts.SSLProxy,
-		all.ListenPorts.HTTPS,
-
-		all.Cfg.HSTS,
-		all.Cfg.HSTSMaxAge,
-		all.Cfg.HSTSIncludeSubdomains,
-		all.Cfg.HSTSPreload,
-
-		all.Cfg.GlobalRateLimitMemcachedHost,
-		all.Cfg.GlobalRateLimitMemcachedPort,
-		all.Cfg.GlobalRateLimitMemcachedConnectTimeout,
-		all.Cfg.GlobalRateLimitMemcachedMaxIdleTimeout,
-		all.Cfg.GlobalRateLimitMemcachedPoolSize,
-		all.Cfg.GlobalRateLimitStatucCode,
-	)
-}
-
 // locationConfigForLua formats some location specific configuration into Lua table represented as string
 func locationConfigForLua(l, a interface{}) string {
 	location, ok := l.(*ingress.Location)
@@ -431,30 +431,26 @@ func locationConfigForLua(l, a interface{}) string {
 		return "{}"
 	}
 
-	ignoredCIDRs, err := convertGoSliceIntoLuaTable(location.GlobalRateLimit.IgnoredCIDRs, false)
-	if err != nil {
-		klog.Errorf("failed to convert %v into Lua table: %q", location.GlobalRateLimit.IgnoredCIDRs, err)
-		ignoredCIDRs = "{}"
-	}
+	/* Lua expects the following vars
+		force_ssl_redirect = string_to_bool(ngx.var.force_ssl_redirect),
+	    ssl_redirect = string_to_bool(ngx.var.ssl_redirect),
+	    force_no_ssl_redirect = string_to_bool(ngx.var.force_no_ssl_redirect),
+	    preserve_trailing_slash = string_to_bool(ngx.var.preserve_trailing_slash),
+	    use_port_in_redirects = string_to_bool(ngx.var.use_port_in_redirects),
+	*/
 
-	return fmt.Sprintf(`{
-		force_ssl_redirect = %t,
-		ssl_redirect = %t,
-		force_no_ssl_redirect = %t,
-		preserve_trailing_slash = %t,
-		use_port_in_redirects = %t,
-		global_throttle = { namespace = "%v", limit = %d, window_size = %d, key = %v, ignored_cidrs = %v },
-	}`,
+	return fmt.Sprintf(`
+	    set $force_ssl_redirect "%t";
+	    set $ssl_redirect "%t";
+	    set $force_no_ssl_redirect "%t";
+	    set $preserve_trailing_slash "%t";
+	    set $use_port_in_redirects "%t";
+	`,
 		location.Rewrite.ForceSSLRedirect,
 		location.Rewrite.SSLRedirect,
 		isLocationInLocationList(l, all.Cfg.NoTLSRedirectLocations),
 		location.Rewrite.PreserveTrailingSlash,
 		location.UsePortInRedirects,
-		location.GlobalRateLimit.Namespace,
-		location.GlobalRateLimit.Limit,
-		location.GlobalRateLimit.WindowSize,
-		parseComplexNginxVarIntoLuaTable(location.GlobalRateLimit.Key),
-		ignoredCIDRs,
 	)
 }
 
@@ -1674,54 +1670,6 @@ func buildServerName(hostname string) string {
 	parts := strings.Split(hostname, ".")
 
 	return `~^(?<subdomain>[\w-]+)\.` + strings.Join(parts, "\\.") + `$`
-}
-
-// parseComplexNginxVarIntoLuaTable parses things like "$my${complex}ngx\$var" into
-// [["$var", "complex", "my", "ngx"]]. In other words, 2nd and 3rd elements
-// in the result are actual NGINX variable names, whereas first and 4th elements
-// are string literals.
-func parseComplexNginxVarIntoLuaTable(ngxVar string) string {
-	r := regexp.MustCompile(`(\\\$[0-9a-zA-Z_]+)|\$\{([0-9a-zA-Z_]+)\}|\$([0-9a-zA-Z_]+)|(\$|[^$\\]+)`)
-	matches := r.FindAllStringSubmatch(ngxVar, -1)
-	components := make([][]string, len(matches))
-	for i, match := range matches {
-		components[i] = match[1:]
-	}
-
-	luaTable, err := convertGoSliceIntoLuaTable(components, true)
-	if err != nil {
-		klog.Errorf("unexpected error: %v", err)
-		luaTable = "{}"
-	}
-	return luaTable
-}
-
-func convertGoSliceIntoLuaTable(goSliceInterface interface{}, emptyStringAsNil bool) (string, error) {
-	goSlice := reflect.ValueOf(goSliceInterface)
-	kind := goSlice.Kind()
-
-	switch kind {
-	case reflect.String:
-		if emptyStringAsNil && goSlice.Interface().(string) == "" {
-			return "nil", nil
-		}
-		return fmt.Sprintf(`"%v"`, goSlice.Interface()), nil
-	case reflect.Int, reflect.Bool:
-		return fmt.Sprintf(`%v`, goSlice.Interface()), nil
-	case reflect.Slice, reflect.Array:
-		luaTable := "{ "
-		for i := 0; i < goSlice.Len(); i++ {
-			luaEl, err := convertGoSliceIntoLuaTable(goSlice.Index(i).Interface(), emptyStringAsNil)
-			if err != nil {
-				return "", err
-			}
-			luaTable = luaTable + luaEl + ", "
-		}
-		luaTable += "}"
-		return luaTable, nil
-	default:
-		return "", fmt.Errorf("could not process type: %s", kind)
-	}
 }
 
 func buildOriginRegex(origin string) string {

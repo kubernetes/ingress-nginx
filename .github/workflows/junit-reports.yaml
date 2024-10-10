@@ -5,11 +5,15 @@ on:
     workflows: ['CI']                     # runs after CI workflow
     types:
       - completed
+
+permissions:
+  checks: write
+
 jobs:
   report:
     runs-on: ubuntu-latest
     steps:
-      - uses: dorny/test-reporter@eaa763f6ffc21c7a37837f56cd5f9737f27fc6c8 # v1.8.0
+      - uses: dorny/test-reporter@31a54ee7ebcacc03a09ea97a7e5465a47b84aea5 # v1.9.1
         with:
           artifact: /e2e-test-reports-(.*)/
           name: JEST Tests $1               # Name of the check run which will be created

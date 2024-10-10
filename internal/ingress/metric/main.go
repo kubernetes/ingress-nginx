@@ -46,7 +46,7 @@ type Collector interface {
 	IncOrphanIngress(string, string, string)
 	DecOrphanIngress(string, string, string)
 
-	RemoveMetrics(ingresses, endpoints, certificates []string)
+	RemoveMetrics(ingresses, certificates []string)
 
 	SetSSLExpireTime([]*ingress.Server)
 	SetSSLInfo(servers []*ingress.Server)
@@ -71,7 +71,7 @@ type collector struct {
 }
 
 // NewCollector creates a new metric collector the for ingress controller
-func NewCollector(metricsPerHost, reportStatusClasses bool, registry *prometheus.Registry, ingressclass string, buckets collectors.HistogramBuckets, excludedSocketMetrics []string) (Collector, error) {
+func NewCollector(metricsPerHost, metricsPerUndefinedHost, reportStatusClasses bool, registry *prometheus.Registry, ingressclass string, buckets collectors.HistogramBuckets, bucketFactor float64, maxBuckets uint32, excludedSocketMetrics []string) (Collector, error) {
 	podNamespace := os.Getenv("POD_NAMESPACE")
 	if podNamespace == "" {
 		podNamespace = "default"
@@ -89,7 +89,7 @@ func NewCollector(metricsPerHost, reportStatusClasses bool, registry *prometheus
 		return nil, err
 	}
 
-	s, err := collectors.NewSocketCollector(podName, podNamespace, ingressclass, metricsPerHost, reportStatusClasses, buckets, excludedSocketMetrics)
+	s, err := collectors.NewSocketCollector(podName, podNamespace, ingressclass, metricsPerHost, metricsPerUndefinedHost, reportStatusClasses, buckets, bucketFactor, maxBuckets, excludedSocketMetrics)
 	if err != nil {
 		return nil, err
 	}
@@ -131,9 +131,9 @@ func (c *collector) IncReloadErrorCount() {
 	c.ingressController.IncReloadErrorCount()
 }
 
-func (c *collector) RemoveMetrics(ingresses, hosts, certificates []string) {
+func (c *collector) RemoveMetrics(ingresses, certificates []string) {
 	c.socket.RemoveMetrics(ingresses, c.registry)
-	c.ingressController.RemoveMetrics(hosts, certificates, c.registry)
+	c.ingressController.RemoveMetrics(certificates, c.registry)
 }
 
 func (c *collector) Start(admissionStatus string) {

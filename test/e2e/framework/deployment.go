@@ -43,11 +43,11 @@ const HTTPBunService = "httpbun"
 // NipService name of external service using nip.io
 const NIPService = "external-nip"
 
-// HTTPBunImage is the default image that is used to deploy HTTPBun with the framwork
+// HTTPBunImage is the default image that is used to deploy HTTPBun with the framework
 var HTTPBunImage = os.Getenv("HTTPBUN_IMAGE")
 
 // EchoImage is the default image to be used by the echo service
-const EchoImage = "registry.k8s.io/ingress-nginx/e2e-test-echo@sha256:4938d1d91a2b7d19454460a8c1b010b89f6ff92d2987fd889ac3e8fc3b70d91a" //#nosec G101
+const EchoImage = "registry.k8s.io/ingress-nginx/e2e-test-echo:v1.0.1@sha256:1cec65aa768720290d05d65ab1c297ca46b39930e56bc9488259f9114fcd30e2" //#nosec G101
 
 // TODO: change all Deployment functions to use these options
 // in order to reduce complexity and have a unified API across the

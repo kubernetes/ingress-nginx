@@ -32,8 +32,8 @@ import (
 )
 
 const (
-	disable                = "false"
-	noAuthLocaltionSetting = "no-auth-locations"
+	disable               = "false"
+	noAuthLocationSetting = "no-auth-locations"
 )
 
 var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
@@ -51,7 +51,7 @@ var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 	fooPath := "/foo"
 	barPath := "/bar"
 
-	noAuthSetting := noAuthLocaltionSetting
+	noAuthSetting := noAuthLocationSetting
 	noAuthLocations := barPath
 
 	enableGlobalExternalAuthAnnotation := "nginx.ingress.kubernetes.io/enable-global-auth"

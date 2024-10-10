@@ -119,7 +119,7 @@ type Configuration struct {
 	// By default this is disabled
 	AllowBackendServerHeader bool `json:"allow-backend-server-header"`
 
-	// AccessLogParams sets additionals params for access_log
+	// AccessLogParams sets additional params for access_log
 	// http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log
 	// By default it's empty
 	AccessLogParams string `json:"access-log-params,omitempty"`
@@ -318,11 +318,6 @@ type Configuration struct {
 	NginxStatusIpv4Whitelist []string `json:"nginx-status-ipv4-whitelist,omitempty"`
 	NginxStatusIpv6Whitelist []string `json:"nginx-status-ipv6-whitelist,omitempty"`
 
-	// Plugins configures plugins to use placed in the directory /etc/nginx/lua/plugins.
-	// Every plugin has to have main.lua in the root. Every plugin has to bundle all of its dependencies.
-	// The execution order follows the definition.
-	Plugins []string `json:"plugins,omitempty"`
-
 	// If UseProxyProtocol is enabled ProxyRealIPCIDR defines the default the IP/network address
 	// of your external load balancer
 	ProxyRealIPCIDR []string `json:"proxy-real-ip-cidr,omitempty"`
@@ -423,7 +418,7 @@ type Configuration struct {
 	// Example '60s'
 	ProxyProtocolHeaderTimeout time.Duration `json:"proxy-protocol-header-timeout,omitempty"`
 
-	// Enables or disables the directive aio_write that writes files files asynchronously
+	// Enables or disables the directive aio_write that writes files asynchronously
 	// https://nginx.org/en/docs/http/ngx_http_core_module.html#aio_write
 	EnableAioWrite bool `json:"enable-aio-write,omitempty"`
 
@@ -476,6 +471,13 @@ type Configuration struct {
 	// Defines the number of worker processes. By default auto means number of available CPU cores
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_processes
 	WorkerProcesses string `json:"worker-processes,omitempty"`
+
+	// Defines whether multiple concurrent reloads of worker processes should occur.
+	// Set this to false to prevent more than n x 2 workers to exist at any time, to avoid potential OOM situations and high CPU load
+	// With this setting on false, configuration changes in the queue will be re-queued with an exponential backoff, until the number of worker process is the expected value.
+	// By default new worker processes are spawned every time there's a change that cannot be applied dynamically with no upper limit to the number of running workers
+	// http://nginx.org/en/docs/ngx_core_module.html#worker_processes
+	WorkerSerialReloads bool `json:"enable-serial-reloads,omitempty"`
 
 	// Defines a timeout for a graceful shutdown of worker processes
 	// http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout
@@ -610,7 +612,7 @@ type Configuration struct {
 	// Default: 0.01
 	OtelSamplerRatio float32 `json:"otel-sampler-ratio"`
 
-	// OtelSamplerParentBased specifies the parent based sampler to be use for any traces created
+	// OtelSamplerParentBased specifies the parent based sampler to be used for any traces created
 	// Default: true
 	OtelSamplerParentBased bool `json:"otel-sampler-parent-based"`
 
@@ -707,7 +709,7 @@ type Configuration struct {
 	DefaultSSLCertificate *ingress.SSLCert `json:"-"`
 
 	// ProxySSLLocationOnly controls whether the proxy-ssl parameters defined in the
-	// proxy-ssl-* annotations are applied on on location level only in the nginx.conf file
+	// proxy-ssl-* annotations are applied on location level only in the nginx.conf file
 	// Default is that those are applied on server level, too
 	ProxySSLLocationOnly bool `json:"proxy-ssl-location-only"`
 
@@ -715,31 +717,6 @@ type Configuration struct {
 	// http://nginx.org/en/docs/http/ngx_http_core_module.html#default_type
 	// Default: text/html
 	DefaultType string `json:"default-type"`
-
-	// GlobalRateLimitMemcachedHost configures memcached host.
-	GlobalRateLimitMemcachedHost string `json:"global-rate-limit-memcached-host"`
-
-	// GlobalRateLimitMemcachedPort configures memcached port.
-	GlobalRateLimitMemcachedPort int `json:"global-rate-limit-memcached-port"`
-
-	// GlobalRateLimitMemcachedConnectTimeout configures timeout when connecting to memcached.
-	// The unit is millisecond.
-	GlobalRateLimitMemcachedConnectTimeout int `json:"global-rate-limit-memcached-connect-timeout"`
-
-	// GlobalRateLimitMemcachedMaxIdleTimeout configured how long connections
-	// should be kept alive in idle state. The unit is millisecond.
-	GlobalRateLimitMemcachedMaxIdleTimeout int `json:"global-rate-limit-memcached-max-idle-timeout"`
-
-	// GlobalRateLimitMemcachedPoolSize configures how many connections
-	// should be kept alive in the pool.
-	// Note that this is per NGINX worker. Make sure your memcached server can
-	// handle `MemcachedPoolSize * <nginx worker count> * <nginx replica count>`
-	// simultaneous connections.
-	GlobalRateLimitMemcachedPoolSize int `json:"global-rate-limit-memcached-pool-size"`
-
-	// GlobalRateLimitStatucCode determines the HTTP status code to return
-	// when limit is exceeding during global rate limiting.
-	GlobalRateLimitStatucCode int `json:"global-rate-limit-status-code"`
 
 	// DebugConnections Enables debugging log for selected client connections
 	// http://nginx.org/en/docs/ngx_core_module.html#debug_connection
@@ -774,10 +751,10 @@ func NewDefault() Configuration {
 
 	cfg := Configuration{
 		AllowSnippetAnnotations:          false,
-		AllowCrossNamespaceResources:     true,
+		AllowCrossNamespaceResources:     false,
 		AllowBackendServerHeader:         false,
 		AnnotationValueWordBlocklist:     "",
-		AnnotationsRiskLevel:             "Critical",
+		AnnotationsRiskLevel:             "High",
 		AccessLogPath:                    "/var/log/nginx/access.log",
 		AccessLogParams:                  "",
 		EnableAccessLogForDefaultBackend: false,
@@ -851,6 +828,7 @@ func NewDefault() Configuration {
 		UseGeoIP2:                        false,
 		GeoIP2AutoReloadMinutes:          0,
 		WorkerProcesses:                  strconv.Itoa(runtime.NumCPU()),
+		WorkerSerialReloads:              false,
 		WorkerShutdownTimeout:            "240s",
 		VariablesHashBucketSize:          256,
 		VariablesHashMaxSize:             2048,
@@ -888,40 +866,36 @@ func NewDefault() Configuration {
 			ProxyHTTPVersion:            "1.1",
 			ProxyMaxTempFileSize:        "1024m",
 			ServiceUpstream:             false,
+			AllowedResponseHeaders:      []string{},
 		},
-		UpstreamKeepaliveConnections:           320,
-		UpstreamKeepaliveTime:                  "1h",
-		UpstreamKeepaliveTimeout:               60,
-		UpstreamKeepaliveRequests:              10000,
-		LimitConnZoneVariable:                  defaultLimitConnZoneVariable,
-		BindAddressIpv4:                        defBindAddress,
-		BindAddressIpv6:                        defBindAddress,
-		OpentelemetryTrustIncomingSpan:         true,
-		OpentelemetryConfig:                    "/etc/ingress-controller/telemetry/opentelemetry.toml",
-		OtlpCollectorPort:                      "4317",
-		OtelServiceName:                        "nginx",
-		OtelSampler:                            "AlwaysOn",
-		OtelSamplerRatio:                       0.01,
-		OtelSamplerParentBased:                 true,
-		OtelScheduleDelayMillis:                5000,
-		OtelMaxExportBatchSize:                 512,
-		OtelMaxQueueSize:                       2048,
-		LimitReqStatusCode:                     503,
-		LimitConnStatusCode:                    503,
-		SyslogPort:                             514,
-		NoTLSRedirectLocations:                 "/.well-known/acme-challenge",
-		NoAuthLocations:                        "/.well-known/acme-challenge",
-		GlobalExternalAuth:                     defGlobalExternalAuth,
-		ProxySSLLocationOnly:                   false,
-		DefaultType:                            "text/html",
-		GlobalRateLimitMemcachedPort:           11211,
-		GlobalRateLimitMemcachedConnectTimeout: 50,
-		GlobalRateLimitMemcachedMaxIdleTimeout: 10000,
-		GlobalRateLimitMemcachedPoolSize:       50,
-		GlobalRateLimitStatucCode:              429,
-		DebugConnections:                       []string{},
-		StrictValidatePathType:                 false, // TODO: This will be true in future releases
-		GRPCBufferSizeKb:                       0,
+		UpstreamKeepaliveConnections:   320,
+		UpstreamKeepaliveTime:          "1h",
+		UpstreamKeepaliveTimeout:       60,
+		UpstreamKeepaliveRequests:      10000,
+		LimitConnZoneVariable:          defaultLimitConnZoneVariable,
+		BindAddressIpv4:                defBindAddress,
+		BindAddressIpv6:                defBindAddress,
+		OpentelemetryTrustIncomingSpan: true,
+		OpentelemetryConfig:            "/etc/ingress-controller/telemetry/opentelemetry.toml",
+		OtlpCollectorPort:              "4317",
+		OtelServiceName:                "nginx",
+		OtelSampler:                    "AlwaysOn",
+		OtelSamplerRatio:               0.01,
+		OtelSamplerParentBased:         true,
+		OtelScheduleDelayMillis:        5000,
+		OtelMaxExportBatchSize:         512,
+		OtelMaxQueueSize:               2048,
+		LimitReqStatusCode:             503,
+		LimitConnStatusCode:            503,
+		SyslogPort:                     514,
+		NoTLSRedirectLocations:         "/.well-known/acme-challenge",
+		NoAuthLocations:                "/.well-known/acme-challenge",
+		GlobalExternalAuth:             defGlobalExternalAuth,
+		ProxySSLLocationOnly:           false,
+		DefaultType:                    "text/html",
+		DebugConnections:               []string{},
+		StrictValidatePathType:         true,
+		GRPCBufferSizeKb:               0,
 	}
 
 	if klog.V(5).Enabled() {

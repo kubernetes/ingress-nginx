@@ -18,9 +18,7 @@ package steps
 
 import (
 	"bytes"
-	"fmt"
 	"os"
-	"strings"
 
 	semver "github.com/blang/semver/v4"
 	"github.com/helm/helm/pkg/chartutil"
@@ -104,18 +102,21 @@ func updateVersion(version string) {
 	utils.CheckIfError(err, "HELM Saving new Chart")
 }
 
-func updateChartReleaseNotes(releasesNotes []string) {
-	utils.Info("HELM Updating the Chart Release notes")
+func updateChartReleaseNotes(releaseNotes []string) {
+	utils.Info("HELM Updating chart release notes")
 	chart, err := chartutil.LoadChartfile(HelmChartPath)
-	utils.CheckIfError(err, "HELM Could not Load Chart to update release notes %s", HelmChartPath)
-	for i := range releasesNotes {
-		releasesNotes[i] = fmt.Sprintf("- %q", releasesNotes[i])
-	}
-	releaseNoteString := strings.Join(releasesNotes, "\n")
-	utils.Info("HELM Release note string %s", releaseNoteString)
-	chart.Annotations["artifacthub.io/changes"] = releaseNoteString
+	utils.CheckIfError(err, "HELM Failed to load chart manifest: %s", HelmChartPath)
+
+	releaseNotesBytes, err := yaml.Marshal(releaseNotes)
+	utils.CheckIfError(err, "HELM Failed to marshal release notes")
+
+	releaseNotesString := string(releaseNotesBytes)
+	utils.Info("HELM Chart release notes:\n%s", releaseNotesString)
+	chart.Annotations["artifacthub.io/changes"] = releaseNotesString
+
+	utils.Info("HELM Saving chart release notes")
 	err = chartutil.SaveChartfile(HelmChartPath, chart)
-	utils.CheckIfError(err, "HELM Saving updated release notes for Chart")
+	utils.CheckIfError(err, "HELM Failed to save chart manifest: %s", HelmChartPath)
 }
 
 // UpdateChartValue Updates the Helm ChartValue
@@ -169,7 +170,7 @@ func runHelmDocs() error {
 	if err != nil {
 		return err
 	}
-	err = sh.RunV("helm-docs", "--chart-search-root=${PWD}/charts")
+	err = sh.RunV("helm-docs", "--chart-search-root", "${PWD}/charts")
 	if err != nil {
 		return err
 	}
@@ -180,7 +181,7 @@ func installHelmDocs() error {
 	utils.Info("HELM Install HelmDocs")
 	g0 := sh.RunCmd("go")
 
-	err := g0("install", "github.com/norwoodj/helm-docs/cmd/helm-docs@v1.11.0")
+	err := g0("install", "github.com/norwoodj/helm-docs/cmd/helm-docs@latest")
 	if err != nil {
 		return err
 	}

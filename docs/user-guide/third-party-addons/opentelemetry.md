@@ -65,7 +65,7 @@ otel-max-queuesize
 
 # The delay interval in milliseconds between two consecutive exports.
 otel-schedule-delay-millis
-        
+
 # How long the export can run before it is cancelled.
 otel-schedule-delay-millis
 
@@ -112,7 +112,7 @@ graph TB
     end
 
     subgraph otel
-        otc["Otel Collector"] 
+        otc["Otel Collector"]
     end
 
     subgraph observability
@@ -147,17 +147,7 @@ graph TB
 
 To install the example and collectors run:
 
-1. Enable Ingress addon with:
-
-    ```yaml
-      opentelemetry:
-        enabled: true
-        image: registry.k8s.io/ingress-nginx/opentelemetry:v20230527@sha256:fd7ec835f31b7b37187238eb4fdad4438806e69f413a203796263131f4f02ed0
-        containerSecurityContext:
-        allowPrivilegeEscalation: false
-    ```
-
-2. Enable OpenTelemetry and set the otlp-collector-host:
+1. Enable OpenTelemetry and set the otlp-collector-host:
 
     ```yaml
     $ echo '
@@ -183,15 +173,15 @@ To install the example and collectors run:
       ' | kubectl replace -f -
     ```
 
-4. Deploy otel-collector, grafana and Jaeger backend:
+2. Deploy otel-collector, grafana and Jaeger backend:
 
     ```bash
     # add helm charts needed for grafana and OpenTelemetry collector
     helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
     helm repo add grafana https://grafana.github.io/helm-charts
     helm repo update
-    # deply cert-manager needed for OpenTelemetry collector operator
-    kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.9.1/cert-manager.yaml
+    # deploy cert-manager needed for OpenTelemetry collector operator
+    kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.15.3/cert-manager.yaml
     # create observability namespace
     kubectl apply -f https://raw.githubusercontent.com/esigo/nginx-example/main/observability/namespace.yaml
     # install OpenTelemetry collector operator
@@ -218,7 +208,7 @@ To install the example and collectors run:
     make deploy-app
     ```
 
-5. Make a few requests to the Service:
+4. Make a few requests to the Service:
 
     ```bash
     kubectl port-forward --namespace=ingress-nginx service/ingress-nginx-controller 8090:80
@@ -247,7 +237,7 @@ To install the example and collectors run:
     RawContentLength  : 21
     ```
 
-6. View the Grafana UI:
+5. View the Grafana UI:
 
     ```bash
     kubectl port-forward --namespace=observability service/grafana 3000:80
@@ -255,7 +245,7 @@ To install the example and collectors run:
     In the Grafana interface we can see the details:
     ![grafana screenshot](../../images/otel-grafana-demo.png "grafana screenshot")
 
-7. View the Jaeger UI:
+6. View the Jaeger UI:
 
     ```bash
     kubectl port-forward --namespace=observability service/jaeger-all-in-one-query 16686:16686
@@ -263,7 +253,7 @@ To install the example and collectors run:
     In the Jaeger interface we can see the details:
     ![Jaeger screenshot](../../images/otel-jaeger-demo.png "Jaeger screenshot")
 
-8. View the Zipkin UI:
+7. View the Zipkin UI:
 
     ```bash
     kubectl port-forward --namespace=observability service/zipkin 9411:9411

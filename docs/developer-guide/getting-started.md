@@ -19,6 +19,10 @@ Install [Go 1.14](https://golang.org/dl/) or later.
 
 Install [Docker](https://docs.docker.com/engine/install/) (v19.03.0 or later with experimental feature on)
 
+Install [kubectl](https://kubernetes.io/docs/tasks/tools/) (1.24.0 or higher)
+
+Install [Kind](https://kind.sigs.k8s.io/)
+
 !!! important
     The majority of make tasks run as docker containers
 

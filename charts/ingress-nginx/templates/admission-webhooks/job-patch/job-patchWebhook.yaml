@@ -42,7 +42,7 @@ spec:
     {{- end }}
       containers:
         - name: patch
-          {{- with .Values.controller.admissionWebhooks.patch.image }}
+          {{- with (merge .Values.controller.admissionWebhooks.patch.image .Values.global.image) }}
           image: {{ if .repository }}{{ .repository }}{{ else }}{{ .registry }}/{{ .image }}{{ end }}:{{ .tag }}{{ if .digest }}@{{ .digest }}{{ end }}
           {{- end }}
           imagePullPolicy: {{ .Values.controller.admissionWebhooks.patch.image.pullPolicy }}
@@ -68,7 +68,7 @@ spec:
           resources: {{ toYaml .Values.controller.admissionWebhooks.patchWebhookJob.resources | nindent 12 }}
           {{- end }}
       restartPolicy: OnFailure
-      serviceAccountName: {{ include "ingress-nginx.admissionWebhooks.fullname" . }}
+      serviceAccountName: {{ include "ingress-nginx.admissionWebhooks.patch.serviceAccountName" . }}
     {{- if .Values.controller.admissionWebhooks.patch.nodeSelector }}
       nodeSelector: {{ toYaml .Values.controller.admissionWebhooks.patch.nodeSelector | nindent 8 }}
     {{- end }}

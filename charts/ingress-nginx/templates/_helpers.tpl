@@ -47,6 +47,7 @@ Controller container security context.
 {{- else -}}
 runAsNonRoot: {{ .Values.controller.image.runAsNonRoot }}
 runAsUser: {{ .Values.controller.image.runAsUser }}
+runAsGroup: {{ .Values.controller.image.runAsGroup }}
 allowPrivilegeEscalation: {{ or .Values.controller.image.allowPrivilegeEscalation .Values.controller.image.chroot }}
 {{- if .Values.controller.image.seccompProfile }}
 seccompProfile: {{ toYaml .Values.controller.image.seccompProfile | nindent 2 }}
@@ -168,6 +169,17 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 
 {{/*
+Create the name of the admission webhook patch job service account to use
+*/}}
+{{- define "ingress-nginx.admissionWebhooks.patch.serviceAccountName" -}}
+{{- if .Values.controller.admissionWebhooks.patch.serviceAccount.create -}}
+    {{ default (include "ingress-nginx.admissionWebhooks.fullname" .) .Values.controller.admissionWebhooks.patch.serviceAccount.name }}
+{{- else -}}
+    {{ default "default" .Values.controller.admissionWebhooks.patch.serviceAccount.name }}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Create a default fully qualified admission webhook secret creation job name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
@@ -192,7 +204,7 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 
 {{/*
-Create the name of the backend service account to use - only used when podsecuritypolicy is also enabled
+Create the name of the default backend service account to use
 */}}
 {{- define "ingress-nginx.defaultBackend.serviceAccountName" -}}
 {{- if .Values.defaultBackend.serviceAccount.create -}}
@@ -211,6 +223,7 @@ Default backend container security context.
 {{- else -}}
 runAsNonRoot: {{ .Values.defaultBackend.image.runAsNonRoot }}
 runAsUser: {{ .Values.defaultBackend.image.runAsUser }}
+runAsGroup: {{ .Values.defaultBackend.image.runAsGroup }}
 allowPrivilegeEscalation: {{ .Values.defaultBackend.image.allowPrivilegeEscalation }}
 {{- if .Values.defaultBackend.image.seccompProfile }}
 seccompProfile: {{ toYaml .Values.defaultBackend.image.seccompProfile | nindent 2 }}
@@ -219,26 +232,6 @@ capabilities:
   drop:
   - ALL
 readOnlyRootFilesystem: {{ .Values.defaultBackend.image.readOnlyRootFilesystem }}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Return the appropriate apiGroup for PodSecurityPolicy.
-*/}}
-{{- define "podSecurityPolicy.apiGroup" -}}
-{{- if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion -}}
-{{- print "policy" -}}
-{{- else -}}
-{{- print "extensions" -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Check the ingress controller version tag is at most three versions behind the last release
-*/}}
-{{- define "isControllerTagValid" -}}
-{{- if not (semverCompare ">=0.27.0-0" .Values.controller.image.tag) -}}
-{{- fail "Controller container image tag should be 0.27.0 or higher" -}}
 {{- end -}}
 {{- end -}}
 

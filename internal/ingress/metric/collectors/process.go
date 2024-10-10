@@ -112,7 +112,7 @@ func NewNGINXProcess(pod, namespace, ingressClass string) (NGINXProcessCollector
 
 	p := &namedProcess{
 		scrapeChan: make(chan scrapeRequest),
-		Grouper:    proc.NewGrouper(nm, true, false, false, false),
+		Grouper:    proc.NewGrouper(nm, true, false, false, 0, false, false),
 		fs:         fs,
 	}
 

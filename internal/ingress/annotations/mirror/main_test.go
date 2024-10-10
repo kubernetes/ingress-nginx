@@ -90,7 +90,7 @@ func TestParse(t *testing.T) {
 			Target:      "http://some.test.env.com:2121/$someparam=1&$someotherparam=2",
 			Host:        "some.test.env.com",
 		}},
-		{map[string]string{backendURL: "http://some.test.env.com", host: "someInvalidParm.%^&*()_=!@#'\""}, &Config{
+		{map[string]string{backendURL: "http://some.test.env.com", host: "someInvalidParam.%^&*()_=!@#'\""}, &Config{
 			Source:      ngxURI,
 			RequestBody: "on",
 			Target:      "http://some.test.env.com",

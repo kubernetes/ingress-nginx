@@ -62,7 +62,7 @@ export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-config-$KIND_CLUSTER_NAME}"
 if [ "${SKIP_CLUSTER_CREATION:-false}" = "false" ]; then
   echo "[dev-env] creating Kubernetes cluster with kind"
 
-  export K8S_VERSION=${K8S_VERSION:-v1.26.3@sha256:61b92f38dff6ccc29969e7aa154d34e38b89443af1a2c14e6cfbd2df6419c66f}
+  export K8S_VERSION=${K8S_VERSION:-v1.29.2@sha256:51a1434a5397193442f0be2a297b488b6c919ce8a3931be0ce822606ea5ca245}
 
   kind create cluster \
     --verbosity=${KIND_LOG_LEVEL} \
@@ -78,7 +78,7 @@ fi
 
 if [ "${SKIP_IMAGE_CREATION:-false}" = "false" ]; then
   if ! command -v ginkgo &> /dev/null; then
-    go install github.com/onsi/ginkgo/v2/ginkgo@v2.17.1
+    go install github.com/onsi/ginkgo/v2/ginkgo@v2.20.2
   fi
   echo "[dev-env] building image"
   make -C ${DIR}/../../ clean-image build image
@@ -91,25 +91,28 @@ echo "[dev-env] copying docker images to cluster..."
 kind load docker-image --name="${KIND_CLUSTER_NAME}" --nodes=${KIND_WORKERS} ${REGISTRY}/controller:${TAG}
 
 if [ "${SKIP_CERT_MANAGER_CREATION:-false}" = "false" ]; then
-  curl -fsSL -o cmctl.tar.gz https://github.com/cert-manager/cert-manager/releases/download/v1.11.1/cmctl-linux-amd64.tar.gz
-  tar xzf cmctl.tar.gz
-  chmod +x cmctl
- ./cmctl help
-  echo "[dev-env] apply cert-manager ..."
-  kubectl apply --wait -f https://github.com/cert-manager/cert-manager/releases/download/v1.11.0/cert-manager.yaml
-  kubectl wait --timeout=30s --for=condition=available deployment/cert-manager -n cert-manager
-  kubectl get validatingwebhookconfigurations cert-manager-webhook -ojson | jq '.webhooks[].clientConfig'
-  kubectl get endpoints -n cert-manager cert-manager-webhook
-  ./cmctl check api --wait=2m
+  echo "[dev-env] deploying cert-manager..."
+
+  # Get OS & platform for downloading cmctl.
+  os="$(uname -o | tr "[:upper:]" "[:lower:]" | sed "s/gnu\///")"
+  platform="$(uname -m | sed "s/aarch64/arm64/;s/x86_64/amd64/")"
+
+  # Download cmctl. Cannot validate checksum as OS & platform may vary.
+  curl --fail --location "https://github.com/cert-manager/cmctl/releases/download/v2.1.1/cmctl_${os}_${platform}.tar.gz" | tar --extract --gzip cmctl
+
+  # Install cert-manager.
+  ./cmctl x install
+  ./cmctl check api --wait 1m
 fi
 
 echo "[dev-env] running helm chart e2e tests..."
-docker run --rm --interactive --network host \
-    --name ct \
-    --volume $KUBECONFIG:/root/.kube/config \
-    --volume "${DIR}/../../":/workdir \
-    --workdir /workdir \
-    registry.k8s.io/ingress-nginx/e2e-test-runner:v20240404-436df3e4@sha256:6bcba53b14d396177414e01f20e9111f1c009ac3b476a9b7668bb98d12bd5e85 \
-        ct install \
-        --charts charts/ingress-nginx \
-        --helm-extra-args "--timeout 60s"
+docker run \
+  --name ct \
+  --volume "${KUBECONFIG}:/root/.kube/config:ro" \
+  --volume "${DIR}/../../:/workdir" \
+  --network host \
+  --workdir /workdir \
+  --entrypoint ct \
+  --rm \
+  registry.k8s.io/ingress-nginx/e2e-test-runner:v20241004-114a6abb@sha256:1389ec0589abbf5c431c9290c4c307437c8396995c63dda5eac26abd70963dc8 \
+    install --charts charts/ingress-nginx

@@ -98,8 +98,9 @@ func rlimitMaxNumFiles() int {
 }
 
 const (
-	defBinary = "/usr/bin/nginx"
-	cfgPath   = "/etc/nginx/nginx.conf"
+	defBinary  = "/usr/bin/nginx"
+	cfgPath    = "/etc/nginx/nginx.conf"
+	luaCfgPath = "/etc/nginx/lua/cfg.json"
 )
 
 // NginxExecTester defines the interface to execute
@@ -129,7 +130,7 @@ func NewNginxCommand() NginxCommand {
 	return command
 }
 
-// ExecCommand instanciates an exec.Cmd object to call nginx program
+// ExecCommand instantiates an exec.Cmd object to call nginx program
 func (nc NginxCommand) ExecCommand(args ...string) *exec.Cmd {
 	cmdArgs := []string{}
 

@@ -1,1 +1,1 @@
-registry.k8s.io/ingress-nginx/e2e-test-httpbun:v20231011-8b53cabe0
+registry.k8s.io/ingress-nginx/httpbun:v1.0.2@sha256:d4079f3027dba27e2a1d7fcfb3144d6dd9e15307fb7fa80ca649232d08e90d16

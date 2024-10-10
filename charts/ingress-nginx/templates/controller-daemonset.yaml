@@ -1,5 +1,4 @@
 {{- if eq .Values.controller.kind "DaemonSet" -}}
-{{- include  "isControllerTagValid" . -}}
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -76,7 +75,7 @@ spec:
     {{- end }}
       containers:
         - name: {{ .Values.controller.containerName }}
-          {{- with .Values.controller.image }}
+          {{- with (merge .Values.controller.image .Values.global.image) }}
           image: {{ if .repository }}{{ .repository }}{{ else }}{{ .registry }}/{{ include "ingress-nginx.image" . }}{{ end }}:{{ .tag }}{{ include "ingress-nginx.imageDigest" . }}
           {{- end }}
           imagePullPolicy: {{ .Values.controller.image.pullPolicy }}
@@ -145,9 +144,9 @@ spec:
               hostPort: {{ $key }}
               {{- end }}
           {{- end }}
-        {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
+        {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraModules) }}
           volumeMounts:
-          {{- if (or .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
+          {{- if .Values.controller.extraModules }}
             - name: modules
             {{- if .Values.controller.image.chroot }}
               mountPath: /chroot/modules_mount
@@ -175,7 +174,7 @@ spec:
       {{- if .Values.controller.extraContainers }}
         {{- toYaml .Values.controller.extraContainers | nindent 8 }}
       {{- end }}
-    {{- if (or .Values.controller.extraInitContainers .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
+    {{- if (or .Values.controller.extraInitContainers .Values.controller.extraModules) }}
       initContainers:
       {{- if .Values.controller.extraInitContainers }}
         {{- toYaml .Values.controller.extraInitContainers | nindent 8 }}
@@ -183,13 +182,7 @@ spec:
       {{- if .Values.controller.extraModules }}
         {{- range .Values.controller.extraModules }}
           {{- $containerSecurityContext := .containerSecurityContext | default $.Values.controller.containerSecurityContext }}
-          {{- include "extraModules" (dict "name" .name "image" .image "containerSecurityContext" $containerSecurityContext "resources" .resources) | nindent 8 }}
-        {{- end }}
-      {{- end }}
-      {{- if .Values.controller.opentelemetry.enabled }}
-        {{- with .Values.controller.opentelemetry }}
-          {{- $containerSecurityContext := .containerSecurityContext | default $.Values.controller.containerSecurityContext }}
-          {{- include "extraModules" (dict "name" .name "image" .image "containerSecurityContext" $containerSecurityContext "resources" .resources) | nindent 8 }}
+          {{- include "extraModules" (dict "name" .name "image" (merge .image $.Values.global.image) "containerSecurityContext" $containerSecurityContext "resources" .resources) | nindent 8 }}
         {{- end }}
       {{- end }}
     {{- end }}
@@ -203,16 +196,16 @@ spec:
       tolerations: {{ toYaml .Values.controller.tolerations | nindent 8 }}
     {{- end }}
     {{- if .Values.controller.affinity }}
-      affinity: {{ toYaml .Values.controller.affinity | nindent 8 }}
+      affinity: {{ tpl (toYaml .Values.controller.affinity) $ | nindent 8 }}
     {{- end }}
     {{- if .Values.controller.topologySpreadConstraints }}
       topologySpreadConstraints: {{ tpl (toYaml .Values.controller.topologySpreadConstraints) $ | nindent 8 }}
     {{- end }}
       serviceAccountName: {{ template "ingress-nginx.serviceAccountName" . }}
       terminationGracePeriodSeconds: {{ .Values.controller.terminationGracePeriodSeconds }}
-    {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraVolumes .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
+    {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraVolumes .Values.controller.extraModules) }}
       volumes:
-      {{- if (or .Values.controller.extraModules .Values.controller.opentelemetry.enabled)}}
+      {{- if .Values.controller.extraModules }}
         - name: modules
           emptyDir: {}
       {{- end }}

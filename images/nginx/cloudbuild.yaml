@@ -1,17 +1,14 @@
-timeout: 10800s
 options:
-  substitution_option: ALLOW_LOOSE
-  # job builds a multi-arch docker image for amd64,arm,arm64 and s390x.
+  # Increase machine type for multi-arch builds.
   machineType: E2_HIGHCPU_32
+  # Ignore Prow provided substitutions.
+  substitution_option: ALLOW_LOOSE
 steps:
-  - name: 'gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:v20211118-2f2d816b90'
-    entrypoint: bash
+  - name: gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:v20240718-5ef92b5c36
     env:
-      - DOCKER_CLI_EXPERIMENTAL=enabled
       - REGISTRY=gcr.io/k8s-staging-ingress-nginx
-      - HOME=/root
+    entrypoint: bash
     args:
-    - -c
-    - |
-      gcloud auth configure-docker \
-      && cd images/nginx && make push
+      - -c
+      - gcloud auth configure-docker && cd images/nginx && make push
+timeout: 7200s

@@ -34,7 +34,7 @@ var serviceUpstreamAnnotations = parser.Annotation{
 		serviceUpstreamAnnotation: {
 			Validator:     parser.ValidateBool,
 			Scope:         parser.AnnotationScopeIngress,
-			Risk:          parser.AnnotationRiskLow, // Critical, this annotation is not validated at all and allows arbitrary configutations
+			Risk:          parser.AnnotationRiskLow, // Critical, this annotation is not validated at all and allows arbitrary configurations
 			Documentation: `This annotation makes NGINX use Service's Cluster IP and Port instead of Endpoints as the backend endpoints`,
 		},
 	},

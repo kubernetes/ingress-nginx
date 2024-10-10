@@ -15,7 +15,7 @@ ARG BASE_IMAGE
 ARG GOLANG_VERSION
 ARG ETCD_VERSION
 
-FROM golang:${GOLANG_VERSION}-alpine3.18 as GO
+FROM golang:${GOLANG_VERSION}-alpine3.20 as GO
 FROM registry.k8s.io/etcd:${ETCD_VERSION} as etcd
 
 FROM ${BASE_IMAGE}
@@ -48,7 +48,7 @@ RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 
 COPY --from=etcd /usr/local/bin/etcd /usr/local/bin/etcd
 
-RUN echo "@testing https://nl.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
+RUN echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
 
 RUN apk update && apk upgrade && apk add --no-cache \
   bash \
@@ -66,7 +66,8 @@ RUN apk update && apk upgrade && apk add --no-cache \
   openssl \
   cfssl@testing \
   tzdata \
-  libc6-compat
+  libc6-compat \
+  sqlite-dev
 
 RUN go install -v github.com/onsi/ginkgo/v2/ginkgo@v${GINKGO_VERSION} \
     && go install golang.org/x/lint/golint@${GOLINT_VERSION}
