@@ -6,7 +6,6 @@ global:
   image:
     # -- Registry host to pull images from.
     registry: registry.k8s.io
-
 ## Overrides for generated resource names
 # See templates/_helpers.tpl
 # nameOverride:
@@ -31,9 +30,9 @@ controller:
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
-    tag: "v1.11.2"
-    digest: sha256:d5f8217feeac4887cb1ed21f27c2674e58be06bd8f5184cacea2a69abaf78dce
-    digestChroot: sha256:21b55a2f0213a18b91612a8c0850167e00a8e34391fd595139a708f9c047e7a8
+    tag: "v1.12.0-beta.0"
+    digest: sha256:9724476b928967173d501040631b23ba07f47073999e80e34b120e8db5f234d5
+    digestChroot: sha256:6e2f8f52e1f2571ff65bc4fc4826d5282d5def5835ec4ab433dcb8e659b2fbac
     pullPolicy: IfNotPresent
     runAsNonRoot: true
     # -- This value must not be changed using the official image.
@@ -244,7 +243,6 @@ controller:
   # -- Specifies the number of seconds you want to wait for the controller deployment to progress before the system reports back that it has failed.
   # Ref.: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#progress-deadline-seconds
   progressDeadlineSeconds: 0
-
   # -- `minReadySeconds` to avoid killing pods before we are ready
   ##
   minReadySeconds: 0
@@ -386,7 +384,6 @@ controller:
   # -- Eviction policy for unhealthy pods guarded by PodDisruptionBudget.
   # Ref: https://kubernetes.io/blog/2023/01/06/unhealthy-pod-eviction-policy-for-pdbs/
   unhealthyPodEvictionPolicy: ""
-
   ## Define requests resources to avoid probe issues due to CPU utilization in busy nodes
   ## ref: https://github.com/kubernetes/ingress-nginx/issues/4735#issuecomment-551204903
   ## Ideally, there should be no limits.
@@ -1093,7 +1090,6 @@ defaultBackend:
   # -- Eviction policy for unhealthy pods guarded by PodDisruptionBudget.
   # Ref: https://kubernetes.io/blog/2023/01/06/unhealthy-pod-eviction-policy-for-pdbs/
   unhealthyPodEvictionPolicy: ""
-
   resources: {}
   # limits:
   #   cpu: 10m
