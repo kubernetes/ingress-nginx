@@ -938,6 +938,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 					nb := upstream.DeepCopy()
 					nb.Name = name
 					nb.Endpoints = endps
+					nb.Service = location.DefaultBackend
 					aUpstreams = append(aUpstreams, nb)
 					location.DefaultBackendUpstreamName = name
 
