@@ -238,12 +238,12 @@ Example:
 apiVersion: v1
 kind: Namespace
 metadata:
+  name: ingress-nginx
   labels:
-    pod-security.kubernetes.io/enforce: baseline
-    pod-security.kubernetes.io/enforce-version: v1.31
     kubernetes.io/metadata.name: ingress-nginx
     name: ingress-nginx
-  name: ingress-nginx
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/enforce-version: v1.31
 ```
 
 {{ template "chart.valuesSection" . }}
