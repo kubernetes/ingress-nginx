@@ -233,9 +233,7 @@ As of version `1.26.0` of this chart, by simply not providing any clusterIP valu
 
 ### Pod Security Admission
 
-You can use PSA by applying label to `ingress-nginx` namespace as instructed by [Pod Security Admission](https://kubernetes.io/docs/tasks/configure-pod-container/enforce-standards-namespace-labels/)
-
-For now, highest level can be <strong>enforced</strong> is `baseline`
+You can use Pod Security Admission by applying labels to the `ingress-nginx` namespace as instructed by the [documentation](https://kubernetes.io/docs/tasks/configure-pod-container/enforce-standards-namespace-labels).
 
 Example:
 
@@ -243,12 +241,12 @@ Example:
 apiVersion: v1
 kind: Namespace
 metadata:
+  name: ingress-nginx
   labels:
-    pod-security.kubernetes.io/enforce: baseline
-    pod-security.kubernetes.io/enforce-version: v1.31
     kubernetes.io/metadata.name: ingress-nginx
     name: ingress-nginx
-  name: ingress-nginx
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: v1.31
 ```
 
 ## Values
