@@ -299,6 +299,8 @@ controller:
   #       app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
   #       app.kubernetes.io/instance: '{{ .Release.Name }}'
   #       app.kubernetes.io/component: controller
+  #   matchLabelKeys:
+  #   - pod-template-hash
   #   topologyKey: topology.kubernetes.io/zone
   #   maxSkew: 1
   #   whenUnsatisfiable: ScheduleAnyway
@@ -307,6 +309,8 @@ controller:
   #       app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
   #       app.kubernetes.io/instance: '{{ .Release.Name }}'
   #       app.kubernetes.io/component: controller
+  #   matchLabelKeys:
+  #   - pod-template-hash
   #   topologyKey: kubernetes.io/hostname
   #   maxSkew: 1
   #   whenUnsatisfiable: ScheduleAnyway
@@ -1063,6 +1067,8 @@ defaultBackend:
   #       app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
   #       app.kubernetes.io/instance: '{{ .Release.Name }}'
   #       app.kubernetes.io/component: default-backend
+  #   matchLabelKeys:
+  #   - pod-template-hash
   #   topologyKey: topology.kubernetes.io/zone
   #   maxSkew: 1
   #   whenUnsatisfiable: ScheduleAnyway
@@ -1071,6 +1077,8 @@ defaultBackend:
   #       app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
   #       app.kubernetes.io/instance: '{{ .Release.Name }}'
   #       app.kubernetes.io/component: default-backend
+  #   matchLabelKeys:
+  #   - pod-template-hash
   #   topologyKey: kubernetes.io/hostname
   #   maxSkew: 1
   #   whenUnsatisfiable: ScheduleAnyway
