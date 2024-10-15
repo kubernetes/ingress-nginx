@@ -12,6 +12,8 @@ This chart bootstraps an ingress-nginx deployment on a [Kubernetes](http://kuber
 
 Kubernetes: `>=1.21.0-0`
 
+
+
 ## Get Repo Info
 
 ```console
@@ -242,7 +244,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   labels:
-    pod-security.kubernetes.io/enforce: baseline 
+    pod-security.kubernetes.io/enforce: baseline
     pod-security.kubernetes.io/enforce-version: v1.31
     kubernetes.io/metadata.name: ingress-nginx
     name: ingress-nginx
