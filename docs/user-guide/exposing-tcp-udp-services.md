@@ -3,7 +3,7 @@
 While the Kubernetes Ingress resource only officially supports routing external HTTP(s) traffic to services, ingress-nginx can be configured to receive external TCP/UDP traffic from non-HTTP protocols and route them to internal services using TCP/UDP port mappings that are specified within a ConfigMap.
 
 To support this, the `--tcp-services-configmap` and `--udp-services-configmap` flags can be used to point to an existing config map where the key is the external port to use and the value indicates the service to expose using the format:
-`<service port>:<namespace/service name>:[PROXY]:[PROXY]`
+`<external port>:<namespace/service name>:<service port/name>:[PROXY]:[PROXY]`
 
 It is also possible to use a number or the name of the port. The two last fields are optional.
 Adding `PROXY` in either or both of the two last fields we can use [Proxy Protocol](https://www.nginx.com/resources/admin-guide/proxy-protocol) decoding (listen) and/or encoding (proxy_pass) in a TCP service. 
