@@ -31,7 +31,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authtls"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/backendprotocol"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/clientbodybuffersize"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/client"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/connection"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/customheaders"
@@ -80,7 +80,7 @@ type Ingress struct {
 	BasicDigestAuth             auth.Config
 	Canary                      canary.Config
 	CertificateAuth             authtls.Config
-	ClientBodyBufferSize        string
+	Client                      client.Config
 	CustomHeaders               customheaders.Config
 	ConfigurationSnippet        string
 	Connection                  connection.Config
@@ -129,7 +129,7 @@ func NewAnnotationFactory(cfg resolver.Resolver) map[string]parser.IngressAnnota
 		"BasicDigestAuth":             auth.NewParser(auth.AuthDirectory, cfg),
 		"Canary":                      canary.NewParser(cfg),
 		"CertificateAuth":             authtls.NewParser(cfg),
-		"ClientBodyBufferSize":        clientbodybuffersize.NewParser(cfg),
+		"Client":                      client.NewParser(cfg),
 		"CustomHeaders":               customheaders.NewParser(cfg),
 		"ConfigurationSnippet":        snippet.NewParser(cfg),
 		"Connection":                  connection.NewParser(cfg),

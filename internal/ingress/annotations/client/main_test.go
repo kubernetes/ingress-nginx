@@ -14,14 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package clientbodybuffersize
+package client
 
 import (
 	"testing"
 
 	api "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
@@ -48,7 +49,7 @@ func TestParse(t *testing.T) {
 	}
 
 	ing := &networking.Ingress{
-		ObjectMeta: meta_v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "foo",
 			Namespace: api.NamespaceDefault,
 		},
@@ -58,9 +59,13 @@ func TestParse(t *testing.T) {
 	for _, testCase := range testCases {
 		ing.SetAnnotations(testCase.annotations)
 		//nolint:errcheck // Ignore the error since invalid cases will be checked with expected results
-		result, _ := ap.Parse(ing)
-		if result != testCase.expected {
-			t.Errorf("expected %v but returned %v, annotations: %s", testCase.expected, result, testCase.annotations)
+		res, _ := ap.Parse(ing)
+		c, ok := res.(*Config)
+		if !ok {
+			t.Fatal("expected a client.Config type")
+		}
+		if c.BodyBufferSize != testCase.expected {
+			t.Errorf("expected %v but returned %v, annotations: %s", testCase.expected, res, testCase.annotations)
 		}
 	}
 }

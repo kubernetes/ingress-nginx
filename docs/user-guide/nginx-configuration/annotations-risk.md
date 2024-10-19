@@ -22,7 +22,7 @@
 | CertificateAuth | auth-tls-secret | Medium | location |
 | CertificateAuth | auth-tls-verify-client | Medium | location |
 | CertificateAuth | auth-tls-verify-depth | Low | location |
-| ClientBodyBufferSize | client-body-buffer-size | Low | location |
+| Client | client-body-buffer-size | Low | location |
 | ConfigurationSnippet | configuration-snippet | Critical | location |
 | Connection | connection-proxy-header | Low | location |
 | CorsConfig | cors-allow-credentials | Low | ingress |
