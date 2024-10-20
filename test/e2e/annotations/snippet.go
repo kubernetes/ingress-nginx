@@ -30,6 +30,9 @@ var _ = framework.DescribeAnnotation("configuration-snippet", func() {
 		"configurationsnippet",
 		framework.WithHTTPBunEnabled(),
 	)
+	if framework.IsCrossplane() {
+		return
+	}
 
 	ginkgo.It("set snippet more_set_headers in all locations", func() {
 		host := "configurationsnippet.foo.com"
