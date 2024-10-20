@@ -43,6 +43,10 @@ const (
 )
 
 var _ = framework.DescribeAnnotation("auth-*", func() {
+	// Skipping crossplane on tests as this will be implemented on alpha2
+	if framework.IsCrossplane() {
+		return
+	}
 	f := framework.NewDefaultFramework("auth", framework.WithHTTPBunEnabled())
 
 	ginkgo.BeforeEach(func() {

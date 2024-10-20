@@ -84,9 +84,10 @@ func TestCrossplaneTemplate(t *testing.T) {
 		DirectiveSources: []ngx_crossplane.MatchFunc{
 			ngx_crossplane.DefaultDirectivesMatchFunc,
 			ngx_crossplane.MatchLuaLatest,
+			ngx_crossplane.MatchHeadersMoreLatest,
 			extramodules.BrotliMatchFn,
 			extramodules.OpentelemetryMatchFn,
-			extramodules.ExtraheadersMatchFn,
+			ngx_crossplane.MatchGeoip2Latest,
 		},
 		LexOptions: ngx_crossplane.LexOptions{
 			Lexers: []ngx_crossplane.RegisterLexer{lua.RegisterLexer()},

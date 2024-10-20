@@ -29,10 +29,12 @@ import (
 
 	ngx_crossplane "github.com/nginxinc/nginx-go-crossplane"
 	networkingv1 "k8s.io/api/networking/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog/v2"
 	"k8s.io/utils/ptr"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
 	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 	ing_net "k8s.io/ingress-nginx/internal/net"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
@@ -58,6 +60,7 @@ var (
 )
 
 type seconds int
+type minutes int
 
 func buildDirectiveWithComment(directive string, comment string, args ...any) *ngx_crossplane.Directive {
 	dir := buildDirective(directive, args...)
@@ -91,6 +94,8 @@ func buildDirective(directive string, args ...any) *ngx_crossplane.Directive {
 			argsVal = append(argsVal, boolToStr(v))
 		case seconds:
 			argsVal = append(argsVal, strconv.Itoa(int(v))+"s")
+		case minutes:
+			argsVal = append(argsVal, strconv.Itoa(int(v))+"m")
 		}
 	}
 	return &ngx_crossplane.Directive{
@@ -542,4 +547,138 @@ func buildProxyPass(backends []*ingress.Backend, location *ingress.Location) ngx
 
 	// default proxy_pass
 	return ngx_crossplane.Directives{defProxyPass}
+}
+
+func buildGeoIPDirectives(reloadTime int, files []string) ngx_crossplane.Directives {
+
+	directives := make(ngx_crossplane.Directives, 0)
+	buildGeoIPBlock := func(file string, directives ngx_crossplane.Directives) *ngx_crossplane.Directive {
+		if reloadTime > 0 && file != "GeoIP2-Connection-Type.mmdb" {
+			directives = append(directives, buildDirective("auto_reload", minutes(reloadTime)))
+		}
+		fileName := fmt.Sprintf("/etc/ingress-controller/geoip/%s", file)
+		return buildBlockDirective("geoip2", []string{fileName}, directives)
+	}
+
+	for _, file := range files {
+		if file == "GeoLite2-Country.mmdb" || file == "GeoIP2-Country.mmdb" {
+			directives = append(directives, buildGeoIPBlock(file, ngx_crossplane.Directives{
+				buildDirective("$geoip2_country_code", "source=$remote_addr", "country", "iso_code"),
+				buildDirective("$geoip2_country_name", "source=$remote_addr", "country", "names", "en"),
+				buildDirective("$geoip2_country_geoname_id", "source=$remote_addr", "country", "geoname_id"),
+				buildDirective("$geoip2_continent_code", "source=$remote_addr", "continent", "code"),
+				buildDirective("$geoip2_continent_name", "source=$remote_addr", "continent", "names", "en"),
+				buildDirective("$geoip2_continent_geoname_id", "source=$remote_addr", "continent", "geoname_id"),
+			}))
+		}
+		if file == "GeoLite2-City.mmdb" || file == "GeoIP2-City.mmdb" {
+			directives = append(directives, buildGeoIPBlock(file, ngx_crossplane.Directives{
+				buildDirective("$geoip2_city_country_code", "source=$remote_addr", "country", "iso_code"),
+				buildDirective("$geoip2_city_country_name", "source=$remote_addr", "country", "names", "en"),
+				buildDirective("$geoip2_city_country_geoname_id", "source=$remote_addr", "country", "geoname_id"),
+				buildDirective("$geoip2_city_continent_code", "source=$remote_addr", "continent", "code"),
+				buildDirective("$geoip2_city_continent_name", "source=$remote_addr", "continent", "names", "en"),
+				buildDirective("$geoip2_city", "source=$remote_addr", "city", "names", "en"),
+				buildDirective("$geoip2_city_geoname_id", "source=$remote_addr", "city", "geoname_id"),
+				buildDirective("$geoip2_postal_code", "source=$remote_addr", "postal", "code"),
+				buildDirective("$geoip2_dma_code", "source=$remote_addr", "location", "metro_code"),
+				buildDirective("$geoip2_latitude", "source=$remote_addr", "location", "latitude"),
+				buildDirective("$geoip2_longitude", "source=$remote_addr", "location", "longitude"),
+				buildDirective("$geoip2_time_zone", "source=$remote_addr", "location", "time_zone"),
+				buildDirective("$geoip2_region_code", "source=$remote_addr", "subdivisions", "0", "iso_code"),
+				buildDirective("$geoip2_region_name", "source=$remote_addr", "subdivisions", "0", "names", "en"),
+				buildDirective("$geoip2_region_geoname_id", "source=$remote_addr", "subdivisions", "0", "geoname_id"),
+				buildDirective("$geoip2_subregion_code", "source=$remote_addr", "subdivisions", "1", "iso_code"),
+				buildDirective("$geoip2_subregion_name", "source=$remote_addr", "subdivisions", "1", "names", "en"),
+				buildDirective("$geoip2_subregion_geoname_id", "source=$remote_addr", "subdivisions", "1", "geoname_id"),
+			}))
+		}
+		if file == "GeoLite2-ASN.mmdb" || file == "GeoIP2-ASN.mmdb" {
+			directives = append(directives, buildGeoIPBlock(file, ngx_crossplane.Directives{
+				buildDirective("$geoip2_asn", "source=$remote_addr", "autonomous_system_number"),
+				buildDirective("$geoip2_org", "source=$remote_addr", "autonomous_system_organization"),
+			}))
+		}
+		if file == "GeoIP2-ISP.mmdb" {
+			directives = append(directives, buildGeoIPBlock(file, ngx_crossplane.Directives{
+				buildDirective("$geoip2_isp", "source=$remote_addr", "isp"),
+				buildDirective("$geoip2_isp_org", "source=$remote_addr", "organization"),
+				buildDirective("$geoip2_asn", "source=$remote_addr", "autonomous_system_number"),
+			}))
+		}
+		if file == "GeoIP2-Anonymous-IP.mmdb" {
+			directives = append(directives, buildGeoIPBlock(file, ngx_crossplane.Directives{
+				buildDirective("$geoip2_is_anon", "source=$remote_addr", "is_anonymous"),
+				buildDirective("$geoip2_is_anonymous", "source=$remote_addr", "default=0", "is_anonymous"),
+				buildDirective("$geoip2_is_anonymous_vpn", "source=$remote_addr", "default=0", "is_anonymous_vpn"),
+				buildDirective("$geoip2_is_hosting_provider", "source=$remote_addr", "default=0", "is_hosting_provider"),
+				buildDirective("$geoip2_is_public_proxy", "source=$remote_addr", "default=0", "is_public_proxy"),
+				buildDirective("$geoip2_is_tor_exit_node", "source=$remote_addr", "default=0", "is_tor_exit_node"),
+			}))
+		}
+		if file == "GeoIP2-Connection-Type.mmdb" {
+			directives = append(directives, buildGeoIPBlock(file, ngx_crossplane.Directives{
+				buildDirective("$geoip2_connection_type", "connection_type"),
+			}))
+		}
+	}
+	return directives
+}
+
+func filterRateLimits(servers []*ingress.Server) []ratelimit.Config {
+	ratelimits := []ratelimit.Config{}
+	found := sets.Set[string]{}
+
+	for _, server := range servers {
+		for _, loc := range server.Locations {
+			if loc.RateLimit.ID != "" && !found.Has(loc.RateLimit.ID) {
+				found.Insert(loc.RateLimit.ID)
+				ratelimits = append(ratelimits, loc.RateLimit)
+			}
+		}
+	}
+	return ratelimits
+}
+
+// buildRateLimitZones produces an array of limit_conn_zone in order to allow
+// rate limiting of request. Each Ingress rule could have up to three zones, one
+// for connection limit by IP address, one for limiting requests per minute, and
+// one for limiting requests per second.
+func buildRateLimitZones(servers []*ingress.Server) ngx_crossplane.Directives {
+	zones := make(map[string]bool)
+	directives := make(ngx_crossplane.Directives, 0)
+	for _, server := range servers {
+		for _, loc := range server.Locations {
+			zoneID := fmt.Sprintf("$limit_%s", loc.RateLimit.ID)
+			if loc.RateLimit.Connections.Limit > 0 {
+				zoneArg := fmt.Sprintf("zone=%s:%dm", loc.RateLimit.Connections.Name, loc.RateLimit.Connections.SharedSize)
+				zone := fmt.Sprintf("limit_conn_zone %s %s", zoneID, zoneArg)
+				if _, ok := zones[zone]; !ok {
+					zones[zone] = true
+					directives = append(directives, buildDirective("limit_conn_zone", zoneID, zoneArg))
+				}
+			}
+
+			if loc.RateLimit.RPM.Limit > 0 {
+				zoneArg := fmt.Sprintf("zone=%s:%dm", loc.RateLimit.RPM.Name, loc.RateLimit.RPM.SharedSize)
+				zoneRate := fmt.Sprintf("rate=%dr/m", loc.RateLimit.RPM.Limit)
+				zone := fmt.Sprintf("limit_req_zone %s %s %s", zoneID, zoneArg, zoneRate)
+				if _, ok := zones[zone]; !ok {
+					zones[zone] = true
+					directives = append(directives, buildDirective("limit_req_zone", zoneID, zoneArg, zoneRate))
+				}
+			}
+
+			if loc.RateLimit.RPS.Limit > 0 {
+				zoneArg := fmt.Sprintf("zone=%s:%dm", loc.RateLimit.RPS.Name, loc.RateLimit.RPS.SharedSize)
+				zoneRate := fmt.Sprintf("rate=%dr/s", loc.RateLimit.RPS.Limit)
+				zone := fmt.Sprintf("limit_req_zone %s %s %s", zoneID, zoneArg, zoneRate)
+				if _, ok := zones[zone]; !ok {
+					zones[zone] = true
+					directives = append(directives, buildDirective("limit_req_zone", zoneID, zoneArg, zoneRate))
+				}
+			}
+		}
+	}
+	return directives
 }

@@ -167,7 +167,7 @@ func (c *Template) buildServerLocations(server *ingress.Server, locations []*ing
 
 		if location.Rewrite.AppRoot != "" {
 			serverLocations = append(serverLocations,
-				buildBlockDirective("if", []string{"$uri = /"},
+				buildBlockDirective("if", []string{"$uri", "=", "/"},
 					ngx_crossplane.Directives{
 						buildDirective("return", "302", fmt.Sprintf("$scheme://$http_host%s", location.Rewrite.AppRoot)),
 					}))
@@ -244,7 +244,7 @@ func (c *Template) buildLocation(server *ingress.Server,
 		buildDirective("header_filter_by_lua_file", "/etc/nginx/lua/nginx/ngx_conf_srv_hdr_filter.lua"),
 		buildDirective("log_by_lua_file", "/etc/nginx/lua/nginx/ngx_conf_log_block.lua"),
 		buildDirective("rewrite_log", location.Logs.Rewrite),
-		buildDirective("http2_push_preload", location.HTTP2PushPreload),
+		// buildDirective("http2_push_preload", location.HTTP2PushPreload), // This directive is deprecated, keeping out of new crossplane
 		buildDirective("port_in_redirect", location.UsePortInRedirects))
 
 	if location.Mirror.Source != "" {

@@ -151,6 +151,14 @@ func (c *Template) buildHTTP() {
 		httpBlock = append(httpBlock, buildDirective("more_clear_headers", "Server"))
 	}
 
+	if cfg.UseGeoIP2 && c.tplConfig.MaxmindEditionFiles != nil && len(*c.tplConfig.MaxmindEditionFiles) > 0 {
+		geoipDirectives := buildGeoIPDirectives(cfg.GeoIP2AutoReloadMinutes, *c.tplConfig.MaxmindEditionFiles)
+		// We do this to avoid adding empty blocks
+		if len(geoipDirectives) > 0 {
+			httpBlock = append(httpBlock, geoipDirectives...)
+		}
+	}
+
 	httpBlock = append(httpBlock, buildBlockDirective(
 		"geo",
 		[]string{"$literal_dollar"},
@@ -279,6 +287,30 @@ func (c *Template) buildHTTP() {
 		)
 	}
 	httpBlock = append(httpBlock, buildBlockDirective("upstream", []string{"upstream_balancer"}, blockUpstreamDirectives))
+
+	// Adding Rate limit
+	for _, rl := range filterRateLimits(c.tplConfig.Servers) {
+		id := fmt.Sprintf("$allowlist_%s", rl.ID)
+		httpBlock = append(httpBlock, buildDirective("#", "Ratelimit", rl.Name))
+		rlDirectives := ngx_crossplane.Directives{
+			buildDirective("default", 0),
+		}
+		for _, ip := range rl.Allowlist {
+			rlDirectives = append(rlDirectives, buildDirective(ip, "1"))
+		}
+		mapRateLimitDirective := buildMapDirective(id, fmt.Sprintf("$limit_%s", rl.ID), ngx_crossplane.Directives{
+			buildDirective("0", cfg.LimitConnZoneVariable),
+			buildDirective("1", ""),
+		})
+		httpBlock = append(httpBlock, buildBlockDirective("geo", []string{"$remote_addr", id}, rlDirectives), mapRateLimitDirective)
+	}
+
+	zoneRL := buildRateLimitZones(c.tplConfig.Servers)
+	if len(zoneRL) > 0 {
+		httpBlock = append(httpBlock, zoneRL...)
+	}
+
+	// End of Rate limit configs
 
 	for i := range cfg.BlockCIDRs {
 		httpBlock = append(httpBlock, buildDirective("deny", strings.TrimSpace(cfg.BlockCIDRs[i])))
