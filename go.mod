@@ -13,7 +13,7 @@ require (
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/moul/pb v0.0.0-20220425114252-bca18df4138c
-	github.com/ncabatoff/process-exporter v0.8.3
+	github.com/ncabatoff/process-exporter v0.8.4
 	github.com/onsi/ginkgo/v2 v2.20.2
 	github.com/opencontainers/runc v1.1.15
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
