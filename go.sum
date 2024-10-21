@@ -154,8 +154,8 @@ github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
 github.com/ncabatoff/go-seq v0.0.0-20180805175032-b08ef85ed833 h1:t4WWQ9I797y7QUgeEjeXnVb+oYuEDQc6gLvrZJTYo94=
 github.com/ncabatoff/go-seq v0.0.0-20180805175032-b08ef85ed833/go.mod h1:0CznHmXSjMEqs5Tezj/w2emQoM41wzYM9KpDKUHPYag=
-github.com/ncabatoff/process-exporter v0.8.3 h1:ZJpzWhRfwdBisIpr2BkitAlUR6dt45hpQn8/AYgToO8=
-github.com/ncabatoff/process-exporter v0.8.3/go.mod h1:MxEOWl740VK/hlWycJkq91VrA2mI+U9Bvc1wuyAaxA4=
+github.com/ncabatoff/process-exporter v0.8.4 h1:qj0pWbP6AytVQ1fMYabRd5LnuV6NPh0O6WCfenPJT54=
+github.com/ncabatoff/process-exporter v0.8.4/go.mod h1:MxEOWl740VK/hlWycJkq91VrA2mI+U9Bvc1wuyAaxA4=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/nxadm/tail v1.4.8 h1:nPr65rt6Y5JFSKQO7qToXr7pePgD6Gwiw05lkbyAQTE=
 github.com/nxadm/tail v1.4.8/go.mod h1:+ncqLTQzXmGhMZNUePPaPqPvBxHAIsmXswZKocGu+AU=
