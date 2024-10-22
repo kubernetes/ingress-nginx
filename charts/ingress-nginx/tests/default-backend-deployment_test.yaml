@@ -187,3 +187,18 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].image
           value: registry.k8s.io/defaultbackend-amd64:custom-tag@sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+
+  - it: should create a Deployment with extraPorts if `defaultBackend.service.extraPorts` is set
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.service.extraPorts[0]:
+        name: example
+        protocol: TCP
+        targetPort: 9999
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            name: example
+            protocol: TCP
+            containerPort: 9999
