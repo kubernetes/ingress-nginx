@@ -104,6 +104,7 @@ type Zone struct {
 	Name  string `json:"name"`
 	Limit int    `json:"limit"`
 	Burst int    `json:"burst"`
+	Delay int    `json:"delay"`
 	// SharedSize amount of shared memory for the zone
 	SharedSize int `json:"sharedSize"`
 }
@@ -125,6 +126,9 @@ func (z1 *Zone) Equal(z2 *Zone) bool {
 	if z1.Burst != z2.Burst {
 		return false
 	}
+	if z1.Delay != z2.Delay {
+		return false
+	}
 	if z1.SharedSize != z2.SharedSize {
 		return false
 	}
@@ -141,6 +145,9 @@ const (
 	limitRateBurstMultiplierAnnotation = "limit-burst-multiplier"
 	limitWhitelistAnnotation           = "limit-whitelist" // This annotation is an alias for limit-allowlist
 	limitAllowlistAnnotation           = "limit-allowlist"
+	limitRateNoBurstAnnotation         = "limit-no-burst"
+	limitRateDelayAnnotation           = "limit-delay"
+	limitRateSharedSizeAnnotation      = "limit-shared-size"
 )
 
 var rateLimitAnnotations = parser.Annotation{
@@ -191,6 +198,24 @@ var rateLimitAnnotations = parser.Annotation{
 			Documentation:     `List of CIDR/IP addresses that will not be rate-limited.`,
 			AnnotationAliases: []string{limitWhitelistAnnotation},
 		},
+		limitRateNoBurstAnnotation: {
+			Validator:     parser.ValidateBool,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow, // Low, as it allows just a set of options
+			Documentation: `To enable/disable burst in ratelimiting`,
+		},
+		limitRateDelayAnnotation: {
+			Validator:     parser.ValidateInt,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow, // Low, as it allows just a set of options
+			Documentation: `Adds delay in nginx rate limiting`,
+		},
+		limitRateSharedSizeAnnotation: {
+			Validator:     parser.ValidateInt,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow, // Low, as it allows just a set of options
+			Documentation: `Used to configure the sharedSize in ratelimit zone`,
+		},
 	},
 }
 
@@ -237,6 +262,22 @@ func (a ratelimit) Parse(ing *networking.Ingress) (interface{}, error) {
 		burstMultiplier = defBurst
 	}
 
+	//nolint:errcheck // No need to check err here
+	noburst, _ := parser.GetBoolAnnotation(limitRateNoBurstAnnotation, ing, a.annotationConfig.Annotations)
+	if noburst {
+		burstMultiplier = 0
+	}
+
+	delay, err := parser.GetIntAnnotation(limitRateDelayAnnotation, ing, a.annotationConfig.Annotations)
+	if err != nil {
+		delay = -1
+	}
+
+	sharedSize, err := parser.GetIntAnnotation(limitRateSharedSizeAnnotation, ing, a.annotationConfig.Annotations)
+	if err != nil {
+		sharedSize = defSharedSize
+	}
+
 	val, err := parser.GetStringAnnotation(limitAllowlistAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil && errors.IsValidationError(err) {
 		return nil, err
@@ -264,19 +305,22 @@ func (a ratelimit) Parse(ing *networking.Ingress) (interface{}, error) {
 			Name:       fmt.Sprintf("%v_conn", zoneName),
 			Limit:      conn,
 			Burst:      conn * burstMultiplier,
-			SharedSize: defSharedSize,
+			Delay:      delay,
+			SharedSize: sharedSize,
 		},
 		RPS: Zone{
 			Name:       fmt.Sprintf("%v_rps", zoneName),
 			Limit:      rps,
 			Burst:      rps * burstMultiplier,
-			SharedSize: defSharedSize,
+			Delay:      delay,
+			SharedSize: sharedSize,
 		},
 		RPM: Zone{
 			Name:       fmt.Sprintf("%v_rpm", zoneName),
 			Limit:      rpm,
 			Burst:      rpm * burstMultiplier,
-			SharedSize: defSharedSize,
+			Delay:      delay,
+			SharedSize: sharedSize,
 		},
 		LimitRate:      lr,
 		LimitRateAfter: lra,
