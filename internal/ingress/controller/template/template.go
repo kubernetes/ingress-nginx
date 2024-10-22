@@ -1409,6 +1409,12 @@ func buildHTTPSListener(t, s interface{}) string {
 		return ""
 	}
 
+	for _, server := range tc.Servers {
+		if server.Hostname == hostname && server.SSLCert == nil {
+			return ""
+		}
+	}
+
 	co := commonListenOptions(&tc, hostname)
 
 	addrV4 := []string{""}
