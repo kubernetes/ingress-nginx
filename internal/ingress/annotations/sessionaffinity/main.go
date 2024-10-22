@@ -61,6 +61,9 @@ const (
 	// This is used to control whether SameSite=None should be conditionally applied based on the User-Agent
 	annotationAffinityCookieConditionalSameSiteNone = "session-cookie-conditional-samesite-none"
 
+	// This is used to set the Partitioned flag on the cookie
+	annotationAffinityCookiePartitioned = "session-cookie-partitioned"
+
 	// This is used to control the cookie change after request failure
 	annotationAffinityCookieChangeOnFailure = "session-cookie-change-on-failure"
 
@@ -141,6 +144,12 @@ var sessionAffinityAnnotations = parser.Annotation{
 			Risk:          parser.AnnotationRiskLow,
 			Documentation: `This annotation is used to omit SameSite=None from browsers with SameSite attribute incompatibilities`,
 		},
+		annotationAffinityCookiePartitioned: {
+			Validator:     parser.ValidateBool,
+			Scope:         parser.AnnotationScopeIngress,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `This annotation sets the cookie as Partitioned`,
+		},
 		annotationAffinityCookieChangeOnFailure: {
 			Validator: parser.ValidateBool,
 			Scope:     parser.AnnotationScopeIngress,
@@ -184,6 +193,8 @@ type Cookie struct {
 	SameSite string `json:"samesite"`
 	// Flag that conditionally applies SameSite=None attribute on cookie if user agent accepts it.
 	ConditionalSameSiteNone bool `json:"conditional-samesite-none"`
+	// Partitioned flag to be set
+	Partitioned bool `json:"partitioned"`
 }
 
 type affinity struct {
@@ -239,6 +250,11 @@ func (a affinity) cookieAffinityParse(ing *networking.Ingress) *Cookie {
 	cookie.ConditionalSameSiteNone, err = parser.GetBoolAnnotation(annotationAffinityCookieConditionalSameSiteNone, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		klog.V(3).InfoS("Invalid or no annotation value found. Ignoring", "ingress", klog.KObj(ing), "annotation", annotationAffinityCookieConditionalSameSiteNone)
+	}
+
+	cookie.Partitioned, err = parser.GetBoolAnnotation(annotationAffinityCookiePartitioned, ing, a.annotationConfig.Annotations)
+	if err != nil {
+		klog.V(3).InfoS("Invalid or no annotation value found. Ignoring", "ingress", klog.KObj(ing), "annotation", annotationAffinityCookiePartitioned)
 	}
 
 	cookie.ChangeOnFailure, err = parser.GetBoolAnnotation(annotationAffinityCookieChangeOnFailure, ing, a.annotationConfig.Annotations)

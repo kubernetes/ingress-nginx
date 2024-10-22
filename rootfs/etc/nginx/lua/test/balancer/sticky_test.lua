@@ -503,6 +503,56 @@ describe("Sticky", function()
     end)
   end)
 
+  describe("Partitioned settings", function()
+    local mocked_cookie_new = cookie.new
+
+    before_each(function()
+      reset_sticky_balancer()
+    end)
+
+    after_each(function()
+      cookie.new = mocked_cookie_new
+    end)
+
+    local function test_set_cookie_with(sticky_balancer_type, expected_path, partitioned, expected_partitioned)
+      local s = {}
+      cookie.new = function(self)
+        local cookie_instance = {
+          set = function(self, payload)
+            assert.equal(payload.key, test_backend.sessionAffinityConfig.cookieSessionAffinity.name)
+            assert.equal(payload.path, expected_path)
+            assert.equal(payload.domain, nil)
+            assert.equal(payload.httponly, true)
+            assert.equal(payload.secure, true)
+            assert.equal(payload.partitioned, expected_partitioned)
+            return true, nil
+          end,
+          get = function(k) return false end,
+        }
+        s = spy.on(cookie_instance, "set")
+        return cookie_instance, false
+      end
+      local b = get_test_backend()
+      b.sessionAffinityConfig.cookieSessionAffinity.locations = {}
+      b.sessionAffinityConfig.cookieSessionAffinity.locations["test.com"] = {"/"}
+      b.sessionAffinityConfig.cookieSessionAffinity.secure = true
+      b.sessionAffinityConfig.cookieSessionAffinity.partitioned = partitioned
+      local sticky_balancer_instance = sticky_balancer_type:new(b)
+      assert.has_no.errors(function() sticky_balancer_instance:balance() end)
+      assert.spy(s).was_called()
+    end
+
+    it("returns a cookie with Partitioned when user specifies partitioned=true", function()
+      test_set_cookie_with(sticky_balanced, "/", true, true)
+    end)
+    it("returns a cookie without Partitioned when user specifies partitioned=false", function()
+      test_set_cookie_with(sticky_balanced, "/", false, false)
+    end)
+    it("returns a cookie without Partitioned when user does not specify partitioned", function()
+      test_set_cookie_with(sticky_balanced, "/", nil, nil)
+    end)
+  end)
+
   describe("get_cookie()", function()
 
     describe("legacy cookie value", function()

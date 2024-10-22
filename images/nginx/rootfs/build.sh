@@ -71,8 +71,8 @@ export LUA_RESTY_CACHE=99e7578465b40f36f596d099b82eab404f2b42ed
 # Check for recent changes: https://github.com/openresty/lua-resty-core/compare/v0.1.27...master
 export LUA_RESTY_CORE=v0.1.28
 
-# Check for recent changes: https://github.com/cloudflare/lua-resty-cookie/compare/f418d77082eaef48331302e84330488fdc810ef4...master
-export LUA_RESTY_COOKIE_VERSION=f418d77082eaef48331302e84330488fdc810ef4
+# Check for recent changes: https://github.com/utix/lua-resty-cookie/compare/v0.3.0...master
+export LUA_RESTY_COOKIE_VERSION=v0.3.0
 
 # Check for recent changes: https://github.com/openresty/lua-resty-dns/compare/8bb53516e2933e61c317db740a9b7c2048847c2f...master
 export LUA_RESTY_DNS=8bb53516e2933e61c317db740a9b7c2048847c2f
@@ -249,8 +249,8 @@ get_src 39baab9e2b31cc48cecf896cea40ef6e80559054fd8a6e440cc804a858ea84d4 \
 get_src a77b9de160d81712f2f442e1de8b78a5a7ef0d08f13430ff619f79235db974d4 \
         "https://github.com/openresty/lua-cjson/archive/$LUA_CJSON_VERSION.tar.gz" "lua-cjson"
 
-get_src 5ed48c36231e2622b001308622d46a0077525ac2f751e8cc0c9905914254baa4 \
-        "https://github.com/cloudflare/lua-resty-cookie/archive/$LUA_RESTY_COOKIE_VERSION.tar.gz" "lua-resty-cookie"
+get_src 6a9261708e817f5a2941c1860b74bef10b2499bca02c82cf7451400f59d6c6b7 \
+        "https://github.com/utix/lua-resty-cookie/archive/$LUA_RESTY_COOKIE_VERSION.tar.gz" "lua-resty-cookie"
 
 get_src 573184006b98ccee2594b0d134fa4d05e5d2afd5141cbad315051ccf7e9b6403 \
         "https://github.com/openresty/lua-resty-lrucache/archive/$LUA_RESTY_CACHE.tar.gz" "lua-resty-lrucache"

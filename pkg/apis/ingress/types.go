@@ -162,6 +162,7 @@ type CookieSessionAffinity struct {
 	Domain                  string              `json:"domain,omitempty"`
 	SameSite                string              `json:"samesite,omitempty"`
 	ConditionalSameSiteNone bool                `json:"conditional_samesite_none,omitempty"`
+	Partitioned             bool                `json:"partitioned,omitempty"`
 	ChangeOnFailure         bool                `json:"change_on_failure,omitempty"`
 }
 

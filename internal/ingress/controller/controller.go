@@ -868,6 +868,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 					ups.SessionAffinity.CookieSessionAffinity.Domain = anns.SessionAffinity.Cookie.Domain
 					ups.SessionAffinity.CookieSessionAffinity.SameSite = anns.SessionAffinity.Cookie.SameSite
 					ups.SessionAffinity.CookieSessionAffinity.ConditionalSameSiteNone = anns.SessionAffinity.Cookie.ConditionalSameSiteNone
+					ups.SessionAffinity.CookieSessionAffinity.Partitioned = anns.SessionAffinity.Cookie.Partitioned
 					ups.SessionAffinity.CookieSessionAffinity.ChangeOnFailure = anns.SessionAffinity.Cookie.ChangeOnFailure
 
 					locs := ups.SessionAffinity.CookieSessionAffinity.Locations
