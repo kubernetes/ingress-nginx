@@ -357,6 +357,83 @@ func TestCheckIngress(t *testing.T) {
 				t.Errorf("with a new ingress without error, no error should be returned")
 			}
 		})
+
+		t.Run("When there is a duplicated ingress with same host and path it should error", func(t *testing.T) {
+			ing := &networking.Ingress{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-ingress",
+					Namespace: "test-namespace",
+					Annotations: map[string]string{
+						"kubernetes.io/ingress.class": "nginx",
+					},
+				},
+				Spec: networking.IngressSpec{
+					Rules: []networking.IngressRule{
+						{
+							Host: "example.com",
+							IngressRuleValue: networking.IngressRuleValue{
+								HTTP: &networking.HTTPIngressRuleValue{
+									Paths: []networking.HTTPIngressPath{
+										{
+											Path:     "/",
+											PathType: &pathTypePrefix,
+											Backend: networking.IngressBackend{
+												Service: &networking.IngressServiceBackend{
+													Name: "http-svc",
+													Port: networking.ServiceBackendPort{
+														Number: 80,
+														Name:   "http",
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+
+			nginx.store = &fakeIngressStore{
+				ingresses: []*ingress.Ingress{
+					{
+						Ingress:           *ing,
+						ParsedAnnotations: &annotations.Ingress{},
+					},
+				},
+			}
+			duplicatedIngress := ing.DeepCopy()
+			duplicatedIngress.ObjectMeta.Name = "duplicated-ingress"
+
+			nginx.cfg.DisablePathOverlapValidation = false
+			nginx.command = testNginxTestCommand{
+				t:        t,
+				err:      nil,
+				expected: "_,example.com",
+			}
+
+			err = nginx.CheckIngress(duplicatedIngress)
+			if err == nil {
+				t.Errorf("expected errors but noone occurred")
+			}
+			t.Run("if disablePathOverlap is enabled should not throw any error", func(t *testing.T) {
+				duplicatedIngress := ing.DeepCopy()
+				duplicatedIngress.ObjectMeta.Name = "duplicated-ingress"
+
+				nginx.cfg.DisablePathOverlapValidation = true
+				nginx.command = testNginxTestCommand{
+					t:        t,
+					err:      nil,
+					expected: "_,example.com",
+				}
+
+				err = nginx.CheckIngress(duplicatedIngress)
+				if err != nil {
+					t.Errorf("expected no errors but one %+v occurred", err)
+				}
+			})
+		})
 	})
 
 	t.Run("When the ingress is marked as deleted", func(t *testing.T) {
