@@ -32,7 +32,7 @@ import (
 
 // GetLbAlgorithm returns algorithm identifier for the given backend
 func (f *Framework) GetLbAlgorithm(serviceName string, servicePort int) (string, error) {
-	backendName := fmt.Sprintf("%s-%s-%v", f.Namespace, serviceName, servicePort)
+	backendName := fmt.Sprintf("%s_%s_%v", f.Namespace, serviceName, servicePort)
 	cmd := fmt.Sprintf("/dbg backends get %s", backendName)
 
 	output, err := f.ExecIngressPod(cmd)
