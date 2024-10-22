@@ -17,6 +17,7 @@ limitations under the License.
 package annotations
 
 import (
+	"fmt"
 	"testing"
 
 	apiv1 "k8s.io/api/core/v1"
@@ -364,5 +365,59 @@ func TestCustomResponseHeaders(t *testing.T) {
 				t.Errorf("Returned %v but expected %v", r, foo.headers)
 			}
 		}
+	}
+}
+
+func TestIPAllowList(t *testing.T) {
+	mockObj := mockCfg{}
+	mockObj.MockConfigMaps = map[string]*apiv1.ConfigMap{}
+
+	ec := NewAnnotationExtractor(mockObj)
+	ing := buildIngress()
+	annotationKeys := []string{"allowlist-source-range", "whitelist-source-range"}
+	for _, tc := range []struct {
+		name      string
+		net       string
+		expectErr bool
+		errOut    string
+	}{
+		{
+			name: "test parse a valid net",
+			net:  "10.0.0.0/24",
+		},
+		{
+			name:      "test parse a invalid net",
+			net:       "ww",
+			errOut:    "annotation nginx.ingress.kubernetes.io/%s contains invalid value",
+			expectErr: true,
+		},
+		{
+			name:      "test parse multiple valid cidr",
+			net:       "2.2.2.2/32,1.1.1.1/32,3.3.3.0/24",
+			expectErr: false,
+		},
+		{
+			name:      "test parse multiple invalid cidr(missing comma)",
+			net:       "1.1.1.1 2.2.2.2",
+			expectErr: true,
+			errOut:    "annotation nginx.ingress.kubernetes.io/%s contains invalid value",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			for _, annotationKey := range annotationKeys {
+				ing.SetAnnotations(map[string]string{
+					parser.GetAnnotationWithPrefix(annotationKey): tc.net,
+				})
+				i, err := ec.Extract(ing)
+				if (err != nil) != tc.expectErr {
+					t.Errorf("expected error: %t got error: %t err value: %s. %+v", tc.expectErr, err != nil, err, i)
+				}
+				if tc.expectErr && err != nil {
+					if err.Error() != fmt.Sprintf(tc.errOut, annotationKey) {
+						t.Errorf("expected error %s but got %s", tc.errOut, err)
+					}
+				}
+			}
+		})
 	}
 }
