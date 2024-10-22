@@ -32,6 +32,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/klog/v2"
+
 	"k8s.io/ingress-nginx/internal/ingress/annotations"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/canary"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
@@ -47,7 +49,6 @@ import (
 	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 	utilingress "k8s.io/ingress-nginx/pkg/util/ingress"
-	"k8s.io/klog/v2"
 )
 
 const (
@@ -1502,7 +1503,7 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 
 func locationApplyAnnotations(loc *ingress.Location, anns *annotations.Ingress) {
 	loc.BasicDigestAuth = anns.BasicDigestAuth
-	loc.ClientBodyBufferSize = anns.ClientBodyBufferSize
+	loc.ClientBodyBufferSize = anns.Client.BodyBufferSize
 	loc.CustomHeaders = anns.CustomHeaders
 	loc.ConfigurationSnippet = anns.ConfigurationSnippet
 	loc.CorsConfig = anns.CorsConfig
