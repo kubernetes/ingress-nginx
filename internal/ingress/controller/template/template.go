@@ -331,6 +331,7 @@ var funcMap = text_template.FuncMap{
 	"shouldLoadAuthDigestModule":         shouldLoadAuthDigestModule,
 	"buildServerName":                    buildServerName,
 	"buildCorsOriginRegex":               buildCorsOriginRegex,
+	"isCorsVaryHeaderNeeded":             isCorsVaryHeaderNeeded,
 }
 
 // escapeLiteralDollar will replace the $ character with ${literal_dollar}
@@ -1696,4 +1697,11 @@ func buildCorsOriginRegex(corsOrigins []string) string {
 	}
 	originsRegex += ")$ ) { set $cors 'true'; }"
 	return originsRegex
+}
+
+func isCorsVaryHeaderNeeded(corsOrigins []string) bool {
+	hasMultipleOrigins := len(corsOrigins) > 1
+	hasAnyOrigin := len(corsOrigins) == 1 && corsOrigins[0] == "*"
+	hasSingleDynamicOrigin := len(corsOrigins) == 1 && strings.Contains(corsOrigins[0], "*")
+	return hasMultipleOrigins || hasAnyOrigin || hasSingleDynamicOrigin
 }

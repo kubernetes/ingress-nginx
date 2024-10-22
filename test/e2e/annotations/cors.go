@@ -31,7 +31,7 @@ const (
 )
 
 var _ = framework.DescribeAnnotation("cors-*", func() {
-	f := framework.NewDefaultFramework("cors")
+	f := framework.NewDefaultFramework("cors", framework.WithHTTPBunEnabled())
 
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment(framework.WithDeploymentReplicas(2))
@@ -94,6 +94,134 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			func(server string) bool {
 				return strings.Contains(server, "more_set_headers 'Access-Control-Max-Age: 200';")
 			})
+	})
+
+	ginkgo.It("should include vary header - multiple origins", func() {
+		host := corsHost
+		origin := originHost
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/enable-cors":       "true",
+			"nginx.ingress.kubernetes.io/cors-allow-origin": "http://origin.com:8080, http://cors.foo.com",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "more_set_headers 'Vary: $cors_vary';")
+			})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("Origin", origin).
+			Expect().
+			Headers().
+			ValueEqual("Vary", []string{"Origin"})
+	})
+
+	ginkgo.It("should include vary header - any origin", func() {
+		host := corsHost
+		origin := originHost
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/enable-cors":       "true",
+			"nginx.ingress.kubernetes.io/cors-allow-origin": "*",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "more_set_headers 'Vary: $cors_vary';")
+			})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("Origin", origin).
+			Expect().
+			Headers().
+			ValueEqual("Vary", []string{"Origin"})
+	})
+
+	ginkgo.It("should include vary header - single dynamic origin", func() {
+		host := corsHost
+		origin := "http://foo.origin.cors.com"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/enable-cors":       "true",
+			"nginx.ingress.kubernetes.io/cors-allow-origin": "http://*.origin.cors.com",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "more_set_headers 'Vary: $cors_vary';")
+			})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("Origin", origin).
+			Expect().
+			Headers().
+			ValueEqual("Vary", []string{"Origin"})
+	})
+
+	ginkgo.It("should not include vary header - single static origin", func() {
+		host := corsHost
+		origin := originHost
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/enable-cors":       "true",
+			"nginx.ingress.kubernetes.io/cors-allow-origin": originHost,
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return !strings.Contains(server, "more_set_headers 'Vary: $cors_vary';")
+			})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("Origin", origin).
+			Expect().
+			Headers().
+			NotContainsKey("Vary")
+	})
+
+	ginkgo.It("should preserve upstream vary headers", func() {
+		host := corsHost
+		origin := originHost
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/enable-cors":       "true",
+			"nginx.ingress.kubernetes.io/cors-allow-origin": "*",
+		}
+
+		f.NewHttpbunDeployment(framework.WithDeploymentName("cors-service"))
+		f.EnsureIngress(framework.NewSingleIngress(
+			host,
+			"/",
+			host,
+			f.Namespace,
+			framework.HTTPBunService,
+			80,
+			annotations))
+
+		f.HTTPTestClient().
+			GET("/response-headers").
+			WithQuery("Vary", "Origin, X-My-Custom-Header").
+			WithHeader("Host", host).
+			WithHeader("Origin", origin).
+			Expect().
+			Headers().
+			ValueEqual("Vary", []string{"Origin, X-My-Custom-Header"})
 	})
 
 	ginkgo.It("should disable cors allow credentials", func() {
