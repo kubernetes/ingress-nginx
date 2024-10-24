@@ -125,6 +125,11 @@ type Backend struct {
 	// Default: false
 	UsePortInRedirects bool `json:"use-port-in-redirects"`
 
+	// Enables or disables relative redirects. By default nginx uses absolute redirects.
+	// http://nginx.org/en/docs/http/ngx_http_core_module.html#absolute_redirect
+	// Default: false
+	RelativeRedirects bool `json:"relative-redirects"`
+
 	// Enable stickiness by client-server mapping based on a NGINX variable, text or a combination of both.
 	// A consistent hashing method will be used which ensures only a few keys would be remapped to different
 	// servers on upstream group changes

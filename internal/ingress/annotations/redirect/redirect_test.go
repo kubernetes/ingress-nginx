@@ -32,6 +32,7 @@ import (
 
 const (
 	defRedirectURL = "http://some-site.com"
+	defTrue        = "true"
 )
 
 func TestPermanentRedirectWithDefaultCode(t *testing.T) {
@@ -112,7 +113,7 @@ func TestTemporalRedirectWithDefaultCode(t *testing.T) {
 	ing := new(networking.Ingress)
 
 	data := make(map[string]string, 1)
-	data[parser.GetAnnotationWithPrefix(fromToWWWRedirAnnotation)] = "true"
+	data[parser.GetAnnotationWithPrefix(fromToWWWRedirAnnotation)] = defTrue
 	data[parser.GetAnnotationWithPrefix(temporalRedirectAnnotation)] = defRedirectURL
 	ing.SetAnnotations(data)
 
@@ -151,7 +152,7 @@ func TestTemporalRedirectWithCustomCode(t *testing.T) {
 			ing := new(networking.Ingress)
 
 			data := make(map[string]string, 2)
-			data[parser.GetAnnotationWithPrefix(fromToWWWRedirAnnotation)] = "true"
+			data[parser.GetAnnotationWithPrefix(fromToWWWRedirAnnotation)] = defTrue
 			data[parser.GetAnnotationWithPrefix(temporalRedirectAnnotation)] = defRedirectURL
 			data[parser.GetAnnotationWithPrefix(temporalRedirectAnnotationCode)] = strconv.Itoa(tc.input)
 			ing.SetAnnotations(data)
@@ -191,5 +192,24 @@ func TestIsValidURL(t *testing.T) {
 	err = isValidURL(valid)
 	if err != nil {
 		t.Errorf("expected nil but got %v", err)
+	}
+}
+
+func TestParseAnnotations(t *testing.T) {
+	ing := new(networking.Ingress)
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix(relativeRedirectsAnnotation)] = defTrue
+	ing.SetAnnotations(data)
+
+	_, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	// test ingress using the annotation without a TLS section
+	_, err = NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error parsing ingress with relative-redirects")
 	}
 }
