@@ -1,6 +1,6 @@
-diff -u -r -p -Naur nginx-1.25.3/src/stream/ngx_stream.h nginx-1.25.3-patched/src/stream/ngx_stream.h
---- nginx-1.25.3/src/stream/ngx_stream.h	2021-11-04 21:27:55.288708527 +0800
-+++ nginx-1.25.3-patched/src/stream/ngx_stream.h	2021-11-04 21:28:50.768035209 +0800
+diff -u -r -p -Naur nginx-1.27.1/src/stream/ngx_stream.h nginx-1.27.1-patched/src/stream/ngx_stream.h
+--- nginx-1.27.1/src/stream/ngx_stream.h	2021-11-04 21:27:55.288708527 +0800
++++ nginx-1.27.1-patched/src/stream/ngx_stream.h	2021-11-04 21:28:50.768035209 +0800
 @@ -254,6 +254,15 @@ typedef struct {
  } ngx_stream_module_t;
  
@@ -25,9 +25,9 @@ diff -u -r -p -Naur nginx-1.25.3/src/stream/ngx_stream.h nginx-1.25.3-patched/sr
  
  
  typedef ngx_int_t (*ngx_stream_filter_pt)(ngx_stream_session_t *s,
-diff -u -r -p -Naur nginx-1.25.3/src/stream/ngx_stream_proxy_module.c nginx-1.25.3-patched/src/stream/ngx_stream_proxy_module.c
---- nginx-1.25.3/src/stream/ngx_stream_proxy_module.c	2021-11-04 21:27:55.289708533 +0800
-+++ nginx-1.25.3-patched/src/stream/ngx_stream_proxy_module.c	2021-11-04 21:37:03.578936990 +0800
+diff -u -r -p -Naur nginx-1.27.1/src/stream/ngx_stream_proxy_module.c nginx-1.27.1-patched/src/stream/ngx_stream_proxy_module.c
+--- nginx-1.27.1/src/stream/ngx_stream_proxy_module.c	2021-11-04 21:27:55.289708533 +0800
++++ nginx-1.27.1-patched/src/stream/ngx_stream_proxy_module.c	2021-11-04 21:37:03.578936990 +0800
 @@ -400,6 +400,7 @@ ngx_stream_proxy_handler(ngx_stream_sess
      ngx_stream_proxy_srv_conf_t      *pscf;
      ngx_stream_upstream_srv_conf_t   *uscf, **uscfp;

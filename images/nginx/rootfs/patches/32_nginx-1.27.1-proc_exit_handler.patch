@@ -1,0 +1,77 @@
+diff --git a/src/core/ngx_cycle.c b/src/core/ngx_cycle.c
+index c4e3c50..fa1408b 100644
+--- a/src/core/ngx_cycle.c
++++ b/src/core/ngx_cycle.c
+@@ -264,6 +264,9 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
+     }
+ 
+ 
++#if !(NGX_WIN32)
++    ngx_proc_exit_top_handler = ngx_proc_exit_def_handler;
++#endif
+     conf.ctx = cycle->conf_ctx;
+     conf.cycle = cycle;
+     conf.pool = pool;
+diff --git a/src/os/unix/ngx_process.c b/src/os/unix/ngx_process.c
+index 12a8c68..874c9bf 100644
+--- a/src/os/unix/ngx_process.c
++++ b/src/os/unix/ngx_process.c
+@@ -34,6 +34,7 @@ ngx_int_t        ngx_process_slot;
+ ngx_socket_t     ngx_channel;
+ ngx_int_t        ngx_last_process;
+ ngx_process_t    ngx_processes[NGX_MAX_PROCESSES];
++ngx_proc_exit_pt ngx_proc_exit_top_handler;
+ 
+ 
+ ngx_signal_t  signals[] = {
+@@ -83,6 +84,13 @@ ngx_signal_t  signals[] = {
+ };
+ 
+ 
++void
++ngx_proc_exit_def_handler(ngx_pid_t pid)
++{
++    /* do nothing */
++}
++
++
+ ngx_pid_t
+ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
+     char *name, ngx_int_t respawn)
+@@ -564,6 +572,7 @@ ngx_process_get_status(void)
+         }
+ 
+         ngx_unlock_mutexes(pid);
++        ngx_proc_exit_top_handler(pid);
+     }
+ }
+ 
+diff --git a/src/os/unix/ngx_process.h b/src/os/unix/ngx_process.h
+index 3986639..0b55d98 100644
+--- a/src/os/unix/ngx_process.h
++++ b/src/os/unix/ngx_process.h
+@@ -18,6 +18,8 @@ typedef pid_t       ngx_pid_t;
+ #define NGX_INVALID_PID  -1
+ 
+ typedef void (*ngx_spawn_proc_pt) (ngx_cycle_t *cycle, void *data);
++#define NGX_HAVE_PROC_EXIT 1
++typedef void (*ngx_proc_exit_pt)(ngx_pid_t pid);
+ 
+ typedef struct {
+     ngx_pid_t           pid;
+@@ -66,6 +68,7 @@ ngx_pid_t ngx_spawn_process(ngx_cycle_t *cycle,
+ ngx_pid_t ngx_execute(ngx_cycle_t *cycle, ngx_exec_ctx_t *ctx);
+ ngx_int_t ngx_init_signals(ngx_log_t *log);
+ void ngx_debug_point(void);
++void ngx_proc_exit_def_handler(ngx_pid_t pid);
+ 
+ 
+ #if (NGX_HAVE_SCHED_YIELD)
+@@ -85,6 +88,7 @@ extern ngx_socket_t   ngx_channel;
+ extern ngx_int_t      ngx_process_slot;
+ extern ngx_int_t      ngx_last_process;
+ extern ngx_process_t  ngx_processes[NGX_MAX_PROCESSES];
++extern ngx_proc_exit_pt  ngx_proc_exit_top_handler;
+ 
+ 
+ #endif /* _NGX_PROCESS_H_INCLUDED_ */
