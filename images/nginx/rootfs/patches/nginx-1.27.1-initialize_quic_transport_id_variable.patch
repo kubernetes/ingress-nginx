@@ -1,0 +1,11 @@
+--- nginx-1.27.1/src/event/quic/ngx_event_quic_transport.c	2024-08-06 16:52:18.545250210 +0800
++++ nginx-1.27.1-patched/src/event/quic/ngx_event_quic_transport.c	2024-08-06 16:52:29.691035755 +0800
+@@ -1720,7 +1720,7 @@
+ ngx_quic_parse_transport_params(u_char *p, u_char *end, ngx_quic_tp_t *tp,
+     ngx_log_t *log)
+ {
+-    uint64_t   id, len;
++    uint64_t   id = 0, len;
+     ngx_int_t  rc;
+ 
+     while (p < end) {
