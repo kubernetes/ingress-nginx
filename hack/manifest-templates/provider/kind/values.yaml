@@ -8,11 +8,9 @@ controller:
     enabled: true
   terminationGracePeriodSeconds: 0
   service:
-    type: NodePort
+    type: LoadBalancer
   watchIngressWithoutClass: true
 
-  nodeSelector:
-    ingress-ready: "true"
   tolerations:
     - key: "node-role.kubernetes.io/master"
       operator: "Equal"
