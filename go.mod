@@ -15,7 +15,7 @@ require (
 	github.com/moul/pb v0.0.0-20220425114252-bca18df4138c
 	github.com/ncabatoff/process-exporter v0.8.4
 	github.com/onsi/ginkgo/v2 v2.20.2
-	github.com/opencontainers/runc v1.1.15
+	github.com/opencontainers/runc v1.2.0
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
 	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/client_model v0.6.1
@@ -49,6 +49,7 @@ require (
 	github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be // indirect
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
+	github.com/moby/sys/userns v0.1.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	sigs.k8s.io/release-utils v0.8.3 // indirect
@@ -62,7 +63,7 @@ require (
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
-	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
+	github.com/cyphar/filepath-securejoin v0.3.4 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/eapache/queue v1.1.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.12.0 // indirect
