@@ -31,8 +31,6 @@ func TestNewUDPLogListener(t *testing.T) {
 	var count uint64
 
 	fn := func(message []byte) { //nolint:unparam,revive // Unused `message` param is required by the handleMessages function
-	//nolint:unparam // Unused `message` param is required by the handleMessages function
-	fn := func(message []byte) {
 		atomic.AddUint64(&count, 1)
 	}
 
@@ -84,6 +82,9 @@ func TestCollector(t *testing.T) {
 		prometheus.LinearBuckets(10, 10, 10),
 		prometheus.ExponentialBuckets(10, 10, 7),
 	}
+
+	bucketFactor := 1.1
+	maxBuckets := uint32(100)
 
 	cases := []struct {
 		name                    string
