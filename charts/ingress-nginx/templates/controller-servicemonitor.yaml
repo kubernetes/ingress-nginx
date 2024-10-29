@@ -19,16 +19,16 @@ metadata:
   {{- end }}
 spec:
   endpoints:
-    - port: {{ .Values.controller.metrics.portName }}
-      interval: {{ .Values.controller.metrics.serviceMonitor.scrapeInterval }}
+  - port: {{ .Values.controller.metrics.portName }}
+    interval: {{ .Values.controller.metrics.serviceMonitor.scrapeInterval }}
     {{- if .Values.controller.metrics.serviceMonitor.honorLabels }}
-      honorLabels: true
+    honorLabels: true
     {{- end }}
     {{- if .Values.controller.metrics.serviceMonitor.relabelings }}
-      relabelings: {{ toYaml .Values.controller.metrics.serviceMonitor.relabelings | nindent 8 }}
+    relabelings: {{ toYaml .Values.controller.metrics.serviceMonitor.relabelings | nindent 4 }}
     {{- end }}
     {{- if .Values.controller.metrics.serviceMonitor.metricRelabelings }}
-      metricRelabelings: {{ toYaml .Values.controller.metrics.serviceMonitor.metricRelabelings | nindent 8 }}
+    metricRelabelings: {{ toYaml .Values.controller.metrics.serviceMonitor.metricRelabelings | nindent 4 }}
     {{- end }}
 {{- if .Values.controller.metrics.serviceMonitor.jobLabel }}
   jobLabel: {{ .Values.controller.metrics.serviceMonitor.jobLabel | quote }}
