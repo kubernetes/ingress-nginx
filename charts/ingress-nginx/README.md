@@ -399,12 +399,17 @@ metadata:
 | controller.metrics.serviceMonitor.additionalLabels | object | `{}` |  |
 | controller.metrics.serviceMonitor.annotations | object | `{}` | Annotations to be added to the ServiceMonitor. |
 | controller.metrics.serviceMonitor.enabled | bool | `false` |  |
+| controller.metrics.serviceMonitor.labelLimit | int | `0` | Per-scrape limit on number of labels that will be accepted for a sample. |
+| controller.metrics.serviceMonitor.labelNameLengthLimit | int | `0` | Per-scrape limit on length of labels name that will be accepted for a sample. |
+| controller.metrics.serviceMonitor.labelValueLengthLimit | int | `0` | Per-scrape limit on length of labels value that will be accepted for a sample. |
 | controller.metrics.serviceMonitor.metricRelabelings | list | `[]` |  |
 | controller.metrics.serviceMonitor.namespace | string | `""` |  |
 | controller.metrics.serviceMonitor.namespaceSelector | object | `{}` |  |
 | controller.metrics.serviceMonitor.relabelings | list | `[]` |  |
+| controller.metrics.serviceMonitor.sampleLimit | int | `0` | Defines a per-scrape limit on the number of scraped samples that will be accepted. |
 | controller.metrics.serviceMonitor.scrapeInterval | string | `"30s"` |  |
 | controller.metrics.serviceMonitor.targetLabels | list | `[]` |  |
+| controller.metrics.serviceMonitor.targetLimit | int | `0` | Defines a limit on the number of scraped targets that will be accepted. |
 | controller.minAvailable | int | `1` | Minimum available pods set in PodDisruptionBudget. Define either 'minAvailable' or 'maxUnavailable', never both. |
 | controller.minReadySeconds | int | `0` | `minReadySeconds` to avoid killing pods before we are ready # |
 | controller.name | string | `"controller"` |  |
