@@ -3,51 +3,48 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ include "ingress-nginx.controller.fullname" . }}
-{{- if .Values.controller.metrics.serviceMonitor.namespace }}
+  {{- if .Values.controller.metrics.serviceMonitor.namespace }}
   namespace: {{ .Values.controller.metrics.serviceMonitor.namespace }}
-{{- else }}
+  {{- else }}
   namespace: {{ include "ingress-nginx.namespace" . }}
-{{- end }}
+  {{- end }}
   labels:
     {{- include "ingress-nginx.labels" . | nindent 4 }}
     app.kubernetes.io/component: controller
-  {{- if .Values.controller.metrics.serviceMonitor.additionalLabels }}
+    {{- if .Values.controller.metrics.serviceMonitor.additionalLabels }}
     {{- toYaml .Values.controller.metrics.serviceMonitor.additionalLabels | nindent 4 }}
-  {{- end }}
+    {{- end }}
   {{- if .Values.controller.metrics.serviceMonitor.annotations }}
   annotations: {{ toYaml .Values.controller.metrics.serviceMonitor.annotations | nindent 4 }}
   {{- end }}
 spec:
-  endpoints:
-    - port: {{ .Values.controller.metrics.portName }}
-      interval: {{ .Values.controller.metrics.serviceMonitor.scrapeInterval }}
-    {{- if .Values.controller.metrics.serviceMonitor.honorLabels }}
-      honorLabels: true
-    {{- end }}
-    {{- if .Values.controller.metrics.serviceMonitor.relabelings }}
-      relabelings: {{ toYaml .Values.controller.metrics.serviceMonitor.relabelings | nindent 8 }}
-    {{- end }}
-    {{- if .Values.controller.metrics.serviceMonitor.metricRelabelings }}
-      metricRelabelings: {{ toYaml .Values.controller.metrics.serviceMonitor.metricRelabelings | nindent 8 }}
-    {{- end }}
-{{- if .Values.controller.metrics.serviceMonitor.jobLabel }}
-  jobLabel: {{ .Values.controller.metrics.serviceMonitor.jobLabel | quote }}
-{{- end }}
-{{- if .Values.controller.metrics.serviceMonitor.namespaceSelector }}
+  {{- if .Values.controller.metrics.serviceMonitor.namespaceSelector }}
   namespaceSelector: {{ toYaml .Values.controller.metrics.serviceMonitor.namespaceSelector | nindent 4 }}
-{{- else }}
+  {{- else }}
   namespaceSelector:
     matchNames:
-      - {{ include "ingress-nginx.namespace" . }}
-{{- end }}
-{{- if .Values.controller.metrics.serviceMonitor.targetLabels }}
-  targetLabels:
-  {{- range .Values.controller.metrics.serviceMonitor.targetLabels }}
-    - {{ . }}
+    - {{ include "ingress-nginx.namespace" . }}
   {{- end }}
-{{- end }}
   selector:
     matchLabels:
       {{- include "ingress-nginx.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: controller
+  endpoints:
+  - port: {{ .Values.controller.metrics.portName }}
+    interval: {{ .Values.controller.metrics.serviceMonitor.scrapeInterval }}
+    {{- if .Values.controller.metrics.serviceMonitor.honorLabels }}
+    honorLabels: true
+    {{- end }}
+    {{- if .Values.controller.metrics.serviceMonitor.relabelings }}
+    relabelings: {{ toYaml .Values.controller.metrics.serviceMonitor.relabelings | nindent 4 }}
+    {{- end }}
+    {{- if .Values.controller.metrics.serviceMonitor.metricRelabelings }}
+    metricRelabelings: {{ toYaml .Values.controller.metrics.serviceMonitor.metricRelabelings | nindent 4 }}
+    {{- end }}
+  {{- if .Values.controller.metrics.serviceMonitor.jobLabel }}
+  jobLabel: {{ .Values.controller.metrics.serviceMonitor.jobLabel | quote }}
+  {{- end }}
+  {{- if .Values.controller.metrics.serviceMonitor.targetLabels }}
+  targetLabels: {{ toYaml .Values.controller.metrics.serviceMonitor.targetLabels | nindent 2 }}
+  {{- end }}
 {{- end }}
