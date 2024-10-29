@@ -44,6 +44,7 @@ type socketData struct {
 	Latency      float64 `json:"upstreamLatency"`
 	HeaderTime   float64 `json:"upstreamHeaderTime"`
 	ResponseTime float64 `json:"upstreamResponseTime"`
+	CacheStatus  string  `json:"upstreamCacheStatus"`
 	Namespace    string  `json:"namespace"`
 	Ingress      string  `json:"ingress"`
 	Service      string  `json:"service"`
@@ -96,6 +97,7 @@ var requestTags = []string{
 	"ingress",
 	"service",
 	"canary",
+	"cacheStatus",
 }
 
 // NewSocketCollector creates a new SocketCollector instance using
@@ -319,23 +321,25 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 
 		// Note these must match the order in requestTags at the top
 		requestLabels := prometheus.Labels{
-			"status":    stats.Status,
-			"method":    stats.Method,
-			"path":      stats.Path,
-			"namespace": stats.Namespace,
-			"ingress":   stats.Ingress,
-			"service":   stats.Service,
-			"canary":    stats.Canary,
+			"status":      stats.Status,
+			"method":      stats.Method,
+			"path":        stats.Path,
+			"namespace":   stats.Namespace,
+			"ingress":     stats.Ingress,
+			"service":     stats.Service,
+			"canary":      stats.Canary,
+			"cacheStatus": stats.CacheStatus,
 		}
 
 		collectorLabels := prometheus.Labels{
-			"namespace": stats.Namespace,
-			"ingress":   stats.Ingress,
-			"status":    stats.Status,
-			"service":   stats.Service,
-			"canary":    stats.Canary,
-			"method":    stats.Method,
-			"path":      stats.Path,
+			"namespace":   stats.Namespace,
+			"ingress":     stats.Ingress,
+			"status":      stats.Status,
+			"service":     stats.Service,
+			"canary":      stats.Canary,
+			"method":      stats.Method,
+			"path":        stats.Path,
+			"cacheStatus": stats.CacheStatus,
 		}
 		if sc.metricsPerHost {
 			requestLabels["host"] = stats.Host
