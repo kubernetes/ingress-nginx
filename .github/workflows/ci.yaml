@@ -256,7 +256,7 @@ jobs:
           git diff --exit-code charts/ingress-nginx/README.md
 
       - name: Run tests
-        run: helm unittest charts/ingress-nginx -f "tests/**/*_test.yaml"
+        run: helm unittest charts/ingress-nginx --file "tests/**/*_test.yaml"
 
   chart-test:
     name: Chart / Test
