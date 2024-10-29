@@ -537,10 +537,7 @@ func TestBuildAuthResponseHeaders(t *testing.T) {
 
 func TestBuildAuthResponseLua(t *testing.T) {
 	externalAuthResponseHeaders := []string{"h1", "H-With-Caps-And-Dashes"}
-	expected := []string{
-		"ngx.var.authHeader0 = res.header['h1']",
-		"ngx.var.authHeader1 = res.header['H-With-Caps-And-Dashes']",
-	}
+	expected := "h1,H-With-Caps-And-Dashes"
 
 	headers := buildAuthUpstreamLuaHeaders(externalAuthResponseHeaders)
 
