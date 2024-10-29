@@ -18,15 +18,15 @@ package collectors
 
 import (
 	"fmt"
-	"io"
-	"net"
-	"os"
-	"syscall"
-
 	jsoniter "github.com/json-iterator/go"
 	"github.com/prometheus/client_golang/prometheus"
+	"io"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog/v2"
+	"net"
+	"os"
+	"strings"
+	"syscall"
 )
 
 type socketData struct {
@@ -57,6 +57,8 @@ type HistogramBuckets struct {
 	LengthBuckets []float64
 	SizeBuckets   []float64
 }
+
+type metricMapping map[string]prometheus.Collector
 
 // SocketCollector stores prometheus metrics and ingress meta-data
 type SocketCollector struct {
@@ -101,6 +103,7 @@ var requestTags = []string{
 func NewSocketCollector(pod, namespace, class string, metricsPerHost, metricsPerUndefinedHost, reportStatusClasses bool, buckets HistogramBuckets, bucketFactor float64, maxBuckets uint32, excludeMetrics []string) (*SocketCollector, error) {
 	socket := "/tmp/nginx/prometheus-nginx.socket"
 	// unix sockets must be unlink()ed before being used
+	//nolint:errcheck // Ignore unlink error
 	_ = syscall.Unlink(socket)
 
 	listener, err := net.Listen("unix", socket)
@@ -123,6 +126,16 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, metricsPer
 	if metricsPerHost {
 		requestTags = append(requestTags, "host")
 	}
+
+	em := make(map[string]struct{}, len(excludeMetrics))
+	for _, m := range excludeMetrics {
+		// remove potential nginx_ingress_controller prefix from the metric name
+		// TBD: how to handle fully qualified histogram metrics e.g. _buckets and _sum. Should we just remove the suffix and remove the histogram metric or ignore it?
+		em[strings.TrimPrefix(m, "nginx_ingress_controller_")] = struct{}{}
+	}
+
+	// create metric mapping with only the metrics that are not excluded
+	mm := make(metricMapping)
 
 	sc := &SocketCollector{
 		listener: listener,
@@ -248,6 +261,38 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, metricsPer
 
 	sc.metricMapping = mm
 	return sc, nil
+}
+
+func containsMetric(excludeMetrics map[string]struct{}, name string) bool {
+	if _, ok := excludeMetrics[name]; ok {
+		klog.V(3).InfoS("Skipping metric", "metric", name)
+		return true
+	}
+	return false
+}
+
+func counterMetric(opts *prometheus.CounterOpts, requestTags []string, excludeMetrics map[string]struct{}, metricMapping metricMapping) *prometheus.CounterVec {
+	if containsMetric(excludeMetrics, opts.Name) {
+		return nil
+	}
+	m := prometheus.NewCounterVec(
+		*opts,
+		requestTags,
+	)
+	metricMapping[prometheus.BuildFQName(PrometheusNamespace, "", opts.Name)] = m
+	return m
+}
+
+func histogramMetric(opts *prometheus.HistogramOpts, requestTags []string, excludeMetrics map[string]struct{}, metricMapping metricMapping) *prometheus.HistogramVec {
+	if containsMetric(excludeMetrics, opts.Name) {
+		return nil
+	}
+	m := prometheus.NewHistogramVec(
+		*opts,
+		requestTags,
+	)
+	metricMapping[prometheus.BuildFQName(PrometheusNamespace, "", opts.Name)] = m
+	return m
 }
 
 func (sc *SocketCollector) handleMessage(msg []byte) {
