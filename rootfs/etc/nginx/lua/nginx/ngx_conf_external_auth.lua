@@ -1,12 +1,12 @@
-local auth_path = ngx.var.auth_access_path
-local keepalive_shared_vars = ngx.var.keep_alive_share_vars
+local auth_path = ngx.var.auth_path
+local auth_keepalive_share_vars = ngx.var.auth_keepalive_share_vars
 local auth_response_headers = ngx.var.auth_response_headers
 local ngx_re_split = require("ngx.re").split
 local ipairs = ipairs
 local ngx_log = ngx.log
 local ngx_ERR = ngx.ERR
 
-local res = ngx.location.capture(auth_path, { method = ngx.HTTP_GET, body = '', share_all_vars = keepalive_shared_vars })
+local res = ngx.location.capture(auth_path, { method = ngx.HTTP_GET, body = '', share_all_vars = auth_keepalive_share_vars })
 if res.status == ngx.HTTP_OK then
     local header_parts, err = ngx_re_split(auth_response_headers, ",")
     if err then
