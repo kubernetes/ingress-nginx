@@ -1,4 +1,4 @@
-suite: Admission Webhooks > Patch Webhook Job
+suite: Admission Webhooks > Patch Job > Patch Webhook Job
 templates:
   - admission-webhooks/job-patch/job-patchWebhook.yaml
 
