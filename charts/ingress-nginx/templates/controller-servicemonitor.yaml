@@ -47,4 +47,19 @@ spec:
   {{- if .Values.controller.metrics.serviceMonitor.targetLabels }}
   targetLabels: {{ toYaml .Values.controller.metrics.serviceMonitor.targetLabels | nindent 2 }}
   {{- end }}
+  {{- if .Values.controller.metrics.serviceMonitor.labelLimit }}
+  labelLimit: {{ .Values.controller.metrics.serviceMonitor.labelLimit }}
+  {{- end }}
+  {{- if .Values.controller.metrics.serviceMonitor.labelNameLengthLimit }}
+  labelNameLengthLimit: {{ .Values.controller.metrics.serviceMonitor.labelNameLengthLimit }}
+  {{- end }}
+  {{- if .Values.controller.metrics.serviceMonitor.labelValueLengthLimit }}
+  labelValueLengthLimit: {{ .Values.controller.metrics.serviceMonitor.labelValueLengthLimit }}
+  {{- end }}
+  {{- if .Values.controller.metrics.serviceMonitor.sampleLimit }}
+  sampleLimit: {{ .Values.controller.metrics.serviceMonitor.sampleLimit }}
+  {{- end }}
+  {{- if .Values.controller.metrics.serviceMonitor.targetLimit }}
+  targetLimit: {{ .Values.controller.metrics.serviceMonitor.targetLimit }}
+  {{- end }}
 {{- end }}

@@ -882,6 +882,16 @@ controller:
       targetLabels: []
       relabelings: []
       metricRelabelings: []
+      # -- Per-scrape limit on number of labels that will be accepted for a sample.
+      labelLimit: 0
+      # -- Per-scrape limit on length of labels name that will be accepted for a sample.
+      labelNameLengthLimit: 0
+      # -- Per-scrape limit on length of labels value that will be accepted for a sample.
+      labelValueLengthLimit: 0
+      # -- Defines a per-scrape limit on the number of scraped samples that will be accepted.
+      sampleLimit: 0
+      # -- Defines a limit on the number of scraped targets that will be accepted.
+      targetLimit: 0
     prometheusRule:
       enabled: false
       additionalLabels: {}
