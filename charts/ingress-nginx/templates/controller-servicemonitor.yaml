@@ -18,6 +18,10 @@ metadata:
   annotations: {{ toYaml .Values.controller.metrics.serviceMonitor.annotations | nindent 4 }}
   {{- end }}
 spec:
+  selector:
+    matchLabels:
+      {{- include "ingress-nginx.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: controller
   endpoints:
   - port: {{ .Values.controller.metrics.portName }}
     interval: {{ .Values.controller.metrics.serviceMonitor.scrapeInterval }}
@@ -43,8 +47,4 @@ spec:
   {{- if .Values.controller.metrics.serviceMonitor.targetLabels }}
   targetLabels: {{ toYaml .Values.controller.metrics.serviceMonitor.targetLabels | nindent 2 }}
   {{- end }}
-  selector:
-    matchLabels:
-      {{- include "ingress-nginx.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: controller
 {{- end }}
