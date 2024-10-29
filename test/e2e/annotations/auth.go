@@ -673,7 +673,7 @@ http {
 				func(server string) bool {
 					return strings.Contains(server, `upstream auth-external-auth`) &&
 						strings.Contains(server, `keepalive 10;`) &&
-						strings.Contains(server, `set $auth_keepalive_share_vars true`)
+						strings.Contains(server, `set $auth_keepalive_share_vars true;`)
 				})
 		})
 	})

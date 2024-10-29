@@ -9,6 +9,7 @@ local ngx_ERR = ngx.ERR
 local res = ngx.location.capture(auth_path, {
     method = ngx.HTTP_GET, body = '',
     share_all_vars = auth_keepalive_share_vars })
+
 if res.status == ngx.HTTP_OK then
     local header_parts, err = ngx_re_split(auth_response_headers, ",")
     if err then
@@ -22,6 +23,7 @@ if res.status == ngx.HTTP_OK then
     end
     return
 end
+
 if res.status == ngx.HTTP_UNAUTHORIZED or res.status == ngx.HTTP_FORBIDDEN then
     ngx.exit(res.status)
 end
