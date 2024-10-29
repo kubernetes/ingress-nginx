@@ -33,13 +33,13 @@ spec:
   {{- if .Values.controller.metrics.serviceMonitor.jobLabel }}
   jobLabel: {{ .Values.controller.metrics.serviceMonitor.jobLabel | quote }}
   {{- end }}
-{{- if .Values.controller.metrics.serviceMonitor.namespaceSelector }}
+  {{- if .Values.controller.metrics.serviceMonitor.namespaceSelector }}
   namespaceSelector: {{ toYaml .Values.controller.metrics.serviceMonitor.namespaceSelector | nindent 4 }}
-{{- else }}
+  {{- else }}
   namespaceSelector:
     matchNames:
-      - {{ include "ingress-nginx.namespace" . }}
-{{- end }}
+    - {{ include "ingress-nginx.namespace" . }}
+  {{- end }}
 {{- if .Values.controller.metrics.serviceMonitor.targetLabels }}
   targetLabels:
   {{- range .Values.controller.metrics.serviceMonitor.targetLabels }}
