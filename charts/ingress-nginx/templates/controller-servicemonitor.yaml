@@ -40,12 +40,9 @@ spec:
     matchNames:
     - {{ include "ingress-nginx.namespace" . }}
   {{- end }}
-{{- if .Values.controller.metrics.serviceMonitor.targetLabels }}
-  targetLabels:
-  {{- range .Values.controller.metrics.serviceMonitor.targetLabels }}
-    - {{ . }}
+  {{- if .Values.controller.metrics.serviceMonitor.targetLabels }}
+  targetLabels: {{ toYaml .Values.controller.metrics.serviceMonitor.targetLabels | nindent 2 }}
   {{- end }}
-{{- end }}
   selector:
     matchLabels:
       {{- include "ingress-nginx.selectorLabels" . | nindent 6 }}
