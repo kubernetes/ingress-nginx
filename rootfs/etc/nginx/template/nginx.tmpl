@@ -1185,20 +1185,10 @@ stream {
             {{- end }}
             # `auth_request` module does not support HTTP keepalives in upstream block:
             # https://trac.nginx.org/nginx/ticket/1579
-            access_by_lua_block {
-                local res = ngx.location.capture('{{ $authPath }}', { method = ngx.HTTP_GET, body = '', share_all_vars = {{ $externalAuth.KeepaliveShareVars }} })
-                if res.status == ngx.HTTP_OK then
-                    ngx.var.auth_cookie = res.header['Set-Cookie']
-                    {{- range $line := buildAuthUpstreamLuaHeaders $externalAuth.ResponseHeaders }}
-                    {{ $line }}
-                    {{- end }}
-                    return
-                end
-                if res.status == ngx.HTTP_UNAUTHORIZED or res.status == ngx.HTTP_FORBIDDEN then
-                    ngx.exit(res.status)
-                end
-                ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
-            }
+            set $auth_path '{{ $authPath }}';
+            set $auth_keepalive_share_vars {{ $externalAuth.KeepaliveShareVars }};
+            set $auth_response_headers '{{ buildAuthUpstreamLuaHeaders $externalAuth.ResponseHeaders }}';
+            access_by_lua_file /etc/nginx/lua/nginx/ngx_conf_external_auth.lua;
             {{ else }}
             auth_request        {{ $authPath }};
             auth_request_set    $auth_cookie $upstream_http_set_cookie;
