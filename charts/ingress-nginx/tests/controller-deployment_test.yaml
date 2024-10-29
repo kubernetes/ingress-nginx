@@ -215,3 +215,11 @@ tests:
       - equal:
           path: spec.progressDeadlineSeconds
           value: 111
+
+  - it: should create a Deployment with token auto-mounting disabled if `serviceAccount.automountServiceAccountToken` is false
+    set:
+      serviceAccount.automountServiceAccountToken: false
+    asserts:
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: false

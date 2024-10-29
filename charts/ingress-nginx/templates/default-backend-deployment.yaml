@@ -103,6 +103,7 @@ spec:
       nodeSelector: {{ toYaml .Values.defaultBackend.nodeSelector | nindent 8 }}
     {{- end }}
       serviceAccountName: {{ include "ingress-nginx.defaultBackend.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.defaultBackend.serviceAccount.automountServiceAccountToken }}
     {{- if .Values.defaultBackend.tolerations }}
       tolerations: {{ toYaml .Values.defaultBackend.tolerations | nindent 8 }}
     {{- end }}
