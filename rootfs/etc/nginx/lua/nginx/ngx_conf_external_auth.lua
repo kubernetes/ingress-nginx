@@ -6,7 +6,9 @@ local ipairs = ipairs
 local ngx_log = ngx.log
 local ngx_ERR = ngx.ERR
 
-local res = ngx.location.capture(auth_path, { method = ngx.HTTP_GET, body = '', share_all_vars = auth_keepalive_share_vars })
+local res = ngx.location.capture(auth_path, {
+    method = ngx.HTTP_GET, body = '',
+    share_all_vars = auth_keepalive_share_vars })
 if res.status == ngx.HTTP_OK then
     local header_parts, err = ngx_re_split(auth_response_headers, ",")
     if err then
