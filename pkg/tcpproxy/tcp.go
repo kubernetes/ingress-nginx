@@ -59,7 +59,6 @@ func (p *TCPProxy) Get(host string) *TCPServer {
 // and open a connection to the passthrough server.
 func (p *TCPProxy) Handle(conn net.Conn) {
 	defer conn.Close()
-	// [Documentation by @maxl99](https://github.com/kubernetes/ingress-nginx/pull/11843/files#diff-aef3e187fd37c68706ad582d7b89a2d9ad11691bd929a2158b86f93362244105R67-R79)
 	// It appears that the ClientHello must fit into *one* TLSPlaintext message:
 	// When a client first connects to a server, it is REQUIRED to send the ClientHello as its first TLS message.
 	// Source: https://datatracker.ietf.org/doc/html/rfc8446#section-4.1.2
