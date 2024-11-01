@@ -1188,6 +1188,9 @@ _References:_
 
 Sets the initial amount after which the further transmission of a response to a client will be rate limited.
 
+_References:_
+[https://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after](https://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after)
+
 ## lua-shared-dicts
 
 Customize default Lua shared dictionaries or define more. You can use the following syntax to do so:
@@ -1208,9 +1211,6 @@ You can optionally set a size unit to allow for kilobyte-granularity. Allowed un
 ```
 lua-shared-dicts: "certificate_data: 100, my_custom_plugin: 512k"
 ```
-
-_References:_
-[https://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after](https://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after)
 
 ## http-redirect-code
 
