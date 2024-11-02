@@ -127,8 +127,11 @@ func ReadConfig(src map[string]string) config.Configuration {
 		delete(conf, luaSharedDictsKey)
 		lsd := splitAndTrimSpace(val, ",")
 		for _, v := range lsd {
-			v = strings.ReplaceAll(v, " ", "")
-			results := strings.SplitN(v, ":", 2)
+			results := strings.SplitN(strings.ReplaceAll(v, " ", ""), ":", 2)
+			if len(results) != 2 {
+				klog.Errorf("Ignoring poorly formatted Lua dictionary %v", v)
+				continue
+			}
 			dictName := results[0]
 			size := dictStrToKb(results[1])
 			if size < 0 {
