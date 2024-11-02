@@ -391,6 +391,11 @@ func TestLuaSharedDictsParsing(t *testing.T) {
 			expect: map[string]int{"configuration_data": 10240, "my_random_dict": 15360, "another_example": 2048},
 		},
 		{
+			name:   "invalid format",
+			entry:  map[string]string{"lua-shared-dicts": "mydict: 10, invalid_dict 100"},
+			expect: map[string]int{"mydict": 10240},
+		},
+		{
 			name:   "invalid size value should be ignored",
 			entry:  map[string]string{"lua-shared-dicts": "mydict: 10, invalid_dict: 1a, bad_mb_dict:10mb"},
 			expect: map[string]int{"mydict": 10240},
