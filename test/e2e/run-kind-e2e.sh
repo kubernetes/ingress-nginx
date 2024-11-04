@@ -96,7 +96,7 @@ fi
 
 if [ "${SKIP_E2E_IMAGE_CREATION}" = "false" ]; then
   if ! command -v ginkgo &> /dev/null; then
-    go install github.com/onsi/ginkgo/v2/ginkgo@v2.20.2
+    go install github.com/onsi/ginkgo/v2/ginkgo@v2.21.0
   fi
 
   echo "[dev-env] .. done building controller images"
