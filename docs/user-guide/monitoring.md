@@ -168,7 +168,7 @@ According to the above example, this URL will be http://10.192.0.3:31086
 
   - By default request metrics are labeled with the hostname. When you have a wildcard domain ingress, then there will be no metrics for that ingress (to prevent the metrics from exploding in cardinality). To get metrics in this case you have two options:
     - Run the ingress controller with `--metrics-per-host=false`. You will lose labeling by hostname, but still have labeling by ingress.
-    - Run the ingress controller with `--metrics-per-undefined-host=true --metrics-per-host=true`. You will get labeling by hostname even if the hostname is not explicitly defined on an ingress. Be warned that cardinality could explode due to many hostnames.
+    - Run the ingress controller with `--metrics-per-undefined-host=true --metrics-per-host=true`. You will get labeling by hostname even if the hostname is not explicitly defined on an ingress. Be warned that cardinality could explode due to many hostnames and CPU usage could also increase.
 
 ### Grafana dashboard using ingress resource
   - If you want to expose the dashboard for grafana using an ingress resource, then you can :
