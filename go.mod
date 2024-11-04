@@ -6,7 +6,7 @@ require (
 	dario.cat/mergo v1.0.1
 	github.com/armon/go-proxyproto v0.1.0
 	github.com/eapache/channels v1.1.0
-	github.com/fsnotify/fsnotify v1.7.0
+	github.com/fsnotify/fsnotify v1.8.0
 	github.com/json-iterator/go v1.1.12
 	github.com/kylelemons/godebug v1.1.0
 	github.com/mitchellh/go-ps v1.0.0
