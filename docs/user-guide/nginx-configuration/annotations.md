@@ -338,7 +338,13 @@ nginx.ingress.kubernetes.io/custom-http-errors: "404,415"
 ```
 
 ### Custom Headers
-This annotation is of the form `nginx.ingress.kubernetes.io/custom-headers: custom-headers-configmap` to specify a configmap name that contains custom headers. This annotation uses `more_set_headers` nginx directive.
+This annotation is of the form `nginx.ingress.kubernetes.io/custom-headers: <namespace>/<custom headers configmap>` to specify a namespace and configmap name that contains custom headers. This annotation uses `more_set_headers` nginx directive.
+
+Example annotation for following example configmap:
+
+```yaml
+nginx.ingress.kubernetes.io/custom-headers: default/custom-headers-configmap
+```
 
 Example configmap:
 ```yaml
@@ -348,6 +354,7 @@ data:
 kind: ConfigMap
 metadata:
   name: custom-headers-configmap
+  namespace: default
 ```
 
 !!! attention
