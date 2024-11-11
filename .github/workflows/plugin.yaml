@@ -27,7 +27,7 @@ jobs:
 
       - name: Run GoReleaser Snapshot
         if: ${{ ! startsWith(github.ref, 'refs/tags/') }}
-        uses: goreleaser/goreleaser-action@286f3b13b1b49da4ac219696163fb8c1c93e1200 # v6.0.0
+        uses: goreleaser/goreleaser-action@9ed2f89a662bf1735a48bc8557fd212fa902bebf # v6.1.0
         with:
           version: latest
           args: release --snapshot --clean
@@ -36,7 +36,7 @@ jobs:
 
       - name: Run GoReleaser
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
-        uses: goreleaser/goreleaser-action@286f3b13b1b49da4ac219696163fb8c1c93e1200 # v6.0.0
+        uses: goreleaser/goreleaser-action@9ed2f89a662bf1735a48bc8557fd212fa902bebf # v6.1.0
         with:
           version: latest
           args: release --clean
@@ -45,6 +45,6 @@ jobs:
 
       - name: Update new version in krew-index
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
-        uses: rajatjindal/krew-release-bot@df3eb197549e3568be8b4767eec31c5e8e8e6ad8 # v0.0.46
+        uses: rajatjindal/krew-release-bot@3d9faef30a82761d610544f62afddca00993eef9 # v0.0.47
         with:
           krew_template_file: cmd/plugin/krew.yaml
