@@ -19,6 +19,9 @@ spec:
 {{- if .Values.controller.service.clusterIP }}
   clusterIP: {{ .Values.controller.service.clusterIP }}
 {{- end }}
+{{- if .Values.controller.service.clusterIPs }}
+  clusterIPs: {{ toYaml .Values.controller.service.clusterIPs | nindent 4 }}
+{{- end }}
 {{- if .Values.controller.service.externalIPs }}
   externalIPs: {{ toYaml .Values.controller.service.externalIPs | nindent 4 }}
 {{- end }}
