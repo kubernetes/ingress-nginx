@@ -157,7 +157,7 @@ func (ntc testNginxTestCommand) Test(cfg string) ([]byte, error) {
 
 type fakeTemplate struct{}
 
-func (fakeTemplate) Validate(filename string) error {
+func (fakeTemplate) Validate(_ string) error {
 	return nil
 }
 

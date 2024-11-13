@@ -85,7 +85,7 @@ func (c *Template) initHTTPDirectives() ngx_crossplane.Directives {
 	return httpBlock
 }
 
-//nolint:gocyclo
+//nolint:gocyclo // Function is what it is
 func (c *Template) buildHTTP() {
 	cfg := c.tplConfig.Cfg
 	httpBlock := c.initHTTPDirectives()
@@ -140,10 +140,10 @@ func (c *Template) buildHTTP() {
 	}
 
 	if cfg.EnableBrotli {
-		httpBlock = append(httpBlock, buildDirective("brotli", "on"))
-		httpBlock = append(httpBlock, buildDirective("brotli_comp_level", cfg.BrotliLevel))
-		httpBlock = append(httpBlock, buildDirective("brotli_min_length", cfg.BrotliMinLength))
-		httpBlock = append(httpBlock, buildDirective("brotli_types", cfg.BrotliTypes))
+		httpBlock = append(httpBlock, buildDirective("brotli", "on"),
+			buildDirective("brotli_comp_level", cfg.BrotliLevel),
+			buildDirective("brotli_min_length", cfg.BrotliMinLength),
+			buildDirective("brotli_types", cfg.BrotliTypes))
 	}
 
 	if (c.tplConfig.Cfg.EnableOpentelemetry || shouldLoadOpentelemetryModule(c.tplConfig.Servers)) &&
@@ -293,16 +293,17 @@ func (c *Template) buildHTTP() {
 	httpBlock = append(httpBlock, buildBlockDirective("upstream", []string{"upstream_balancer"}, blockUpstreamDirectives))
 
 	// Adding Rate limit
-	for _, rl := range filterRateLimits(c.tplConfig.Servers) {
-		id := fmt.Sprintf("$allowlist_%s", rl.ID)
-		httpBlock = append(httpBlock, buildDirective("#", "Ratelimit", rl.Name))
+	rl := filterRateLimits(c.tplConfig.Servers)
+	for i := range rl {
+		id := fmt.Sprintf("$allowlist_%s", rl[i].ID)
+		httpBlock = append(httpBlock, buildDirective("#", "Ratelimit", rl[i].Name))
 		rlDirectives := ngx_crossplane.Directives{
 			buildDirective("default", 0),
 		}
-		for _, ip := range rl.Allowlist {
+		for _, ip := range rl[i].Allowlist {
 			rlDirectives = append(rlDirectives, buildDirective(ip, "1"))
 		}
-		mapRateLimitDirective := buildMapDirective(id, fmt.Sprintf("$limit_%s", rl.ID), ngx_crossplane.Directives{
+		mapRateLimitDirective := buildMapDirective(id, fmt.Sprintf("$limit_%s", rl[i].ID), ngx_crossplane.Directives{
 			buildDirective("0", cfg.LimitConnZoneVariable),
 			buildDirective("1", ""),
 		})
@@ -343,10 +344,11 @@ func (c *Template) buildHTTP() {
 
 	if redirectServers, ok := c.tplConfig.RedirectServers.([]*utilingress.Redirect); ok {
 		for _, server := range redirectServers {
-			httpBlock = append(httpBlock, buildStartServer(server.From))
-			serverBlock := c.buildRedirectServer(server)
-			httpBlock = append(httpBlock, serverBlock)
-			httpBlock = append(httpBlock, buildEndServer(server.From))
+			httpBlock = append(httpBlock,
+				buildStartServer(server.From),
+				c.buildRedirectServer(server),
+				buildEndServer(server.From),
+			)
 		}
 	}
 

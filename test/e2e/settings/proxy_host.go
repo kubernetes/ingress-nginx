@@ -34,7 +34,6 @@ var _ = framework.IngressNginxDescribe("Dynamic $proxy_host", func() {
 	})
 
 	ginkgo.It("should exist a proxy_host", func() {
-
 		h := make(map[string]string)
 		h["Custom-Header"] = "$proxy_host"
 		cfgMap := "add-headers-configmap"
@@ -60,7 +59,6 @@ var _ = framework.IngressNginxDescribe("Dynamic $proxy_host", func() {
 	})
 
 	ginkgo.It("should exist a proxy_host using the upstream-vhost annotation value", func() {
-
 		h := make(map[string]string)
 		h["Custom-Header"] = "$proxy_host"
 		cfgMap := "add-headers-configmap"

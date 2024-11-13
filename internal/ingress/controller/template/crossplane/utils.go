@@ -17,7 +17,7 @@ limitations under the License.
 package crossplane
 
 import (
-	"crypto/sha1"
+	"crypto/sha1" //nolint:gosec // We cannot move away from sha1
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
@@ -59,10 +59,12 @@ var (
 	defaultGlobalAuthRedirectParam = "rd"
 )
 
-type seconds int
-type minutes int
+type (
+	seconds int
+	minutes int
+)
 
-func buildDirectiveWithComment(directive string, comment string, args ...any) *ngx_crossplane.Directive {
+func buildDirectiveWithComment(directive, comment string, args ...any) *ngx_crossplane.Directive {
 	dir := buildDirective(directive, args...)
 	dir.Comment = ptr.To(comment)
 	return dir
@@ -213,25 +215,25 @@ func buildServerName(hostname string) string {
 	return `~^(?<subdomain>[\w-]+)\.` + strings.Join(parts, "\\.") + `$`
 }
 
-func buildListener(tc config.TemplateConfig, hostname string) ngx_crossplane.Directives {
+func buildListener(tc *config.TemplateConfig, hostname string) ngx_crossplane.Directives {
 	listenDirectives := make(ngx_crossplane.Directives, 0)
 
-	co := commonListenOptions(&tc, hostname)
+	co := commonListenOptions(tc, hostname)
 
 	addrV4 := []string{""}
 	if len(tc.Cfg.BindAddressIpv4) > 0 {
 		addrV4 = tc.Cfg.BindAddressIpv4
 	}
-	listenDirectives = append(listenDirectives, httpListener(addrV4, co, &tc, false)...)
-	listenDirectives = append(listenDirectives, httpListener(addrV4, co, &tc, true)...)
+	listenDirectives = append(listenDirectives, httpListener(addrV4, co, tc, false)...)
+	listenDirectives = append(listenDirectives, httpListener(addrV4, co, tc, true)...)
 
 	if tc.IsIPV6Enabled {
 		addrV6 := []string{"[::]"}
 		if len(tc.Cfg.BindAddressIpv6) > 0 {
 			addrV6 = tc.Cfg.BindAddressIpv6
 		}
-		listenDirectives = append(listenDirectives, httpListener(addrV6, co, &tc, false)...)
-		listenDirectives = append(listenDirectives, httpListener(addrV6, co, &tc, true)...)
+		listenDirectives = append(listenDirectives, httpListener(addrV6, co, tc, false)...)
+		listenDirectives = append(listenDirectives, httpListener(addrV6, co, tc, true)...)
 	}
 
 	return listenDirectives
@@ -258,7 +260,7 @@ func commonListenOptions(template *config.TemplateConfig, hostname string) []str
 	return out
 }
 
-func httpListener(addresses []string, co []string, tc *config.TemplateConfig, ssl bool) ngx_crossplane.Directives {
+func httpListener(addresses, co []string, tc *config.TemplateConfig, ssl bool) ngx_crossplane.Directives {
 	listeners := make(ngx_crossplane.Directives, 0)
 	port := tc.ListenPorts.HTTP
 	isTLSProxy := tc.IsSSLPassthroughEnabled
@@ -400,7 +402,7 @@ func changeHostPort(newURL, value string) string {
 }
 
 func buildAuthSignURLLocation(location, authSignURL string) string {
-	hasher := sha1.New() // #nosec
+	hasher := sha1.New() //nolint:gosec // We cannot move away from sha1
 	hasher.Write([]byte(location))
 	hasher.Write([]byte(authSignURL))
 	return "@" + hex.EncodeToString(hasher.Sum(nil))
@@ -558,7 +560,6 @@ func buildProxyPass(backends []*ingress.Backend, location *ingress.Location) ngx
 }
 
 func buildGeoIPDirectives(reloadTime int, files []string) ngx_crossplane.Directives {
-
 	directives := make(ngx_crossplane.Directives, 0)
 	buildGeoIPBlock := func(file string, directives ngx_crossplane.Directives) *ngx_crossplane.Directive {
 		if reloadTime > 0 && file != "GeoIP2-Connection-Type.mmdb" {

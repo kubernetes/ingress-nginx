@@ -37,7 +37,7 @@ func (c *Template) buildServerDirective(server *ingress.Server) *ngx_crossplane.
 		buildDirective("ssl_certificate_by_lua_file", "/etc/nginx/lua/nginx/ngx_conf_certificate.lua"),
 	}
 
-	serverBlock = append(serverBlock, buildListener(*c.tplConfig, server.Hostname)...)
+	serverBlock = append(serverBlock, buildListener(c.tplConfig, server.Hostname)...)
 	serverBlock = append(serverBlock, c.buildBlockers()...)
 
 	if server.Hostname == "_" {
@@ -62,7 +62,6 @@ func (c *Template) buildServerDirective(server *ingress.Server) *ngx_crossplane.
 
 		// The other locations should come here!
 		serverBlock = append(serverBlock, c.buildServerLocations(server, server.Locations)...)
-
 	}
 
 	// "/healthz" location
@@ -101,7 +100,6 @@ func (c *Template) buildServerDirective(server *ingress.Server) *ngx_crossplane.
 		// End of "nginx_status" location
 
 		serverBlock = append(serverBlock, buildBlockDirective("location", []string{"/nginx_status"}, statusLocationDirs))
-
 	}
 
 	// DO NOT MOVE! THIS IS THE END DIRECTIVE OF SERVERS
@@ -167,7 +165,7 @@ func (c *Template) buildRedirectServer(server *utilingress.Redirect) *ngx_crossp
 		buildDirective("ssl_certificate_by_lua_file", "/etc/nginx/lua/nginx/ngx_conf_certificate.lua"),
 		buildDirective("set_by_lua_file", "$redirect_to", "/etc/nginx/lua/nginx/ngx_srv_redirect.lua", server.To),
 	}
-	serverBlock = append(serverBlock, buildListener(*c.tplConfig, server.From)...)
+	serverBlock = append(serverBlock, buildListener(c.tplConfig, server.From)...)
 	serverBlock = append(serverBlock, c.buildBlockers()...)
 	serverBlock = append(serverBlock, buildDirective("return", c.tplConfig.Cfg.HTTPRedirectCode, "$redirect_to"))
 

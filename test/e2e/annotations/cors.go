@@ -86,7 +86,6 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			func(server string) bool {
 				return strings.Contains(server, "more_set_headers 'Access-Control-Allow-Methods: POST, GET';") ||
 					strings.Contains(server, `more_set_headers "Access-Control-Allow-Methods: POST, GET";`)
-
 			})
 	})
 

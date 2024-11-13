@@ -23,11 +23,10 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
 )
 
-func buildCorsDirectives(locationcors cors.Config) ngx_crossplane.Directives {
+func buildCorsDirectives(locationcors *cors.Config) ngx_crossplane.Directives {
 	directives := make(ngx_crossplane.Directives, 0)
 	if len(locationcors.CorsAllowOrigin) > 0 {
 		directives = append(directives, buildCorsOriginRegex(locationcors.CorsAllowOrigin)...)
-
 	}
 	directives = append(directives,
 		buildBlockDirective("if",
@@ -43,7 +42,7 @@ func buildCorsDirectives(locationcors cors.Config) ngx_crossplane.Directives {
 }
 
 // commonCorsDirective builds the common cors directives for a location
-func commonCorsDirective(cfg cors.Config, options bool) *ngx_crossplane.Directive {
+func commonCorsDirective(cfg *cors.Config, options bool) *ngx_crossplane.Directive {
 	corsDir := "true"
 	if options {
 		corsDir = "trueoptions"

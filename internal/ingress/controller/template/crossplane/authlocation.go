@@ -86,7 +86,8 @@ func buildExternalAuth(cfg any) *externalAuth {
 }
 
 func (c *Template) buildAuthLocation(server *ingress.Server,
-	location *ingress.Location, locationConfig locationCfg) *ngx_crossplane.Directive {
+	location *ingress.Location, locationConfig locationCfg,
+) *ngx_crossplane.Directive {
 	locationDirectives := ngx_crossplane.Directives{
 		buildDirective("internal"),
 	}

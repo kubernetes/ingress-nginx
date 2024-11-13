@@ -107,7 +107,6 @@ func buildCustomErrorLocationsPerServer(server *ingress.Server, enableMetrics bo
 		errorLocationsDirectives = append(errorLocationsDirectives, buildCustomErrorLocation(errorLocations[i].UpstreamName, errorLocations[i].Codes, enableMetrics)...)
 	}
 	return errorLocationsDirectives
-
 }
 
 func buildCustomErrorLocation(upstreamName string, errorCodes []int, enableMetrics bool) ngx_crossplane.Directives {
@@ -199,7 +198,7 @@ func (c *Template) buildServerLocations(server *ingress.Server, locations []*ing
 				buildDirective("add_header", "Set-Cookie", "$auth_cookie"),
 			}
 			if location.CorsConfig.CorsEnabled {
-				directives = append(directives, buildCorsDirectives(location.CorsConfig)...)
+				directives = append(directives, buildCorsDirectives(&location.CorsConfig)...)
 			}
 			directives = append(directives,
 				buildDirective("return",
@@ -208,17 +207,15 @@ func (c *Template) buildServerLocations(server *ingress.Server, locations []*ing
 
 			serverLocations = append(serverLocations, buildBlockDirective("location",
 				[]string{buildAuthSignURLLocation(location.Path, locationConfig.externalAuth.SigninURL)}, directives))
-
 		}
 		serverLocations = append(serverLocations, c.buildLocation(server, location, locationConfig))
-
 	}
-
 	return serverLocations
 }
 
 func (c *Template) buildLocation(server *ingress.Server,
-	location *ingress.Location, locationConfig locationCfg) *ngx_crossplane.Directive {
+	location *ingress.Location, locationConfig locationCfg,
+) *ngx_crossplane.Directive {
 	ing := getIngressInformation(location.Ingress, server.Hostname, location.IngressPath)
 	cfg := c.tplConfig
 	locationDirectives := ngx_crossplane.Directives{
@@ -294,7 +291,7 @@ func (c *Template) buildAllowedLocation(server *ingress.Server, location *ingres
 	}
 
 	if location.CorsConfig.CorsEnabled {
-		dir = append(dir, buildCorsDirectives(location.CorsConfig)...)
+		dir = append(dir, buildCorsDirectives(&location.CorsConfig)...)
 	}
 
 	if !isLocationInLocationList(location, c.tplConfig.Cfg.NoAuthLocations) {
@@ -686,8 +683,8 @@ func buildAuthLocationConfig(location *ingress.Location, locationConfig location
 	directives := make(ngx_crossplane.Directives, 0)
 	if locationConfig.authPath != "" {
 		if locationConfig.applyAuthUpstream && !locationConfig.applyGlobalAuth {
-			directives = append(directives, buildDirective("set", "$auth_cookie", ""))
-			directives = append(directives, buildDirective("add_header", "Set-Cookie", "$auth_cookie"))
+			directives = append(directives, buildDirective("set", "$auth_cookie", ""),
+				buildDirective("add_header", "Set-Cookie", "$auth_cookie"))
 			directives = append(directives, buildAuthResponseHeaders(locationConfig.proxySetHeader, locationConfig.externalAuth.ResponseHeaders, true)...)
 			if len(locationConfig.externalAuth.ResponseHeaders) > 0 {
 				directives = append(directives, buildDirective("set", "$auth_response_headers", strings.Join(locationConfig.externalAuth.ResponseHeaders, ",")))
@@ -733,24 +730,4 @@ func buildAuthLocationConfig(location *ingress.Location, locationConfig location
 	}
 
 	return directives
-	/*
-			Missing this Lua script
-		   # `auth_request` module does not support HTTP keepalives in upstream block:
-		   # https://trac.nginx.org/nginx/ticket/1579
-		   access_by_lua_block {
-		       local res = ngx.location.capture('{{ $authPath }}', { method = ngx.HTTP_GET, body = '', share_all_vars = {{ $externalAuth.KeepaliveShareVars }} })
-		       if res.status == ngx.HTTP_OK then
-		           ngx.var.auth_cookie = res.header['Set-Cookie']
-		           {{- range $line := buildAuthUpstreamLuaHeaders $externalAuth.ResponseHeaders }} # IF 4
-		           {{ $line }}
-		           {{- end }} # END IF 4
-		           return
-		       end
-		       if res.status == ngx.HTTP_UNAUTHORIZED or res.status == ngx.HTTP_FORBIDDEN then
-		           ngx.exit(res.status)
-		       end
-		       ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
-		   }
-
-	*/
 }

@@ -1106,7 +1106,6 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 							!strings.Contains(server, `set $proxy_upstream_name "pstream-default-backend;`) &&
 							!strings.Contains(server, canaryUpstreamNameCrossplane) &&
 							strings.Contains(server, upstreamNameCrossplane))
-
 				})
 		})
 

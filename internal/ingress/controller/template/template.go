@@ -234,7 +234,7 @@ type LuaListenPorts struct {
 }
 
 // Validate is no-op at go-template
-func (t *Template) Validate(filename string) error {
+func (t *Template) Validate(_ string) error {
 	return nil
 }
 

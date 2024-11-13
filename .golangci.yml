@@ -24,7 +24,6 @@ linters:
     - errname
     - ginkgolinter
     - gocheckcompilerdirectives
-    - goconst
     - gocritic
     - gocyclo
     - godox

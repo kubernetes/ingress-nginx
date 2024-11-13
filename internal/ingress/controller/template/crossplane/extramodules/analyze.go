@@ -70,6 +70,8 @@ const (
 
 // helpful directive location alias describing "any" context
 // doesn't include ngxHTTPSifConf, ngxHTTPLifConf, ngxHTTPLmtConf, or ngxMgmtMainConf.
+//
+//nolint:unused // This file is generated
 const ngxAnyConf = ngxMainConf | ngxEventConf | ngxMailMainConf | ngxMailSrvConf |
 	ngxStreamMainConf | ngxStreamSrvConf | ngxStreamUpsConf |
 	ngxHTTPMainConf | ngxHTTPSrvConf | ngxHTTPLocConf | ngxHTTPUpsConf |
