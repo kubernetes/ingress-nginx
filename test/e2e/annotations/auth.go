@@ -419,7 +419,6 @@ http {
 			f.EnsureIngress(ing2)
 
 			f.WaitForNginxServer(host, func(server string) bool {
-				//nolint:goconst //server_name is a constant
 				return strings.Contains(server, "server_name "+host)
 			})
 		})

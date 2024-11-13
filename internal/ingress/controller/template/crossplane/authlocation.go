@@ -124,39 +124,23 @@ func (c *Template) buildAuthLocation(server *ingress.Server,
 	*/
 	locationDirectives = append(locationDirectives,
 		buildDirective("set", "$proxy_upstream_name", location.Backend),
+		buildDirective("proxy_pass_request_body", "off"),
+		buildDirective("proxy_ssl_server_name", "on"),
+		buildDirective("proxy_pass_request_headers", "on"),
+		buildDirective("proxy_set_header", "Content-Length", ""),
+		buildDirective("proxy_set_header", "X-Forwarded-Proto", ""),
+		buildDirective("proxy_set_header", "X-Request-ID", "$req_id"),
+		buildDirective("proxy_set_header", "Host", locationConfig.externalAuth.Host),
+		buildDirective("proxy_set_header", "X-Original-URL", "$scheme://$http_host$request_uri"),
+		buildDirective("proxy_set_header", "X-Original-Method", "$request_method"),
+		buildDirective("proxy_set_header", "X-Sent-From", "nginx-ingress-controller"),
+		buildDirective("proxy_set_header", "X-Real-IP", "$remote_addr"),
 	)
-
-	locationDirectives = append(locationDirectives,
-		buildDirective("proxy_pass_request_body", "off"))
-
-	locationDirectives = append(locationDirectives,
-		buildDirective("proxy_ssl_server_name", "on"))
-	locationDirectives = append(locationDirectives,
-		buildDirective("proxy_pass_request_headers", "on"))
-
-	locationDirectives = append(locationDirectives,
-		buildDirective("proxy_set_header", "Content-Length", ""))
-	locationDirectives = append(locationDirectives,
-		buildDirective("proxy_set_header", "X-Forwarded-Proto", ""))
-	locationDirectives = append(locationDirectives,
-		buildDirective("proxy_set_header", "X-Request-ID", "$req_id"))
-	locationDirectives = append(locationDirectives,
-		buildDirective("proxy_set_header", "Host", locationConfig.externalAuth.Host))
-	locationDirectives = append(locationDirectives,
-		buildDirective("proxy_set_header", "X-Original-URL", "$scheme://$http_host$request_uri"))
-	locationDirectives = append(locationDirectives,
-		buildDirective("proxy_set_header", "X-Original-Method", "$request_method"))
-	locationDirectives = append(locationDirectives,
-		buildDirective("proxy_set_header", "X-Sent-From", "nginx-ingress-controller"))
-	locationDirectives = append(locationDirectives,
-		buildDirective("proxy_set_header", "X-Real-IP", "$remote_addr"))
 
 	if locationConfig.externalAuth.Method != "" {
 		locationDirectives = append(locationDirectives,
-			buildDirective("proxy_method", locationConfig.externalAuth.Method))
-		locationDirectives = append(locationDirectives,
-			buildDirective("proxy_set_header", "X-Original-URI", "$request_uri"))
-		locationDirectives = append(locationDirectives,
+			buildDirective("proxy_method", locationConfig.externalAuth.Method),
+			buildDirective("proxy_set_header", "X-Original-URI", "$request_uri"),
 			buildDirective("proxy_set_header", "X-Scheme", "$pass_access_scheme"))
 	}
 
@@ -178,8 +162,7 @@ func (c *Template) buildAuthLocation(server *ingress.Server,
 
 	if locationConfig.externalAuth.Method != "" {
 		locationDirectives = append(locationDirectives,
-			buildDirective("proxy_set_header", "X-Original-URI", "$request_uri"))
-		locationDirectives = append(locationDirectives,
+			buildDirective("proxy_set_header", "X-Original-URI", "$request_uri"),
 			buildDirective("proxy_set_header", "X-Scheme", "$pass_access_scheme"))
 	}
 
@@ -192,11 +175,10 @@ func (c *Template) buildAuthLocation(server *ingress.Server,
 	}
 
 	locationDirectives = append(locationDirectives,
-		buildDirective("proxy_buffer_size", location.Proxy.BufferSize))
-	locationDirectives = append(locationDirectives,
-		buildDirective("proxy_buffers", location.Proxy.BuffersNumber, location.Proxy.BufferSize))
-	locationDirectives = append(locationDirectives,
-		buildDirective("proxy_request_buffering", location.Proxy.RequestBuffering))
+		buildDirective("proxy_buffer_size", location.Proxy.BufferSize),
+		buildDirective("proxy_buffers", location.Proxy.BuffersNumber, location.Proxy.BufferSize),
+		buildDirective("proxy_request_buffering", location.Proxy.RequestBuffering),
+	)
 
 	if isValidByteSize(location.Proxy.BodySize, true) {
 		locationDirectives = append(locationDirectives,
@@ -210,13 +192,10 @@ func (c *Template) buildAuthLocation(server *ingress.Server,
 
 	if server.CertificateAuth.CAFileName != "" {
 		locationDirectives = append(locationDirectives,
-			buildDirective("proxy_set_header", "ssl-client-verify", "$ssl_client_verify"))
-
-		locationDirectives = append(locationDirectives,
-			buildDirective("proxy_set_header", "ssl-client-subject-dn", "$ssl_client_s_dn"))
-
-		locationDirectives = append(locationDirectives,
-			buildDirective("proxy_set_header", "ssl-client-issuer-dn", "$ssl_client_i_dn"))
+			buildDirective("proxy_set_header", "ssl-client-verify", "$ssl_client_verify"),
+			buildDirective("proxy_set_header", "ssl-client-subject-dn", "$ssl_client_s_dn"),
+			buildDirective("proxy_set_header", "ssl-client-issuer-dn", "$ssl_client_i_dn"),
+		)
 
 		if server.CertificateAuth.PassCertToUpstream {
 			locationDirectives = append(locationDirectives,
@@ -231,16 +210,13 @@ func (c *Template) buildAuthLocation(server *ingress.Server,
 
 	if locationConfig.applyAuthUpstream && locationConfig.applyGlobalAuth {
 		locationDirectives = append(locationDirectives,
-			buildDirective("proxy_http_version", "1.1"))
-		locationDirectives = append(locationDirectives,
-			buildDirective("proxy_set_header", "Connection", ""))
-		locationDirectives = append(locationDirectives,
+			buildDirective("proxy_http_version", "1.1"),
+			buildDirective("proxy_set_header", "Connection", ""),
 			buildDirective("set", "$target",
 				changeHostPort(locationConfig.externalAuth.URL, buildAuthUpstreamName(location, server.Hostname))))
 	} else {
 		locationDirectives = append(locationDirectives,
-			buildDirective("proxy_http_version", location.Proxy.ProxyHTTPVersion))
-		locationDirectives = append(locationDirectives,
+			buildDirective("proxy_http_version", location.Proxy.ProxyHTTPVersion),
 			buildDirective("set", "$target", locationConfig.externalAuth.URL))
 	}
 	locationDirectives = append(locationDirectives,

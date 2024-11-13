@@ -35,12 +35,10 @@ func buildCorsDirectives(locationcors cors.Config) ngx_crossplane.Directives {
 				buildDirective("set", "$cors", "${cors}options"),
 			},
 		),
-	)
-
-	directives = append(directives,
 		commonCorsDirective(locationcors, false),
 		commonCorsDirective(locationcors, true),
 	)
+
 	return directives
 }
 

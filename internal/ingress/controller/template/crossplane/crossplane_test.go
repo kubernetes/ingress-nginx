@@ -87,12 +87,12 @@ func TestCrossplaneTemplate(t *testing.T) {
 			ngx_crossplane.MatchHeadersMoreLatest,
 			extramodules.BrotliMatchFn,
 			extramodules.OpentelemetryMatchFn,
+			extramodules.SetMiscMatchFn,
 			ngx_crossplane.MatchGeoip2Latest,
 		},
 		LexOptions: ngx_crossplane.LexOptions{
 			Lexers: []ngx_crossplane.RegisterLexer{lua.RegisterLexer()},
 		},
-		IgnoreDirectives: []string{"set_escape_uri"},
 	}
 
 	mimeFile, err := os.CreateTemp("", "")

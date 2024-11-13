@@ -22,8 +22,6 @@ limitations under the License.
  */
 
 // This file is an extraction from https://github.com/nginxinc/nginx-go-crossplane/blob/main/analyze.go
-//
-//nolint:unused
 package extramodules
 
 // bit masks for different directive argument styles.

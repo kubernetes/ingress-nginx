@@ -56,7 +56,6 @@ func (c *Template) buildServerDirective(server *ingress.Server) *ngx_crossplane.
 	if server.AuthTLSError != "" {
 		serverBlock = append(serverBlock, buildDirective("return", 403))
 	} else {
-
 		serverBlock = append(serverBlock, c.buildCertificateDirectives(server)...)
 		serverBlock = append(serverBlock, buildCustomErrorLocationsPerServer(server, c.tplConfig.EnableMetrics)...)
 		serverBlock = append(serverBlock, buildMirrorLocationDirective(server.Locations)...)
@@ -119,9 +118,10 @@ func (c *Template) buildCertificateDirectives(server *ingress.Server) ngx_crossp
 
 	if server.CertificateAuth.CAFileName != "" {
 		certAuth := server.CertificateAuth
-		certDirectives = append(certDirectives, buildDirective("ssl_client_certificate", certAuth.CAFileName))
-		certDirectives = append(certDirectives, buildDirective("ssl_verify_client", certAuth.VerifyClient))
-		certDirectives = append(certDirectives, buildDirective("ssl_verify_depth", certAuth.ValidationDepth))
+		certDirectives = append(certDirectives,
+			buildDirective("ssl_client_certificate", certAuth.CAFileName),
+			buildDirective("ssl_verify_client", certAuth.VerifyClient),
+			buildDirective("ssl_verify_depth", certAuth.ValidationDepth))
 		if certAuth.CRLFileName != "" {
 			certDirectives = append(certDirectives, buildDirective("ssl_crl", certAuth.CRLFileName))
 		}
@@ -132,19 +132,22 @@ func (c *Template) buildCertificateDirectives(server *ingress.Server) ngx_crossp
 
 	prxSSL := server.ProxySSL
 	if prxSSL.CAFileName != "" {
-		certDirectives = append(certDirectives, buildDirective("proxy_ssl_trusted_certificate", prxSSL.CAFileName))
-		certDirectives = append(certDirectives, buildDirective("proxy_ssl_ciphers", prxSSL.Ciphers))
-		certDirectives = append(certDirectives, buildDirective("proxy_ssl_protocols", strings.Split(prxSSL.Protocols, " ")))
-		certDirectives = append(certDirectives, buildDirective("proxy_ssl_verify", prxSSL.Verify))
-		certDirectives = append(certDirectives, buildDirective("proxy_ssl_verify_depth", prxSSL.VerifyDepth))
+		certDirectives = append(certDirectives, buildDirective("proxy_ssl_trusted_certificate", prxSSL.CAFileName),
+			buildDirective("proxy_ssl_ciphers", prxSSL.Ciphers),
+			buildDirective("proxy_ssl_protocols", strings.Split(prxSSL.Protocols, " ")),
+			buildDirective("proxy_ssl_verify", prxSSL.Verify),
+			buildDirective("proxy_ssl_verify_depth", prxSSL.VerifyDepth),
+		)
 		if prxSSL.ProxySSLName != "" {
-			certDirectives = append(certDirectives, buildDirective("proxy_ssl_name", prxSSL.ProxySSLName))
-			certDirectives = append(certDirectives, buildDirective("proxy_ssl_server_name", prxSSL.ProxySSLServerName))
+			certDirectives = append(certDirectives,
+				buildDirective("proxy_ssl_name", prxSSL.ProxySSLName),
+				buildDirective("proxy_ssl_server_name", prxSSL.ProxySSLServerName))
 		}
 	}
 	if prxSSL.PemFileName != "" {
-		certDirectives = append(certDirectives, buildDirective("proxy_ssl_certificate", prxSSL.PemFileName))
-		certDirectives = append(certDirectives, buildDirective("proxy_ssl_certificate_key", prxSSL.PemFileName))
+		certDirectives = append(certDirectives,
+			buildDirective("proxy_ssl_certificate", prxSSL.PemFileName),
+			buildDirective("proxy_ssl_certificate_key", prxSSL.PemFileName))
 	}
 	if server.SSLCiphers != "" {
 		certDirectives = append(certDirectives, buildDirective("ssl_ciphers", server.SSLCiphers))
@@ -191,11 +194,12 @@ func (c *Template) buildDefaultBackend() *ngx_crossplane.Directive {
 			fmt.Sprintf("backlog=%d", c.tplConfig.BacklogSize),
 		))
 	}
-	serverBlock = append(serverBlock, buildDirective("set", "$proxy_upstream_name", "internal"))
-	serverBlock = append(serverBlock, buildDirective("access_log", "off"))
-	serverBlock = append(serverBlock, buildBlockDirective("location", []string{"/"}, ngx_crossplane.Directives{
-		buildDirective("return", "404"),
-	}))
+	serverBlock = append(serverBlock,
+		buildDirective("set", "$proxy_upstream_name", "internal"),
+		buildDirective("access_log", "off"),
+		buildBlockDirective("location", []string{"/"}, ngx_crossplane.Directives{
+			buildDirective("return", "404"),
+		}))
 
 	return &ngx_crossplane.Directive{
 		Directive: "server",
@@ -228,8 +232,8 @@ func (c *Template) buildHealthAndStatsServer() *ngx_crossplane.Directive {
 		buildBlockDirective(
 			"location",
 			[]string{"/configuration"}, ngx_crossplane.Directives{
-				buildDirective("client_max_body_size", luaConfigurationRequestBodySize(c.tplConfig.Cfg)),
-				buildDirective("client_body_buffer_size", luaConfigurationRequestBodySize(c.tplConfig.Cfg)),
+				buildDirective("client_max_body_size", luaConfigurationRequestBodySize(&c.tplConfig.Cfg)),
+				buildDirective("client_body_buffer_size", luaConfigurationRequestBodySize(&c.tplConfig.Cfg)),
 				buildDirective("proxy_buffering", "off"),
 				buildDirective("content_by_lua_file", "/etc/nginx/lua/nginx/ngx_conf_configuration.lua"),
 			}),

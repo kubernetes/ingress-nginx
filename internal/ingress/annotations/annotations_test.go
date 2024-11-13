@@ -133,7 +133,6 @@ func TestSSLPassthrough(t *testing.T) {
 	ec := NewAnnotationExtractor(mockCfg{})
 	ing := buildIngress()
 
-	//nolint:goconst //already a constant
 	fooAnns := []struct {
 		annotations map[string]string
 		er          bool

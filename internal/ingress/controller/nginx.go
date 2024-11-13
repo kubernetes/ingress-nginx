@@ -71,6 +71,7 @@ import (
 const (
 	tempNginxPattern = "nginx-cfg"
 	emptyUID         = "-1"
+	goTemplateEngine = "go-template"
 )
 
 // NewNGINXController creates a new NGINX Ingress controller.
@@ -159,7 +160,7 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 	}
 
 	onTemplateChange := func() {
-		if config.ConfigurationTemplateEngine != "go-template" {
+		if config.ConfigurationTemplateEngine != goTemplateEngine {
 			return
 		}
 		template, err := ngx_template.NewTemplate(nginx.TemplatePath)
@@ -176,7 +177,7 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 
 	var ngxTpl ngx_template.Writer
 	switch config.ConfigurationTemplateEngine {
-	case "go-template":
+	case goTemplateEngine:
 		ngxTpl, err = ngx_template.NewTemplate(nginx.TemplatePath)
 		if err != nil {
 			klog.Fatalf("Invalid NGINX configuration template: %v", err)
@@ -887,7 +888,7 @@ func (n *NGINXController) configureDynamically(pcfg *ingress.Configuration) erro
 		}
 	}
 
-	if n.cfg.ConfigurationTemplateEngine == "go-template" {
+	if n.cfg.ConfigurationTemplateEngine == goTemplateEngine {
 		streamConfigurationChanged := !reflect.DeepEqual(n.runningConfig.TCPEndpoints, pcfg.TCPEndpoints) || !reflect.DeepEqual(n.runningConfig.UDPEndpoints, pcfg.UDPEndpoints)
 		if streamConfigurationChanged {
 			err := updateStreamConfiguration(pcfg.TCPEndpoints, pcfg.UDPEndpoints)

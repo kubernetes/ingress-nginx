@@ -173,7 +173,7 @@ func (c *Template) buildServerLocations(server *ingress.Server, locations []*ing
 			proxySetHeader:    getProxySetHeader(location),
 			authPath:          buildAuthLocation(location, cfg.GlobalExternalAuth.URL),
 			applyGlobalAuth:   shouldApplyGlobalAuth(location, cfg.GlobalExternalAuth.URL),
-			applyAuthUpstream: shouldApplyAuthUpstream(location, cfg),
+			applyAuthUpstream: shouldApplyAuthUpstream(location, &cfg),
 			externalAuth:      &externalAuth{},
 		}
 
@@ -236,7 +236,7 @@ func (c *Template) buildLocation(server *ingress.Server,
 		buildDirective("set", "$location_path", strings.ReplaceAll(ing.Path, `$`, `${literal_dollar}`)),
 	}
 
-	locationDirectives = append(locationDirectives, locationConfigForLua(location, *c.tplConfig)...)
+	locationDirectives = append(locationDirectives, locationConfigForLua(location, c.tplConfig)...)
 	locationDirectives = append(locationDirectives, buildCertificateDirectives(location)...)
 
 	if cfg.Cfg.UseProxyProtocol {
@@ -648,7 +648,7 @@ func buildRateLimit(loc *ingress.Location) ngx_crossplane.Directives {
 }
 
 // locationConfigForLua formats some location specific configuration into Lua table represented as string
-func locationConfigForLua(location *ingress.Location, all config.TemplateConfig) ngx_crossplane.Directives {
+func locationConfigForLua(location *ingress.Location, all *config.TemplateConfig) ngx_crossplane.Directives {
 	/* Lua expects the following vars
 		force_ssl_redirect = string_to_bool(ngx.var.force_ssl_redirect),
 	    ssl_redirect = string_to_bool(ngx.var.ssl_redirect),

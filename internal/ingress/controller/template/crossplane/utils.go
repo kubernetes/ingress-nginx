@@ -289,7 +289,7 @@ func httpListener(addresses []string, co []string, tc *config.TemplateConfig, ss
 	return listeners
 }
 
-func luaConfigurationRequestBodySize(cfg config.Configuration) string {
+func luaConfigurationRequestBodySize(cfg *config.Configuration) string {
 	size := cfg.LuaSharedDicts["configuration_data"]
 	if size < cfg.LuaSharedDicts["certificate_data"] {
 		size = cfg.LuaSharedDicts["certificate_data"]
@@ -347,7 +347,7 @@ func shouldApplyGlobalAuth(location *ingress.Location, globalExternalAuthURL str
 
 // shouldApplyAuthUpstream returns true only in case when ExternalAuth.URL and
 // ExternalAuth.KeepaliveConnections are all set
-func shouldApplyAuthUpstream(location *ingress.Location, cfg config.Configuration) bool {
+func shouldApplyAuthUpstream(location *ingress.Location, cfg *config.Configuration) bool {
 	if location.ExternalAuth.URL == "" || location.ExternalAuth.KeepaliveConnections == 0 {
 		return false
 	}

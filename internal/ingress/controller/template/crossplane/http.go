@@ -113,8 +113,10 @@ func (c *Template) buildHTTP() {
 
 	// HTTP2 Configuration
 	if cfg.HTTP2MaxHeaderSize != "" && cfg.HTTP2MaxFieldSize != "" {
-		httpBlock = append(httpBlock, buildDirective("http2_max_field_size", cfg.HTTP2MaxFieldSize))
-		httpBlock = append(httpBlock, buildDirective("http2_max_header_size", cfg.HTTP2MaxHeaderSize))
+		httpBlock = append(httpBlock,
+			buildDirective("http2_max_field_size", cfg.HTTP2MaxFieldSize),
+			buildDirective("http2_max_header_size", cfg.HTTP2MaxHeaderSize),
+		)
 	}
 
 	if cfg.HTTP2MaxRequests > 0 {
@@ -122,13 +124,15 @@ func (c *Template) buildHTTP() {
 	}
 
 	if cfg.UseGzip {
-		httpBlock = append(httpBlock, buildDirective("gzip", "on"))
-		httpBlock = append(httpBlock, buildDirective("gzip_comp_level", cfg.GzipLevel))
-		httpBlock = append(httpBlock, buildDirective("gzip_http_version", "1.1"))
-		httpBlock = append(httpBlock, buildDirective("gzip_min_length", cfg.GzipMinLength))
-		httpBlock = append(httpBlock, buildDirective("gzip_types", strings.Split(cfg.GzipTypes, " ")))
-		httpBlock = append(httpBlock, buildDirective("gzip_proxied", "any"))
-		httpBlock = append(httpBlock, buildDirective("gzip_vary", "on"))
+		httpBlock = append(httpBlock,
+			buildDirective("gzip", "on"),
+			buildDirective("gzip_comp_level", cfg.GzipLevel),
+			buildDirective("gzip_http_version", "1.1"),
+			buildDirective("gzip_min_length", cfg.GzipMinLength),
+			buildDirective("gzip_types", strings.Split(cfg.GzipTypes, " ")),
+			buildDirective("gzip_proxied", "any"),
+			buildDirective("gzip_vary", "on"),
+		)
 
 		if cfg.GzipDisable != "" {
 			httpBlock = append(httpBlock, buildDirective("gzip_disable", strings.Split(cfg.GzipDisable, " ")))
@@ -346,29 +350,9 @@ func (c *Template) buildHTTP() {
 		}
 	}
 
-	/*
-			    {{ range $server := $servers }}
-		    {{ range $location := $server.Locations }}
-		    {{ $applyGlobalAuth := shouldApplyGlobalAuth $location $all.Cfg.GlobalExternalAuth.URL }}
-		    {{ $applyAuthUpstream := shouldApplyAuthUpstream $location $all.Cfg }}
-		    {{ if and (eq $applyAuthUpstream true) (eq $applyGlobalAuth false) }}
-		    ## start auth upstream {{ $server.Hostname }}{{ $location.Path }}
-		    upstream {{ buildAuthUpstreamName $location $server.Hostname }} {
-		        {{- $externalAuth := $location.ExternalAuth }}
-		        server {{ extractHostPort $externalAuth.URL }};
-
-		        keepalive {{ $externalAuth.KeepaliveConnections }};
-		        keepalive_requests {{ $externalAuth.KeepaliveRequests }};
-		        keepalive_timeout {{ $externalAuth.KeepaliveTimeout }}s;
-		    }
-		    ## end auth upstream {{ $server.Hostname }}{{ $location.Path }}
-		    {{ end }}
-		    {{ end }}
-		    {{ end }}
-	*/
 	for _, server := range c.tplConfig.Servers {
 		for _, location := range server.Locations {
-			if shouldApplyAuthUpstream(location, cfg) && !shouldApplyGlobalAuth(location, cfg.GlobalExternalAuth.URL) {
+			if shouldApplyAuthUpstream(location, &cfg) && !shouldApplyGlobalAuth(location, cfg.GlobalExternalAuth.URL) {
 				authUpstreamBlock := buildBlockDirective("upstream",
 					[]string{buildAuthUpstreamName(location, server.Hostname)}, ngx_crossplane.Directives{
 						buildDirective("server", extractHostPort(location.ExternalAuth.URL)),
@@ -387,14 +371,17 @@ func (c *Template) buildHTTP() {
 	}
 
 	for _, server := range c.tplConfig.Servers {
-		httpBlock = append(httpBlock, buildStartServer(server.Hostname))
-		serverBlock := c.buildServerDirective(server)
-		httpBlock = append(httpBlock, serverBlock)
-		httpBlock = append(httpBlock, buildEndServer(server.Hostname))
+		httpBlock = append(httpBlock,
+			buildStartServer(server.Hostname),
+			c.buildServerDirective(server),
+			buildEndServer(server.Hostname),
+		)
 	}
 
-	httpBlock = append(httpBlock, c.buildDefaultBackend())
-	httpBlock = append(httpBlock, c.buildHealthAndStatsServer())
+	httpBlock = append(httpBlock,
+		c.buildDefaultBackend(),
+		c.buildHealthAndStatsServer(),
+	)
 
 	c.config.Parsed = append(c.config.Parsed, &ngx_crossplane.Directive{
 		Directive: "http",

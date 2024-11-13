@@ -321,7 +321,7 @@ func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) b
 		if name == "" {
 			cmd = "cat /etc/nginx/nginx.conf"
 		} else {
-			cmd = fmt.Sprintf("cat /etc/nginx/nginx.conf | awk '/## start server %s;/,/## end server %s;/'", name, name)
+			cmd = fmt.Sprintf("cat /etc/nginx/nginx.conf | awk '/## start server %s/,/## end server %s/'", name, name)
 		}
 
 		o, err := f.ExecCommand(f.pod, cmd)
