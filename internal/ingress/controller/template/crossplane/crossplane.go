@@ -60,14 +60,12 @@ func NewTemplate() (*Template, error) {
 			ngx_crossplane.MatchHeadersMoreLatest,
 			extramodules.BrotliMatchFn,
 			extramodules.OpentelemetryMatchFn,
+			extramodules.SetMiscMatchFn,
 			ngx_crossplane.MatchGeoip2Latest,
 		},
 		LexOptions: ngx_crossplane.LexOptions{
 			Lexers: []ngx_crossplane.RegisterLexer{lua.RegisterLexer()},
 		},
-		// Modules that needs to be ported:
-		// // https://github.com/openresty/set-misc-nginx-module?tab=readme-ov-file#set_escape_uri
-		IgnoreDirectives: []string{"set_escape_uri"},
 	}
 
 	return &Template{
