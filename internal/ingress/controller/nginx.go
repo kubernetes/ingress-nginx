@@ -159,7 +159,10 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 	}
 
 	onTemplateChange := func() {
-		template, err := crossplane.NewTemplate()
+		if config.ConfigurationTemplateEngine != "go-template" {
+			return
+		}
+		template, err := ngx_template.NewTemplate(nginx.TemplatePath)
 		if err != nil {
 			// this error is different from the rest because it must be clear why nginx is not working
 			klog.ErrorS(err, "Error loading new template")
@@ -171,17 +174,27 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 		n.syncQueue.EnqueueTask(task.GetDummyObject("template-change"))
 	}
 
-	ngxTpl, err := crossplane.NewTemplate()
-	if err != nil {
-		klog.Fatalf("Invalid NGINX configuration template: %v", err)
+	var ngxTpl ngx_template.Writer
+	switch config.ConfigurationTemplateEngine {
+	case "go-template":
+		ngxTpl, err = ngx_template.NewTemplate(nginx.TemplatePath)
+		if err != nil {
+			klog.Fatalf("Invalid NGINX configuration template: %v", err)
+		}
+		_, err = file.NewFileWatcher(nginx.TemplatePath, onTemplateChange)
+		if err != nil {
+			klog.Fatalf("Error creating file watcher for %v: %v", nginx.TemplatePath, err)
+		}
+	case "crossplane":
+		ngxTpl, err = crossplane.NewTemplate()
+		if err != nil {
+			klog.Fatalf("Invalid NGINX configuration template: %v", err)
+		}
+	default:
+		klog.Fatal("Invalid template engine, please use 'go-template' or 'crossplane'")
 	}
 
 	n.t = ngxTpl
-
-	_, err = file.NewFileWatcher(nginx.TemplatePath, onTemplateChange)
-	if err != nil {
-		klog.Fatalf("Error creating file watcher for %v: %v", nginx.TemplatePath, err)
-	}
 
 	filesToWatch := []string{}
 
@@ -653,6 +666,11 @@ func (n *NGINXController) testTemplate(cfg []byte) error {
 	if err != nil {
 		return err
 	}
+
+	if err := n.t.Validate(tmpfile.Name()); err != nil {
+		return fmt.Errorf("error during template validation: %w", err)
+	}
+
 	out, err := n.command.Test(tmpfile.Name())
 	if err != nil {
 		// this error is different from the rest because it must be clear why nginx is not working
@@ -701,7 +719,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 
 	err = n.testTemplate(content)
 	if err != nil {
-		return fmt.Errorf("err %s content %s", err, string(content))
+		return err
 	}
 
 	if klog.V(2).Enabled() {
@@ -869,14 +887,15 @@ func (n *NGINXController) configureDynamically(pcfg *ingress.Configuration) erro
 		}
 	}
 
-	// TODO: (ricardo) - Disable in case this is crossplane, we don't support stream on this mode
-	/*streamConfigurationChanged := !reflect.DeepEqual(n.runningConfig.TCPEndpoints, pcfg.TCPEndpoints) || !reflect.DeepEqual(n.runningConfig.UDPEndpoints, pcfg.UDPEndpoints)
-	if streamConfigurationChanged {
-		err := updateStreamConfiguration(pcfg.TCPEndpoints, pcfg.UDPEndpoints)
-		if err != nil {
-			return err
+	if n.cfg.ConfigurationTemplateEngine == "go-template" {
+		streamConfigurationChanged := !reflect.DeepEqual(n.runningConfig.TCPEndpoints, pcfg.TCPEndpoints) || !reflect.DeepEqual(n.runningConfig.UDPEndpoints, pcfg.UDPEndpoints)
+		if streamConfigurationChanged {
+			err := updateStreamConfiguration(pcfg.TCPEndpoints, pcfg.UDPEndpoints)
+			if err != nil {
+				return err
+			}
 		}
-	}*/
+	}
 
 	serversChanged := !reflect.DeepEqual(n.runningConfig.Servers, pcfg.Servers)
 	if serversChanged {

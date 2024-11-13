@@ -21,6 +21,7 @@ commonLabels: {}
 
 controller:
   name: controller
+  templateEngine: "go-template"
   enableAnnotationValidations: true
   image:
     ## Keep false as default for now!

@@ -296,7 +296,7 @@ func (c *Template) buildAllowedLocation(server *ingress.Server, location *ingres
 	if location.CorsConfig.CorsEnabled {
 		dir = append(dir, buildCorsDirectives(location.CorsConfig)...)
 	}
-	// TODO: Implement the build Auth Location
+
 	if !isLocationInLocationList(location, c.tplConfig.Cfg.NoAuthLocations) {
 		dir = append(dir, buildAuthLocationConfig(location, locationConfig)...)
 	}

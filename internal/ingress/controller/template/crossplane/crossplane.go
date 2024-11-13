@@ -18,7 +18,6 @@ package crossplane
 
 import (
 	"bytes"
-	"os"
 
 	ngx_crossplane "github.com/nginxinc/nginx-go-crossplane"
 
@@ -31,27 +30,50 @@ Unsupported directives:
 - opentelemetry
 - modsecurity
 - any stream directive (TCP/UDP forwarding)
-- geoip2
 */
 
 // On this case we will try to use the go ngx_crossplane to write the template instead of the template renderer
 
 type Template struct {
-	options   *ngx_crossplane.BuildOptions
-	config    *ngx_crossplane.Config
-	tplConfig *config.TemplateConfig
-	mimeFile  string
+	options      *ngx_crossplane.BuildOptions
+	parseOptions *ngx_crossplane.ParseOptions
+	config       *ngx_crossplane.Config
+	tplConfig    *config.TemplateConfig
+	mimeFile     string
 }
 
 func NewTemplate() (*Template, error) {
 	lua := ngx_crossplane.Lua{}
-	return &Template{
-		mimeFile: "/etc/nginx/mime.types",
-		options: &ngx_crossplane.BuildOptions{
-			Builders: []ngx_crossplane.RegisterBuilder{
-				lua.RegisterBuilder(),
-			},
+	buildOptions := &ngx_crossplane.BuildOptions{
+		Builders: []ngx_crossplane.RegisterBuilder{
+			lua.RegisterBuilder(),
 		},
+	}
+
+	parseOptions := &ngx_crossplane.ParseOptions{
+		ParseComments:            true,
+		ErrorOnUnknownDirectives: true,
+		StopParsingOnError:       true,
+		DirectiveSources: []ngx_crossplane.MatchFunc{
+			ngx_crossplane.DefaultDirectivesMatchFunc,
+			ngx_crossplane.MatchLuaLatest,
+			ngx_crossplane.MatchHeadersMoreLatest,
+			extramodules.BrotliMatchFn,
+			extramodules.OpentelemetryMatchFn,
+			ngx_crossplane.MatchGeoip2Latest,
+		},
+		LexOptions: ngx_crossplane.LexOptions{
+			Lexers: []ngx_crossplane.RegisterLexer{lua.RegisterLexer()},
+		},
+		// Modules that needs to be ported:
+		// // https://github.com/openresty/set-misc-nginx-module?tab=readme-ov-file#set_escape_uri
+		IgnoreDirectives: []string{"set_escape_uri"},
+	}
+
+	return &Template{
+		mimeFile:     "/etc/nginx/mime.types",
+		options:      buildOptions,
+		parseOptions: parseOptions,
 	}, nil
 }
 
@@ -78,45 +100,10 @@ func (c *Template) Write(conf *config.TemplateConfig) ([]byte, error) {
 		return nil, err
 	}
 
-	lua := ngx_crossplane.Lua{}
-	options := ngx_crossplane.ParseOptions{
-		ParseComments:            true,
-		ErrorOnUnknownDirectives: true,
-		StopParsingOnError:       true,
-		DirectiveSources: []ngx_crossplane.MatchFunc{
-			ngx_crossplane.DefaultDirectivesMatchFunc,
-			ngx_crossplane.MatchLuaLatest,
-			ngx_crossplane.MatchHeadersMoreLatest,
-			extramodules.BrotliMatchFn,
-			extramodules.OpentelemetryMatchFn,
-			ngx_crossplane.MatchGeoip2Latest,
-		},
-		LexOptions: ngx_crossplane.LexOptions{
-			Lexers: []ngx_crossplane.RegisterLexer{lua.RegisterLexer()},
-		},
-		// Modules that needs to be ported:
-		// // https://github.com/openresty/set-misc-nginx-module?tab=readme-ov-file#set_escape_uri
-		IgnoreDirectives: []string{"set_escape_uri"},
-	}
-
-	tmpFile, err := os.CreateTemp("", "")
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		_ = os.Remove(tmpFile.Name())
-		_ = tmpFile.Close()
-	}()
-
-	_, err = tmpFile.Write(buf.Bytes())
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = ngx_crossplane.Parse(tmpFile.Name(), &options)
-	if err != nil {
-		return nil, err
-	}
-
 	return buf.Bytes(), err
+}
+
+func (c *Template) Validate(filename string) error {
+	_, err := ngx_crossplane.Parse(filename, c.parseOptions)
+	return err
 }

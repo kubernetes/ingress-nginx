@@ -169,12 +169,27 @@ func TestCrossplaneTemplate(t *testing.T) {
 							Target:      "http://www.mymirror.com",
 							RequestBody: "off",
 						},
+						Proxy: proxy.Config{
+							ProxyBuffering:   "on",
+							RequestBuffering: "on",
+							NextUpstream:     "10.10.10.10",
+						},
 					},
 					{
 						DefaultBackendUpstreamName: "something",
-						CustomHTTPErrors:           []int{403, 404, 403, 409}, // Duplicated on purpose!
+						Proxy: proxy.Config{
+							ProxyBuffering:   "on",
+							RequestBuffering: "on",
+							NextUpstream:     "10.10.10.10",
+						},
+						CustomHTTPErrors: []int{403, 404, 403, 409}, // Duplicated on purpose!
 					},
 					{
+						Proxy: proxy.Config{
+							ProxyBuffering:   "on",
+							RequestBuffering: "on",
+							NextUpstream:     "10.10.10.10",
+						},
 						DefaultBackendUpstreamName: "otherthing",
 						CustomHTTPErrors:           []int{403, 404, 403, 409}, // Duplicated on purpose!
 					},
@@ -255,7 +270,6 @@ func TestCrossplaneTemplate(t *testing.T) {
 
 		_, err = ngx_crossplane.Parse(tmpFile.Name(), &options)
 		require.NoError(t, err)
-		require.Equal(t, "bla", string(content))
 	})
 
 	t.Run("it should set the right logging configs", func(t *testing.T) {
@@ -352,6 +366,5 @@ func TestCrossplaneTemplate(t *testing.T) {
 
 		_, err = ngx_crossplane.Parse(tmpFile.Name(), &options)
 		require.NoError(t, err)
-		// require.Equal(t, " ", string(content))
 	})
 }
