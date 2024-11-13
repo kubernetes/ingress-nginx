@@ -50,7 +50,8 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return !strings.Contains(server, fmt.Sprintf("server_name %s;", host))
+				return !strings.Contains(server, fmt.Sprintf("server_name %s;", host)) &&
+					!strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
 		f.WaitForNginxServer(host,
@@ -87,7 +88,8 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return !strings.Contains(server, fmt.Sprintf("server_name %s;", host))
+				return !strings.Contains(server, fmt.Sprintf("server_name %s;", host)) &&
+					!strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
 		f.WaitForNginxServer(host,
@@ -123,7 +125,8 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 
 		f.WaitForNginxServer(hostValid,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %s;", hostValid))
+				return strings.Contains(server, fmt.Sprintf("server_name %s;", hostValid)) ||
+					strings.Contains(server, fmt.Sprintf("server_name %s ;", hostValid))
 			})
 
 		f.WaitForNginxServer(hostValid,
@@ -156,7 +159,8 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return !strings.Contains(server, fmt.Sprintf("server_name %s;", host))
+				return !strings.Contains(server, fmt.Sprintf("server_name %s;", host)) &&
+					!strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
 		f.WaitForNginxServer(host,
