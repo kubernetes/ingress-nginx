@@ -459,6 +459,10 @@ http {
     proxy_intercept_errors on;
     {{ end }}
 
+    {{ if $cfg.RelativeRedirects }}
+    absolute_redirect off;
+    {{ end }}
+
     {{ range $errCode := $cfg.CustomHTTPErrors }}
     error_page {{ $errCode }} = @custom_upstream-default-backend_{{ $errCode }};{{ end }}
 
@@ -1341,6 +1345,10 @@ stream {
 
             {{ if $location.Satisfy }}
             satisfy {{ $location.Satisfy }};
+            {{ end }}
+
+            {{ if $location.Redirect.Relative }}
+            absolute_redirect off;
             {{ end }}
 
             {{/* if a location-specific error override is set, add the proxy_intercept here */}}
