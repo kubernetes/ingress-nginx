@@ -23,6 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"k8s.io/ingress-nginx/internal/ingress/metric/collectors"
 	"net"
 	"net/http"
 	"os"
@@ -377,6 +378,63 @@ func (n *NGINXController) Start() {
 	}
 }
 
+// stopWait waits until no more connections are made to nginx.
+//
+// This waits until all of following conditions are met:
+//   - No more requests are made to nginx for the last 5 seconds.
+//   - 'shutdown-grace-period' seconds have passed after calling this method.
+//
+// Pods in Kubernetes endpoints are expected to shut-down 'gracefully' after receiving SIGTERM -
+// we should keep accepting new connections for a while. This is because Kubernetes updates Service endpoints
+// and sends SIGTERM to pods *in parallel*.
+// If we don't see new requests for 5 seconds, then we assume that this pod was removed from the upstream endpoints
+// (AWS ALB endpoints for example), and proceed with shutdown.
+//
+// See https://github.com/kubernetes/kubernetes/issues/106476 for more detail on this issue.
+func (n *NGINXController) stopWait() {
+	const checkFrequency = time.Second
+	const waitUntilNoConnectionsFor = int((5 * time.Second) / checkFrequency)
+	waitAtLeastUntil := time.Now().Add(time.Duration(n.cfg.ShutdownGracePeriod) * time.Second)
+
+	var scraper collectors.NginxStatusScraper
+	lastRequests := 0
+	noChangeTimes := 0
+
+	for ; ; time.Sleep(checkFrequency) {
+		st, err := scraper.Scrape()
+		if err != nil {
+			klog.Warningf("failed to scrape nginx status: %v", err)
+			noChangeTimes = 0
+			continue
+		}
+
+		diff := st.Requests - lastRequests
+		// We assume that there were no client requests to nginx, if and only if
+		// there were 0 to 2 increase in handled requests from the last scrape.
+		// 1 is to account for our own stub_status request from this method,
+		// and the other 1 is to account for the readinessProbe.
+		// Note that readinessProbe DO happen even when the pod is terminating.
+		// See: https://github.com/kubernetes/kubernetes/issues/122824#issuecomment-1899224434
+		noChange := 0 <= diff && diff <= 2
+		if noChange {
+			noChangeTimes++
+			if noChangeTimes >= waitUntilNoConnectionsFor {
+				// Safe to proceed shutdown, we are seeing no more client request.
+				break
+			}
+		} else {
+			noChangeTimes = 0
+		}
+		lastRequests = st.Requests
+	}
+
+	// Wait at least for the configured duration, if any
+	delay := waitAtLeastUntil.Sub(time.Now())
+	if delay > 0 {
+		time.Sleep(delay)
+	}
+}
+
 // Stop gracefully stops the NGINX master process.
 func (n *NGINXController) Stop() error {
 	n.isShuttingDown = true
@@ -388,7 +446,8 @@ func (n *NGINXController) Stop() error {
 		return fmt.Errorf("shutdown already in progress")
 	}
 
-	time.Sleep(time.Duration(n.cfg.ShutdownGracePeriod) * time.Second)
+	klog.InfoS("Graceful shutdown - waiting until no more requests are made")
+	n.stopWait()
 
 	klog.InfoS("Shutting down controller queues")
 	close(n.stopCh)
