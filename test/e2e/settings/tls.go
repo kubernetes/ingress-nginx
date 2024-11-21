@@ -25,10 +25,11 @@ import (
 	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
-var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", func() {
+var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers", func() {
 	f := framework.NewDefaultFramework("settings-tls")
 	host := "settings-tls"
 
@@ -87,9 +88,7 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 	})
 
 	ginkgo.Context("should configure HSTS policy header", func() {
-		var (
-			tlsConfig *tls.Config
-		)
+		var tlsConfig *tls.Config
 
 		const (
 			hstsMaxAge            = "hsts-max-age"
@@ -111,8 +110,9 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 		ginkgo.It("setting max-age parameter", func() {
 			f.UpdateNginxConfigMapData(hstsMaxAge, "86400")
 
-			f.WaitForNginxConfiguration(func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf(`hsts_max_age = 86400,`))
+			f.WaitForLuaConfiguration(func(jsonCfg map[string]interface{}) bool {
+				val, ok, err := unstructured.NestedString(jsonCfg, "hsts_max_age")
+				return err == nil && ok && val == "86400"
 			})
 
 			f.HTTPTestClientWithTLSConfig(tlsConfig).
@@ -130,8 +130,9 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 				hstsIncludeSubdomains: "false",
 			})
 
-			f.WaitForNginxConfiguration(func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf(`hsts_include_subdomains = false,`))
+			f.WaitForLuaConfiguration(func(jsonCfg map[string]interface{}) bool {
+				val, ok, err := unstructured.NestedBool(jsonCfg, "hsts_include_subdomains")
+				return err == nil && ok && !val
 			})
 
 			f.HTTPTestClientWithTLSConfig(tlsConfig).
@@ -150,8 +151,9 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 				hstsIncludeSubdomains: "false",
 			})
 
-			f.WaitForNginxConfiguration(func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf(`hsts_preload = true,`))
+			f.WaitForLuaConfiguration(func(jsonCfg map[string]interface{}) bool {
+				val, ok, err := unstructured.NestedBool(jsonCfg, "hsts_preload")
+				return err == nil && ok && val
 			})
 
 			f.HTTPTestClientWithTLSConfig(tlsConfig).
@@ -170,17 +172,18 @@ var _ = framework.DescribeSetting("[SSL] TLS protocols, ciphers and headers)", f
 				hstsIncludeSubdomains: "false",
 			})
 
-			// we can not use gorequest here because it flattens the duplicate headers
-			// and specifically in case of Strict-Transport-Security it ignore extra headers
-			// intead of concatenating, rightfully. And I don't know of any API it provides for getting raw headers.
-			curlCmd := fmt.Sprintf("curl -I -k --fail --silent --resolve settings-tls:443:127.0.0.1 https://settings-tls%v", "?hsts=true")
-			output, err := f.ExecIngressPod(curlCmd)
-			assert.Nil(ginkgo.GinkgoT(), err)
-			assert.Contains(ginkgo.GinkgoT(), output, "strict-transport-security: max-age=86400; preload")
-			// this is what the upstream sets
-			assert.NotContains(ginkgo.GinkgoT(), output, "strict-transport-security: max-age=3600; preload")
-		})
+			expectResponse := f.HTTPTestClientWithTLSConfig(tlsConfig).
+				GET("/").
+				WithURL(f.GetURL(framework.HTTPS)).
+				WithHeader("Host", host).
+				WithQuery("hsts", "true").
+				Expect()
 
+			expectResponse.Header("Strict-Transport-Security").Equal("max-age=86400; preload")
+			header := expectResponse.Raw().Header
+			got := header["Strict-Transport-Security"]
+			assert.Equal(ginkgo.GinkgoT(), 1, len(got))
+		})
 	})
 
 	ginkgo.Context("ports or X-Forwarded-Host check during HTTP tp HTTPS redirection", func() {

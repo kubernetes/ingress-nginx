@@ -26,12 +26,12 @@ import (
 	"k8s.io/klog/v2"
 )
 
-var (
-	scheme = runtime.NewScheme()
-)
+var scheme = runtime.NewScheme()
 
 func init() {
-	admissionv1.AddToScheme(scheme)
+	if err := admissionv1.AddToScheme(scheme); err != nil {
+		klog.ErrorS(err, "Failed to add scheme")
+	}
 }
 
 // AdmissionController checks if an object
@@ -47,7 +47,7 @@ type AdmissionControllerServer struct {
 	AdmissionController AdmissionController
 }
 
-// NewAdmissionControllerServer instanciates an admission controller server with
+// NewAdmissionControllerServer instantiates an admission controller server with
 // a default codec
 func NewAdmissionControllerServer(ac AdmissionController) *AdmissionControllerServer {
 	return &AdmissionControllerServer{

@@ -39,6 +39,9 @@ var _ = framework.DescribeSetting("stream-snippet", func() {
 	})
 
 	ginkgo.It("should add value of stream-snippet to nginx config", func() {
+		disableSnippet := f.AllowSnippetConfiguration()
+		defer disableSnippet()
+
 		host := "foo.com"
 
 		snippet := `server {listen 8000; proxy_pass 127.0.0.1:80;}`

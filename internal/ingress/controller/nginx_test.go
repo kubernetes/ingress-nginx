@@ -58,6 +58,7 @@ func TestConfigureDynamically(t *testing.T) {
 
 	server := &httptest.Server{
 		Listener: listener,
+		//nolint:gosec // Ignore not configured ReadHeaderTimeout in testing
 		Config: &http.Server{
 			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusCreated)
@@ -76,23 +77,17 @@ func TestConfigureDynamically(t *testing.T) {
 
 				switch r.URL.Path {
 				case "/configuration/backends":
-					{
-						if strings.Contains(body, "target") {
-							t.Errorf("unexpected target reference in JSON content: %v", body)
-						}
+					if strings.Contains(body, "target") {
+						t.Errorf("unexpected target reference in JSON content: %v", body)
+					}
 
-						if !strings.Contains(body, "service") {
-							t.Errorf("service reference should be present in JSON content: %v", body)
-						}
+					if !strings.Contains(body, "service") {
+						t.Errorf("service reference should be present in JSON content: %v", body)
 					}
 				case "/configuration/general":
-					{
-					}
 				case "/configuration/servers":
-					{
-						if !strings.Contains(body, `{"certificates":{},"servers":{"myapp.fake":"-1"}}`) {
-							t.Errorf("should be present in JSON content: %v", body)
-						}
+					if !strings.Contains(body, `{"certificates":{},"servers":{"myapp.fake":"-1"}}`) {
+						t.Errorf("should be present in JSON content: %v", body)
 					}
 				default:
 					t.Errorf("unknown request to %s", r.URL.Path)
@@ -218,6 +213,7 @@ func TestConfigureCertificates(t *testing.T) {
 
 	server := &httptest.Server{
 		Listener: listener,
+		//nolint:gosec // Ignore not configured ReadHeaderTimeout in testing
 		Config: &http.Server{
 			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusCreated)
@@ -365,10 +361,11 @@ func TestCleanTempNginxCfg(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tmpfile, err := os.CreateTemp("", tempNginxPattern)
+	tmpfile, err := os.CreateTemp(filepath.Join(os.TempDir(), "nginx"), tempNginxPattern)
 	if err != nil {
 		t.Fatal(err)
 	}
+	expectedDeletedFile := tmpfile.Name()
 	defer tmpfile.Close()
 
 	dur, err := time.ParseDuration("-10m")
@@ -382,10 +379,11 @@ func TestCleanTempNginxCfg(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tmpfile, err = os.CreateTemp("", tempNginxPattern)
+	tmpfile, err = os.CreateTemp(filepath.Join(os.TempDir(), "nginx"), tempNginxPattern)
 	if err != nil {
 		t.Fatal(err)
 	}
+	expectedFile := tmpfile.Name()
 	defer tmpfile.Close()
 
 	err = cleanTempNginxCfg()
@@ -395,8 +393,8 @@ func TestCleanTempNginxCfg(t *testing.T) {
 
 	var files []string
 
-	err = filepath.Walk(os.TempDir(), func(path string, info os.FileInfo, err error) error {
-		if info.IsDir() && os.TempDir() != path {
+	err = filepath.Walk(filepath.Join(os.TempDir(), "nginx"), func(path string, info os.FileInfo, _ error) error {
+		if info.IsDir() && filepath.Join(os.TempDir(), "nginx") != path {
 			return filepath.SkipDir
 		}
 
@@ -409,11 +407,22 @@ func TestCleanTempNginxCfg(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(files) != 1 {
-		t.Errorf("expected one file but %d were found", len(files))
+	// some other files can be created by other tests
+	var found bool
+	for _, file := range files {
+		if file == expectedDeletedFile {
+			t.Errorf("file %s should be deleted", file)
+		}
+		if file == expectedFile {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("file %s should not be deleted", expectedFile)
 	}
 }
 
+//nolint:unparam // Ignore `network` always receives `"tcp"` error
 func tryListen(network, address string) (l net.Listener, err error) {
 	condFunc := func() (bool, error) {
 		l, err = net.Listen(network, address)

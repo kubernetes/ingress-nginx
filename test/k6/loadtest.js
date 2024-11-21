@@ -1,6 +1,6 @@
 // This is a loadtest under development
 // Test here is spec'd to have 100virtual-users
-// Other specs currently similar to smoktest
+// Other specs currently similar to smoketest
 // But loadtest needs testplan that likely uses auth & data-transfer
 
 import http from 'k6/http';
@@ -35,7 +35,7 @@ export default function () {
   const req3 = {
   	params: {
   	  headers: {
-        'Content-Type': 'application/x-www-form-urlencoded' 
+        'Content-Type': 'application/x-www-form-urlencoded'
       },
   	},
   	method: 'POST',

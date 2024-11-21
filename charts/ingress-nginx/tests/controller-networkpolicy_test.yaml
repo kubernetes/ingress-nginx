@@ -1,0 +1,23 @@
+suite: Controller > NetworkPolicy
+templates:
+  - controller-networkpolicy.yaml
+
+tests:
+  - it: should not create a NetworkPolicy if `controller.networkPolicy.enabled` is false
+    set:
+      controller.networkPolicy.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create a NetworkPolicy if `controller.networkPolicy.enabled` is true
+    set:
+      controller.networkPolicy.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: NetworkPolicy
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-controller

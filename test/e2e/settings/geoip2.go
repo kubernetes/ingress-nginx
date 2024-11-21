@@ -19,10 +19,9 @@ package settings
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"path/filepath"
 	"strings"
-
-	"net/http"
 
 	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
@@ -55,7 +54,7 @@ var _ = framework.DescribeSetting("Geoip2", func() {
 		})
 		assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller deployment flags")
 
-		filename := fmt.Sprintf("/etc/nginx/geoip/%s.mmdb", edition)
+		filename := fmt.Sprintf("/etc/ingress-controller/geoip/%s.mmdb", edition)
 		exec, err := f.ExecIngressPod(fmt.Sprintf(`sh -c "mkdir -p '%s' && wget -O '%s' '%s' 2>&1"`, filepath.Dir(filename), filename, testdataURL))
 		framework.Logf(exec)
 		assert.Nil(ginkgo.GinkgoT(), err, fmt.Sprintln("error downloading test geoip2 db", filename))
@@ -70,10 +69,11 @@ var _ = framework.DescribeSetting("Geoip2", func() {
 	ginkgo.It("should only allow requests from specific countries", func() {
 		ginkgo.Skip("GeoIP test are temporarily disabled")
 
+		disableSnippet := f.AllowSnippetConfiguration()
+		defer disableSnippet()
 		f.UpdateNginxConfigMapData("use-geoip2", "true")
 
-		httpSnippetAllowingOnlyAustralia :=
-			`map $geoip2_city_country_code $blocked_country {
+		httpSnippetAllowingOnlyAustralia := `map $geoip2_city_country_code $blocked_country {
   default 1;
   AU 0;
 }`
@@ -85,8 +85,7 @@ var _ = framework.DescribeSetting("Geoip2", func() {
 				return strings.Contains(cfg, "map $geoip2_city_country_code $blocked_country")
 			})
 
-		configSnippet :=
-			`if ($blocked_country) {
+		configSnippet := `if ($blocked_country) {
   return 403;
 }`
 
@@ -116,6 +115,54 @@ var _ = framework.DescribeSetting("Geoip2", func() {
 			GET("/").
 			WithHeader("Host", host).
 			WithHeader("X-Forwarded-For", australianIP).
+			Expect().
+			Status(http.StatusOK)
+	})
+
+	ginkgo.It("should up and running nginx controller using autoreload flag", func() {
+		edition := "GeoLite2-Country"
+
+		err := f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
+			args := deployment.Spec.Template.Spec.Containers[0].Args
+			args = append(args, "--maxmind-edition-ids="+edition)
+			deployment.Spec.Template.Spec.Containers[0].Args = args
+			_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
+			return err
+		})
+		assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller deployment flags")
+
+		filename := fmt.Sprintf("/etc/ingress-controller/geoip/%s.mmdb", edition)
+		exec, err := f.ExecIngressPod(fmt.Sprintf(`sh -c "mkdir -p '%s' && wget -O '%s' '%s' 2>&1"`, filepath.Dir(filename), filename, testdataURL))
+		framework.Logf(exec)
+		assert.Nil(ginkgo.GinkgoT(), err, fmt.Sprintln("error downloading test geoip2 db", filename))
+
+		f.SetNginxConfigMapData(map[string]string{
+			"use-geoip2":                   "true",
+			"geoip2-autoreload-in-minutes": "5",
+		})
+
+		// Check Configmap Autoreload Patterns
+		f.WaitForNginxConfiguration(
+			func(cfg string) bool {
+				return strings.Contains(cfg, fmt.Sprintf("geoip2 %s", filename)) &&
+					strings.Contains(cfg, "auto_reload 5m;")
+			},
+		)
+
+		// Check if Nginx could up, running and routing with auto_reload configs
+		host := "ping.com"
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, host) &&
+					strings.Contains(server, "location /")
+			})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusOK)
 	})

@@ -27,15 +27,14 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/authtls"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/connection"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/cors"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/customheaders"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/fastcgi"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/globalratelimit"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/ipallowlist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ipdenylist"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/ipwhitelist"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/log"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/mirror"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/modsecurity"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/opentelemetry"
-	"k8s.io/ingress-nginx/internal/ingress/annotations/opentracing"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxy"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/proxyssl"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/ratelimit"
@@ -73,7 +72,7 @@ type Configuration struct {
 
 	DefaultSSLCertificate *SSLCert `json:"-"`
 
-	StreamSnippets []string
+	StreamSnippets []string `json:"StreamSnippets"`
 }
 
 // Backend describes one or more remote server/s (endpoints) associated with a service
@@ -129,7 +128,7 @@ type TrafficShapingPolicy struct {
 }
 
 // HashInclude defines if a field should be used or not to calculate the hash
-func (s Backend) HashInclude(field string, v interface{}) (bool, error) {
+func (b *Backend) HashInclude(field string, _ interface{}) (bool, error) {
 	switch field {
 	case "Endpoints":
 		return false, nil
@@ -199,10 +198,10 @@ type Server struct {
 	Aliases []string `json:"aliases,omitempty"`
 	// RedirectFromToWWW returns if a redirect to/from prefix www is required
 	RedirectFromToWWW bool `json:"redirectFromToWWW,omitempty"`
-	// CertificateAuth indicates the this server requires mutual authentication
+	// CertificateAuth indicates this server requires mutual authentication
 	// +optional
 	CertificateAuth authtls.Config `json:"certificateAuth"`
-	// ProxySSL indicates the this server uses client certificate to access backends
+	// ProxySSL indicates this server uses client certificate to access backends
 	// +optional
 	ProxySSL proxyssl.Config `json:"proxySSL"`
 	// ServerSnippet returns the snippet of server
@@ -211,7 +210,7 @@ type Server struct {
 	// SSLCiphers returns list of ciphers to be enabled
 	SSLCiphers string `json:"sslCiphers,omitempty"`
 	// SSLPreferServerCiphers indicates that server ciphers should be preferred
-	// over client ciphers when using the SSLv3 and TLS protocols.
+	// over client ciphers when using the TLS protocols.
 	SSLPreferServerCiphers string `json:"sslPreferServerCiphers,omitempty"`
 	// AuthTLSError contains the reason why the access to a server should be denied
 	AuthTLSError string `json:"authTLSError,omitempty"`
@@ -220,11 +219,11 @@ type Server struct {
 // Location describes an URI inside a server.
 // Also contains additional information about annotations in the Ingress.
 //
-// In some cases when more than one annotations is defined a particular order in the execution
+// In some cases when more than one annotation is defined a particular order in the execution
 // is required.
 // The chain in the execution order of annotations should be:
 // - Denylist
-// - Whitelist
+// - Allowlist
 // - RateLimit
 // - BasicDigestAuth
 // - ExternalAuth
@@ -264,7 +263,8 @@ type Location struct {
 	BasicDigestAuth auth.Config `json:"basicDigestAuth,omitempty"`
 	// Denied returns an error when this location cannot not be allowed
 	// Requesting a denied location should return HTTP code 403.
-	Denied *string `json:"denied,omitempty"`
+	Denied        *string              `json:"denied,omitempty"`
+	CustomHeaders customheaders.Config `json:"customHeaders,omitempty"`
 	// CorsConfig returns the Cors Configuration for the ingress rule
 	// +optional
 	CorsConfig cors.Config `json:"corsConfig,omitempty"`
@@ -284,10 +284,6 @@ type Location struct {
 	// The Redirect annotation precedes RateLimit
 	// +optional
 	RateLimit ratelimit.Config `json:"rateLimit,omitempty"`
-	// GlobalRateLimit similar to RateLimit
-	// but this is applied globally across multiple replicas.
-	// +optional
-	GlobalRateLimit globalratelimit.Config `json:"globalRateLimit,omitempty"`
 	// Redirect describes a temporal o permanent redirection this location.
 	// +optional
 	Redirect redirect.Config `json:"redirect,omitempty"`
@@ -298,10 +294,10 @@ type Location struct {
 	// addresses or networks are allowed.
 	// +optional
 	Denylist ipdenylist.SourceRange `json:"denylist,omitempty"`
-	// Whitelist indicates only connections from certain client
+	// Allowlist indicates only connections from certain client
 	// addresses or networks are allowed.
 	// +optional
-	Whitelist ipwhitelist.SourceRange `json:"whitelist,omitempty"`
+	Allowlist ipallowlist.SourceRange `json:"allowlist,omitempty"`
 	// Proxy contains information about timeouts and buffer sizes
 	// to be used in connections against endpoints
 	// +optional
@@ -346,6 +342,11 @@ type Location struct {
 	// CustomHTTPErrors specifies the error codes that should be intercepted.
 	// +optional
 	CustomHTTPErrors []int `json:"custom-http-errors"`
+	// ProxyInterceptErrors disables error interception when using CustomHTTPErrors
+	// e.g. custom 404 and 503 when service-a does not exist or is not available
+	// but service-a can return 404 and 503 error codes without intercept
+	// +optional
+	DisableProxyInterceptErrors bool `json:"disable-proxy-intercept-errors"`
 	// ModSecurity allows to enable and configure modsecurity
 	// +optional
 	ModSecurity modsecurity.Config `json:"modsecurity"`
@@ -354,9 +355,6 @@ type Location struct {
 	// Mirror allows you to mirror traffic to a "test" backend
 	// +optional
 	Mirror mirror.Config `json:"mirror,omitempty"`
-	// Opentracing allows the global opentracing setting to be overridden for a location
-	// +optional
-	Opentracing opentracing.Config `json:"opentracing"`
 	// Opentelemetry allows the global opentelemetry setting to be overridden for a location
 	// +optional
 	Opentelemetry opentelemetry.Config `json:"opentelemetry"`
@@ -410,5 +408,4 @@ type Ingress struct {
 }
 
 // GeneralConfig holds the definition of lua general configuration data
-type GeneralConfig struct {
-}
+type GeneralConfig struct{}

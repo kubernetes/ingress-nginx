@@ -1,0 +1,225 @@
+suite: Controller > Deployment
+templates:
+  - controller-deployment.yaml
+
+tests:
+  - it: should create a Deployment
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-controller
+
+  - it: should create a Deployment with 3 replicas if `controller.replicaCount` is 3
+    set:
+      controller.replicaCount: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: should create a Deployment without replicas if `controller.autoscaling.enabled` is true
+    set:
+      controller.autoscaling.enabled: true
+    asserts:
+      - notExists:
+          path: spec.replicas
+
+  - it: should create a Deployment without replicas if `controller.keda.enabled` is true
+    set:
+      controller.keda.enabled: true
+    asserts:
+      - notExists:
+          path: spec.replicas
+
+  - it: should create a Deployment with replicas if `controller.autoscaling.enabled` is true and `controller.keda.enabled` is true
+    set:
+      controller.autoscaling.enabled: true
+      controller.keda.enabled: true
+    asserts:
+      - exists:
+          path: spec.replicas
+
+  - it: should create a Deployment with argument `--enable-metrics=true` if `controller.metrics.enabled` is true
+    set:
+      controller.metrics.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --enable-metrics=true
+
+  - it: should create a Deployment without argument `--enable-metrics=true` if `controller.metrics.enabled` is false
+    set:
+      controller.metrics.enabled: false
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].args
+          content: --enable-metrics=true
+
+  - it: should create a Deployment with argument `--controller-class=k8s.io/ingress-nginx-internal` if `controller.ingressClassResource.controllerValue` is "k8s.io/ingress-nginx-internal"
+    set:
+      controller.ingressClassResource.controllerValue: k8s.io/ingress-nginx-internal
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --controller-class=k8s.io/ingress-nginx-internal
+
+  - it: should create a Deployment with resource limits if `controller.resources.limits` is set
+    set:
+      controller.resources.limits.cpu: 500m
+      controller.resources.limits.memory: 512Mi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: 500m
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 512Mi
+
+  - it: should create a Deployment with topology spread constraints if `controller.topologySpreadConstraints` is set
+    set:
+      controller.topologySpreadConstraints:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
+              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/component: controller
+          topologyKey: topology.kubernetes.io/zone
+          maxSkew: 1
+          whenUnsatisfiable: ScheduleAnyway
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
+              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/component: controller
+          topologyKey: kubernetes.io/hostname
+          maxSkew: 1
+          whenUnsatisfiable: ScheduleAnyway
+    asserts:
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints
+          value:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: ingress-nginx
+                  app.kubernetes.io/instance: RELEASE-NAME
+                  app.kubernetes.io/component: controller
+              topologyKey: topology.kubernetes.io/zone
+              maxSkew: 1
+              whenUnsatisfiable: ScheduleAnyway
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: ingress-nginx
+                  app.kubernetes.io/instance: RELEASE-NAME
+                  app.kubernetes.io/component: controller
+              topologyKey: kubernetes.io/hostname
+              maxSkew: 1
+              whenUnsatisfiable: ScheduleAnyway
+
+  - it: should create a Deployment with affinity if `controller.affinity` is set
+    set:
+      controller.affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/name
+                    operator: In
+                    values:
+                      - '{{ include "ingress-nginx.name" . }}'
+                  - key: app.kubernetes.io/instance
+                    operator: In
+                    values:
+                      - '{{ .Release.Name }}'
+                  - key: app.kubernetes.io/component
+                    operator: In
+                    values:
+                      - controller
+              topologyKey: kubernetes.io/hostname
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            podAntiAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchExpressions:
+                      - key: app.kubernetes.io/name
+                        operator: In
+                        values:
+                          - ingress-nginx
+                      - key: app.kubernetes.io/instance
+                        operator: In
+                        values:
+                          - RELEASE-NAME
+                      - key: app.kubernetes.io/component
+                        operator: In
+                        values:
+                          - controller
+                  topologyKey: kubernetes.io/hostname
+
+  - it: should create a Deployment with `runAsGroup` if `controller.image.runAsGroup` is set
+    set:
+      controller.image.runAsGroup: 1000
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsGroup
+          value: 1000
+
+  - it: should create a Deployment with a custom registry if `global.image.registry` is set
+    set:
+      global.image.registry: custom.registry.io
+      controller.image.tag: v1.0.0-dev
+      controller.image.digest: sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: custom.registry.io/ingress-nginx/controller:v1.0.0-dev@sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+
+  - it: should create a Deployment with a custom registry if `controller.image.registry` is set
+    set:
+      controller.image.registry: custom.registry.io
+      controller.image.tag: v1.0.0-dev
+      controller.image.digest: sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: custom.registry.io/ingress-nginx/controller:v1.0.0-dev@sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+
+  - it: should create a Deployment with a custom image if `controller.image.image` is set
+    set:
+      controller.image.image: custom-repo/custom-image
+      controller.image.tag: v1.0.0-dev
+      controller.image.digest: sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: registry.k8s.io/custom-repo/custom-image:v1.0.0-dev@sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+
+  - it: should create a Deployment with a custom tag if `controller.image.tag` is set
+    set:
+      controller.image.tag: custom-tag
+      controller.image.digest: sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: registry.k8s.io/ingress-nginx/controller:custom-tag@sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+
+  - it: should create a Deployment with `progressDeadlineSeconds` if `controller.progressDeadlineSeconds` is set
+    set:
+      controller.progressDeadlineSeconds: 111
+    asserts:
+      - equal:
+          path: spec.progressDeadlineSeconds
+          value: 111
+
+  - it: should create a Deployment with token auto-mounting disabled if `serviceAccount.automountServiceAccountToken` is false
+    set:
+      serviceAccount.automountServiceAccountToken: false
+    asserts:
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: false

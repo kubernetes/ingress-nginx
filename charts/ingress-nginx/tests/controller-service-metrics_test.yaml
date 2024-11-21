@@ -1,0 +1,41 @@
+suite: Controller > Service > Metrics
+templates:
+  - controller-service-metrics.yaml
+
+tests:
+  - it: should not create a metrics Service if `controller.metrics.enabled` is false and `controller.metrics.service.enabled` is false
+    set:
+      controller.metrics.enabled: false
+      controller.metrics.service.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not create a metrics Service if `controller.metrics.enabled` is false and `controller.metrics.service.enabled` is true
+    set:
+      controller.metrics.enabled: false
+      controller.metrics.service.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not create a metrics Service if `controller.metrics.enabled` is true and `controller.metrics.service.enabled` is false
+    set:
+      controller.metrics.enabled: true
+      controller.metrics.service.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create a metrics Service if `controller.metrics.enabled` is true and `controller.metrics.service.enabled` is true
+    set:
+      controller.metrics.enabled: true
+      controller.metrics.service.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-controller-metrics

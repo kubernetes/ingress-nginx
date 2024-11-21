@@ -21,6 +21,8 @@ writeDirs=( \
   /chroot/etc/ingress-controller \
   /chroot/etc/ingress-controller/ssl \
   /chroot/etc/ingress-controller/auth \
+  /chroot/etc/ingress-controller/telemetry \
+  /chroot/etc/ingress-controller/geoip \
   /chroot/opt/modsecurity/var/log \
   /chroot/opt/modsecurity/var/upload \
   /chroot/opt/modsecurity/var/audit \
@@ -41,7 +43,8 @@ for dir in "${writeDirs[@]}"; do
 done
 
 mkdir -p  /chroot/lib /chroot/proc /chroot/usr /chroot/bin /chroot/dev /chroot/run 
-cp /etc/passwd /etc/group /chroot/etc/
+cp /etc/passwd /etc/group /etc/hosts /chroot/etc/
 cp -a /usr/* /chroot/usr/
 cp -a /etc/nginx/* /chroot/etc/nginx/
+cp -a /etc/ingress-controller/* /chroot/etc/ingress-controller/
 cp /lib/ld-musl-* /lib/libcrypto* /lib/libssl* /lib/libz* /chroot/lib/

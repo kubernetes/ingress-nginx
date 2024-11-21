@@ -2,8 +2,20 @@
 
 Enables requests served by NGINX for distributed telemetry via The OpenTelemetry Project.
 
-Using the third party module [opentelemetry-cpp-contrib/nginx](https://github.com/open-telemetry/opentelemetry-cpp-contrib/tree/main/instrumentation/nginx) the NGINX ingress controller can configure NGINX to enable [OpenTelemetry](http://opentelemetry.io) instrumentation.
+Using the third party module [opentelemetry-cpp-contrib/nginx](https://github.com/open-telemetry/opentelemetry-cpp-contrib/tree/main/instrumentation/nginx) the Ingress-Nginx Controller can configure NGINX to enable [OpenTelemetry](http://opentelemetry.io) instrumentation.
 By default this feature is disabled.
+
+Check out this demo showcasing OpenTelemetry in Ingress NGINX. The video provides an overview and
+practical demonstration of how OpenTelemetry can be utilized in Ingress NGINX for observability
+and monitoring purposes.
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=jpBfgJpTcfw&t=129" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.youtube.com/vi/jpBfgJpTcfw/0.jpg" alt="Video Thumbnail" />
+  </a>
+</p>
+
+<p align="center">Demo: OpenTelemetry in Ingress NGINX.</p>
 
 ## Usage
 
@@ -27,7 +39,7 @@ We must also set the host to use when uploading traces:
 ```yaml
 otlp-collector-host: "otel-coll-collector.otel.svc"
 ```
-NOTE: While the option is called `otlp-collector-host`, you will need to point this to any backend that recieves otlp-grpc.
+NOTE: While the option is called `otlp-collector-host`, you will need to point this to any backend that receives otlp-grpc.
 
 Next you will need to deploy a distributed telemetry system which uses OpenTelemetry.
 [opentelemetry-collector](https://github.com/open-telemetry/opentelemetry-collector), [Jaeger](https://www.jaegertracing.io/)
@@ -53,7 +65,7 @@ otel-max-queuesize
 
 # The delay interval in milliseconds between two consecutive exports.
 otel-schedule-delay-millis
-        
+
 # How long the export can run before it is cancelled.
 otel-schedule-delay-millis
 
@@ -100,7 +112,7 @@ graph TB
     end
 
     subgraph otel
-        otc["Otel Collector"] 
+        otc["Otel Collector"]
     end
 
     subgraph observability
@@ -135,17 +147,7 @@ graph TB
 
 To install the example and collectors run:
 
-1. Enable Ingress addon with:
-
-    ```yaml
-      opentelemetry:
-        enabled: true
-        image: registry.k8s.io/ingress-nginx/opentelemetry:v20230107-helm-chart-4.4.2-2-g96b3d2165@sha256:331b9bebd6acfcd2d3048abbdd86555f5be76b7e3d0b5af4300b04235c6056c9
-        containerSecurityContext:
-        allowPrivilegeEscalation: false
-    ```
-
-2. Enable OpenTelemetry and set the otlp-collector-host:
+1. Enable OpenTelemetry and set the otlp-collector-host:
 
     ```yaml
     $ echo '
@@ -171,15 +173,15 @@ To install the example and collectors run:
       ' | kubectl replace -f -
     ```
 
-4. Deploy otel-collector, grafana and Jaeger backend:
+2. Deploy otel-collector, grafana and Jaeger backend:
 
     ```bash
     # add helm charts needed for grafana and OpenTelemetry collector
     helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
     helm repo add grafana https://grafana.github.io/helm-charts
     helm repo update
-    # deply cert-manager needed for OpenTelemetry collector operator
-    kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.9.1/cert-manager.yaml
+    # deploy cert-manager needed for OpenTelemetry collector operator
+    kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.15.3/cert-manager.yaml
     # create observability namespace
     kubectl apply -f https://raw.githubusercontent.com/esigo/nginx-example/main/observability/namespace.yaml
     # install OpenTelemetry collector operator
@@ -206,7 +208,7 @@ To install the example and collectors run:
     make deploy-app
     ```
 
-5. Make a few requests to the Service:
+4. Make a few requests to the Service:
 
     ```bash
     kubectl port-forward --namespace=ingress-nginx service/ingress-nginx-controller 8090:80
@@ -235,7 +237,7 @@ To install the example and collectors run:
     RawContentLength  : 21
     ```
 
-6. View the Grafana UI:
+5. View the Grafana UI:
 
     ```bash
     kubectl port-forward --namespace=observability service/grafana 3000:80
@@ -243,7 +245,7 @@ To install the example and collectors run:
     In the Grafana interface we can see the details:
     ![grafana screenshot](../../images/otel-grafana-demo.png "grafana screenshot")
 
-7. View the Jaeger UI:
+6. View the Jaeger UI:
 
     ```bash
     kubectl port-forward --namespace=observability service/jaeger-all-in-one-query 16686:16686
@@ -251,10 +253,52 @@ To install the example and collectors run:
     In the Jaeger interface we can see the details:
     ![Jaeger screenshot](../../images/otel-jaeger-demo.png "Jaeger screenshot")
 
-8. View the Zipkin UI:
+7. View the Zipkin UI:
 
     ```bash
     kubectl port-forward --namespace=observability service/zipkin 9411:9411
     ```
     In the Zipkin interface we can see the details:
     ![zipkin screenshot](../../images/otel-zipkin-demo.png "zipkin screenshot")
+
+## Migration from OpenTracing, Jaeger, Zipkin and Datadog
+
+If you are migrating from OpenTracing, Jaeger, Zipkin, or Datadog to OpenTelemetry,
+you may need to update various annotations and configurations. Here are the mappings
+for common annotations and configurations:
+
+### Annotations
+
+| Legacy                                                        | OpenTelemetry                                                   |
+|---------------------------------------------------------------|-----------------------------------------------------------------|
+| `nginx.ingress.kubernetes.io/enable-opentracing`              | `nginx.ingress.kubernetes.io/enable-opentelemetry`              |
+| `nginx.ingress.kubernetes.io/opentracing-trust-incoming-span` | `nginx.ingress.kubernetes.io/opentelemetry-trust-incoming-span` |
+
+### Configs
+
+| Legacy                                | OpenTelemetry                                |
+|---------------------------------------|----------------------------------------------|
+| `opentracing-operation-name`          | `opentelemetry-operation-name`               |
+| `opentracing-location-operation-name` | `opentelemetry-operation-name`               |
+| `opentracing-trust-incoming-span`     | `opentelemetry-trust-incoming-span`          |
+| `zipkin-collector-port`               | `otlp-collector-port`                        |
+| `zipkin-service-name`                 | `otel-service-name`                          |
+| `zipkin-sample-rate`                  | `otel-sampler-ratio`                         |
+| `jaeger-collector-port`               | `otlp-collector-port`                        |
+| `jaeger-endpoint`                     | `otlp-collector-port`, `otlp-collector-host` |
+| `jaeger-service-name`                 | `otel-service-name`                          |
+| `jaeger-propagation-format`           | `N/A`                                        |
+| `jaeger-sampler-type`                 | `otel-sampler`                               |
+| `jaeger-sampler-param`                | `otel-sampler`                               |
+| `jaeger-sampler-host`                 | `N/A`                                        |
+| `jaeger-sampler-port`                 | `N/A`                                        |
+| `jaeger-trace-context-header-name`    | `N/A`                                        |
+| `jaeger-debug-header`                 | `N/A`                                        |
+| `jaeger-baggage-header`               | `N/A`                                        |
+| `jaeger-tracer-baggage-header-prefix` | `N/A`                                        |
+| `datadog-collector-port`              | `otlp-collector-port`                        |
+| `datadog-service-name`                | `otel-service-name`                          |
+| `datadog-environment`                 | `N/A`                                        |
+| `datadog-operation-name-override`     | `N/A`                                        |
+| `datadog-priority-sampling`           | `otel-sampler`                               |
+| `datadog-sample-rate`                 | `otel-sampler-ratio`                         |

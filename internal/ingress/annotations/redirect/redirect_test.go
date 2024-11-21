@@ -43,7 +43,7 @@ func TestPermanentRedirectWithDefaultCode(t *testing.T) {
 	ing := new(networking.Ingress)
 
 	data := make(map[string]string, 1)
-	data[parser.GetAnnotationWithPrefix("permanent-redirect")] = defRedirectURL
+	data[parser.GetAnnotationWithPrefix(permanentRedirectAnnotation)] = defRedirectURL
 	ing.SetAnnotations(data)
 
 	i, err := rp.Parse(ing)
@@ -81,8 +81,8 @@ func TestPermanentRedirectWithCustomCode(t *testing.T) {
 			ing := new(networking.Ingress)
 
 			data := make(map[string]string, 2)
-			data[parser.GetAnnotationWithPrefix("permanent-redirect")] = defRedirectURL
-			data[parser.GetAnnotationWithPrefix("permanent-redirect-code")] = strconv.Itoa(tc.input)
+			data[parser.GetAnnotationWithPrefix(permanentRedirectAnnotation)] = defRedirectURL
+			data[parser.GetAnnotationWithPrefix(permanentRedirectAnnotationCode)] = strconv.Itoa(tc.input)
 			ing.SetAnnotations(data)
 
 			i, err := rp.Parse(ing)
@@ -103,7 +103,7 @@ func TestPermanentRedirectWithCustomCode(t *testing.T) {
 	}
 }
 
-func TestTemporalRedirect(t *testing.T) {
+func TestTemporalRedirectWithDefaultCode(t *testing.T) {
 	rp := NewParser(resolver.Mock{})
 	if rp == nil {
 		t.Fatalf("Expected a parser.IngressAnnotation but returned nil")
@@ -112,8 +112,8 @@ func TestTemporalRedirect(t *testing.T) {
 	ing := new(networking.Ingress)
 
 	data := make(map[string]string, 1)
-	data[parser.GetAnnotationWithPrefix("from-to-www-redirect")] = "true"
-	data[parser.GetAnnotationWithPrefix("temporal-redirect")] = defRedirectURL
+	data[parser.GetAnnotationWithPrefix(fromToWWWRedirAnnotation)] = "true"
+	data[parser.GetAnnotationWithPrefix(temporalRedirectAnnotation)] = defRedirectURL
 	ing.SetAnnotations(data)
 
 	i, err := rp.Parse(ing)
@@ -128,15 +128,53 @@ func TestTemporalRedirect(t *testing.T) {
 		t.Errorf("Expected %v as redirect but returned %s", defRedirectURL, redirect.URL)
 	}
 	if redirect.Code != http.StatusFound {
-		t.Errorf("Expected %v as redirect to have a code %d but had %d", defRedirectURL, defaultPermanentRedirectCode, redirect.Code)
+		t.Errorf("Expected %v as redirect to have a code %d but had %d", defRedirectURL, http.StatusFound, redirect.Code)
 	}
-	if redirect.FromToWWW != true {
-		t.Errorf("Expected %v as redirect to have from-to-www as %v but got %v", defRedirectURL, true, redirect.FromToWWW)
+}
+
+func TestTemporalRedirectWithCustomCode(t *testing.T) {
+	rp := NewParser(resolver.Mock{})
+	if rp == nil {
+		t.Fatalf("Expected a parser.IngressAnnotation but returned nil")
+	}
+
+	testCases := map[string]struct {
+		input        int
+		expectOutput int
+	}{
+		"valid code":   {http.StatusTemporaryRedirect, http.StatusTemporaryRedirect},
+		"invalid code": {http.StatusTeapot, http.StatusFound},
+	}
+
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			ing := new(networking.Ingress)
+
+			data := make(map[string]string, 2)
+			data[parser.GetAnnotationWithPrefix(fromToWWWRedirAnnotation)] = "true"
+			data[parser.GetAnnotationWithPrefix(temporalRedirectAnnotation)] = defRedirectURL
+			data[parser.GetAnnotationWithPrefix(temporalRedirectAnnotationCode)] = strconv.Itoa(tc.input)
+			ing.SetAnnotations(data)
+
+			i, err := rp.Parse(ing)
+			if err != nil {
+				t.Errorf("Unexpected error with ingress: %v", err)
+			}
+			redirect, ok := i.(*Config)
+			if !ok {
+				t.Errorf("Expected a Redirect type")
+			}
+			if redirect.URL != defRedirectURL {
+				t.Errorf("Expected %v as redirect but returned %s", defRedirectURL, redirect.URL)
+			}
+			if redirect.Code != tc.expectOutput {
+				t.Errorf("Expected %v as redirect to have a code %d but had %d", defRedirectURL, tc.expectOutput, redirect.Code)
+			}
+		})
 	}
 }
 
 func TestIsValidURL(t *testing.T) {
-
 	invalid := "ok.com"
 	urlParse, err := url.Parse(invalid)
 	if err != nil {
@@ -153,5 +191,24 @@ func TestIsValidURL(t *testing.T) {
 	err = isValidURL(valid)
 	if err != nil {
 		t.Errorf("expected nil but got %v", err)
+	}
+}
+
+func TestParseAnnotations(t *testing.T) {
+	ing := new(networking.Ingress)
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix(relativeRedirectsAnnotation)] = "true"
+	ing.SetAnnotations(data)
+
+	_, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	// test ingress using the annotation without a TLS section
+	_, err = NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error parsing ingress with relative-redirects")
 	}
 }

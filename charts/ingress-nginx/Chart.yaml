@@ -1,35 +1,25 @@
 annotations:
   artifacthub.io/changes: |
-    - "Upgrade alpine 3.17.2"
-    - "Upgrade golang 1.20"
-    - "Drop testing/support for Kubernetes 1.23"
-    - "docs(helm): fix value key in readme for enabling certManager (#9640)"
-    - "Update Ingress-Nginx version controller-v1.7.0"
-    - "feat: OpenTelemetry module integration (#9062)"
-    - "canary-weight-total annotation ignored in rule backends (#9729)"
-    - "fix controller psp's volume config (#9740)"
-    - "Fix several Helm YAML issues with extraModules and extraInitContainers (#9709)"
-    - "Chart: Drop `controller.headers`, rework DH param secret. (#9659)"
-    - "Deployment/DaemonSet: Label pods using `ingress-nginx.labels`. (#9732)"
-    - "HPA: autoscaling/v2beta1 deprecated, bump apiVersion to v2 for defaultBackend (#9731)"
-    - "Fix incorrect annotation name in upstream hashing configuration (#9617)"
-  artifacthub.io/prerelease: "false"
+    - Update Ingress-Nginx version controller-v1.12.0-beta.0
+  artifacthub.io/prerelease: "true"
 apiVersion: v2
-appVersion: 1.7.0
+appVersion: 1.12.0-beta.0
 description: Ingress controller for Kubernetes using NGINX as a reverse proxy and
   load balancer
-engine: gotpl
 home: https://github.com/kubernetes/ingress-nginx
 icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
 keywords:
 - ingress
 - nginx
-kubeVersion: '>=1.20.0-0'
+kubeVersion: '>=1.21.0-0'
 maintainers:
+- name: cpanato
+- name: Gacko
+- name: puerco
 - name: rikatz
 - name: strongjz
 - name: tao12345666333
 name: ingress-nginx
 sources:
 - https://github.com/kubernetes/ingress-nginx
-version: 4.6.0
+version: 4.12.0-beta.0

@@ -1,0 +1,32 @@
+suite: Admission Webhooks > ValidatingWebhookConfiguration
+templates:
+  - admission-webhooks/validating-webhook.yaml
+
+tests:
+  - it: should not create a ValidatingWebhookConfiguration if `controller.admissionWebhooks.enabled` is false
+    set:
+      controller.admissionWebhooks.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create a ValidatingWebhookConfiguration if `controller.admissionWebhooks.enabled` is true
+    set:
+      controller.admissionWebhooks.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ValidatingWebhookConfiguration
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-admission
+
+  - it: should create a ValidatingWebhookConfiguration with a custom port if `controller.admissionWebhooks.service.servicePort` is set
+    set:
+      controller.admissionWebhooks.enabled: true
+      controller.admissionWebhooks.service.servicePort: 9443
+    asserts:
+      - equal:
+          path: webhooks[0].clientConfig.service.port
+          value: 9443

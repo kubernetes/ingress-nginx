@@ -30,7 +30,7 @@ import (
 func TestNewUDPLogListener(t *testing.T) {
 	var count uint64
 
-	fn := func(message []byte) {
+	fn := func(message []byte) { //nolint:unparam,revive // Unused `message` param is required by the handleMessages function
 		atomic.AddUint64(&count, 1)
 	}
 
@@ -57,8 +57,13 @@ func TestNewUDPLogListener(t *testing.T) {
 		}
 	}()
 
-	conn, _ := net.Dial("unix", tmpFile)
-	conn.Write([]byte("message"))
+	conn, err := net.Dial("unix", tmpFile)
+	if err != nil {
+		t.Errorf("unexpected error connecting to unix socket: %v", err)
+	}
+	if _, err := conn.Write([]byte("message")); err != nil {
+		t.Errorf("unexpected error writing to unix socket: %v", err)
+	}
 	conn.Close()
 
 	time.Sleep(1 * time.Millisecond)
@@ -68,7 +73,6 @@ func TestNewUDPLogListener(t *testing.T) {
 }
 
 func TestCollector(t *testing.T) {
-
 	buckets := struct {
 		TimeBuckets   []float64
 		LengthBuckets []float64
@@ -79,15 +83,19 @@ func TestCollector(t *testing.T) {
 		prometheus.ExponentialBuckets(10, 10, 7),
 	}
 
+	bucketFactor := 1.1
+	maxBuckets := uint32(100)
+
 	cases := []struct {
-		name             string
-		data             []string
-		metrics          []string
-		useStatusClasses bool
-		excludeMetrics   []string
-		wantBefore       string
-		removeIngresses  []string
-		wantAfter        string
+		name                    string
+		data                    []string
+		metrics                 []string
+		metricsPerUndefinedHost bool
+		useStatusClasses        bool
+		excludeMetrics          []string
+		wantBefore              string
+		removeIngresses         []string
+		wantAfter               string
 	}{
 		{
 			name: "invalid metric object should not increase prometheus metrics",
@@ -584,13 +592,69 @@ func TestCollector(t *testing.T) {
 				nginx_ingress_controller_response_duration_seconds_count{canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx"} 1
 			`,
 		},
+		{
+			name: "metrics with a host should not be dropped when the host is not in the hosts slice but metricsPerUndefinedHost is true",
+			data: []string{`[{
+				"host":"wildcard.testshop.com",
+				"status":"200",
+				"bytesSent":150.0,
+				"method":"GET",
+				"path":"/admin",
+				"requestLength":300.0,
+				"requestTime":60.0,
+				"upstreamLatency":1.0,
+				"upstreamHeaderTime":5.0,
+				"upstreamName":"test-upstream",
+				"upstreamIP":"1.1.1.1:8080",
+				"upstreamResponseTime":200,
+				"upstreamStatus":"220",
+				"namespace":"test-app-production",
+				"ingress":"web-yml",
+				"service":"test-app",
+				"canary":""
+			}]`},
+			excludeMetrics:          []string{"response_duration_seconds2", "test.*", "nginx_ingress_.*", "response_duration_secon"},
+			metrics:                 []string{"nginx_ingress_controller_requests"},
+			metricsPerUndefinedHost: true,
+			useStatusClasses:        true,
+			wantBefore: `
+				# HELP nginx_ingress_controller_requests The total number of client requests
+				# TYPE nginx_ingress_controller_requests counter
+				nginx_ingress_controller_requests{canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="wildcard.testshop.com",ingress="web-yml",method="GET",namespace="test-app-production",path="/admin",service="test-app",status="2xx"} 1
+			`,
+		},
+		{
+			name: "metrics with a host should be dropped when the host is not in the hosts slice",
+			data: []string{`[{
+				"host":"wildcard.testshop.com",
+				"status":"200",
+				"bytesSent":150.0,
+				"method":"GET",
+				"path":"/admin",
+				"requestLength":300.0,
+				"requestTime":60.0,
+				"upstreamLatency":1.0,
+				"upstreamHeaderTime":5.0,
+				"upstreamName":"test-upstream",
+				"upstreamIP":"1.1.1.1:8080",
+				"upstreamResponseTime":200,
+				"upstreamStatus":"220",
+				"namespace":"test-app-production",
+				"ingress":"web-yml",
+				"service":"test-app",
+				"canary":""
+			}]`},
+			excludeMetrics:   []string{"response_duration_seconds2", "test.*", "nginx_ingress_.*", "response_duration_secon"},
+			metrics:          []string{"nginx_ingress_controller_requests"},
+			useStatusClasses: true,
+		},
 	}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			registry := prometheus.NewPedanticRegistry()
 
-			sc, err := NewSocketCollector("pod", "default", "ingress", true, c.useStatusClasses, buckets, c.excludeMetrics)
+			sc, err := NewSocketCollector("pod", "default", "ingress", true, c.metricsPerUndefinedHost, c.useStatusClasses, buckets, bucketFactor, maxBuckets, c.excludeMetrics)
 			if err != nil {
 				t.Errorf("%v: unexpected error creating new SocketCollector: %v", c.name, err)
 			}

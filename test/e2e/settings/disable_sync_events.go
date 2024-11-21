@@ -44,12 +44,14 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-sync-events", func() {
 				return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 			})
 
+		//nolint:goconst //string interpolation
 		events, err := f.KubeClientSet.CoreV1().Events(ing.Namespace).List(context.TODO(), metav1.ListOptions{FieldSelector: "reason=Sync,involvedObject.name=" + host})
 		assert.Nil(ginkgo.GinkgoT(), err, "listing events")
 
 		assert.NotEmpty(ginkgo.GinkgoT(), events.Items, "got events")
 	})
 
+	//nolint:dupl // Ignore dupl errors for similar test case
 	ginkgo.It("should create sync events", func() {
 		host := "disable-sync-events-false"
 		f.NewEchoDeployment(framework.WithDeploymentReplicas(1))
@@ -77,6 +79,7 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-sync-events", func() {
 		assert.NotEmpty(ginkgo.GinkgoT(), events.Items, "got events")
 	})
 
+	//nolint:dupl // Ignore dupl errors for similar test case
 	ginkgo.It("should not create sync events", func() {
 		host := "disable-sync-events-true"
 		f.NewEchoDeployment(framework.WithDeploymentReplicas(1))
@@ -103,5 +106,4 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-sync-events", func() {
 
 		assert.Empty(ginkgo.GinkgoT(), events.Items, "got events")
 	})
-
 })

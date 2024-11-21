@@ -34,6 +34,8 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 	})
 
 	ginkgo.It("[BAD_ANNOTATIONS] should drop an ingress if there is an invalid character in some annotation", func() {
+		disableSnippet := f.AllowSnippetConfiguration()
+		defer disableSnippet()
 		host := "invalid-value-test"
 
 		annotations := map[string]string{
@@ -42,7 +44,6 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.UpdateNginxConfigMapData("allow-snippet-annotations", "true")
 		f.UpdateNginxConfigMapData("annotation-value-word-blocklist", "something_forbidden,otherthing_forbidden,{")
 
 		f.EnsureIngress(ing)
@@ -65,6 +66,9 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 	})
 
 	ginkgo.It("[BAD_ANNOTATIONS] should drop an ingress if there is a forbidden word in some annotation", func() {
+		disableSnippet := f.AllowSnippetConfiguration()
+		defer disableSnippet()
+
 		host := "forbidden-value-test"
 
 		annotations := map[string]string{
@@ -76,7 +80,6 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 		}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.UpdateNginxConfigMapData("allow-snippet-annotations", "true")
 		f.UpdateNginxConfigMapData("annotation-value-word-blocklist", "something_forbidden,otherthing_forbidden,content_by_lua_block")
 		// Sleep a while just to guarantee that the configmap is applied
 		framework.Sleep()
@@ -100,6 +103,8 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 	})
 
 	ginkgo.It("[BAD_ANNOTATIONS] should allow an ingress if there is a default blocklist config in place", func() {
+		disableSnippet := f.AllowSnippetConfiguration()
+		defer disableSnippet()
 
 		hostValid := "custom-allowed-value-test"
 		annotationsValid := map[string]string{
@@ -131,6 +136,8 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 	})
 
 	ginkgo.It("[BAD_ANNOTATIONS] should drop an ingress if there is a custom blocklist config in place and allow others to pass", func() {
+		disableSnippet := f.AllowSnippetConfiguration()
+		defer disableSnippet()
 		host := "custom-forbidden-value-test"
 
 		annotations := map[string]string{
@@ -159,6 +166,5 @@ var _ = framework.DescribeAnnotation("Bad annotation values", func() {
 			WithHeader("Host", host).
 			Expect().
 			Status(http.StatusNotFound)
-
 	})
 })

@@ -1,0 +1,198 @@
+suite: Default Backend > Deployment
+templates:
+  - default-backend-deployment.yaml
+
+tests:
+  - it: should not create a Deployment if `defaultBackend.enabled` is false
+    set:
+      defaultBackend.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create a Deployment if `defaultBackend.enabled` is true
+    set:
+      defaultBackend.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-defaultbackend
+
+  - it: should create a Deployment with 3 replicas if `defaultBackend.replicaCount` is 3
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.replicaCount: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: should create a Deployment without replicas if `defaultBackend.autoscaling.enabled` is true
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.autoscaling.enabled: true
+    asserts:
+      - notExists:
+          path: spec.replicas
+
+  - it: should create a Deployment with resource limits if `defaultBackend.resources.limits` is set
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.resources.limits.cpu: 500m
+      defaultBackend.resources.limits.memory: 512Mi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: 500m
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 512Mi
+
+  - it: should create a Deployment with topology spread constraints if `defaultBackend.topologySpreadConstraints` is set
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.topologySpreadConstraints:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
+              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/component: default-backend
+          topologyKey: topology.kubernetes.io/zone
+          maxSkew: 1
+          whenUnsatisfiable: ScheduleAnyway
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
+              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/component: default-backend
+          topologyKey: kubernetes.io/hostname
+          maxSkew: 1
+          whenUnsatisfiable: ScheduleAnyway
+    asserts:
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints
+          value:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: ingress-nginx
+                  app.kubernetes.io/instance: RELEASE-NAME
+                  app.kubernetes.io/component: default-backend
+              topologyKey: topology.kubernetes.io/zone
+              maxSkew: 1
+              whenUnsatisfiable: ScheduleAnyway
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: ingress-nginx
+                  app.kubernetes.io/instance: RELEASE-NAME
+                  app.kubernetes.io/component: default-backend
+              topologyKey: kubernetes.io/hostname
+              maxSkew: 1
+              whenUnsatisfiable: ScheduleAnyway
+
+  - it: should create a Deployment with affinity if `defaultBackend.affinity` is set
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/name
+                    operator: In
+                    values:
+                      - '{{ include "ingress-nginx.name" . }}'
+                  - key: app.kubernetes.io/instance
+                    operator: In
+                    values:
+                      - '{{ .Release.Name }}'
+                  - key: app.kubernetes.io/component
+                    operator: In
+                    values:
+                      - default-backend
+              topologyKey: kubernetes.io/hostname
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            podAntiAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchExpressions:
+                      - key: app.kubernetes.io/name
+                        operator: In
+                        values:
+                          - ingress-nginx
+                      - key: app.kubernetes.io/instance
+                        operator: In
+                        values:
+                          - RELEASE-NAME
+                      - key: app.kubernetes.io/component
+                        operator: In
+                        values:
+                          - default-backend
+                  topologyKey: kubernetes.io/hostname
+
+  - it: should create a Deployment with `runAsGroup` if `defaultBackend.image.runAsGroup` is set
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.image.runAsGroup: 1000
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsGroup
+          value: 1000
+
+  - it: should create a Deployment with a custom registry if `global.image.registry` is set
+    set:
+      global.image.registry: custom.registry.io
+      defaultBackend.enabled: true
+      defaultBackend.image.tag: v1.0.0-dev
+      defaultBackend.image.digest: sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: custom.registry.io/defaultbackend-amd64:v1.0.0-dev@sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+
+  - it: should create a Deployment with a custom registry if `defaultBackend.image.registry` is set
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.image.registry: custom.registry.io
+      defaultBackend.image.tag: v1.0.0-dev
+      defaultBackend.image.digest: sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: custom.registry.io/defaultbackend-amd64:v1.0.0-dev@sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+
+  - it: should create a Deployment with a custom image if `defaultBackend.image.image` is set
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.image.image: custom-repo/custom-image
+      defaultBackend.image.tag: v1.0.0-dev
+      defaultBackend.image.digest: sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: registry.k8s.io/custom-repo/custom-image:v1.0.0-dev@sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+
+  - it: should create a Deployment with a custom tag if `defaultBackend.image.tag` is set
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.image.tag: custom-tag
+      defaultBackend.image.digest: sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: registry.k8s.io/defaultbackend-amd64:custom-tag@sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+
+  - it: should create a Deployment with token auto-mounting disabled if `defaultBackend.serviceAccount.automountServiceAccountToken` is false
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.serviceAccount.automountServiceAccountToken: false
+    asserts:
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: false

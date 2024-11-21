@@ -1,4 +1,4 @@
-site_name: NGINX Ingress Controller
+site_name: Ingress-Nginx Controller
 repo_name: "kubernetes/ingress-nginx"
 repo_url: https://github.com/kubernetes/ingress-nginx
 site_url: https://kubernetes.github.io/ingress-nginx
@@ -65,7 +65,6 @@ plugins:
 
 extra_css: [extra.css]
 
-google_analytics: ["UA-118407822-1", "kubernetes.github.io"]
 
 nav:
   - Welcome:
@@ -79,11 +78,12 @@ nav:
       - Role Based Access Control (RBAC): "deploy/rbac.md"
       - Upgrade: "deploy/upgrade.md"
       - Hardening guide: "deploy/hardening-guide.md"
-  - User guide:
+  - User Guide:
       - NGINX Configuration:
           - Introduction: "user-guide/nginx-configuration/index.md"
           - Basic usage: "user-guide/basic-usage.md"
           - Annotations: "user-guide/nginx-configuration/annotations.md"
+          - Annotations Risks: "user-guide/nginx-configuration/annotations-risk.md"
           - ConfigMap: "user-guide/nginx-configuration/configmap.md"
           - Custom NGINX template: "user-guide/nginx-configuration/custom-template.md"
           - Log format: "user-guide/nginx-configuration/log-format.md"
@@ -100,7 +100,6 @@ nav:
       - TLS/HTTPS: "user-guide/tls.md"
       - Third party addons:
           - ModSecurity Web Application Firewall: "user-guide/third-party-addons/modsecurity.md"
-          - OpenTracing: "user-guide/third-party-addons/opentracing.md"
           - OpenTelemetry: "user-guide/third-party-addons/opentelemetry.md"
   - Examples:
       - Introduction: "examples/index.md"
@@ -125,7 +124,9 @@ nav:
       - Rewrite: "examples/rewrite/README.md"
       - Static IPs: "examples/static-ip/README.md"
       - TLS termination: "examples/tls-termination/README.md"
-      - Pod Security Policy (PSP): "examples/psp/README.md"
+      - Open Policy Agent rules: "examples/openpolicyagent/README.md"
+      - Canary Deployments: "examples/canary/README.md"
   - Developer Guide:
       - Getting Started: "developer-guide/getting-started.md"
       - Code Overview: "developer-guide/code-overview.md"
+  - FAQ: "faq.md"

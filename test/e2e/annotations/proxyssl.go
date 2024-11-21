@@ -27,6 +27,8 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
+const proxySSLHost = "proxyssl.foo.com"
+
 var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 	f := framework.NewDefaultFramework("proxyssl")
 
@@ -35,7 +37,7 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 	})
 
 	ginkgo.It("should set valid proxy-ssl-secret", func() {
-		host := "proxyssl.foo.com"
+		host := proxySSLHost
 		annotations := make(map[string]string)
 		annotations["nginx.ingress.kubernetes.io/proxy-ssl-secret"] = f.Namespace + "/" + host
 
@@ -45,7 +47,7 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
-		assertProxySSL(f, host, "", "DEFAULT", "TLSv1 TLSv1.1 TLSv1.2", "off", 1, "")
+		assertProxySSL(f, host, "", "DEFAULT", "TLSv1.2", "off", 1, "")
 
 		f.HTTPTestClient().
 			GET("/").
@@ -62,7 +64,7 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 	})
 
 	ginkgo.It("should set valid proxy-ssl-secret, proxy-ssl-verify to on, proxy-ssl-verify-depth to 2, and proxy-ssl-server-name to on", func() {
-		host := "proxyssl.foo.com"
+		host := proxySSLHost
 		annotations := make(map[string]string)
 		annotations["nginx.ingress.kubernetes.io/proxy-ssl-secret"] = f.Namespace + "/" + host
 		annotations["nginx.ingress.kubernetes.io/proxy-ssl-verify"] = "on"
@@ -75,7 +77,7 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
-		assertProxySSL(f, host, "", "DEFAULT", "TLSv1 TLSv1.1 TLSv1.2", "on", 2, "on")
+		assertProxySSL(f, host, "", "DEFAULT", "TLSv1.2", "on", 2, "on")
 
 		f.HTTPTestClient().
 			GET("/").
@@ -90,9 +92,9 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 			Expect().
 			Status(http.StatusOK)
 	})
-
+	//nolint:dupl // Ignore dupl errors for similar test case
 	ginkgo.It("should set valid proxy-ssl-secret, proxy-ssl-ciphers to HIGH:!AES", func() {
-		host := "proxyssl.foo.com"
+		host := proxySSLHost
 		annotations := make(map[string]string)
 		annotations["nginx.ingress.kubernetes.io/proxy-ssl-secret"] = f.Namespace + "/" + host
 		annotations["nginx.ingress.kubernetes.io/proxy-ssl-ciphers"] = "HIGH:!AES"
@@ -103,7 +105,7 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
-		assertProxySSL(f, host, "", "HIGH:!AES", "TLSv1 TLSv1.1 TLSv1.2", "off", 1, "")
+		assertProxySSL(f, host, "", "HIGH:!AES", "TLSv1.2", "off", 1, "")
 
 		f.HTTPTestClient().
 			GET("/").
@@ -118,9 +120,9 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 			Expect().
 			Status(http.StatusOK)
 	})
-
+	//nolint:dupl // Ignore dupl errors for similar test case
 	ginkgo.It("should set valid proxy-ssl-secret, proxy-ssl-protocols", func() {
-		host := "proxyssl.foo.com"
+		host := proxySSLHost
 		annotations := make(map[string]string)
 		annotations["nginx.ingress.kubernetes.io/proxy-ssl-secret"] = f.Namespace + "/" + host
 		annotations["nginx.ingress.kubernetes.io/proxy-ssl-protocols"] = "TLSv1.2 TLSv1.3"
@@ -169,7 +171,7 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 		wlValue := "true"
 		f.UpdateNginxConfigMapData(wlKey, wlValue)
 
-		assertProxySSL(f, host, secretName, "DEFAULT", "TLSv1 TLSv1.1 TLSv1.2", "on", 1, "on")
+		assertProxySSL(f, host, secretName, "DEFAULT", "TLSv1.2", "on", 1, "on")
 
 		f.WaitForNginxCustomConfiguration("## start server proxyssl.com", "location ", func(server string) bool {
 			return (!strings.Contains(server, "proxy_ssl_trusted_certificate") &&
@@ -195,7 +197,6 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 				strings.Contains(server, "proxy_ssl_certificate_key"))
 		})
 	})
-
 })
 
 func assertProxySSL(f *framework.Framework, host, sslName, ciphers, protocols, verify string, depth int, proxySSLServerName string) {

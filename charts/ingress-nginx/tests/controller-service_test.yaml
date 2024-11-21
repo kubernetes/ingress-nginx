@@ -1,0 +1,52 @@
+suite: Controller > Service
+templates:
+  - controller-service.yaml
+
+tests:
+  - it: should not create a Service if `controller.service.external.enabled` is false
+    set:
+      controller.service.external.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create a Service if `controller.service.external.enabled` is true
+    set:
+      controller.service.external.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-controller
+
+  - it: should create a Service of type "NodePort" if `controller.service.external.enabled` is true and `controller.service.type` is "NodePort"
+    set:
+      controller.service.external.enabled: true
+      controller.service.type: NodePort
+    asserts:
+      - equal:
+          path: spec.type
+          value: NodePort
+
+  - it: should create a Service without `clusterIPs` if `controller.service.clusterIPs` is not set
+    set:
+      controller.service.external.enabled: true
+    asserts:
+      - notExists:
+          path: spec.clusterIPs
+
+  - it: should create a Service with `clusterIPs` if `controller.service.clusterIPs` is set
+    set:
+      controller.service.external.enabled: true
+      controller.service.clusterIPs:
+        - 10.0.0.1
+        - fd00::1
+    asserts:
+      - equal:
+          path: spec.clusterIPs
+          value:
+            - 10.0.0.1
+            - fd00::1

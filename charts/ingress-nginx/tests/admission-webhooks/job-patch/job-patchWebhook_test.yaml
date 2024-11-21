@@ -1,0 +1,12 @@
+suite: Admission Webhooks > Patch Job > Patch Webhook Job
+templates:
+  - admission-webhooks/job-patch/job-patchWebhook.yaml
+
+tests:
+  - it: should create a Job with token auto-mounting disabled if `controller.admissionWebhooks.patch.serviceAccount.automountServiceAccountToken` is false
+    set:
+      controller.admissionWebhooks.patch.serviceAccount.automountServiceAccountToken: false
+    asserts:
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: false

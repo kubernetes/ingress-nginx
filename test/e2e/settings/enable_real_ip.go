@@ -47,6 +47,7 @@ var _ = framework.DescribeSetting("enable-real-ip", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
+				//nolint:goconst //already a const
 				return strings.Contains(server, "server_name "+host) &&
 					!strings.Contains(server, "proxy_set_header X-Forwarded-Proto $full_x_forwarded_proto;")
 			})
@@ -64,15 +65,15 @@ var _ = framework.DescribeSetting("enable-real-ip", func() {
 			Body().
 			Raw()
 
-		assert.NotContains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=myhost"))
-		assert.NotContains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-host=myhost"))
-		assert.NotContains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-proto=myproto"))
-		assert.NotContains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-port=1234"))
+		assert.NotContains(ginkgo.GinkgoT(), body, "host=myhost")
+		assert.NotContains(ginkgo.GinkgoT(), body, "x-forwarded-host=myhost")
+		assert.NotContains(ginkgo.GinkgoT(), body, "x-forwarded-proto=myproto")
+		assert.NotContains(ginkgo.GinkgoT(), body, "x-forwarded-port=1234")
 		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=%s", host))
 		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-host=%s", host))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-proto=http"))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-port=80"))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-for=1.2.3.4"))
+		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-proto=http")
+		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-port=80")
+		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-for=1.2.3.4")
 	})
 
 	ginkgo.It("should not trust X-Forwarded-For header when setting is false", func() {
@@ -101,13 +102,13 @@ var _ = framework.DescribeSetting("enable-real-ip", func() {
 			Raw()
 
 		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=%s", host))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-port=80"))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-proto=http"))
-		assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-original-forwarded-for=1.2.3.4"))
-		assert.NotContains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=myhost"))
-		assert.NotContains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-host=myhost"))
-		assert.NotContains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-proto=myproto"))
-		assert.NotContains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-port=1234"))
-		assert.NotContains(ginkgo.GinkgoT(), body, fmt.Sprintf("x-forwarded-for=1.2.3.4"))
+		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-port=80")
+		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-proto=http")
+		assert.Contains(ginkgo.GinkgoT(), body, "x-original-forwarded-for=1.2.3.4")
+		assert.NotContains(ginkgo.GinkgoT(), body, "host=myhost")
+		assert.NotContains(ginkgo.GinkgoT(), body, "x-forwarded-host=myhost")
+		assert.NotContains(ginkgo.GinkgoT(), body, "x-forwarded-proto=myproto")
+		assert.NotContains(ginkgo.GinkgoT(), body, "x-forwarded-port=1234")
+		assert.NotContains(ginkgo.GinkgoT(), body, "x-forwarded-for=1.2.3.4")
 	})
 })

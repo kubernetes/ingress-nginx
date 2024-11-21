@@ -29,6 +29,11 @@ SHELL=/bin/bash -o pipefail -o errexit
 # Use the 0.0 tag for testing, it shouldn't clobber any release builds
 TAG ?= $(shell cat TAG)
 
+# The env below is called GO_VERSION and not GOLANG_VERSION because 
+# the gcb image we use to build already defines GOLANG_VERSION and is a 
+# really old version
+GO_VERSION ?= $(shell cat GOLANG_VERSION)
+
 # e2e settings
 # Allow limiting the scope of the e2e tests. By default run everything
 FOCUS ?=
@@ -68,7 +73,6 @@ image: clean-image ## Build image for a particular arch.
 	docker build \
 		${PLATFORM_FLAG} ${PLATFORM} \
 		--no-cache \
-		--pull \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
 		--build-arg TARGETARCH="$(ARCH)" \
@@ -85,7 +89,6 @@ image-chroot: clean-chroot-image ## Build image for a particular arch.
 	echo "Building docker image ($(ARCH))..."
 	docker build \
 		--no-cache \
-		--pull \
 		--build-arg BASE_IMAGE="$(BASE_IMAGE)" \
 		--build-arg VERSION="$(TAG)" \
 		--build-arg TARGETARCH="$(ARCH)" \
@@ -107,7 +110,7 @@ clean-chroot-image: ## Removes local image
 
 .PHONY: build
 build:  ## Build ingress controller, debug tool and pre-stop hook.
-	build/run-in-docker.sh \
+	E2E_IMAGE=golang:$(GO_VERSION)-alpine3.20 USE_SHELL=/bin/sh build/run-in-docker.sh \
 		MAC_OS=$(MAC_OS) \
 		PKG=$(PKG) \
 		ARCH=$(ARCH) \
@@ -121,12 +124,21 @@ build:  ## Build ingress controller, debug tool and pre-stop hook.
 clean: ## Remove .gocache directory.
 	rm -rf bin/ .gocache/ .cache/
 
+.PHONY: verify-docs
+verify-docs: ## Verify doc generation
+	hack/verify-annotation-docs.sh
 
 .PHONY: static-check
 static-check: ## Run verification script for boilerplate, codegen, gofmt, golint, lualint and chart-lint.
 	@build/run-in-docker.sh \
 	    MAC_OS=$(MAC_OS) \
 		hack/verify-all.sh
+
+.PHONY: golint-check
+golint-check:
+	@build/run-in-docker.sh \
+	    MAC_OS=$(MAC_OS) \
+		hack/verify-golint.sh
 
 ###############################
 # Tests for ingress-nginx
@@ -147,7 +159,6 @@ test:  ## Run go unit tests.
 .PHONY: lua-test
 lua-test: ## Run lua unit tests.
 	@build/run-in-docker.sh \
-		BUSTED_ARGS=$(BUSTED_ARGS) \
 		MAC_OS=$(MAC_OS) \
 		test/test-lua.sh
 
@@ -205,8 +216,9 @@ live-docs: ## Build and launch a local copy of the documentation website in http
 	@docker run ${PLATFORM_FLAG} ${PLATFORM} --rm -it \
 		-p 8000:8000 \
 		-v ${PWD}:/docs \
-		--entrypoint mkdocs \
-		ingress-nginx-docs serve --dev-addr=0.0.0.0:8000
+		--entrypoint /bin/bash   \
+		ingress-nginx-docs \
+		-c "pip install -r /docs/docs/requirements.txt && mkdocs serve --dev-addr=0.0.0.0:8000"
 
 .PHONY: misspell
 misspell:  ## Check for spelling errors.
@@ -228,8 +240,8 @@ ensure-buildx:
 show-version:
 	echo -n $(TAG)
 
-PLATFORMS ?= amd64 arm arm64 s390x
-BUILDX_PLATFORMS ?= linux/amd64,linux/arm,linux/arm64,linux/s390x
+PLATFORMS ?= amd64 arm arm64
+BUILDX_PLATFORMS ?= linux/amd64,linux/arm,linux/arm64
 
 .PHONY: release # Build a multi-arch docker image
 release: ensure-buildx clean
@@ -263,3 +275,8 @@ release: ensure-buildx clean
 		--build-arg COMMIT_SHA="$(COMMIT_SHA)" \
 		--build-arg BUILD_ID="$(BUILD_ID)" \
 		-t $(REGISTRY)/controller-chroot:$(TAG) rootfs -f rootfs/Dockerfile-chroot
+
+.PHONY: build-docs
+build-docs:
+	pip install -r docs/requirements.txt
+	mkdocs build --config-file mkdocs.yml

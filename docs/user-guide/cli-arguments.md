@@ -8,6 +8,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 |----------|-------------|
 | `--annotations-prefix`             | Prefix of the Ingress annotations specific to the NGINX controller. (default "nginx.ingress.kubernetes.io") |
 | `--apiserver-host`                 | Address of the Kubernetes API server. Takes the form "protocol://address:port". If not specified, it is assumed the program runs inside a Kubernetes cluster and local discovery is attempted. |
+| `--bucket-factor`                    | Bucket factor for native histograms. Value must be > 1 for enabling native histograms. (default 0) |
 | `--certificate-authority`          | Path to a cert file for the certificate authority. This certificate is used only when the flag --apiserver-host is specified. |
 | `--configmap`                      | Name of the ConfigMap containing custom global configurations for the controller. |
 | `--controller-class`                      | Ingress Class Controller value this Ingress satisfies. The class of an Ingress object is set using the field IngressClassName in Kubernetes clusters version v1.19.0 or higher. The .spec.controller value of the IngressClass referenced in an Ingress Object should be the same value specified here to make this object be watched. |
@@ -15,16 +16,19 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--default-backend-service`        | Service used to serve HTTP requests not matching any known server name (catch-all). Takes the form "namespace/name". The controller configures NGINX to forward requests to the first port of this Service. |
 | `--default-server-port`            | Port to use for exposing the default server (catch-all). (default 8181) |
 | `--default-ssl-certificate`        | Secret containing a SSL certificate to be used by the default HTTPS server (catch-all). Takes the form "namespace/name". |
+| `--enable-annotation-validation`  | If true, will enable the annotation validation feature. Defaults to true |
 | `--disable-catch-all`              | Disable support for catch-all Ingresses. (default false) |
 | `--disable-full-test` | Disable full test of all merged ingresses at the admission stage and tests the template of the ingress being created or updated  (full test of all ingresses is enabled by default). |
 | `--disable-svc-external-name` | Disable support for Services of type ExternalName. (default false) |
 | `--disable-sync-events` | Disables the creation of 'Sync' Event resources, but still logs them |
 | `--dynamic-configuration-retries` | Number of times to retry failed dynamic configuration before failing to sync an ingress. (default 15) |
 | `--election-id`                    | Election id to use for Ingress status updates. (default "ingress-controller-leader") |
-| `--enable-metrics`                 | Enables the collection of NGINX metrics. (default true) |
+| `--election-ttl`                  | Duration a leader election is valid before it's getting re-elected, e.g. `15s`, `10m` or `1h`. (Default: 30s) |
+| `--enable-metrics`                 | Enables the collection of NGINX metrics. (Default: false) |
 | `--enable-ssl-chain-completion`    | Autocomplete SSL certificate chains with missing intermediate CA certificates. Certificates uploaded to Kubernetes must have the "Authority Information Access" X.509 v3 extension for this to succeed. (default false)|
 | `--enable-ssl-passthrough`         | Enable SSL Passthrough. (default false) |
-| `--enable-topology-aware-routing`  | Enable topology aware hints feature, needs service object annotation service.kubernetes.io/topology-aware-hints sets to auto. (default false) |
+| `--disable-leader-election`        | Disable Leader Election on Nginx Controller. (default false) |
+| `--enable-topology-aware-routing`  | Enable topology aware routing feature, needs service object annotation service.kubernetes.io/topology-mode sets to auto. (default false) |
 | `--exclude-socket-metrics`         | Set of socket request metrics to exclude which won't be exported nor being calculated. The possible socket request metrics to exclude are documented in the monitoring guide e.g. 'nginx_ingress_controller_request_duration_seconds,nginx_ingress_controller_response_size'|
 | `--health-check-path`              | URL path of the health check endpoint. Configured inside the NGINX status server. All requests received on the port defined by the healthz-port parameter are forwarded internally to this path. (default "/healthz") |
 | `--health-check-timeout`           | Time limit, in seconds, for a probe to health-check-path to succeed. (default 10) |
@@ -37,12 +41,14 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--internal-logger-address`        | Address to be used when binding internal syslogger. (default 127.0.0.1:11514) |
 | `--kubeconfig`                     | Path to a kubeconfig file containing authorization and API server information. |
 | `--length-buckets`                     | Set of buckets which will be used for prometheus histogram metrics such as RequestLength, ResponseLength. (default `[10, 20, 30, 40, 50, 60, 70, 80, 90, 100]`) |
+| `--max-buckets`                      | Maximum number of buckets for native histograms. (default 100) |
 | `--maxmind-edition-ids`            | Maxmind edition ids to download GeoLite2 Databases. (default "GeoLite2-City,GeoLite2-ASN") |
 | `--maxmind-retries-timeout`        | Maxmind downloading delay between 1st and 2nd attempt, 0s - do not retry to download if something went wrong. (default 0s) |
 | `--maxmind-retries-count`          | Number of attempts to download the GeoIP DB. (default 1) |
-| `--maxmind-license-key`            | Maxmind license key to download GeoLite2 Databases. https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases . |
+| `--maxmind-license-key`            | Maxmind license key to download GeoLite2 Databases. https://blog.maxmind.com/2019/12/significant-changes-to-accessing-and-using-geolite2-databases/ . |
 | `--maxmind-mirror`            | Maxmind mirror url (example: http://geoip.local/databases. |
 | `--metrics-per-host`               | Export metrics per-host. (default true) |
+| `--metrics-per-undefined-host`     | Export metrics per-host even if the host is not defined in an ingress. Requires --metrics-per-host to be set to true. (default false) |
 | `--monitor-max-batch-size`               | Max batch size of NGINX metrics. (default 10000)|
 | `--post-shutdown-grace-period`     | Additional delay in seconds before controller container exits. (default 10) |
 | `--profiler-port`                  | Port to use for expose the ingress controller Go profiler when it is enabled. (default 10245) |
@@ -68,7 +74,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--validating-webhook`             | The address to start an admission controller on to validate incoming ingresses. Takes the form "<host>:port". If not provided, no admission controller is started. |
 | `--validating-webhook-certificate` | The path of the validating webhook certificate PEM. |
 | `--validating-webhook-key`         | The path of the validating webhook key PEM. |
-| `--version`                        | Show release information about the NGINX Ingress controller and exit. |
+| `--version`                        | Show release information about the Ingress-Nginx Controller and exit. |
 | `--watch-ingress-without-class`                        | Define if Ingress Controller should also watch for Ingresses without an IngressClass or the annotation specified. (default false) |
 | `--watch-namespace`                | Namespace the controller watches for updates to Kubernetes objects. This includes Ingresses, Services and all configuration resources. All namespaces are watched if this parameter is left empty. |
 | `--watch-namespace-selector`       | The controller will watch namespaces whose labels match the given selector. This flag only takes effective when `--watch-namespace` is empty. |

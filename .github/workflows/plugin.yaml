@@ -1,13 +1,8 @@
 name: kubectl plugin
 
 on:
-  push:
-    branches:
-      - "main"
-    paths:
-      - "cmd/plugin/**"
-    tags:
-      - "v*"
+  release:
+    types: [published]
 
 permissions:
   contents: write # for goreleaser/goreleaser-action
@@ -17,25 +12,39 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
 
+      - name: Get go version
+        run: echo "GOLANG_VERSION=$(cat GOLANG_VERSION)" >> $GITHUB_ENV
+
       - name: Set up Go
-        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4.0.0
+        uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed # v5.1.0
         with:
-          go-version: 1.20
+          go-version: ${{ env.GOLANG_VERSION }}
           check-latest: true
 
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@f82d6c1c344bcacabba2c841718984797f664a6b # v4.2.0
+      - name: Run GoReleaser Snapshot
+        if: ${{ ! startsWith(github.ref, 'refs/tags/') }}
+        uses: goreleaser/goreleaser-action@9ed2f89a662bf1735a48bc8557fd212fa902bebf # v6.1.0
         with:
           version: latest
-          args: release --rm-dist
+          args: release --snapshot --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run GoReleaser
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        uses: goreleaser/goreleaser-action@9ed2f89a662bf1735a48bc8557fd212fa902bebf # v6.1.0
+        with:
+          version: latest
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update new version in krew-index
-        uses: rajatjindal/krew-release-bot@df3eb197549e3568be8b4767eec31c5e8e8e6ad8 # v0.0.46
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        uses: rajatjindal/krew-release-bot@3d9faef30a82761d610544f62afddca00993eef9 # v0.0.47
         with:
           krew_template_file: cmd/plugin/krew.yaml

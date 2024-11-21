@@ -1,6 +1,6 @@
- Developing for NGINX Ingress Controller
+ Developing for Ingress-Nginx Controller
 
-This document explains how to get started with developing for NGINX Ingress controller.
+This document explains how to get started with developing for Ingress-Nginx Controller.
 
 For the really new contributors, who want to contribute to the INGRESS-NGINX project, but need help with understanding some basic concepts,
 that are needed to work with the Kubernetes ingress resource, here is a link to the [New Contributors Guide](https://github.com/kubernetes/ingress-nginx/blob/main/NEW_CONTRIBUTOR.md).
@@ -18,6 +18,10 @@ Install [Go 1.14](https://golang.org/dl/) or later.
     The project uses [Go Modules](https://github.com/golang/go/wiki/Modules)
 
 Install [Docker](https://docs.docker.com/engine/install/) (v19.03.0 or later with experimental feature on)
+
+Install [kubectl](https://kubernetes.io/docs/tasks/tools/) (1.24.0 or higher)
+
+Install [Kind](https://kind.sigs.k8s.io/)
 
 !!! important
     The majority of make tasks run as docker containers

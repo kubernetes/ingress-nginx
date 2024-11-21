@@ -1,0 +1,52 @@
+suite: Default Backend > Service
+templates:
+  - default-backend-service.yaml
+
+tests:
+  - it: should not create a Service if `defaultBackend.enabled` is false
+    set:
+      defaultBackend.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create a Service if `defaultBackend.enabled` is true
+    set:
+      defaultBackend.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-defaultbackend
+
+  - it: should create a Service with port 80 if `defaultBackend.service.port` is 80
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.service.port: 80
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 80
+
+  - it: should create a Service without `clusterIPs` if `defaultBackend.service.clusterIPs` is not set
+    set:
+      defaultBackend.enabled: true
+    asserts:
+      - notExists:
+          path: spec.clusterIPs
+
+  - it: should create a Service with `clusterIPs` if `defaultBackend.service.clusterIPs` is set
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.service.clusterIPs:
+        - 10.0.0.1
+        - fd00::1
+    asserts:
+      - equal:
+          path: spec.clusterIPs
+          value:
+            - 10.0.0.1
+            - fd00::1
