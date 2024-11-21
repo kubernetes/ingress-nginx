@@ -732,7 +732,7 @@ func NewSingleIngressWithMultiplePaths(name string, paths []string, host, ns, se
 	return newSingleIngress(name, ns, annotations, spec)
 }
 
-func NewSingleIngressWithMultiplePathsOfDifferentTypes(name string, host, ns string, services map[string]networking.PathType, port int, annotations map[string]string) *networking.Ingress {
+func NewSingleIngressWithMultiplePathsOfDifferentTypes(name, host, ns string, services map[string]networking.PathType, port int32, annotations map[string]string) *networking.Ingress {
 	spec := networking.IngressSpec{
 		IngressClassName: GetIngressClassName(ns),
 		Rules: []networking.IngressRule{
@@ -753,7 +753,7 @@ func NewSingleIngressWithMultiplePathsOfDifferentTypes(name string, host, ns str
 				Service: &networking.IngressServiceBackend{
 					Name: service,
 					Port: networking.ServiceBackendPort{
-						Number: int32(port),
+						Number: port,
 					},
 				},
 			},
