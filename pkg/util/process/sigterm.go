@@ -17,11 +17,12 @@ limitations under the License.
 package process
 
 import (
-	klog "k8s.io/klog/v2"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"k8s.io/klog/v2"
 )
 
 type exiter func(code int)
@@ -41,7 +42,7 @@ func HandleSigterm(ngx Controller, delay int, exit exiter) {
 	}
 
 	if delay > 0 {
-		klog.Warning("[DEPRECATED] Delaying controller exit for %d seconds", delay)
+		klog.Warningf("[DEPRECATED] Delaying controller exit for %d seconds", delay)
 		klog.Warning("[DEPRECATED] 'post-shutdown-grace-period' does not have any effect for graceful shutdown - use 'shutdown-grace-period' flag instead.")
 		time.Sleep(time.Duration(delay) * time.Second)
 	}

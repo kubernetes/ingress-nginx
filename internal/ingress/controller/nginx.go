@@ -23,7 +23,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"k8s.io/ingress-nginx/internal/ingress/metric/collectors"
 	"net"
 	"net/http"
 	"os"
@@ -37,6 +36,8 @@ import (
 	"text/template"
 	"time"
 	"unicode"
+
+	"k8s.io/ingress-nginx/internal/ingress/metric/collectors"
 
 	proxyproto "github.com/armon/go-proxyproto"
 	"github.com/eapache/channels"
@@ -429,7 +430,7 @@ func (n *NGINXController) stopWait() {
 	}
 
 	// Wait at least for the configured duration, if any
-	delay := waitAtLeastUntil.Sub(time.Now())
+	delay := time.Until(waitAtLeastUntil)
 	if delay > 0 {
 		time.Sleep(delay)
 	}
