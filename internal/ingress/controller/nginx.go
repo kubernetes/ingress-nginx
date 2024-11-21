@@ -400,12 +400,18 @@ func (n *NGINXController) stopWait() {
 	var scraper collectors.NginxStatusScraper
 	lastRequests := 0
 	noChangeTimes := 0
+	failures := 0
+	const failureThreshold = 5
 
 	for ; ; time.Sleep(checkFrequency) {
 		st, err := scraper.Scrape()
 		if err != nil {
 			klog.Warningf("failed to scrape nginx status: %v", err)
-			noChangeTimes = 0
+			failures++
+			if failures >= failureThreshold {
+				klog.Warningf("giving up graceful shutdown: too many nginx status scrape failures")
+				break
+			}
 			continue
 		}
 
