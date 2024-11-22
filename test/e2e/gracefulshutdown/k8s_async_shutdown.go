@@ -68,7 +68,7 @@ var _ = framework.IngressNginxDescribe("[Shutdown] Asynchronous shutdown", func(
 		// therefore we are still receiving traffic while shutting down
 		go func() {
 			defer ginkgo.GinkgoRecover()
-			for i := 0; i < 120; i++ {
+			for i := 0; i < 30; i++ {
 				f.HTTPDumbTestClient().
 					GET("/").
 					WithURL(fmt.Sprintf("http://%s/", ip)).
@@ -76,7 +76,7 @@ var _ = framework.IngressNginxDescribe("[Shutdown] Asynchronous shutdown", func(
 					Expect().
 					Status(http.StatusOK)
 
-				framework.Sleep(250 * time.Millisecond)
+				framework.Sleep(time.Second)
 			}
 		}()
 

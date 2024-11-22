@@ -417,12 +417,9 @@ func (n *NGINXController) stopWait() {
 
 		diff := st.Requests - lastRequests
 		// We assume that there were no client requests to nginx, if and only if
-		// there were 0 to 2 increase in handled requests from the last scrape.
-		// 1 is to account for our own stub_status request from this method,
-		// and the other 1 is to account for the readinessProbe.
-		// Note that readinessProbe DO happen even when the pod is terminating.
-		// See: https://github.com/kubernetes/kubernetes/issues/122824#issuecomment-1899224434
-		noChange := 0 <= diff && diff <= 2
+		// there were 0 to 1 increase in handled requests from the last scrape -
+		// 1 is to account for our own stub_status request from this method.
+		noChange := 0 <= diff && diff <= 1
 		if noChange {
 			noChangeTimes++
 			if noChangeTimes >= waitUntilNoConnectionsFor {
