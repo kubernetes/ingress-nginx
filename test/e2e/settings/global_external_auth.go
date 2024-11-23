@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"regexp"
 	"strings"
 
 	"github.com/onsi/ginkgo/v2"
@@ -169,11 +168,9 @@ var _ = framework.DescribeSetting("[Security] global-auth-url", func() {
 				globalExternalAuthURLSetting:           globalExternalAuthURL,
 			})
 
-			cacheRegex := regexp.MustCompile(`\$cache_key.*foo`)
-
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return cacheRegex.MatchString(server) &&
+					return strings.Contains(server, "proxy_cache_key \"$njs_cache_key\";") &&
 						strings.Contains(server, `proxy_cache_valid 200 201 401 30m;`)
 				})
 
