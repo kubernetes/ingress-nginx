@@ -106,6 +106,9 @@ export OPENTELEMETRY_CPP_VERSION="v1.11.0"
 # Check on https://github.com/open-telemetry/opentelemetry-proto
 export OPENTELEMETRY_PROTO_VERSION="v1.1.0"
 
+# Check for recent changes: https://github.com/nginx/njs/compare/0.8.7...master
+export NJS_VERSION="0.8.7"
+
 export BUILD_PATH=/tmp/build
 
 ARCH=$(uname -m)
@@ -414,6 +417,12 @@ Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-980-CORRELATION.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
 " > /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
 
+# checkout njs module
+cd "$BUILD_PATH"
+git clone -n https://github.com/nginx/njs
+cd njs/
+git checkout $NJS_VERSION
+
 # build nginx
 cd "$BUILD_PATH/nginx-$NGINX_VERSION"
 
@@ -478,6 +487,7 @@ WITH_MODULES=" \
   --add-module=$BUILD_PATH/lua-nginx-module \
   --add-module=$BUILD_PATH/stream-lua-nginx-module \
   --add-module=$BUILD_PATH/lua-upstream-nginx-module \
+  --add-module=$BUILD_PATH/njs/nginx \
   --add-dynamic-module=$BUILD_PATH/nginx-http-auth-digest \
   --add-dynamic-module=$BUILD_PATH/ModSecurity-nginx \
   --add-dynamic-module=$BUILD_PATH/ngx_http_geoip2_module \
