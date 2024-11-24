@@ -60,6 +60,9 @@
 {{- if .Values.controller.enableTopologyAwareRouting }}
 - --enable-topology-aware-routing=true
 {{- end }}
+{{- if .Values.controller.templateEngine }}
+- --configuration-template-engine={{ .Values.controller.templateEngine }}
+{{- end }}
 {{- if .Values.controller.disableLeaderElection }}
 - --disable-leader-election=true
 {{- end }}

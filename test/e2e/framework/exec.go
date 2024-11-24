@@ -117,7 +117,12 @@ func (f *Framework) newIngressController(namespace, namespaceOverlay string) err
 		isChroot = "false"
 	}
 
-	cmd := exec.Command("./wait-for-nginx.sh", namespace, namespaceOverlay, isChroot)
+	isCrossplane, ok := os.LookupEnv("IS_CROSSPLANE")
+	if !ok {
+		isCrossplane = "false"
+	}
+
+	cmd := exec.Command("./wait-for-nginx.sh", namespace, namespaceOverlay, isChroot, isCrossplane)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("unexpected error waiting for ingress controller deployment: %v.\nLogs:\n%v", err, string(out))

@@ -36,7 +36,8 @@ func startIngress(f *framework.Framework, annotations map[string]string) map[str
 	f.EnsureIngress(ing)
 	f.WaitForNginxServer(host,
 		func(server string) bool {
-			return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+			return strings.Contains(server, fmt.Sprintf("server_name %s;", host)) ||
+				strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 		})
 
 	//nolint:staticcheck // TODO: will replace it since wait.Poll is deprecated

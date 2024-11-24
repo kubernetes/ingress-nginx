@@ -212,7 +212,8 @@ func createIngress(f *framework.Framework, host, deploymentName string) {
 
 	f.WaitForNginxServer(host,
 		func(server string) bool {
-			return strings.Contains(server, fmt.Sprintf("server_name %s ;", host)) &&
+			return (strings.Contains(server, fmt.Sprintf("server_name %s;", host)) ||
+				strings.Contains(server, fmt.Sprintf("server_name %s ;", host))) &&
 				strings.Contains(server, "proxy_pass http://upstream_balancer;")
 		})
 }

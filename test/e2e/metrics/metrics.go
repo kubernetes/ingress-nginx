@@ -43,7 +43,8 @@ var _ = framework.IngressNginxDescribe("[metrics] exported prometheus metrics", 
 		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host)) &&
+				return (strings.Contains(server, fmt.Sprintf("server_name %s;", host)) ||
+					strings.Contains(server, fmt.Sprintf("server_name %s ;", host))) &&
 					strings.Contains(server, "proxy_pass http://upstream_balancer;")
 			})
 	})

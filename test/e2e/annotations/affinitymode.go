@@ -56,7 +56,8 @@ var _ = framework.DescribeAnnotation("affinitymode", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+				return strings.Contains(server, fmt.Sprintf("server_name %s;", host)) ||
+					strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
 		// Check configuration
@@ -89,7 +90,8 @@ var _ = framework.DescribeAnnotation("affinitymode", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+				return strings.Contains(server, fmt.Sprintf("server_name %s;", host)) ||
+					strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
 		// Check configuration

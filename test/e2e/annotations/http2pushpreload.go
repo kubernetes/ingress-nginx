@@ -25,6 +25,10 @@ import (
 )
 
 var _ = framework.DescribeAnnotation("http2-push-preload", func() {
+	if framework.IsCrossplane() {
+		// Http2 Push preload is removed from crossplane as it is deprecated
+		return
+	}
 	f := framework.NewDefaultFramework("http2pushpreload")
 
 	ginkgo.BeforeEach(func() {

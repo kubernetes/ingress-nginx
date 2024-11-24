@@ -27,6 +27,9 @@ import (
 
 var _ = framework.DescribeAnnotation("server-snippet", func() {
 	f := framework.NewDefaultFramework("serversnippet")
+	if framework.IsCrossplane() {
+		return
+	}
 
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()
