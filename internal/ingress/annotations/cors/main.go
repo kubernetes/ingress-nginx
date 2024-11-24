@@ -40,12 +40,12 @@ var (
 	// that could cause the Response to contain some internal value/variable (like returning $pid, $upstream_addr, etc)
 	// Origin must contain a http/s Origin (including or not the port) or the value '*'
 	// This Regex is composed of the following:
-	// * Sets a group that can be (https?://)?*?.something.com:port?
+	// * Sets a group that can be (https?://)?*?.something.com:port? OR null
 	// * Allows this to be repeated as much as possible, and separated by comma
 	// Otherwise it should be '*'
-	corsOriginRegexValidator = regexp.MustCompile(`^(((([a-z]+://)?(\*\.)?[A-Za-z0-9\-.]*(:\d+)?,?)+)|\*)?$`)
+	corsOriginRegexValidator = regexp.MustCompile(`^((((([a-z]+://)?(\*\.)?[A-Za-z0-9\-.]*(:\d+)?,?)|null)+)|\*)?$`)
 	// corsOriginRegex defines the regex for validation inside Parse
-	corsOriginRegex = regexp.MustCompile(`^([a-z]+://(\*\.)?[A-Za-z0-9\-.]*(:\d+)?|\*)?$`)
+	corsOriginRegex = regexp.MustCompile(`^([a-z]+://(\*\.)?[A-Za-z0-9\-.]*(:\d+)?|\*|null)?$`)
 	// Method must contain valid methods list (PUT, GET, POST, BLA)
 	// May contain or not spaces between each verb
 	corsMethodsRegex = regexp.MustCompile(`^([A-Za-z]+,?\s?)+$`)
@@ -78,7 +78,7 @@ var corsAnnotation = parser.Annotation{
 			Scope:     parser.AnnotationScopeIngress,
 			Risk:      parser.AnnotationRiskMedium,
 			Documentation: `This annotation controls what's the accepted Origin for CORS.
-			This is a multi-valued field, separated by ','. It must follow this format: protocol://origin-site.com or protocol://origin-site.com:port
+			This is a multi-valued field, separated by ','. It must follow this format: protocol://origin-site.com, protocol://origin-site.com:port, null, or *.
 			It also supports single level wildcard subdomains and follows this format: https://*.foo.bar, http://*.bar.foo:8080 or myprotocol://*.abc.bar.foo:9000
 			Protocol can be any lowercase string, like http, https, or mycustomprotocol.`,
 		},
