@@ -82,7 +82,7 @@ func TestIngressCorsConfigValid(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix(corsAllowHeadersAnnotation)] = "DNT,X-CustomHeader, Keep-Alive,User-Agent"
 	data[parser.GetAnnotationWithPrefix(corsAllowCredentialsAnnotation)] = "false"
 	data[parser.GetAnnotationWithPrefix(corsAllowMethodsAnnotation)] = "GET, PATCH"
-	data[parser.GetAnnotationWithPrefix(corsAllowOriginAnnotation)] = "https://origin123.test.com:4443"
+	data[parser.GetAnnotationWithPrefix(corsAllowOriginAnnotation)] = "null, https://origin123.test.com:4443"
 	data[parser.GetAnnotationWithPrefix(corsExposeHeadersAnnotation)] = "*, X-CustomResponseHeader"
 	data[parser.GetAnnotationWithPrefix(corsMaxAgeAnnotation)] = "600"
 	ing.SetAnnotations(data)
@@ -113,7 +113,7 @@ func TestIngressCorsConfigValid(t *testing.T) {
 		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix(corsAllowMethodsAnnotation)], nginxCors.CorsAllowMethods)
 	}
 
-	if nginxCors.CorsAllowOrigin[0] != "https://origin123.test.com:4443" {
+	if !reflect.DeepEqual(nginxCors.CorsAllowOrigin, []string{"null", "https://origin123.test.com:4443"}) {
 		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix(corsAllowOriginAnnotation)], nginxCors.CorsAllowOrigin)
 	}
 
@@ -176,7 +176,7 @@ func TestIngressCorsConfigInvalid(t *testing.T) {
 	}
 }
 
-func TestIngresCorsConfigAllowOriginWithTrailingComma(t *testing.T) {
+func TestIngressCorsConfigAllowOriginWithTrailingComma(t *testing.T) {
 	ing := buildIngress()
 
 	data := map[string]string{}
@@ -201,6 +201,36 @@ func TestIngresCorsConfigAllowOriginWithTrailingComma(t *testing.T) {
 	}
 
 	expectedCorsAllowOrigins := []string{"https://origin123.test.com:4443", "https://origin321.test.com:4443"}
+	if !reflect.DeepEqual(nginxCors.CorsAllowOrigin, expectedCorsAllowOrigins) {
+		t.Errorf("expected %v but returned %v", expectedCorsAllowOrigins, nginxCors.CorsAllowOrigin)
+	}
+}
+
+func TestIngressCorsConfigAllowOriginNull(t *testing.T) {
+	ing := buildIngress()
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix(corsEnableAnnotation)] = enableAnnotation
+
+	// Include a trailing comma and an empty value between the commas.
+	data[parser.GetAnnotationWithPrefix(corsAllowOriginAnnotation)] = "https://origin123.test.com:4443,null,https://origin321.test.com:4443"
+	ing.SetAnnotations(data)
+
+	corst, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("error parsing annotations: %v", err)
+	}
+
+	nginxCors, ok := corst.(*Config)
+	if !ok {
+		t.Errorf("expected a Config type but returned %t", corst)
+	}
+
+	if !nginxCors.CorsEnabled {
+		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix(corsEnableAnnotation)], nginxCors.CorsEnabled)
+	}
+
+	expectedCorsAllowOrigins := []string{"https://origin123.test.com:4443", "null", "https://origin321.test.com:4443"}
 	if !reflect.DeepEqual(nginxCors.CorsAllowOrigin, expectedCorsAllowOrigins) {
 		t.Errorf("expected %v but returned %v", expectedCorsAllowOrigins, nginxCors.CorsAllowOrigin)
 	}
