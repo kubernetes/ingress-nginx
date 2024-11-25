@@ -31,8 +31,6 @@ if [ -z "$PKG" ] || [ -z "$ARCH" ] || [ -z "$COMMIT_SHA" ] || [ -z "$REPO_INFO" 
   exit 1 
 fi
 
-
-export CGO_ENABLED=0
 export GOARCH="${ARCH}"
 
 TARGETS_DIR="rootfs/bin/${ARCH}"
