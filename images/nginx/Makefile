@@ -37,6 +37,7 @@ OUTPUT=
 PROGRESS=plain
 build: ensure-buildx
 	docker buildx build \
+		--no-cache \
 		--platform=${PLATFORMS} $(OUTPUT) \
 		--progress=$(PROGRESS) \
 		--pull \
