@@ -29,6 +29,11 @@ if ! docker buildx 2>&1 >/dev/null; then
   exit 1
 fi
 
+uname -a
+docker version
+docker buildx version
+
+
 export BINFMT_VER="sha256:4ea31e9b91c2e7954f5f6ce991fd199a640f194ec5d7961917b5544f66062965"
 
 # Ensure qemu is in binfmt_misc
@@ -44,4 +49,4 @@ fi
 
 # Ensure we use a builder that can leverage it (the default on linux will not)
 docker buildx rm ingress-nginx || true
-docker buildx create --driver-opt image=moby/buildkit:v0.18.0 --driver docker-container --platform linux/amd64,linux/arm,linux/arm64 --use --name=ingress-nginx
+docker buildx create --driver-opt image=moby/buildkit:v0.18.0 --driver docker-container --platform linux/amd64,linux/arm,linux/arm64 --bootstrap --use --name=ingress-nginx

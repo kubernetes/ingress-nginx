@@ -43,6 +43,7 @@ build: ensure-buildx
 		--pull \
 		--tag $(IMAGE):$(TAG) rootfs
 
+
 # push the cross built image
 push: OUTPUT=--push
 push: build
