@@ -4,6 +4,24 @@ options:
   # Ignore Prow provided substitutions.
   substitution_option: ALLOW_LOOSE
 steps:
+  - name: docker
+    args:
+    - run
+    - '--privileged'
+    - '--rm'
+    - 'tonistiigi/binfmt@sha256:4ea31e9b91c2e7954f5f6ce991fd199a640f194ec5d7961917b5544f66062965'
+    - '--uninstall'
+    - 'qemu-*'
+    id: remove-old-qemu
+  - name: docker
+    args:
+    - run
+    - '--privileged'
+    - '--rm'
+    - 'tonistiigi/binfmt@sha256:4ea31e9b91c2e7954f5f6ce991fd199a640f194ec5d7961917b5544f66062965'
+    - '--install'
+    - 'all'
+    id: install-qemu
   - name: gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:v20241110-72bb0b1665
     env:
       - REGISTRY=gcr.io/k8s-staging-ingress-nginx
