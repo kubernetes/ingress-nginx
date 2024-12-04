@@ -139,7 +139,7 @@ func (f *Framework) NewCustomErrorPagesDeployment(opts ...func(*deploymentOption
 		options.namespace,
 		options.image,
 		8080,
-		int32(options.replicas),
+		int32(options.replicas), //nolint:gosec // disable G115
 		nil, nil,
 		envVars,
 		[]corev1.VolumeMount{},
@@ -195,7 +195,7 @@ func (f *Framework) NewEchoDeployment(opts ...func(*deploymentOptions)) {
 		options.namespace,
 		options.image,
 		80,
-		int32(options.replicas),
+		int32(options.replicas), //nolint:gosec // disable G115
 		nil, nil, nil,
 		[]corev1.VolumeMount{},
 		[]corev1.Volume{},
@@ -286,7 +286,7 @@ func (f *Framework) NewHttpbunDeployment(opts ...func(*deploymentOptions)) strin
 		options.namespace,
 		options.image,
 		80,
-		int32(options.replicas),
+		int32(options.replicas), //nolint:gosec // disable G115
 		nil, nil,
 		// Required to get hostname information
 		[]corev1.EnvVar{
