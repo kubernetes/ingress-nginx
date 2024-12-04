@@ -6,3 +6,7 @@ steps:
 - name: gcr.io/cloud-builders/docker
   args:
   - version
+# Show info.
+- name: gcr.io/cloud-builders/docker
+  args:
+  - info
