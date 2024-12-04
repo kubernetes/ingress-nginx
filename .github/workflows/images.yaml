@@ -1,0 +1,38 @@
+name: Images
+
+on:
+  push:
+    branches:
+    - release-cloud-build
+    paths:
+    - images/**
+
+jobs:
+  changes:
+    name: Changes
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4.2.2
+    - name: Determine changes
+      id: changes
+      uses: dorny/paths-filter@v3.0.2
+      with:
+        filters: |
+          nginx:
+          - images/nginx/**
+
+    outputs:
+      nginx: ${{ steps.changes.outputs.nginx }}
+
+  nginx:
+    name: NGINX
+    runs-on: ubuntu-latest
+
+    needs: changes
+    if: fromJSON(needs.changes.outputs.nginx)
+
+    steps:
+    - name: Show version
+      run: docker version
