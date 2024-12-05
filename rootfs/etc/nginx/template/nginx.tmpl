@@ -1041,6 +1041,7 @@ stream {
             {{ end }}
             proxy_buffer_size                       {{ $location.Proxy.BufferSize }};
             proxy_buffers                           {{ $location.Proxy.BuffersNumber }} {{ $location.Proxy.BufferSize }};
+            proxy_busy_buffers_size                 {{ $location.Proxy.BusyBuffersSize }};
             proxy_request_buffering                 {{ $location.Proxy.RequestBuffering }};
 
             proxy_ssl_server_name       on;
@@ -1296,6 +1297,7 @@ stream {
             proxy_buffering                         {{ $location.Proxy.ProxyBuffering }};
             proxy_buffer_size                       {{ $location.Proxy.BufferSize }};
             proxy_buffers                           {{ $location.Proxy.BuffersNumber }} {{ $location.Proxy.BufferSize }};
+            proxy_busy_buffers_size                 {{ $location.Proxy.BusyBuffersSize }};
             {{ if isValidByteSize $location.Proxy.ProxyMaxTempFileSize true }}
             proxy_max_temp_file_size                {{ $location.Proxy.ProxyMaxTempFileSize }};
             {{ end }}
