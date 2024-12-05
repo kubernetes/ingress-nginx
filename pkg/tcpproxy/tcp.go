@@ -40,6 +40,11 @@ type TCPProxy struct {
 	Default    *TCPServer
 }
 
+var (
+	tlsHeaderLength     = 5
+	tlsMaxMessageLength = 16384
+)
+
 // Get returns the TCPServer to use for a given host.
 func (p *TCPProxy) Get(host string) *TCPServer {
 	if p.ServerList == nil {
@@ -59,14 +64,36 @@ func (p *TCPProxy) Get(host string) *TCPServer {
 // and open a connection to the passthrough server.
 func (p *TCPProxy) Handle(conn net.Conn) {
 	defer conn.Close()
-	// See: https://www.ibm.com/docs/en/ztpf/1.1.0.15?topic=sessions-ssl-record-format
-	data := make([]byte, 16384)
+	// It appears that the ClientHello must fit into *one* TLSPlaintext message:
+	// When a client first connects to a server, it is REQUIRED to send the ClientHello as its first TLS message.
+	// Source: https://datatracker.ietf.org/doc/html/rfc8446#section-4.1.2
 
-	length, err := conn.Read(data)
+	// length:  The length (in bytes) of the following TLSPlaintext.fragment. The length MUST NOT exceed 2^14 bytes.
+	// An endpoint that receives a record that exceeds this length MUST terminate the connection with a "record_overflow" alert.
+	// Source: https://datatracker.ietf.org/doc/html/rfc8446#section-5.1
+	// bytes 0  : content type
+	// bytes 1-2: legacy version
+	// bytes 3-4: length
+	// bytes 5+ : message
+	// https://en.wikipedia.org/wiki/Transport_Layer_Security#TLS_record
+	// Thus, we need to allocate 5 + 16384 bytes
+	data := make([]byte, tlsHeaderLength+tlsMaxMessageLength)
+
+	length, err := io.ReadAtLeast(conn, data, tlsHeaderLength)
 	if err != nil {
 		klog.V(4).ErrorS(err, "Error reading data from the connection")
 		return
 	}
+
+	// otherwise, ReadAtLeast may produce an index out of bounds
+	clientHelloLength := min(int(data[3])<<8+int(data[4]), tlsMaxMessageLength)
+
+	bLength, err := io.ReadAtLeast(conn, data[length:], tlsHeaderLength+clientHelloLength-length)
+	if err != nil {
+		klog.V(4).ErrorS(err, fmt.Sprintf("Error reading ClientHello of length %d from the connection", clientHelloLength))
+		return
+	}
+	length += bLength
 
 	proxy := p.Default
 	hostname, err := parser.GetHostname(data)
