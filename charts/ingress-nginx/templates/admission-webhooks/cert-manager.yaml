@@ -26,6 +26,9 @@ spec:
   subject:
     organizations:
       - ingress-nginx
+  {{- with .Values.controller.admissionWebhooks.certManager.rootCert.extraConfig }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
 ---
 # Create an Issuer that uses the above generated CA certificate to issue certs
 apiVersion: cert-manager.io/v1
@@ -60,4 +63,7 @@ spec:
   subject:
     organizations:
       - ingress-nginx-admission
+  {{- with .Values.controller.admissionWebhooks.certManager.admissionCert.extraConfig }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
 {{- end -}}
