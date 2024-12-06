@@ -784,7 +784,7 @@ func filterRateLimits(input interface{}) []ratelimit.Config {
 
 	servers, ok := input.([]*ingress.Server)
 	if !ok {
-		klog.Errorf("expected a '[]ratelimit.RateLimit' type but %T was returned", input)
+		klog.Errorf("expected a '[]*ingress.Server' type but %T was returned", input)
 		return ratelimits
 	}
 	for _, server := range servers {
