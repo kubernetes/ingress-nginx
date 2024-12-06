@@ -45,13 +45,15 @@ var (
 )
 
 const (
-	proxySSLSecretAnnotation      = "proxy-ssl-secret"
-	proxySSLCiphersAnnotation     = "proxy-ssl-ciphers"
-	proxySSLProtocolsAnnotation   = "proxy-ssl-protocols"
-	proxySSLNameAnnotation        = "proxy-ssl-name"
-	proxySSLVerifyAnnotation      = "proxy-ssl-verify"
-	proxySSLVerifyDepthAnnotation = "proxy-ssl-verify-depth"
-	proxySSLServerNameAnnotation  = "proxy-ssl-server-name"
+	proxySSLSecretAnnotation       = "proxy-ssl-secret"
+	proxySSLClientSecretAnnotation = "proxy-ssl-client-secret" // #nosec
+	proxySSLCAConfigMapAnnotation  = "proxy-ssl-ca-configmap"
+	proxySSLCiphersAnnotation      = "proxy-ssl-ciphers"
+	proxySSLProtocolsAnnotation    = "proxy-ssl-protocols"
+	proxySSLNameAnnotation         = "proxy-ssl-name"
+	proxySSLVerifyAnnotation       = "proxy-ssl-verify"
+	proxySSLVerifyDepthAnnotation  = "proxy-ssl-verify-depth"
+	proxySSLServerNameAnnotation   = "proxy-ssl-server-name"
 )
 
 var proxySSLAnnotation = parser.Annotation{
@@ -65,6 +67,24 @@ var proxySSLAnnotation = parser.Annotation{
 			It should also contain trusted CA certificates ca.crt in PEM format used to verify the certificate of the proxied HTTPS server. 
 			This annotation expects the Secret name in the form "namespace/secretName"
 			Just secrets on the same namespace of the ingress can be used.`,
+		},
+		proxySSLClientSecretAnnotation: {
+			Validator: parser.ValidateRegex(parser.BasicCharsRegex, true),
+			Scope:     parser.AnnotationScopeIngress,
+			Risk:      parser.AnnotationRiskMedium,
+			Documentation: `This annotation specifies a Secret with the certificate tls.crt, key tls.key in PEM format used for authentication to a proxied HTTPS server. 
+			If the annotation proxy-ssl-secret is also present, the tls.crt and tls.key from this secret will take precedence.
+			This annotation expects the Secret name in the form "namespace/secretName"
+			Just secrets on the same namespace of the ingress can be used.`,
+		},
+		proxySSLCAConfigMapAnnotation: {
+			Validator: parser.ValidateRegex(parser.BasicCharsRegex, true),
+			Scope:     parser.AnnotationScopeIngress,
+			Risk:      parser.AnnotationRiskMedium,
+			Documentation: `This annotation specifies a ConfigMap with the trusted CA certificates ca.crt in PEM format used to verify the certificate of the proxied HTTPS server. 
+			If the annotation proxy-ssl-secret is also present, ca tls.crt and ca.clr (revocation list) from this configMap will take precedence.
+			This annotation expects the ConfigMap name in the form "namespace/configMapName"
+			Just configMaps on the same namespace of the ingress can be used.`,
 		},
 		proxySSLCiphersAnnotation: {
 			Validator: parser.ValidateRegex(proxySSLCiphersRegex, true),
