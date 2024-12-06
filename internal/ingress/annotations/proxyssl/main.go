@@ -45,7 +45,7 @@ var (
 )
 
 const (
-	proxySSLSecretAnnotation       = "proxy-ssl-secret"
+	proxySSLSecretAnnotation       = "proxy-ssl-secret"        // DEPRECATED Use proxy-ssl-client-secret and proxy-ssl-ca-configmap instead
 	proxySSLClientSecretAnnotation = "proxy-ssl-client-secret" // #nosec
 	proxySSLCAConfigMapAnnotation  = "proxy-ssl-ca-configmap"
 	proxySSLCiphersAnnotation      = "proxy-ssl-ciphers"
@@ -63,7 +63,8 @@ var proxySSLAnnotation = parser.Annotation{
 			Validator: parser.ValidateRegex(parser.BasicCharsRegex, true),
 			Scope:     parser.AnnotationScopeIngress,
 			Risk:      parser.AnnotationRiskMedium,
-			Documentation: `This annotation specifies a Secret with the certificate tls.crt, key tls.key in PEM format used for authentication to a proxied HTTPS server. 
+			Documentation: `(DEPRECATED: Use proxy-ssl-client-secret and proxy-ssl-ca-configmap instead)
+			This annotation specifies a Secret with the certificate tls.crt, key tls.key in PEM format used for authentication to a proxied HTTPS server. 
 			It should also contain trusted CA certificates ca.crt in PEM format used to verify the certificate of the proxied HTTPS server. 
 			This annotation expects the Secret name in the form "namespace/secretName"
 			Just secrets on the same namespace of the ingress can be used.`,
