@@ -128,16 +128,18 @@ var proxySSLAnnotation = parser.Annotation{
 	},
 }
 
-// Config contains the AuthSSLCert used for mutual authentication
+// Config contains the Proxy SSL certificates and CAs used for mutual authentication
 // and the configured VerifyDepth
 type Config struct {
 	resolver.AuthSSLCert
-	Ciphers            string `json:"ciphers"`
-	Protocols          string `json:"protocols"`
-	ProxySSLName       string `json:"proxySSLName"`
-	Verify             string `json:"verify"`
-	VerifyDepth        int    `json:"verifyDepth"`
-	ProxySSLServerName string `json:"proxySSLServerName"`
+	ProxySSLClientCert resolver.SSLClientCert `json:"proxySSLClientCert"`
+	ProxySSLCA         resolver.SSLCA         `json:"proxySSLCA"`
+	Ciphers            string                 `json:"ciphers"`
+	Protocols          string                 `json:"protocols"`
+	ProxySSLName       string                 `json:"proxySSLName"`
+	Verify             string                 `json:"verify"`
+	VerifyDepth        int                    `json:"verifyDepth"`
+	ProxySSLServerName string                 `json:"proxySSLServerName"`
 }
 
 // Equal tests for equality between two Config types
@@ -149,6 +151,12 @@ func (pssl1 *Config) Equal(pssl2 *Config) bool {
 		return false
 	}
 	if !(&pssl1.AuthSSLCert).Equal(&pssl2.AuthSSLCert) {
+		return false
+	}
+	if !(&pssl1.ProxySSLClientCert).Equal(&pssl2.ProxySSLClientCert) {
+		return false
+	}
+	if !(&pssl1.ProxySSLCA).Equal(&pssl2.ProxySSLCA) {
 		return false
 	}
 	if pssl1.Ciphers != pssl2.Ciphers {

@@ -91,3 +91,70 @@ func (asslc1 *AuthSSLCert) Equal(assl2 *AuthSSLCert) bool {
 
 	return true
 }
+
+// SSLClientCert contains the clients certificate information
+type SSLClientCert struct {
+	// Secret contains the name of the secret this was fetched from
+	Secret string `json:"secret"`
+	// PemFileName contains the path to the secrets 'tls.crt' and 'tls.key'
+	PemFileName string `json:"pemFilename"`
+}
+
+// Equal tests for equality between two SSLClientCert types
+func (sslcc1 *SSLClientCert) Equal(sslcc2 *SSLClientCert) bool {
+	if sslcc1 == sslcc2 {
+		return true
+	}
+	if sslcc1 == nil || sslcc2 == nil {
+		return false
+	}
+
+	if sslcc1.Secret != sslcc2.Secret {
+		return false
+	}
+
+	return true
+}
+
+// SSLCA contains the CAs used to validate client certificates
+type SSLCA struct {
+	// ConfigMap contains the name of the configMap this was fetched from
+	ConfigMap string `json:"configmap"`
+	// CAFileName contains the path to the secrets 'ca.crt'
+	CAFileName string `json:"caFilename"`
+	// CASHA contains the SHA1 hash of the 'ca.crt'
+	CASHA string `json:"caSha"`
+	// CRLFileName contains the path to the secrets 'ca.crl'
+	CRLFileName string `json:"crlFileName"`
+	// CRLSHA contains the SHA1 hash of the 'ca.crl' file
+	CRLSHA string `json:"crlSha"`
+}
+
+// Equal tests for equality between two SSLCA types
+func (sslc1 *SSLCA) Equal(sslc2 *SSLCA) bool {
+	if sslc1 == sslc2 {
+		return true
+	}
+	if sslc1 == nil || sslc2 == nil {
+		return false
+	}
+
+	if sslc1.ConfigMap != sslc2.ConfigMap {
+		return false
+	}
+	if sslc1.CAFileName != sslc2.CAFileName {
+		return false
+	}
+	if sslc1.CASHA != sslc2.CASHA {
+		return false
+	}
+
+	if sslc1.CRLFileName != sslc2.CRLFileName {
+		return false
+	}
+	if sslc1.CRLSHA != sslc2.CRLSHA {
+		return false
+	}
+
+	return true
+}
