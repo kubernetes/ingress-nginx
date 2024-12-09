@@ -749,9 +749,9 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 			}
 
 			if !n.store.GetBackendConfiguration().ProxySSLLocationOnly {
-				if server.ProxySSL.CAFileName == "" {
+				if server.ProxySSL.CAFileName == "" && server.ProxySSL.ProxySSLCA.CAFileName == "" {
 					server.ProxySSL = anns.ProxySSL
-					if server.ProxySSL.Secret != "" && server.ProxySSL.CAFileName == "" {
+					if (server.ProxySSL.Secret != "" && server.ProxySSL.CAFileName == "") && (server.ProxySSL.ProxySSLCA.ConfigMap != "" && server.ProxySSL.ProxySSLCA.CAFileName == "") {
 						klog.V(3).Infof("Secret %q has no 'ca.crt' key, client cert authentication disabled for Ingress %q",
 							server.ProxySSL.Secret, ingKey)
 					}
