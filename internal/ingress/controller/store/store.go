@@ -236,6 +236,14 @@ type k8sStore struct {
 	// secret in the annotations.
 	secretIngressMap ObjectRefMap
 
+	// clientCertSecretIngressMap contains information about which ingress references a
+	// client cert secret in the annotations.
+	clientCertSecretIngressMap ObjectRefMap
+
+	// configmapIngressMap contains information about which ingress references a
+	// configMap in the annotations.
+	caConfigMapIngressMap ObjectRefMap
+
 	// updateCh
 	updateCh *channels.RingChannel
 
@@ -266,15 +274,17 @@ func New(
 	disableSyncEvents bool,
 ) Storer {
 	store := &k8sStore{
-		informers:             &Informer{},
-		listers:               &Lister{},
-		sslStore:              NewSSLCertTracker(),
-		updateCh:              updateCh,
-		backendConfig:         ngx_config.NewDefault(),
-		syncSecretMu:          &sync.Mutex{},
-		backendConfigMu:       &sync.RWMutex{},
-		secretIngressMap:      NewObjectRefMap(),
-		defaultSSLCertificate: defaultSSLCertificate,
+		informers:                  &Informer{},
+		listers:                    &Lister{},
+		sslStore:                   NewSSLCertTracker(),
+		updateCh:                   updateCh,
+		backendConfig:              ngx_config.NewDefault(),
+		syncSecretMu:               &sync.Mutex{},
+		backendConfigMu:            &sync.RWMutex{},
+		secretIngressMap:           NewObjectRefMap(),
+		clientCertSecretIngressMap: NewObjectRefMap(),
+		caConfigMapIngressMap:      NewObjectRefMap(),
+		defaultSSLCertificate:      defaultSSLCertificate,
 	}
 
 	eventBroadcaster := record.NewBroadcaster()
@@ -464,6 +474,8 @@ func New(
 			store.syncIngress(ing)
 			store.updateSecretIngressMap(ing)
 			store.syncSecrets(ing)
+			store.updateClientCertSecretIngressMap(ing)
+			store.updateCAConfigMapIngressMap(ing)
 
 			updateCh.In() <- Event{
 				Type: CreateEvent,
@@ -521,6 +533,8 @@ func New(
 			store.syncIngress(curIng)
 			store.updateSecretIngressMap(curIng)
 			store.syncSecrets(curIng)
+			store.updateClientCertSecretIngressMap(curIng)
+			store.updateCAConfigMapIngressMap(curIng)
 
 			updateCh.In() <- Event{
 				Type: UpdateEvent,
@@ -1003,6 +1017,53 @@ func (s *k8sStore) updateSecretIngressMap(ing *networkingv1.Ingress) {
 
 	// populate map with all secret references
 	s.secretIngressMap.Insert(key, refSecrets...)
+}
+
+// updateSecretIngressMap takes an Ingress and updates all Secret objects it
+// references in secretIngressMap.
+func (s *k8sStore) updateClientCertSecretIngressMap(ing *networkingv1.Ingress) {
+	key := k8s.MetaNamespaceKey(ing)
+	klog.V(3).Infof("updating references to client cert secrets for ingress %v", key)
+
+	// delete all existing references first
+	s.clientCertSecretIngressMap.Delete(key)
+
+	secConfig := s.GetSecurityConfiguration().AllowCrossNamespaceResources
+	var refClientCertSecrets []string
+	secrKey, err := objectRefAnnotationNsKey("proxy-ssl-client-secret", ing, secConfig)
+	if err != nil && !errors.IsMissingAnnotations(err) {
+		klog.Errorf("error reading client secret reference in annotation %q: %s", "proxy-ssl-client-secret", err)
+	}
+	if secrKey != "" {
+		refClientCertSecrets = append(refClientCertSecrets, secrKey)
+	}
+
+	// populate map with all secret references
+	s.clientCertSecretIngressMap.Insert(key, refClientCertSecrets...)
+}
+
+// updateConfigMapIngressMap takes an Ingress and updates all ConfigMap objects it
+// references in configMapIngressMap.
+func (s *k8sStore) updateCAConfigMapIngressMap(ing *networkingv1.Ingress) {
+	key := k8s.MetaNamespaceKey(ing)
+	klog.V(3).Infof("updating references to configmaps for ingress %v", key)
+
+	// delete all existing references first
+	s.caConfigMapIngressMap.Delete(key)
+
+	var refCACms []string
+
+	secConfig := s.GetSecurityConfiguration().AllowCrossNamespaceResources
+	cmKey, err := objectRefAnnotationNsKey("proxy-ssl-ca-configmap", ing, secConfig)
+	if err != nil && !errors.IsMissingAnnotations(err) {
+		klog.Errorf("error reading ca configmap reference in annotation %q: %s", "proxy-ssl-ca-configmap", err)
+	}
+	if cmKey != "" {
+		refCACms = append(refCACms, cmKey)
+	}
+
+	// populate map with all secret references
+	s.caConfigMapIngressMap.Insert(key, refCACms...)
 }
 
 // objectRefAnnotationNsKey returns an object reference formatted as a
