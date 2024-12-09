@@ -87,7 +87,9 @@
 | Proxy | proxy-redirect-to | Medium | location |
 | Proxy | proxy-request-buffering | Low | location |
 | Proxy | proxy-send-timeout | Low | location |
+| ProxySSL | proxy-ssl-ca-configmap | Medium | ingress |
 | ProxySSL | proxy-ssl-ciphers | Medium | ingress |
+| ProxySSL | proxy-ssl-client-secret | Medium | ingress |
 | ProxySSL | proxy-ssl-name | High | ingress |
 | ProxySSL | proxy-ssl-protocols | Low | ingress |
 | ProxySSL | proxy-ssl-secret | Medium | ingress |
