@@ -42,6 +42,12 @@ type Resolver interface {
 	//   ca.crl: contains the revocation list used for authentication
 	GetAuthCertificate(string) (*AuthSSLCert, error)
 
+	// GetSSLClientCert resolves a given secret name into an SSL certificate.
+	GetSSLClientCert(string) (*SSLClientCert, error)
+
+	// GetSSLCA resolves a given configMap name into an SSL CA.
+	GetSSLCA(string) (*SSLCA, error)
+
 	// GetService searches for services containing the namespace and name using the character /
 	GetService(string) (*apiv1.Service, error)
 }

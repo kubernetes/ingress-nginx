@@ -58,3 +58,5 @@ func TestAuthSSLCertEqual(t *testing.T) {
 		}
 	}
 }
+
+// TODO : implement tests for GetSSLClientCert and GetSSLCA

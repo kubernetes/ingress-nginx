@@ -60,6 +60,16 @@ func (m Mock) GetAuthCertificate(string) (*AuthSSLCert, error) {
 	return nil, nil
 }
 
+// GetSSLClientCert resolves a given secret name into an SSL certificate.
+func (m Mock) GetSSLClientCert(string) (*SSLClientCert, error) {
+	return nil, nil
+}
+
+// GetSSLCA resolves a given configMap name into an SSL CA.
+func (m Mock) GetSSLCA(string) (*SSLCA, error) {
+	return nil, nil
+}
+
 // GetService searches for services containing the namespace and name using the character /
 func (m Mock) GetService(string) (*apiv1.Service, error) {
 	return nil, nil

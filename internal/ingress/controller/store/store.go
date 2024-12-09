@@ -98,6 +98,12 @@ type Storer interface {
 	//   ca.crt: contains the certificate chain used for authentication
 	GetAuthCertificate(string) (*resolver.AuthSSLCert, error)
 
+	// GetSSLClientCert resolves a given secret name into an SSL certificate.
+	GetSSLClientCert(string) (*resolver.SSLClientCert, error)
+
+	// GetSSLCA resolves a given configMap name into an SSL CA.
+	GetSSLCA(string) (*resolver.SSLCA, error)
+
 	// GetDefaultBackend returns the default backend configuration
 	GetDefaultBackend() defaults.Backend
 
@@ -1153,6 +1159,43 @@ func (s *k8sStore) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error
 		CRLFileName: cert.CRLFileName,
 		CRLSHA:      cert.CRLSHA,
 		PemFileName: cert.PemFileName,
+	}, nil
+}
+
+// GetSSLClientCert is used by the proxy-ssl annotations to get a cert from a secret
+func (s *k8sStore) GetSSLClientCert(name string) (*resolver.SSLClientCert, error) {
+	if _, err := s.GetLocalSSLCert(name); err != nil {
+		s.syncClientCertSecret(name)
+	}
+
+	cert, err := s.GetLocalSSLCert(name)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resolver.SSLClientCert{
+		Secret:      name,
+		PemFileName: cert.PemFileName,
+	}, nil
+}
+
+// GetSSLCA is used by the proxy-ssl annotations to get a ca from a configmap
+func (s *k8sStore) GetSSLCA(configMapName string) (*resolver.SSLCA, error) {
+	if _, err := s.GetLocalSSLCert(configMapName); err != nil {
+		s.syncCAConfigMap(configMapName)
+	}
+
+	cert, err := s.GetLocalSSLCert(configMapName)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resolver.SSLCA{
+		ConfigMap:   configMapName,
+		CAFileName:  cert.CAFileName,
+		CASHA:       cert.CASHA,
+		CRLFileName: cert.CRLFileName,
+		CRLSHA:      cert.CRLSHA,
 	}, nil
 }
 
