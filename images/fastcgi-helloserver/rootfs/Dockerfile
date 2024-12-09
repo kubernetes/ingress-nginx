@@ -13,7 +13,7 @@
 # limitations under the License.
 ARG GOLANG_VERSION
 
-FROM golang:${GOLANG_VERSION}-alpine3.20 as builder
+FROM golang:${GOLANG_VERSION}-alpine3.21 as builder
 
 WORKDIR /go/src/k8s.io/ingress-nginx/images/fastcgi
 
