@@ -241,6 +241,50 @@ func (p proxySSL) Parse(ing *networking.Ingress) (interface{}, error) {
 	}
 	config.AuthSSLCert = *proxyCert
 
+	proxysslclientsecret, err := parser.GetStringAnnotation(proxySSLClientSecretAnnotation, ing, p.annotationConfig.Annotations)
+	if err != nil {
+		return &Config{}, err
+	}
+
+	ns, _, err = k8s.ParseNameNS(proxysslclientsecret)
+	if err != nil {
+		return &Config{}, ing_errors.NewLocationDenied(err.Error())
+	}
+
+	// We don't accept different namespaces for secrets.
+	if !secCfg.AllowCrossNamespaceResources && ns != ing.Namespace {
+		return &Config{}, ing_errors.NewLocationDenied("cross namespace secrets are not supported")
+	}
+
+	sslClientCert, err := p.r.GetSSLClientCert(proxysslclientsecret)
+	if err != nil {
+		e := fmt.Errorf("error obtaining ssl client certificate: %w", err)
+		return &Config{}, ing_errors.LocationDeniedError{Reason: e}
+	}
+	config.ProxySSLClientCert = *sslClientCert
+
+	proxysslcaconfigmap, err := parser.GetStringAnnotation(proxySSLCAConfigMapAnnotation, ing, p.annotationConfig.Annotations)
+	if err != nil {
+		return &Config{}, err
+	}
+
+	ns, _, err = k8s.ParseNameNS(proxysslcaconfigmap)
+	if err != nil {
+		return &Config{}, ing_errors.NewLocationDenied(err.Error())
+	}
+
+	// We don't accept different namespaces for configmaps.
+	if !secCfg.AllowCrossNamespaceResources && ns != ing.Namespace {
+		return &Config{}, ing_errors.NewLocationDenied("cross namespace configmaps are not supported")
+	}
+
+	sslCA, err := p.r.GetSSLCA(proxysslcaconfigmap)
+	if err != nil {
+		e := fmt.Errorf("error obtaining ssl certificate authority: %w", err)
+		return &Config{}, ing_errors.LocationDeniedError{Reason: e}
+	}
+	config.ProxySSLCA = *sslCA
+
 	config.Ciphers, err = parser.GetStringAnnotation(proxySSLCiphersAnnotation, ing, p.annotationConfig.Annotations)
 	if err != nil {
 		if ing_errors.IsValidationError(err) {
