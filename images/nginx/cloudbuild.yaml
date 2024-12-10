@@ -6,3 +6,7 @@ steps:
 - name: $_DOCKER
   args:
   - version
+# Show info.
+- name: $_DOCKER
+  args:
+  - info

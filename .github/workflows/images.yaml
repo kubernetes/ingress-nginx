@@ -13,3 +13,5 @@ jobs:
     steps:
     - name: Show version
       run: docker version
+    - name: Show info
+      run: docker info
