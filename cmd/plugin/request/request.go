@@ -25,6 +25,7 @@ import (
 	discoveryv1 "k8s.io/api/discovery/v1"
 	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	appsv1client "k8s.io/client-go/kubernetes/typed/apps/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -97,6 +98,7 @@ func GetDeployments(flags *genericclioptions.ConfigFlags, namespace string) ([]a
 	if err != nil {
 		return make([]appsv1.Deployment, 0), err
 	}
+	rawConfig.ContentType = runtime.ContentTypeProtobuf
 
 	api, err := appsv1client.NewForConfig(rawConfig)
 	if err != nil {
@@ -117,6 +119,7 @@ func GetIngressDefinitions(flags *genericclioptions.ConfigFlags, namespace strin
 	if err != nil {
 		return make([]networking.Ingress, 0), err
 	}
+	rawConfig.ContentType = runtime.ContentTypeProtobuf
 
 	api, err := typednetworking.NewForConfig(rawConfig)
 	if err != nil {
@@ -193,6 +196,7 @@ func getEndpointSlices(flags *genericclioptions.ConfigFlags, namespace string) (
 	if err != nil {
 		return nil, err
 	}
+	rawConfig.ContentType = runtime.ContentTypeProtobuf
 
 	api, err := discoveryv1client.NewForConfig(rawConfig)
 	if err != nil {
@@ -259,6 +263,7 @@ func getPods(flags *genericclioptions.ConfigFlags) ([]apiv1.Pod, error) {
 	if err != nil {
 		return make([]apiv1.Pod, 0), err
 	}
+	rawConfig.ContentType = runtime.ContentTypeProtobuf
 
 	api, err := corev1.NewForConfig(rawConfig)
 	if err != nil {
@@ -280,6 +285,7 @@ func getLabeledPods(flags *genericclioptions.ConfigFlags, label string) ([]apiv1
 	if err != nil {
 		return make([]apiv1.Pod, 0), err
 	}
+	rawConfig.ContentType = runtime.ContentTypeProtobuf
 
 	api, err := corev1.NewForConfig(rawConfig)
 	if err != nil {
@@ -319,6 +325,7 @@ func getServices(flags *genericclioptions.ConfigFlags) ([]apiv1.Service, error) 
 	if err != nil {
 		return make([]apiv1.Service, 0), err
 	}
+	rawConfig.ContentType = runtime.ContentTypeProtobuf
 
 	api, err := corev1.NewForConfig(rawConfig)
 	if err != nil {
