@@ -398,6 +398,7 @@ metadata:
 | controller.metrics.service.type | string | `"ClusterIP"` |  |
 | controller.metrics.serviceMonitor.additionalLabels | object | `{}` |  |
 | controller.metrics.serviceMonitor.annotations | object | `{}` | Annotations to be added to the ServiceMonitor. |
+| controller.metrics.serviceMonitor.apiVersion | string | `"monitoring.coreos.com/v1"` | Override API version of the ServiceMonitor resource. E.g. `azmonitoring.coreos.com/v1` for Azure Managed Prometheus |
 | controller.metrics.serviceMonitor.enabled | bool | `false` |  |
 | controller.metrics.serviceMonitor.labelLimit | int | `0` | Per-scrape limit on number of labels that will be accepted for a sample. |
 | controller.metrics.serviceMonitor.labelNameLengthLimit | int | `0` | Per-scrape limit on length of labels name that will be accepted for a sample. |

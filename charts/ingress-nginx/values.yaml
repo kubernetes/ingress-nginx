@@ -874,6 +874,9 @@ controller:
       # nodePort: ""
     serviceMonitor:
       enabled: false
+      # -- Override API version of the ServiceMonitor resource.
+      # E.g. `azmonitoring.coreos.com/v1` for Azure Managed Prometheus
+      apiVersion: monitoring.coreos.com/v1
       additionalLabels: {}
       # -- Annotations to be added to the ServiceMonitor.
       annotations: {}

@@ -1,5 +1,5 @@
 {{- if and .Values.controller.metrics.enabled .Values.controller.metrics.serviceMonitor.enabled -}}
-apiVersion: monitoring.coreos.com/v1
+apiVersion: {{ .Values.controller.metrics.serviceMonitor.apiVersion }}
 kind: ServiceMonitor
 metadata:
   name: {{ include "ingress-nginx.controller.fullname" . }}
