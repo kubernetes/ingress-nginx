@@ -44,4 +44,6 @@ steps:
   - build
   - --platform
   - linux/arm64
+  - --build-arg
+  - ALPINE=$_ALPINE
   - .

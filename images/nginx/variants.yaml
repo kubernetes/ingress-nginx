@@ -1,7 +1,19 @@
 variants:
-  gcb-docker-20.10.24:
+  gcb-docker-20.10.24-alpine-3.20.3:
     DOCKER: gcr.io/cloud-builders/docker:20.10.24
-  gcb-docker-24.0.9:
+    ALPINE: 3.20.3
+  gcb-docker-24.0.9-alpine-3.20.3:
     DOCKER: gcr.io/cloud-builders/docker:24.0.9
-  docker-docker-27.4.0:
+    ALPINE: 3.20.3
+  docker-docker-27.4.0-alpine-3.20.3:
     DOCKER: docker:27.4.0
+    ALPINE: 3.20.3
+  gcb-docker-20.10.24-alpine-3.21.0:
+    DOCKER: gcr.io/cloud-builders/docker:20.10.24
+    ALPINE: 3.21.0
+  gcb-docker-24.0.9-alpine-3.21.0:
+    DOCKER: gcr.io/cloud-builders/docker:24.0.9
+    ALPINE: 3.21.0
+  docker-docker-27.4.0-alpine-3.21.0:
+    DOCKER: docker:27.4.0
+    ALPINE: 3.21.0
