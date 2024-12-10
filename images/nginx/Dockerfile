@@ -21,3 +21,6 @@ ADD https://github.com/open-telemetry/opentelemetry-cpp.git#v1.18.0 /build/opent
 
 # Configure OpenTelemetry C++.
 RUN cmake -S /build/opentelemetry-cpp -B /build/opentelemetry-cpp/build
+
+# Build OpenTelemetry C++.
+RUN cmake --build /build/opentelemetry-cpp/build --parallel $(getconf _NPROCESSORS_ONLN)
