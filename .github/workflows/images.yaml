@@ -10,4 +10,6 @@ jobs:
     name: NGINX
     runs-on: ubuntu-latest
 
-    steps: []
+    steps:
+    - name: Show version
+      run: docker version

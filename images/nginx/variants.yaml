@@ -1,0 +1,7 @@
+variants:
+  gcb-docker-20.10.24:
+    DOCKER: gcr.io/cloud-builders/docker:20.10.24
+  gcb-docker-24.0.9:
+    DOCKER: gcr.io/cloud-builders/docker:24.0.9
+  docker-docker-27.4.0:
+    DOCKER: docker:27.4.0

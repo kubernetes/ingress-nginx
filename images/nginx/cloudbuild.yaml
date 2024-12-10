@@ -1,4 +1,8 @@
 options:
   # Ignore Prow provided substitutions.
   substitution_option: ALLOW_LOOSE
-steps: []
+steps:
+# Show version.
+- name: $_DOCKER
+  args:
+  - version
