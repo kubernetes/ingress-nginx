@@ -23,3 +23,5 @@ jobs:
       run: docker buildx ls
     - name: Inspect builder
       run: docker buildx inspect
+    - name: Checkout code
+      uses: actions/checkout@v4.2.2
