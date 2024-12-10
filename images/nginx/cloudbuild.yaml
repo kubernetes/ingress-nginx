@@ -1,0 +1,4 @@
+options:
+  # Ignore Prow provided substitutions.
+  substitution_option: ALLOW_LOOSE
+steps: []

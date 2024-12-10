@@ -1,0 +1,13 @@
+name: Images
+
+on:
+  push:
+    paths:
+    - images/nginx/**
+
+jobs:
+  nginx:
+    name: NGINX
+    runs-on: ubuntu-latest
+
+    steps: []
