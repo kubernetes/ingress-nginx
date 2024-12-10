@@ -15,3 +15,12 @@ steps:
   args:
   - buildx
   - ls
+# Create builder.
+- name: $_DOCKER
+  args:
+  - buildx
+  - create
+  - --platform
+  - linux/amd64,linux/arm,linux/arm64
+  - --bootstrap
+  - --use
