@@ -19,3 +19,5 @@ jobs:
       run: docker buildx ls
     - name: Create builder
       run: docker buildx create --platform linux/amd64,linux/arm,linux/arm64 --bootstrap --use
+    - name: List builders
+      run: docker buildx ls

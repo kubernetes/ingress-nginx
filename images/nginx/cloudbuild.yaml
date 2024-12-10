@@ -24,3 +24,8 @@ steps:
   - linux/amd64,linux/arm,linux/arm64
   - --bootstrap
   - --use
+# List builders.
+- name: $_DOCKER
+  args:
+  - buildx
+  - ls
