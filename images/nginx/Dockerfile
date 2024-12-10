@@ -15,3 +15,6 @@ ADD https://github.com/openresty/luajit2.git#v2.1-20241113 /build/luajit2
 
 # Build LuaJIT.
 RUN make --directory /build/luajit2 --jobs $(getconf _NPROCESSORS_ONLN)
+
+# Add OpenTelemetry C++.
+ADD https://github.com/open-telemetry/opentelemetry-cpp.git#v1.18.0 /build/opentelemetry-cpp
