@@ -18,3 +18,6 @@ RUN make --directory /build/luajit2 --jobs $(getconf _NPROCESSORS_ONLN)
 
 # Add OpenTelemetry C++.
 ADD https://github.com/open-telemetry/opentelemetry-cpp.git#v1.18.0 /build/opentelemetry-cpp
+
+# Configure OpenTelemetry C++.
+RUN cmake -S /build/opentelemetry-cpp -B /build/opentelemetry-cpp/build
