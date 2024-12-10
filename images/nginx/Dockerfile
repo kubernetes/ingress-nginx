@@ -12,3 +12,6 @@ RUN gcc /build/main/main.c -o /build/main/main
 
 # Add LuaJIT.
 ADD https://github.com/openresty/luajit2.git#v2.1-20241113 /build/luajit2
+
+# Build LuaJIT.
+RUN make --directory /build/luajit2 --jobs $(getconf _NPROCESSORS_ONLN)
