@@ -34,3 +34,12 @@ steps:
   args:
   - buildx
   - inspect
+# Build image.
+- name: $_DOCKER
+  dir: images/nginx
+  args:
+  - buildx
+  - build
+  - --platform
+  - linux/arm64
+  - .

@@ -25,3 +25,6 @@ jobs:
       run: docker buildx inspect
     - name: Checkout code
       uses: actions/checkout@v4.2.2
+    - name: Build image
+      working-directory: images/nginx
+      run: docker buildx build --platform linux/arm64 .
