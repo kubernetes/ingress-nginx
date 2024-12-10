@@ -21,3 +21,5 @@ jobs:
       run: docker buildx create --platform linux/amd64,linux/arm,linux/arm64 --bootstrap --use
     - name: List builders
       run: docker buildx ls
+    - name: Inspect builder
+      run: docker buildx inspect

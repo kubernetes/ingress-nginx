@@ -29,3 +29,8 @@ steps:
   args:
   - buildx
   - ls
+# Inspect builder.
+- name: $_DOCKER
+  args:
+  - buildx
+  - inspect
