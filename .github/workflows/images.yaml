@@ -15,3 +15,5 @@ jobs:
       run: docker version
     - name: Show info
       run: docker info
+    - name: List builders
+      run: docker buildx ls

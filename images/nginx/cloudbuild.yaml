@@ -10,3 +10,8 @@ steps:
 - name: $_DOCKER
   args:
   - info
+# List builders.
+- name: $_DOCKER
+  args:
+  - buildx
+  - ls
