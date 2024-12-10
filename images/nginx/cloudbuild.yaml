@@ -1,6 +1,6 @@
 options:
   # Increase machine type.
-  machineType: E2_HIGHCPU_8
+  machineType: E2_HIGHCPU_32
   # Ignore Prow provided substitutions.
   substitution_option: ALLOW_LOOSE
 steps:
