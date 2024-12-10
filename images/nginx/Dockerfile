@@ -1,5 +1,8 @@
+# Define Alpine version.
+ARG ALPINE=3.21.0
+
 # Start from Alpine.
-FROM alpine:3.21.0
+FROM alpine:${ALPINE}
 
 # Install packages.
 RUN apk add cmake make gcc g++ libc-dev gtest-dev benchmark-dev
