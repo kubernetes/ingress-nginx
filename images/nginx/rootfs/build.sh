@@ -414,6 +414,21 @@ Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-980-CORRELATION.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
 " > /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
 
+# NGINX compiles a small test program to check if an added module works as expected.
+#
+# ModSecurity-nginx provides 'printf("hello");' as a test, but newer versions of GCC,
+# as included in Alpine 3.21, do not allow implicit declaration of function 'printf':
+#
+#   objs/autotest.c:7:5: error: implicit declaration of function 'printf' [-Wimplicit-function-declaration]
+#
+# For this reason we replace 'printf("hello");' by 'msc_init();', which is always available.
+#
+# This fix is taken from a PR, that has been proposed to the ModSecurity-nginx project:
+#
+#   https://github.com/owasp-modsecurity/ModSecurity-nginx/pull/275
+#
+sed -i "s/ngx_feature_test='printf(\"hello\");'/ngx_feature_test='msc_init();'/" $BUILD_PATH/ModSecurity-nginx/config
+
 # build nginx
 cd "$BUILD_PATH/nginx-$NGINX_VERSION"
 
