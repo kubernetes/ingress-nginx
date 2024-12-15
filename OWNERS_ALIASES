@@ -8,14 +8,12 @@ aliases:
 
   ingress-nginx-admins:
   - Gacko
-  - rikatz
   - strongjz
 
   ingress-nginx-maintainers:
   - cpanato
   - Gacko
   - puerco
-  - rikatz
   - strongjz
   - tao12345666333
 
@@ -23,7 +21,6 @@ aliases:
   - cpanato
   - Gacko
   - puerco
-  - rikatz
   - strongjz
   - tao12345666333
 
