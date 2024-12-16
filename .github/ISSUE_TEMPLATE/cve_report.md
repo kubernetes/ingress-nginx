@@ -5,7 +5,6 @@ title: ''
 labels: kind/bug
 assignees:
     - Gacko
-    - rikatz
     - strongjz
 ---
 
