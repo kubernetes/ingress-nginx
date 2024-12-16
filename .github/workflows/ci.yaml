@@ -194,7 +194,7 @@ jobs:
           make BASE_IMAGE=registry.k8s.io/ingress-nginx/nginx:${TAGNGINX} clean-image build image image-chroot
           make -C test/e2e-image image
           cd images/custom-error-pages/rootfs && docker image build \
-              --build-arg=BASE_IMAGE=registry.k8s.io/ingress-nginx/nginx-1.25:${TAGNGINX} \
+              --build-arg=BASE_IMAGE=registry.k8s.io/ingress-nginx/nginx:${TAGNGINX} \
               --build-arg GOLANG_VERSION=$(cat ../../../GOLANG_VERSION) \
               --tag ingress-controller/custom-error-pages:1.0.0-dev . \
               && cd ../../..
