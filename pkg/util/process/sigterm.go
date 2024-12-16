@@ -22,7 +22,7 @@ import (
 	"syscall"
 	"time"
 
-	klog "k8s.io/klog/v2"
+	"k8s.io/klog/v2"
 )
 
 type exiter func(code int)
@@ -41,8 +41,11 @@ func HandleSigterm(ngx Controller, delay int, exit exiter) {
 		exitCode = 1
 	}
 
-	klog.Infof("Handled quit, delaying controller exit for %d seconds", delay)
-	time.Sleep(time.Duration(delay) * time.Second)
+	if delay > 0 {
+		klog.Warningf("[DEPRECATED] Delaying controller exit for %d seconds", delay)
+		klog.Warning("[DEPRECATED] 'post-shutdown-grace-period' does not have any effect for graceful shutdown - use 'shutdown-grace-period' flag instead.")
+		time.Sleep(time.Duration(delay) * time.Second)
+	}
 
 	klog.InfoS("Exiting", "code", exitCode)
 	exit(exitCode)
