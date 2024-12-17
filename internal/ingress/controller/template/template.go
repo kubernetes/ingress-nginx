@@ -435,6 +435,8 @@ func locationConfigForLua(l, a interface{}) string {
 		force_ssl_redirect = string_to_bool(ngx.var.force_ssl_redirect),
 	    ssl_redirect = string_to_bool(ngx.var.ssl_redirect),
 	    force_no_ssl_redirect = string_to_bool(ngx.var.force_no_ssl_redirect),
+	    force_ssl_forbid_http = string_to_bool(ngx.var.force_ssl_forbid_http),
+	    ssl_forbid_http = string_to_bool(ngx.var.ssl_forbid_http),
 	    preserve_trailing_slash = string_to_bool(ngx.var.preserve_trailing_slash),
 	    use_port_in_redirects = string_to_bool(ngx.var.use_port_in_redirects),
 	*/
@@ -443,12 +445,16 @@ func locationConfigForLua(l, a interface{}) string {
 	    set $force_ssl_redirect "%t";
 	    set $ssl_redirect "%t";
 	    set $force_no_ssl_redirect "%t";
+	    set $force_ssl_forbid_http "%t";
+	    set $ssl_forbid_http "%t";
 	    set $preserve_trailing_slash "%t";
 	    set $use_port_in_redirects "%t";
 	`,
 		location.Rewrite.ForceSSLRedirect,
 		location.Rewrite.SSLRedirect,
 		isLocationInLocationList(l, all.Cfg.NoTLSRedirectLocations),
+		location.Rewrite.ForceSSLForbidHTTP,
+		location.Rewrite.SSLForbidHTTP,
 		location.Rewrite.PreserveTrailingSlash,
 		location.UsePortInRedirects,
 	)
