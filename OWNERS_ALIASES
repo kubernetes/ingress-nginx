@@ -9,11 +9,11 @@ aliases:
   ingress-nginx-admins:
   - Gacko
   - strongjz
-
+  - tao12345666333
+  
   ingress-nginx-maintainers:
   - cpanato
   - Gacko
-  - puerco
   - strongjz
   - tao12345666333
 
@@ -25,13 +25,11 @@ aliases:
   - tao12345666333
 
   ingress-nginx-helm-maintainers:
-  - ubergesundheit
 
   ingress-nginx-helm-reviewers:
-  - ubergesundheit
 
   ingress-nginx-docs-maintainers:
   - longwuyuan
 
   ingress-nginx-kube-webhook-certgen-reviewers:
-  - invidian
+
