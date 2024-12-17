@@ -15,7 +15,6 @@ kubeVersion: '>=1.21.0-0'
 maintainers:
 - name: cpanato
 - name: Gacko
-- name: puerco
 - name: strongjz
 - name: tao12345666333
 name: ingress-nginx
