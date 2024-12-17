@@ -202,6 +202,7 @@ spec:
       topologySpreadConstraints: {{ tpl (toYaml .Values.controller.topologySpreadConstraints) $ | nindent 8 }}
     {{- end }}
       serviceAccountName: {{ template "ingress-nginx.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
       terminationGracePeriodSeconds: {{ .Values.controller.terminationGracePeriodSeconds }}
     {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraVolumes .Values.controller.extraModules) }}
       volumes:

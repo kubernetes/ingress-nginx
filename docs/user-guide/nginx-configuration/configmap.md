@@ -179,6 +179,7 @@ The following table shows a configuration option's name, type, and the default v
 | [proxy-send-timeout](#proxy-send-timeout)                                       | int          | 60                                                                                                                                                                                                                                                                                                                                                           |                                                                                     |
 | [proxy-buffers-number](#proxy-buffers-number)                                   | int          | 4                                                                                                                                                                                                                                                                                                                                                            |                                                                                     |
 | [proxy-buffer-size](#proxy-buffer-size)                                         | string       | "4k"                                                                                                                                                                                                                                                                                                                                                         |                                                                                     |
+| [proxy-busy-buffers-size](#proxy-busy-buffers-size)                             | string       | "8k"                                                                                                                                                                                                                                                                                                                                                         |                                                                                     |
 | [proxy-cookie-path](#proxy-cookie-path)                                         | string       | "off"                                                                                                                                                                                                                                                                                                                                                        |                                                                                     |
 | [proxy-cookie-domain](#proxy-cookie-domain)                                     | string       | "off"                                                                                                                                                                                                                                                                                                                                                        |                                                                                     |
 | [proxy-next-upstream](#proxy-next-upstream)                                     | string       | "error timeout"                                                                                                                                                                                                                                                                                                                                              |                                                                                     |
@@ -223,6 +224,7 @@ The following table shows a configuration option's name, type, and the default v
 | [debug-connections](#debug-connections)                                         | []string     | "127.0.0.1,1.1.1.1/24"                                                                                                                                                                                                                                                                                                                                       |                                                                                     |
 | [strict-validate-path-type](#strict-validate-path-type)                         | bool         | "true"                                                                                                                                                                                                                                                                                                                                                       |                                                                                     |
 | [grpc-buffer-size-kb](#grpc-buffer-size-kb)                                     | int          | 0                                                                                                                                                                                                                                                                                                                                                            |                                                                                     |
+| [relative-redirects](#relative-redirects)                                       | bool         | false                                                                                                                                                                                                                                                                                                                                                        |                                                                                     |
 
 ## add-headers
 
@@ -1108,6 +1110,10 @@ Sets the number of the buffer used for [reading the first part of the response](
 
 Sets the size of the buffer used for [reading the first part of the response](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size) received from the proxied server. This part usually contains a small response header.
 
+## proxy-busy-buffers-size
+
+[Limits the total size of buffers that can be busy](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_busy_buffers_size) sending a response to the client while the response is not yet fully read.
+
 ## proxy-cookie-path
 
 Sets a text that [should be changed in the path attribute](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_path) of the “Set-Cookie” header fields of a proxied server response.
@@ -1173,6 +1179,9 @@ _References:_
 
 Sets the initial amount after which the further transmission of a response to a client will be rate limited.
 
+_References:_
+[https://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after](https://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after)
+
 ## lua-shared-dicts
 
 Customize default Lua shared dictionaries or define more. You can use the following syntax to do so:
@@ -1193,9 +1202,6 @@ You can optionally set a size unit to allow for kilobyte-granularity. Allowed un
 ```
 lua-shared-dicts: "certificate_data: 100, my_custom_plugin: 512k"
 ```
-
-_References:_
-[https://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after](https://nginx.org/en/docs/http/ngx_http_core_module.html#limit_rate_after)
 
 ## http-redirect-code
 
@@ -1382,3 +1388,14 @@ Sets the configuration for the GRPC Buffer Size parameter. If not set it will us
 
 _References:_
 [https://nginx.org/en/docs/http/ngx_http_grpc_module.html#grpc_buffer_size](https://nginx.org/en/docs/http/ngx_http_grpc_module.html#grpc_buffer_size)
+
+## relative-redirects
+
+Use relative redirects instead of absolute redirects. Absolute redirects are the default in nginx. RFC7231 allows relative redirects since 2014.
+Similar to the Ingress rule annotation `nginx.ingress.kubernetes.io/relative-redirects`.
+
+_**default:**_ "false"
+
+_References:_
+- [https://nginx.org/en/docs/http/ngx_http_core_module.html#absolute_redirect](https://nginx.org/en/docs/http/ngx_http_core_module.html#absolute_redirect)
+- [https://datatracker.ietf.org/doc/html/rfc7231#section-7.1.2](https://datatracker.ietf.org/doc/html/rfc7231#section-7.1.2)

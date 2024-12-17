@@ -240,6 +240,8 @@ type k8sStore struct {
 	backendConfigMu *sync.RWMutex
 
 	defaultSSLCertificate string
+
+	recorder record.EventRecorder
 }
 
 // New creates a new object store to be used in the ingress controller.
@@ -279,6 +281,7 @@ func New(
 	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{
 		Component: "nginx-ingress-controller",
 	})
+	store.recorder = recorder
 
 	// k8sStore fulfills resolver.Resolver interface
 	store.annotations = annotations.NewAnnotationExtractor(store)
@@ -937,6 +940,9 @@ func (s *k8sStore) syncIngress(ing *networkingv1.Ingress) {
 	if err != nil {
 		klog.Error(err)
 		return
+	}
+	if parsed.Denied != nil {
+		s.recorder.Eventf(ing, corev1.EventTypeWarning, "AnnotationParsingFailed", fmt.Sprintf("Error parsing annotations: %v", *parsed.Denied))
 	}
 	err = s.listers.IngressWithAnnotation.Update(&ingress.Ingress{
 		Ingress:           *copyIng,

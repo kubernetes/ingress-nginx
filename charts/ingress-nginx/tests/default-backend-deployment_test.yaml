@@ -187,3 +187,12 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].image
           value: registry.k8s.io/defaultbackend-amd64:custom-tag@sha256:faa2d18687f734994b6bd9e309e7a73852a81c30e1b8f63165fcd4f0a087e3cd
+
+  - it: should create a Deployment with token auto-mounting disabled if `defaultBackend.serviceAccount.automountServiceAccountToken` is false
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.serviceAccount.automountServiceAccountToken: false
+    asserts:
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: false

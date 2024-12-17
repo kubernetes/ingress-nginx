@@ -497,6 +497,10 @@ controller:
     # This value is immutable. Set once, it can not be changed without deleting and re-creating the service.
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#choosing-your-own-ip-address
     clusterIP: ""
+    # -- Pre-defined cluster internal IP addresses of the external controller service. Take care of collisions with existing services.
+    # This value is immutable. Set once, it can not be changed without deleting and re-creating the service.
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#choosing-your-own-ip-address
+    clusterIPs: []
     # -- List of node IP addresses at which the external controller service is available.
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
     externalIPs: []
@@ -577,6 +581,10 @@ controller:
       # This value is immutable. Set once, it can not be changed without deleting and re-creating the service.
       # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#choosing-your-own-ip-address
       clusterIP: ""
+      # -- Pre-defined cluster internal IP addresses of the internal controller service. Take care of collisions with existing services.
+      # This value is immutable. Set once, it can not be changed without deleting and re-creating the service.
+      # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#choosing-your-own-ip-address
+      clusterIPs: []
       # -- List of node IP addresses at which the internal controller service is available.
       # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
       externalIPs: []
@@ -882,6 +890,16 @@ controller:
       targetLabels: []
       relabelings: []
       metricRelabelings: []
+      # -- Per-scrape limit on number of labels that will be accepted for a sample.
+      labelLimit: 0
+      # -- Per-scrape limit on length of labels name that will be accepted for a sample.
+      labelNameLengthLimit: 0
+      # -- Per-scrape limit on length of labels value that will be accepted for a sample.
+      labelValueLengthLimit: 0
+      # -- Defines a per-scrape limit on the number of scraped samples that will be accepted.
+      sampleLimit: 0
+      # -- Defines a limit on the number of scraped targets that will be accepted.
+      targetLimit: 0
     prometheusRule:
       enabled: false
       additionalLabels: {}
@@ -1145,6 +1163,10 @@ defaultBackend:
   service:
     annotations: {}
     # clusterIP: ""
+    # -- Pre-defined cluster internal IP addresses of the default backend service. Take care of collisions with existing services.
+    # This value is immutable. Set once, it can not be changed without deleting and re-creating the service.
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#choosing-your-own-ip-address
+    clusterIPs: []
 
     # -- List of IP addresses at which the default backend service is available
     ## Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips

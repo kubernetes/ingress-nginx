@@ -30,3 +30,23 @@ tests:
       - equal:
           path: spec.ports[0].port
           value: 80
+
+  - it: should create a Service without `clusterIPs` if `defaultBackend.service.clusterIPs` is not set
+    set:
+      defaultBackend.enabled: true
+    asserts:
+      - notExists:
+          path: spec.clusterIPs
+
+  - it: should create a Service with `clusterIPs` if `defaultBackend.service.clusterIPs` is set
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.service.clusterIPs:
+        - 10.0.0.1
+        - fd00::1
+    asserts:
+      - equal:
+          path: spec.clusterIPs
+          value:
+            - 10.0.0.1
+            - fd00::1

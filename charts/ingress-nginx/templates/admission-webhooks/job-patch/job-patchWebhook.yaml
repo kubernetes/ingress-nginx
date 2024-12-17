@@ -69,6 +69,7 @@ spec:
           {{- end }}
       restartPolicy: OnFailure
       serviceAccountName: {{ include "ingress-nginx.admissionWebhooks.patch.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.controller.admissionWebhooks.patch.serviceAccount.automountServiceAccountToken }}
     {{- if .Values.controller.admissionWebhooks.patch.nodeSelector }}
       nodeSelector: {{ toYaml .Values.controller.admissionWebhooks.patch.nodeSelector | nindent 8 }}
     {{- end }}

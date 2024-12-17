@@ -459,6 +459,10 @@ http {
     proxy_intercept_errors on;
     {{ end }}
 
+    {{ if $cfg.RelativeRedirects }}
+    absolute_redirect off;
+    {{ end }}
+
     {{ range $errCode := $cfg.CustomHTTPErrors }}
     error_page {{ $errCode }} = @custom_upstream-default-backend_{{ $errCode }};{{ end }}
 
@@ -1037,6 +1041,7 @@ stream {
             {{ end }}
             proxy_buffer_size                       {{ $location.Proxy.BufferSize }};
             proxy_buffers                           {{ $location.Proxy.BuffersNumber }} {{ $location.Proxy.BufferSize }};
+            proxy_busy_buffers_size                 {{ $location.Proxy.BusyBuffersSize }};
             proxy_request_buffering                 {{ $location.Proxy.RequestBuffering }};
 
             proxy_ssl_server_name       on;
@@ -1185,20 +1190,10 @@ stream {
             {{- end }}
             # `auth_request` module does not support HTTP keepalives in upstream block:
             # https://trac.nginx.org/nginx/ticket/1579
-            access_by_lua_block {
-                local res = ngx.location.capture('{{ $authPath }}', { method = ngx.HTTP_GET, body = '', share_all_vars = {{ $externalAuth.KeepaliveShareVars }} })
-                if res.status == ngx.HTTP_OK then
-                    ngx.var.auth_cookie = res.header['Set-Cookie']
-                    {{- range $line := buildAuthUpstreamLuaHeaders $externalAuth.ResponseHeaders }}
-                    {{ $line }}
-                    {{- end }}
-                    return
-                end
-                if res.status == ngx.HTTP_UNAUTHORIZED or res.status == ngx.HTTP_FORBIDDEN then
-                    ngx.exit(res.status)
-                end
-                ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
-            }
+            set $auth_path '{{ $authPath }}';
+            set $auth_keepalive_share_vars {{ $externalAuth.KeepaliveShareVars }};
+            set $auth_response_headers '{{ buildAuthUpstreamLuaHeaders $externalAuth.ResponseHeaders }}';
+            access_by_lua_file /etc/nginx/lua/nginx/ngx_conf_external_auth.lua;
             {{ else }}
             auth_request        {{ $authPath }};
             auth_request_set    $auth_cookie $upstream_http_set_cookie;
@@ -1302,6 +1297,7 @@ stream {
             proxy_buffering                         {{ $location.Proxy.ProxyBuffering }};
             proxy_buffer_size                       {{ $location.Proxy.BufferSize }};
             proxy_buffers                           {{ $location.Proxy.BuffersNumber }} {{ $location.Proxy.BufferSize }};
+            proxy_busy_buffers_size                 {{ $location.Proxy.BusyBuffersSize }};
             {{ if isValidByteSize $location.Proxy.ProxyMaxTempFileSize true }}
             proxy_max_temp_file_size                {{ $location.Proxy.ProxyMaxTempFileSize }};
             {{ end }}
@@ -1351,6 +1347,10 @@ stream {
 
             {{ if $location.Satisfy }}
             satisfy {{ $location.Satisfy }};
+            {{ end }}
+
+            {{ if $location.Redirect.Relative }}
+            absolute_redirect off;
             {{ end }}
 
             {{/* if a location-specific error override is set, add the proxy_intercept here */}}

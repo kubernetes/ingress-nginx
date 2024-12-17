@@ -193,3 +193,22 @@ func TestIsValidURL(t *testing.T) {
 		t.Errorf("expected nil but got %v", err)
 	}
 }
+
+func TestParseAnnotations(t *testing.T) {
+	ing := new(networking.Ingress)
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix(relativeRedirectsAnnotation)] = "true"
+	ing.SetAnnotations(data)
+
+	_, err := NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	// test ingress using the annotation without a TLS section
+	_, err = NewParser(&resolver.Mock{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error parsing ingress with relative-redirects")
+	}
+}

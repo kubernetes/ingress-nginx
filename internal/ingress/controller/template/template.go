@@ -602,17 +602,12 @@ func buildAuthResponseHeaders(proxySetHeader string, headers []string, lua bool)
 	return res
 }
 
-func buildAuthUpstreamLuaHeaders(headers []string) []string {
-	res := []string{}
-
+func buildAuthUpstreamLuaHeaders(headers []string) string {
 	if len(headers) == 0 {
-		return res
+		return ""
 	}
 
-	for i, h := range headers {
-		res = append(res, fmt.Sprintf("ngx.var.authHeader%d = res.header['%s']", i, h))
-	}
-	return res
+	return strings.Join(headers, ",")
 }
 
 func buildAuthProxySetHeaders(headers map[string]string) []string {

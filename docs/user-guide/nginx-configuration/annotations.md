@@ -116,6 +116,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/proxy-buffering](#proxy-buffering)|string|
 |[nginx.ingress.kubernetes.io/proxy-buffers-number](#proxy-buffers-number)|number|
 |[nginx.ingress.kubernetes.io/proxy-buffer-size](#proxy-buffer-size)|string|
+|[nginx.ingress.kubernetes.io/proxy-busy-buffers-size](#proxy-busy-buffers-size)|string|
 |[nginx.ingress.kubernetes.io/proxy-max-temp-file-size](#proxy-max-temp-file-size)|string|
 |[nginx.ingress.kubernetes.io/ssl-ciphers](#ssl-ciphers)|string|
 |[nginx.ingress.kubernetes.io/ssl-prefer-server-ciphers](#ssl-ciphers)|"true" or "false"|
@@ -335,7 +336,13 @@ nginx.ingress.kubernetes.io/custom-http-errors: "404,415"
 ```
 
 ### Custom Headers
-This annotation is of the form `nginx.ingress.kubernetes.io/custom-headers: custom-headers-configmap` to specify a configmap name that contains custom headers. This annotation uses `more_set_headers` nginx directive.
+This annotation is of the form `nginx.ingress.kubernetes.io/custom-headers: <namespace>/<custom headers configmap>` to specify a namespace and configmap name that contains custom headers. This annotation uses `more_set_headers` nginx directive.
+
+Example annotation for following example configmap:
+
+```yaml
+nginx.ingress.kubernetes.io/custom-headers: default/custom-headers-configmap
+```
 
 Example configmap:
 ```yaml
@@ -345,6 +352,7 @@ data:
 kind: ConfigMap
 metadata:
   name: custom-headers-configmap
+  namespace: default
 ```
 
 !!! attention
@@ -733,6 +741,18 @@ By default proxy buffer size is set as "4k"
 To configure this setting globally, set `proxy-buffer-size` in [NGINX ConfigMap](./configmap.md#proxy-buffer-size). To use custom values in an Ingress rule, define this annotation:
 ```yaml
 nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
+```
+
+### Proxy busy buffers size
+
+[Limits the total size of buffers that can be busy](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_busy_buffers_size) sending a response to the client while the response is not yet fully read.
+
+By default proxy busy buffers size is set as "8k".
+
+To configure this setting globally, set `proxy-busy-buffers-size` in the [ConfigMap](./configmap.md#proxy-busy-buffers-size). To use custom values in an Ingress rule, define this annotation:
+
+```yaml
+nginx.ingress.kubernetes.io/proxy-busy-buffers-size: "16k"
 ```
 
 ### Proxy max temp file size
