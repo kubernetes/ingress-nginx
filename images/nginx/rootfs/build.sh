@@ -102,9 +102,9 @@ export LUA_RESTY_IPMATCHER_VERSION=3e93c53eb8c9884efe939ef070486a0e507cc5be
 export MIMALOC_VERSION=v2.1.7
 
 # Check on https://github.com/open-telemetry/opentelemetry-cpp
-export OPENTELEMETRY_CPP_VERSION="v1.11.0"
+export OPENTELEMETRY_CPP_VERSION="v1.17.0"
 # Check on https://github.com/open-telemetry/opentelemetry-proto
-export OPENTELEMETRY_PROTO_VERSION="v1.1.0"
+export OPENTELEMETRY_PROTO_VERSION="v1.3.2"
 
 export BUILD_PATH=/tmp/build
 
@@ -512,7 +512,7 @@ make
 make modules
 make install
 
-export OPENTELEMETRY_CONTRIB_COMMIT=e11348bb400d5472bf1da5d6128bead66fa111ff
+export OPENTELEMETRY_CONTRIB_COMMIT="f6d29426ee9b4d6b476c09ca3cb9bed3cf23906f"
 cd "$BUILD_PATH"
 
 git clone https://github.com/open-telemetry/opentelemetry-cpp-contrib.git opentelemetry-cpp-contrib-${OPENTELEMETRY_CONTRIB_COMMIT}
