@@ -1,4 +1,0 @@
-# See the OWNERS docs: https://www.kubernetes.dev/docs/guide/owners
-
-reviewers:
-- ingress-nginx-kube-webhook-certgen-reviewers
