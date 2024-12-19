@@ -633,7 +633,7 @@ adduser -S -D -H -u 101 -h /usr/local/nginx -s /sbin/nologin -G www-data -g www-
 
 for dir in "${writeDirs[@]}"; do
   mkdir -p ${dir};
-  chown -R www-data.www-data ${dir};
+  chown -R www-data:www-data ${dir};
 done
 
 rm -rf /etc/nginx/owasp-modsecurity-crs/.git
