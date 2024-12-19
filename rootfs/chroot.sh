@@ -39,7 +39,7 @@ writeDirs=( \
 
 for dir in "${writeDirs[@]}"; do
   mkdir -p ${dir};
-  chown -R www-data.www-data ${dir};
+  chown -R www-data:www-data ${dir};
 done
 
 mkdir -p  /chroot/lib /chroot/proc /chroot/usr /chroot/bin /chroot/dev /chroot/run 
