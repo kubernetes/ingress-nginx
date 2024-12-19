@@ -23,7 +23,7 @@ RUN apk update \
   && apk upgrade \
   && /chroot.sh
 
-FROM alpine:3.20
+FROM alpine:3.21
 
 ARG TARGETARCH
 ARG VERSION
@@ -78,7 +78,7 @@ RUN bash -xeu -c ' \
   ); \
   for dir in "${writeDirs[@]}"; do \
     mkdir -p ${dir}; \
-    chown -R www-data.www-data ${dir}; \
+    chown -R www-data:www-data ${dir}; \
   done' \
   # LD_LIBRARY_PATH does not work so below is needed for  opentelemetry/other modules
   # Put libs of newer modules under `/modules_mount/<other>/lib` and add that path below
@@ -103,7 +103,7 @@ RUN  ln -sf /chroot/etc/nginx /etc/nginx \
   && touch /chroot/var/log/nginx/access.log \
   && chown www-data:www-data /chroot/var/log/nginx/access.log \
   && echo "" > /chroot/etc/resolv.conf \
-  && chown -R www-data.www-data /chroot/var/log/nginx /chroot/etc/resolv.conf \
+  && chown -R www-data:www-data /chroot/var/log/nginx /chroot/etc/resolv.conf \
   && mknod -m 0666 /chroot/dev/null c 1 3 \
   && mknod -m 0666 /chroot/dev/random c 1 8 \
   && mknod -m 0666 /chroot/dev/urandom c 1 9 \

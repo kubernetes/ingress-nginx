@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM alpine:3.20 as builder
+FROM alpine:3.21 as builder
 
 COPY . /
 
@@ -21,7 +21,7 @@ RUN apk update \
   && /build.sh
 
 # Use a multi-stage build
-FROM alpine:3.20
+FROM alpine:3.21
 
 ENV PATH=$PATH:/usr/local/luajit/bin:/usr/local/nginx/sbin:/usr/local/nginx/bin
 
@@ -66,7 +66,7 @@ RUN apk update \
   ); \
   for dir in "${writeDirs[@]}"; do \
   mkdir -p ${dir}; \
-  chown -R www-data.www-data ${dir}; \
+  chown -R www-data:www-data ${dir}; \
   done'
 
 EXPOSE 80 443
