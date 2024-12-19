@@ -6,7 +6,9 @@ import (
 	"github.com/onrik/logrus/filename"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset"
 )
@@ -88,8 +90,10 @@ func newKubernetesClients(kubeconfig string) (kubernetes.Interface, clientset.In
 	if err != nil {
 		log.WithError(err).Fatal("error building kubernetes config")
 	}
+	coreConfig := rest.CopyConfig(config)
+	coreConfig.ContentType = runtime.ContentTypeProtobuf
 
-	c, err := kubernetes.NewForConfig(config)
+	c, err := kubernetes.NewForConfig(coreConfig)
 	if err != nil {
 		log.WithError(err).Fatal("error creating kubernetes client")
 	}
