@@ -66,7 +66,7 @@ RUN apk update \
   ); \
   for dir in "${writeDirs[@]}"; do \
   mkdir -p ${dir}; \
-  chown -R www-data.www-data ${dir}; \
+  chown -R www-data:www-data ${dir}; \
   done'
 
 EXPOSE 80 443

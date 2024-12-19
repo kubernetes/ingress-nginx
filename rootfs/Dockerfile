@@ -59,7 +59,7 @@ RUN bash -xeu -c ' \
   ); \
   for dir in "${writeDirs[@]}"; do \
     mkdir -p ${dir}; \
-    chown -R www-data.www-data ${dir}; \
+    chown -R www-data:www-data ${dir}; \
   done' \
   # LD_LIBRARY_PATH does not work so below is needed for  opentelemetry/other modules
   # Put libs of newer modules under `/modules_mount/<other>/lib` and add that path below
