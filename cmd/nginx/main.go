@@ -29,6 +29,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	discovery "k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
@@ -201,6 +202,8 @@ func createApiserverClient(apiserverHost, rootCAFile, kubeConfig string) (*kuber
 
 		cfg.TLSClientConfig = tlsClientConfig
 	}
+
+	cfg.ContentType = kuberuntime.ContentTypeProtobuf
 
 	klog.InfoS("Creating API client", "host", cfg.Host)
 
