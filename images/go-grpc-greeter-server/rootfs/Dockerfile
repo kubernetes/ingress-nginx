@@ -1,6 +1,6 @@
 ARG GOLANG_VERSION
 
-FROM golang:${GOLANG_VERSION}-alpine3.20 as build
+FROM golang:${GOLANG_VERSION}-alpine3.21 as build
 
 WORKDIR /go/src/greeter-server
 
