@@ -270,7 +270,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.28.15, v1.29.10, v1.30.6, v1.31.2]
+        k8s: [v1.28.15, v1.29.12, v1.30.8, v1.31.4, v1.32.0]
 
     steps:
       - name: Checkout code
@@ -301,7 +301,7 @@ jobs:
       (needs.changes.outputs.go == 'true') || (needs.changes.outputs.baseimage == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
     strategy:
       matrix:
-        k8s: [v1.28.15, v1.29.10, v1.30.6, v1.31.2]
+        k8s: [v1.28.15, v1.29.12, v1.30.8, v1.31.4, v1.32.0]
     uses: ./.github/workflows/zz-tmpl-k8s-e2e.yaml
     with:
       k8s-version: ${{ matrix.k8s }}
@@ -315,7 +315,7 @@ jobs:
       (needs.changes.outputs.go == 'true') || (needs.changes.outputs.baseimage == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
     strategy:
       matrix:
-        k8s: [v1.28.15, v1.29.10, v1.30.6, v1.31.2]
+        k8s: [v1.28.15, v1.29.12, v1.30.8, v1.31.4, v1.32.0]
     uses: ./.github/workflows/zz-tmpl-k8s-e2e.yaml
     with:
       k8s-version: ${{ matrix.k8s }}
