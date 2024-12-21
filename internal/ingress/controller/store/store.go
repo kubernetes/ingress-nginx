@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -36,6 +37,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/informers"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -97,6 +99,12 @@ type Storer interface {
 	// The secret must contain 3 keys named:
 	//   ca.crt: contains the certificate chain used for authentication
 	GetAuthCertificate(string) (*resolver.AuthSSLCert, error)
+
+	// GetSSLClientCert resolves a given secret name into an SSL certificate.
+	GetSSLClientCert(string) (*resolver.SSLClientCert, error)
+
+	// GetSSLCA resolves a given configMap name into an SSL CA.
+	GetSSLCA(string) (*resolver.SSLCA, error)
 
 	// GetDefaultBackend returns the default backend configuration
 	GetDefaultBackend() defaults.Backend
@@ -230,6 +238,14 @@ type k8sStore struct {
 	// secret in the annotations.
 	secretIngressMap ObjectRefMap
 
+	// clientCertSecretIngressMap contains information about which ingress references a
+	// client cert secret in the annotations.
+	clientCertSecretIngressMap ObjectRefMap
+
+	// configmapIngressMap contains information about which ingress references a
+	// configMap in the annotations.
+	caConfigMapIngressMap ObjectRefMap
+
 	// updateCh
 	updateCh *channels.RingChannel
 
@@ -260,15 +276,17 @@ func New(
 	disableSyncEvents bool,
 ) Storer {
 	store := &k8sStore{
-		informers:             &Informer{},
-		listers:               &Lister{},
-		sslStore:              NewSSLCertTracker(),
-		updateCh:              updateCh,
-		backendConfig:         ngx_config.NewDefault(),
-		syncSecretMu:          &sync.Mutex{},
-		backendConfigMu:       &sync.RWMutex{},
-		secretIngressMap:      NewObjectRefMap(),
-		defaultSSLCertificate: defaultSSLCertificate,
+		informers:                  &Informer{},
+		listers:                    &Lister{},
+		sslStore:                   NewSSLCertTracker(),
+		updateCh:                   updateCh,
+		backendConfig:              ngx_config.NewDefault(),
+		syncSecretMu:               &sync.Mutex{},
+		backendConfigMu:            &sync.RWMutex{},
+		secretIngressMap:           NewObjectRefMap(),
+		clientCertSecretIngressMap: NewObjectRefMap(),
+		caConfigMapIngressMap:      NewObjectRefMap(),
+		defaultSSLCertificate:      defaultSSLCertificate,
 	}
 
 	eventBroadcaster := record.NewBroadcaster()
@@ -458,6 +476,10 @@ func New(
 			store.syncIngress(ing)
 			store.updateSecretIngressMap(ing)
 			store.syncSecrets(ing)
+			store.updateClientCertSecretIngressMap(ing)
+			store.syncClientCertSecrets(ing)
+			store.updateCAConfigMapIngressMap(ing)
+			store.syncCAConfigMaps(ing)
 
 			updateCh.In() <- Event{
 				Type: CreateEvent,
@@ -515,6 +537,10 @@ func New(
 			store.syncIngress(curIng)
 			store.updateSecretIngressMap(curIng)
 			store.syncSecrets(curIng)
+			store.updateClientCertSecretIngressMap(curIng)
+			store.syncClientCertSecrets(curIng)
+			store.updateCAConfigMapIngressMap(curIng)
+			store.syncCAConfigMaps(curIng)
 
 			updateCh.In() <- Event{
 				Type: UpdateEvent,
@@ -609,9 +635,9 @@ func New(
 				store.syncSecret(store.defaultSSLCertificate)
 			}
 
-			// find references in ingresses and update local ssl certs
+			// find references in ingresses for SSL secret and update local ssl certs
 			if ings := store.secretIngressMap.Reference(key); len(ings) > 0 {
-				klog.InfoS("Secret was added and it is used in ingress annotations. Parsing", "secret", key)
+				klog.InfoS("SSL Secret was added and it is used in ingress annotations. Parsing", "secret", key)
 				for _, ingKey := range ings {
 					ing, err := store.getIngress(ingKey)
 					if err != nil {
@@ -620,6 +646,24 @@ func New(
 					}
 					store.syncIngress(ing)
 					store.syncSecrets(ing)
+				}
+				updateCh.In() <- Event{
+					Type: CreateEvent,
+					Obj:  obj,
+				}
+			}
+
+			// find references in ingresses for client cert secret and update local ssl certs
+			if ings := store.clientCertSecretIngressMap.Reference(key); len(ings) > 0 {
+				klog.InfoS("Client cert Secret was added and it is used in ingress annotations. Parsing", "secret", key)
+				for _, ingKey := range ings {
+					ing, err := store.getIngress(ingKey)
+					if err != nil {
+						klog.Errorf("could not find Ingress %v in local store", ingKey)
+						continue
+					}
+					store.syncIngress(ing)
+					store.syncClientCertSecret(key)
 				}
 				updateCh.In() <- Event{
 					Type: CreateEvent,
@@ -643,9 +687,9 @@ func New(
 					store.syncSecret(store.defaultSSLCertificate)
 				}
 
-				// find references in ingresses and update local ssl certs
+				// find references in ingresses for SSL secret and update local ssl certs
 				if ings := store.secretIngressMap.Reference(key); len(ings) > 0 {
-					klog.InfoS("secret was updated and it is used in ingress annotations. Parsing", "secret", key)
+					klog.InfoS("SSL secret was updated and it is used in ingress annotations. Parsing", "secret", key)
 					for _, ingKey := range ings {
 						ing, err := store.getIngress(ingKey)
 						if err != nil {
@@ -653,6 +697,24 @@ func New(
 							continue
 						}
 						store.syncSecrets(ing)
+						store.syncIngress(ing)
+					}
+					updateCh.In() <- Event{
+						Type: UpdateEvent,
+						Obj:  cur,
+					}
+				}
+
+				// find references in ingresses for SSL client secret and update local ssl certs
+				if ings := store.clientCertSecretIngressMap.Reference(key); len(ings) > 0 {
+					klog.InfoS("client cert secret was updated and it is used in ingress annotations. Parsing", "secret", key)
+					for _, ingKey := range ings {
+						ing, err := store.getIngress(ingKey)
+						if err != nil {
+							klog.ErrorS(err, "could not find Ingress in local store", "ingress", ingKey)
+							continue
+						}
+						store.syncClientCertSecret(key)
 						store.syncIngress(ing)
 					}
 					updateCh.In() <- Event{
@@ -686,9 +748,11 @@ func New(
 			key := k8s.MetaNamespaceKey(sec)
 
 			// find references in ingresses
-			if ings := store.secretIngressMap.Reference(key); len(ings) > 0 {
+			ings := sets.New(store.secretIngressMap.Reference(key)...)
+			ings.Insert(store.clientCertSecretIngressMap.Reference(key)...)
+			if ings.Len() > 0 {
 				klog.InfoS("secret was deleted and it is used in ingress annotations. Parsing", "secret", key)
-				for _, ingKey := range ings {
+				for _, ingKey := range ings.UnsortedList() {
 					ing, err := store.getIngress(ingKey)
 					if err != nil {
 						klog.Errorf("could not find Ingress %v in local store", ingKey)
@@ -740,23 +804,38 @@ func New(
 		return name == configmap || name == tcp || name == udp
 	}
 
-	handleCfgMapEvent := func(key string, cfgMap *corev1.ConfigMap, eventName string) {
+	handleCfgMapEvent := func(key string, cfgMap *corev1.ConfigMap, event EventType) {
 		// updates to configuration configmaps can trigger an update
 		triggerUpdate := false
 		if changeTriggerUpdate(key) {
 			triggerUpdate = true
-			recorder.Eventf(cfgMap, corev1.EventTypeNormal, eventName, fmt.Sprintf("ConfigMap %v", key))
+			recorder.Eventf(cfgMap, corev1.EventTypeNormal, string(event), fmt.Sprintf("ConfigMap %v", key))
 			if key == configmap {
 				store.setConfig(cfgMap)
 			}
 		}
 
 		ings := store.listers.IngressWithAnnotation.List()
+		ingRefCM := store.caConfigMapIngressMap.Reference(key)
+
 		for _, ingKey := range ings {
 			key := k8s.MetaNamespaceKey(ingKey)
 			ing, err := store.getIngress(key)
 			if err != nil {
 				klog.Errorf("could not find Ingress %v in local store: %v", key, err)
+				continue
+			}
+
+			if slices.Contains(ingRefCM, key) {
+				klog.InfoS("ca config map was updated and it is used in ingress annotations. Parsing", "configmap", key)
+				cmKey := k8s.MetaNamespaceKey(configmap)
+
+				store.syncCAConfigMap(cmKey)
+				store.syncIngress(ing)
+				updateCh.In() <- Event{
+					Type: event,
+					Obj:  cfgMap,
+				}
 				continue
 			}
 
@@ -798,6 +877,48 @@ func New(
 			}
 			key := k8s.MetaNamespaceKey(cfgMap)
 			handleCfgMapEvent(key, cfgMap, "UPDATE")
+		},
+		DeleteFunc: func(obj interface{}) {
+			cfgMap, ok := obj.(*corev1.ConfigMap)
+
+			if !ok {
+				// If we reached here it means the configmap was deleted but its final state is unrecorded.
+				tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
+				if !ok {
+					return
+				}
+
+				cfgMap, ok = tombstone.Obj.(*corev1.ConfigMap)
+				if !ok {
+					return
+				}
+			}
+
+			if !watchedNamespace(cfgMap.Namespace) {
+				return
+			}
+
+			store.sslStore.Delete(k8s.MetaNamespaceKey(cfgMap))
+
+			key := k8s.MetaNamespaceKey(cfgMap)
+
+			// find references in ingresses
+			if ings := store.caConfigMapIngressMap.Reference(key); len(ings) > 0 {
+				klog.InfoS("configmap was deleted and it is used in ingress annotations. Parsing", "configMap", key)
+				for _, ingKey := range ings {
+					ing, err := store.getIngress(ingKey)
+					if err != nil {
+						klog.Errorf("could not find Ingress %v in local store", ingKey)
+						continue
+					}
+					store.syncIngress(ing)
+				}
+
+				updateCh.In() <- Event{
+					Type: DeleteEvent,
+					Obj:  obj,
+				}
+			}
 		},
 	}
 
@@ -999,6 +1120,53 @@ func (s *k8sStore) updateSecretIngressMap(ing *networkingv1.Ingress) {
 	s.secretIngressMap.Insert(key, refSecrets...)
 }
 
+// updateSecretIngressMap takes an Ingress and updates all Secret objects it
+// references in secretIngressMap.
+func (s *k8sStore) updateClientCertSecretIngressMap(ing *networkingv1.Ingress) {
+	key := k8s.MetaNamespaceKey(ing)
+	klog.V(3).Infof("updating references to client cert secrets for ingress %v", key)
+
+	// delete all existing references first
+	s.clientCertSecretIngressMap.Delete(key)
+
+	secConfig := s.GetSecurityConfiguration().AllowCrossNamespaceResources
+	var refClientCertSecrets []string
+	secrKey, err := objectRefAnnotationNsKey("proxy-ssl-client-secret", ing, secConfig)
+	if err != nil && !errors.IsMissingAnnotations(err) {
+		klog.Errorf("error reading client secret reference in annotation %q: %s", "proxy-ssl-client-secret", err)
+	}
+	if secrKey != "" {
+		refClientCertSecrets = append(refClientCertSecrets, secrKey)
+	}
+
+	// populate map with all secret references
+	s.clientCertSecretIngressMap.Insert(key, refClientCertSecrets...)
+}
+
+// updateConfigMapIngressMap takes an Ingress and updates all ConfigMap objects it
+// references in configMapIngressMap.
+func (s *k8sStore) updateCAConfigMapIngressMap(ing *networkingv1.Ingress) {
+	key := k8s.MetaNamespaceKey(ing)
+	klog.V(3).Infof("updating references to configmaps for ingress %v", key)
+
+	// delete all existing references first
+	s.caConfigMapIngressMap.Delete(key)
+
+	var refCACms []string
+
+	secConfig := s.GetSecurityConfiguration().AllowCrossNamespaceResources
+	cmKey, err := objectRefAnnotationNsKey("proxy-ssl-ca-configmap", ing, secConfig)
+	if err != nil && !errors.IsMissingAnnotations(err) {
+		klog.Errorf("error reading ca configmap reference in annotation %q: %s", "proxy-ssl-ca-configmap", err)
+	}
+	if cmKey != "" {
+		refCACms = append(refCACms, cmKey)
+	}
+
+	// populate map with all secret references
+	s.caConfigMapIngressMap.Insert(key, refCACms...)
+}
+
 // objectRefAnnotationNsKey returns an object reference formatted as a
 // 'namespace/name' key from the given annotation name.
 func objectRefAnnotationNsKey(ann string, ing *networkingv1.Ingress, allowCrossNamespace bool) (string, error) {
@@ -1028,6 +1196,24 @@ func (s *k8sStore) syncSecrets(ing *networkingv1.Ingress) {
 	key := k8s.MetaNamespaceKey(ing)
 	for _, secrKey := range s.secretIngressMap.ReferencedBy(key) {
 		s.syncSecret(secrKey)
+	}
+}
+
+// syncClientCertSecrets synchronizes data from client cert Secrets referenced by the given
+// Ingress with the local store and file system.
+func (s *k8sStore) syncClientCertSecrets(ing *networkingv1.Ingress) {
+	key := k8s.MetaNamespaceKey(ing)
+	for _, secrKey := range s.clientCertSecretIngressMap.ReferencedBy(key) {
+		s.syncClientCertSecret(secrKey)
+	}
+}
+
+// syncCAConfigMaps synchronizes data from CA configmaps referenced by the given
+// Ingress with the local store and file system.
+func (s *k8sStore) syncCAConfigMaps(ing *networkingv1.Ingress) {
+	key := k8s.MetaNamespaceKey(ing)
+	for _, cmKey := range s.caConfigMapIngressMap.ReferencedBy(key) {
+		s.syncCAConfigMap(cmKey)
 	}
 }
 
@@ -1153,6 +1339,43 @@ func (s *k8sStore) GetAuthCertificate(name string) (*resolver.AuthSSLCert, error
 		CRLFileName: cert.CRLFileName,
 		CRLSHA:      cert.CRLSHA,
 		PemFileName: cert.PemFileName,
+	}, nil
+}
+
+// GetSSLClientCert is used by the proxy-ssl annotations to get a cert from a secret
+func (s *k8sStore) GetSSLClientCert(name string) (*resolver.SSLClientCert, error) {
+	if _, err := s.GetLocalSSLCert(name); err != nil {
+		s.syncClientCertSecret(name)
+	}
+
+	cert, err := s.GetLocalSSLCert(name)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resolver.SSLClientCert{
+		Secret:      name,
+		PemFileName: cert.PemFileName,
+	}, nil
+}
+
+// GetSSLCA is used by the proxy-ssl annotations to get a ca from a configmap
+func (s *k8sStore) GetSSLCA(configMapName string) (*resolver.SSLCA, error) {
+	if _, err := s.GetLocalSSLCert(configMapName); err != nil {
+		s.syncCAConfigMap(configMapName)
+	}
+
+	cert, err := s.GetLocalSSLCert(configMapName)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resolver.SSLCA{
+		ConfigMap:   configMapName,
+		CAFileName:  cert.CAFileName,
+		CASHA:       cert.CASHA,
+		CRLFileName: cert.CRLFileName,
+		CRLSHA:      cert.CRLSHA,
 	}, nil
 }
 

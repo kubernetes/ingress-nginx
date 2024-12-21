@@ -45,13 +45,15 @@ var (
 )
 
 const (
-	proxySSLSecretAnnotation      = "proxy-ssl-secret"
-	proxySSLCiphersAnnotation     = "proxy-ssl-ciphers"
-	proxySSLProtocolsAnnotation   = "proxy-ssl-protocols"
-	proxySSLNameAnnotation        = "proxy-ssl-name"
-	proxySSLVerifyAnnotation      = "proxy-ssl-verify"
-	proxySSLVerifyDepthAnnotation = "proxy-ssl-verify-depth"
-	proxySSLServerNameAnnotation  = "proxy-ssl-server-name"
+	proxySSLSecretAnnotation       = "proxy-ssl-secret"        // DEPRECATED Use proxy-ssl-client-secret and proxy-ssl-ca-configmap instead
+	proxySSLClientSecretAnnotation = "proxy-ssl-client-secret" // #nosec
+	proxySSLCAConfigMapAnnotation  = "proxy-ssl-ca-configmap"
+	proxySSLCiphersAnnotation      = "proxy-ssl-ciphers"
+	proxySSLProtocolsAnnotation    = "proxy-ssl-protocols"
+	proxySSLNameAnnotation         = "proxy-ssl-name"
+	proxySSLVerifyAnnotation       = "proxy-ssl-verify"
+	proxySSLVerifyDepthAnnotation  = "proxy-ssl-verify-depth"
+	proxySSLServerNameAnnotation   = "proxy-ssl-server-name"
 )
 
 var proxySSLAnnotation = parser.Annotation{
@@ -61,10 +63,29 @@ var proxySSLAnnotation = parser.Annotation{
 			Validator: parser.ValidateRegex(parser.BasicCharsRegex, true),
 			Scope:     parser.AnnotationScopeIngress,
 			Risk:      parser.AnnotationRiskMedium,
-			Documentation: `This annotation specifies a Secret with the certificate tls.crt, key tls.key in PEM format used for authentication to a proxied HTTPS server. 
+			Documentation: `(DEPRECATED: Use proxy-ssl-client-secret and proxy-ssl-ca-configmap instead)
+			This annotation specifies a Secret with the certificate tls.crt, key tls.key in PEM format used for authentication to a proxied HTTPS server. 
 			It should also contain trusted CA certificates ca.crt in PEM format used to verify the certificate of the proxied HTTPS server. 
 			This annotation expects the Secret name in the form "namespace/secretName"
 			Just secrets on the same namespace of the ingress can be used.`,
+		},
+		proxySSLClientSecretAnnotation: {
+			Validator: parser.ValidateRegex(parser.BasicCharsRegex, true),
+			Scope:     parser.AnnotationScopeIngress,
+			Risk:      parser.AnnotationRiskMedium,
+			Documentation: `This annotation specifies a Secret with the certificate tls.crt, key tls.key in PEM format used for authentication to a proxied HTTPS server. 
+			If the annotation proxy-ssl-secret is also present, the tls.crt and tls.key from this secret will take precedence.
+			This annotation expects the Secret name in the form "namespace/secretName"
+			Just secrets on the same namespace of the ingress can be used.`,
+		},
+		proxySSLCAConfigMapAnnotation: {
+			Validator: parser.ValidateRegex(parser.BasicCharsRegex, true),
+			Scope:     parser.AnnotationScopeIngress,
+			Risk:      parser.AnnotationRiskMedium,
+			Documentation: `This annotation specifies a ConfigMap with the trusted CA certificates ca.crt in PEM format used to verify the certificate of the proxied HTTPS server. 
+			If the annotation proxy-ssl-secret is also present, ca tls.crt and ca.clr (revocation list) from this configMap will take precedence.
+			This annotation expects the ConfigMap name in the form "namespace/configMapName"
+			Just configMaps on the same namespace of the ingress can be used.`,
 		},
 		proxySSLCiphersAnnotation: {
 			Validator: parser.ValidateRegex(proxySSLCiphersRegex, true),
@@ -107,16 +128,18 @@ var proxySSLAnnotation = parser.Annotation{
 	},
 }
 
-// Config contains the AuthSSLCert used for mutual authentication
+// Config contains the Proxy SSL certificates and CAs used for mutual authentication
 // and the configured VerifyDepth
 type Config struct {
 	resolver.AuthSSLCert
-	Ciphers            string `json:"ciphers"`
-	Protocols          string `json:"protocols"`
-	ProxySSLName       string `json:"proxySSLName"`
-	Verify             string `json:"verify"`
-	VerifyDepth        int    `json:"verifyDepth"`
-	ProxySSLServerName string `json:"proxySSLServerName"`
+	ProxySSLClientCert resolver.SSLClientCert `json:"proxySSLClientCert"`
+	ProxySSLCA         resolver.SSLCA         `json:"proxySSLCA"`
+	Ciphers            string                 `json:"ciphers"`
+	Protocols          string                 `json:"protocols"`
+	ProxySSLName       string                 `json:"proxySSLName"`
+	Verify             string                 `json:"verify"`
+	VerifyDepth        int                    `json:"verifyDepth"`
+	ProxySSLServerName string                 `json:"proxySSLServerName"`
 }
 
 // Equal tests for equality between two Config types
@@ -128,6 +151,12 @@ func (pssl1 *Config) Equal(pssl2 *Config) bool {
 		return false
 	}
 	if !(&pssl1.AuthSSLCert).Equal(&pssl2.AuthSSLCert) {
+		return false
+	}
+	if !(&pssl1.ProxySSLClientCert).Equal(&pssl2.ProxySSLClientCert) {
+		return false
+	}
+	if !(&pssl1.ProxySSLCA).Equal(&pssl2.ProxySSLCA) {
 		return false
 	}
 	if pssl1.Ciphers != pssl2.Ciphers {
@@ -211,6 +240,50 @@ func (p proxySSL) Parse(ing *networking.Ingress) (interface{}, error) {
 		return &Config{}, ing_errors.LocationDeniedError{Reason: e}
 	}
 	config.AuthSSLCert = *proxyCert
+
+	proxysslclientsecret, err := parser.GetStringAnnotation(proxySSLClientSecretAnnotation, ing, p.annotationConfig.Annotations)
+	if err != nil {
+		return &Config{}, err
+	}
+
+	ns, _, err = k8s.ParseNameNS(proxysslclientsecret)
+	if err != nil {
+		return &Config{}, ing_errors.NewLocationDenied(err.Error())
+	}
+
+	// We don't accept different namespaces for secrets.
+	if !secCfg.AllowCrossNamespaceResources && ns != ing.Namespace {
+		return &Config{}, ing_errors.NewLocationDenied("cross namespace secrets are not supported")
+	}
+
+	sslClientCert, err := p.r.GetSSLClientCert(proxysslclientsecret)
+	if err != nil {
+		e := fmt.Errorf("error obtaining ssl client certificate: %w", err)
+		return &Config{}, ing_errors.LocationDeniedError{Reason: e}
+	}
+	config.ProxySSLClientCert = *sslClientCert
+
+	proxysslcaconfigmap, err := parser.GetStringAnnotation(proxySSLCAConfigMapAnnotation, ing, p.annotationConfig.Annotations)
+	if err != nil {
+		return &Config{}, err
+	}
+
+	ns, _, err = k8s.ParseNameNS(proxysslcaconfigmap)
+	if err != nil {
+		return &Config{}, ing_errors.NewLocationDenied(err.Error())
+	}
+
+	// We don't accept different namespaces for configmaps.
+	if !secCfg.AllowCrossNamespaceResources && ns != ing.Namespace {
+		return &Config{}, ing_errors.NewLocationDenied("cross namespace configmaps are not supported")
+	}
+
+	sslCA, err := p.r.GetSSLCA(proxysslcaconfigmap)
+	if err != nil {
+		e := fmt.Errorf("error obtaining ssl certificate authority: %w", err)
+		return &Config{}, ing_errors.LocationDeniedError{Reason: e}
+	}
+	config.ProxySSLCA = *sslCA
 
 	config.Ciphers, err = parser.GetStringAnnotation(proxySSLCiphersAnnotation, ing, p.annotationConfig.Annotations)
 	if err != nil {
