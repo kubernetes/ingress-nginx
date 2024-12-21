@@ -34,11 +34,11 @@ require (
 	k8s.io/api v0.32.0
 	k8s.io/apiextensions-apiserver v0.31.3
 	k8s.io/apimachinery v0.32.0
-	k8s.io/apiserver v0.31.3
+	k8s.io/apiserver v0.32.0
 	k8s.io/cli-runtime v0.31.3
 	k8s.io/client-go v0.32.0
 	k8s.io/code-generator v0.31.3
-	k8s.io/component-base v0.31.3
+	k8s.io/component-base v0.32.0
 	k8s.io/klog/v2 v2.130.1
 	pault.ag/go/sniff v0.0.0-20200207005214-cf7e4d167732
 	sigs.k8s.io/controller-runtime v0.19.3
@@ -51,6 +51,8 @@ require (
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/moby/sys/userns v0.1.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
+	go.opentelemetry.io/otel v1.31.0 // indirect
+	go.opentelemetry.io/otel/trace v1.31.0 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	sigs.k8s.io/release-utils v0.8.3 // indirect
 )
@@ -111,7 +113,6 @@ require (
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
 	github.com/yudai/pp v2.0.1+incompatible // indirect
 	go.starlark.net v0.0.0-20240123142251-f86470692795 // indirect
-	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/mod v0.21.0 // indirect
 	golang.org/x/net v0.32.0 // indirect
 	golang.org/x/oauth2 v0.24.0 // indirect
