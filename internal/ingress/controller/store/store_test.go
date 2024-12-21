@@ -32,6 +32,7 @@ import (
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
@@ -98,6 +99,7 @@ func TestStore(t *testing.T) {
 
 	defer te.Stop() //nolint:errcheck // Ignore the error
 
+	cfg.ContentType = runtime.ContentTypeProtobuf
 	clientSet, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
 		t.Fatalf("error: %v", err)
