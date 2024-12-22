@@ -37,6 +37,9 @@ spec:
 {{- if hasKey .Values.controller.service "allocateLoadBalancerNodePorts" }}
   allocateLoadBalancerNodePorts: {{ .Values.controller.service.allocateLoadBalancerNodePorts }}
 {{- end }}
+{{- if .Values.controller.service.trafficDistribution }}
+  trafficDistribution: {{ .Values.controller.service.trafficDistribution }}
+{{- end }}
 {{- if .Values.controller.service.externalTrafficPolicy }}
   externalTrafficPolicy: {{ .Values.controller.service.externalTrafficPolicy }}
 {{- end }}
