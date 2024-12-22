@@ -50,6 +50,7 @@ local function metrics()
     upstreamHeaderTime = tonumber(ngx.var.upstream_header_time) or -1,
     upstreamResponseTime = tonumber(ngx.var.upstream_response_time) or -1,
     upstreamResponseLength = tonumber(ngx.var.upstream_response_length) or -1,
+    upstreamCacheStatus = ngx.var.upstream_cache_status or "-",
     --upstreamStatus = ngx.var.upstream_status or "-",
   }
 end
