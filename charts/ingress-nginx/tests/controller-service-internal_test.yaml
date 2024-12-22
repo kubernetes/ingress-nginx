@@ -47,3 +47,17 @@ tests:
           value:
             - 10.0.0.1
             - fd00::1
+
+  - it: should create a Service with `trafficDistribution` if `controller.service.internal.trafficDistribution` is set
+    capabilities:
+      majorVersion: 1
+      minorVersion: 31
+    set:
+      controller.service.internal.enabled: true
+      controller.service.internal.annotations:
+        test.annotation: "true"
+      controller.service.internal.trafficDistribution: PreferClose
+    asserts:
+      - equal:
+          path: spec.trafficDistribution
+          value: PreferClose

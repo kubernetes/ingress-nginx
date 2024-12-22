@@ -46,6 +46,11 @@ spec:
 {{- if .Values.controller.service.healthCheckNodePort }}
   healthCheckNodePort: {{ .Values.controller.service.healthCheckNodePort }}
 {{- end }}
+{{- if semverCompare ">=1.31.0-0" .Capabilities.KubeVersion.Version -}}
+{{- if .Values.controller.service.trafficDistribution }}
+  trafficDistribution: {{ .Values.controller.service.trafficDistribution }}
+{{- end }}
+{{- end }}
 {{- if semverCompare ">=1.21.0-0" .Capabilities.KubeVersion.Version -}}
 {{- if .Values.controller.service.ipFamilyPolicy }}
   ipFamilyPolicy: {{ .Values.controller.service.ipFamilyPolicy }}
