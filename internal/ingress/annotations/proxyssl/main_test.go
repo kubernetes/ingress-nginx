@@ -28,11 +28,12 @@ import (
 )
 
 const (
-	defaultDemoSecret = "default/demo-secret"
-	proxySslCiphers   = "HIGH:-SHA"
-	off               = "off"
-	sslServerName     = "w00t"
-	defaultProtocol   = "TLSv1.2 TLSv1.3"
+	defaultDemoSecret    = "default/demo-secret"
+	defaultDemoConfigMap = "default/demo-configmap"
+	proxySslCiphers      = "HIGH:-SHA"
+	off                  = "off"
+	sslServerName        = "w00t"
+	defaultProtocol      = "TLSv1.2 TLSv1.3"
 )
 
 func buildIngress() *networking.Ingress {
@@ -96,11 +97,37 @@ func (m mockSecret) GetAuthCertificate(name string) (*resolver.AuthSSLCert, erro
 	}, nil
 }
 
+// GetSSLClientCert resolves a given secret name into an SSL certificate.
+func (m mockSecret) GetSSLClientCert(name string) (*resolver.SSLClientCert, error) {
+	if name != defaultDemoSecret {
+		return nil, errors.Errorf("there is no secret with name %v", name)
+	}
+
+	return &resolver.SSLClientCert{
+		Secret: defaultDemoSecret,
+	}, nil
+}
+
+// GetSSLCA resolves a given configMap name into an SSL CA.
+func (m mockSecret) GetSSLCA(name string) (*resolver.SSLCA, error) {
+	if name != defaultDemoConfigMap {
+		return nil, errors.Errorf("there is no configmap with name %v", name)
+	}
+
+	return &resolver.SSLCA{
+		ConfigMap:  defaultDemoConfigMap,
+		CAFileName: "/ssl/ca.crt",
+		CASHA:      "abc",
+	}, nil
+}
+
 func TestAnnotations(t *testing.T) {
 	ing := buildIngress()
 	data := map[string]string{}
 
 	data[parser.GetAnnotationWithPrefix(proxySSLSecretAnnotation)] = defaultDemoSecret
+	data[parser.GetAnnotationWithPrefix(proxySSLClientSecretAnnotation)] = defaultDemoSecret
+	data[parser.GetAnnotationWithPrefix(proxySSLCAConfigMapAnnotation)] = defaultDemoConfigMap
 	data[parser.GetAnnotationWithPrefix("proxy-ssl-ciphers")] = proxySslCiphers
 	data[parser.GetAnnotationWithPrefix("proxy-ssl-name")] = "$host"
 	data[parser.GetAnnotationWithPrefix("proxy-ssl-protocols")] = "TLSv1.3 TLSv1.2"
@@ -126,8 +153,22 @@ func TestAnnotations(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected error getting secret %v", err)
 	}
+	clientSecret, err := fakeSecret.GetSSLClientCert(defaultDemoSecret)
+	if err != nil {
+		t.Errorf("unexpected error getting secret %v", err)
+	}
+	configMap, err := fakeSecret.GetSSLCA(defaultDemoConfigMap)
+	if err != nil {
+		t.Errorf("unexpected error getting configmap %v", err)
+	}
 
 	if u.AuthSSLCert.Secret != secret.Secret {
+		t.Errorf("expected %v but got %v", secret.Secret, u.AuthSSLCert.Secret)
+	}
+	if u.ProxySSLClientCert.Secret != clientSecret.Secret {
+		t.Errorf("expected %v but got %v", secret.Secret, u.AuthSSLCert.Secret)
+	}
+	if u.ProxySSLCA.ConfigMap != configMap.ConfigMap {
 		t.Errorf("expected %v but got %v", secret.Secret, u.AuthSSLCert.Secret)
 	}
 	if u.Ciphers != proxySslCiphers {
@@ -179,6 +220,8 @@ func TestInvalidAnnotations(t *testing.T) {
 
 	// Invalid optional Annotations
 	data[parser.GetAnnotationWithPrefix("proxy-ssl-secret")] = defaultDemoSecret
+	data[parser.GetAnnotationWithPrefix("proxy-ssl-client-secret")] = defaultDemoSecret
+	data[parser.GetAnnotationWithPrefix("proxy-ssl-ca-configmap")] = defaultDemoConfigMap
 	data[parser.GetAnnotationWithPrefix("proxy-ssl-protocols")] = "TLSv111 SSLv1"
 	data[parser.GetAnnotationWithPrefix("proxy-ssl-server-name")] = sslServerName
 	data[parser.GetAnnotationWithPrefix("proxy-ssl-session-reuse")] = sslServerName
@@ -237,6 +280,9 @@ func TestEquals(t *testing.T) {
 		t.Errorf("Expected false")
 	}
 	cfg2.AuthSSLCert = sslCert1
+	// TODO: Different client certs
+
+	// TODO: Different CAs
 
 	// Different Ciphers
 	cfg1.Ciphers = "DEFAULT"

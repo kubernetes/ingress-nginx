@@ -912,9 +912,14 @@ stream {
         {{ end }}
         {{ end }}
 
-        {{ if not (empty $server.ProxySSL.CAFileName) }}
+        {{ if or (not (empty $server.ProxySSL.ProxySSLCA.CAFileName)) (not (empty $server.ProxySSL.CAFileName)) }}
+        {{ if not (empty $server.ProxySSL.ProxySSLCA.CAFileName) }}
+        # PEM sha: {{ $server.ProxySSL.ProxySSLCA.CASHA }}
+        proxy_ssl_trusted_certificate           {{ $server.ProxySSL.ProxySSLCA.CAFileName }};
+        {{ else if not (empty $server.ProxySSL.CAFileName) }}
         # PEM sha: {{ $server.ProxySSL.CASHA }}
         proxy_ssl_trusted_certificate           {{ $server.ProxySSL.CAFileName }};
+        {{ end }}
         proxy_ssl_ciphers                       {{ $server.ProxySSL.Ciphers }};
         proxy_ssl_protocols                     {{ $server.ProxySSL.Protocols }};
         proxy_ssl_verify                        {{ $server.ProxySSL.Verify }};
@@ -925,7 +930,10 @@ stream {
         {{ end }}
         {{ end }}
 
-        {{ if not (empty $server.ProxySSL.PemFileName) }}
+        {{ if not (empty $server.ProxySSL.ProxySSLClientCert.PemFileName) }}
+        proxy_ssl_certificate                   {{ $server.ProxySSL.ProxySSLClientCert.PemFileName }};
+        proxy_ssl_certificate_key               {{ $server.ProxySSL.ProxySSLClientCert.PemFileName }};
+        {{ else if not (empty $server.ProxySSL.PemFileName) }}
         proxy_ssl_certificate                   {{ $server.ProxySSL.PemFileName }};
         proxy_ssl_certificate_key               {{ $server.ProxySSL.PemFileName }};
         {{ end }}
@@ -1386,9 +1394,14 @@ stream {
             # Location denied. Reason: {{ $location.Denied | quote }}
             return 503;
             {{ end }}
-            {{ if not (empty $location.ProxySSL.CAFileName) }}
+            {{ if or (not (empty $location.ProxySSL.ProxySSLCA.CAFileName)) (not (empty $location.ProxySSL.CAFileName)) }}
+            {{ if not (empty $location.ProxySSL.ProxySSLCA.CAFileName) }}
+            # PEM sha: {{ $location.ProxySSL.ProxySSLCA.CASHA }}
+            proxy_ssl_trusted_certificate           {{ $location.ProxySSL.ProxySSLCA.CAFileName }};
+            {{ else if not (empty $location.ProxySSL.CAFileName) }}
             # PEM sha: {{ $location.ProxySSL.CASHA }}
             proxy_ssl_trusted_certificate           {{ $location.ProxySSL.CAFileName }};
+            {{ end }}
             proxy_ssl_ciphers                       {{ $location.ProxySSL.Ciphers }};
             proxy_ssl_protocols                     {{ $location.ProxySSL.Protocols }};
             proxy_ssl_verify                        {{ $location.ProxySSL.Verify }};
@@ -1402,7 +1415,10 @@ stream {
             proxy_ssl_server_name                   {{ $location.ProxySSL.ProxySSLServerName }};
             {{ end }}
 
-            {{ if not (empty $location.ProxySSL.PemFileName) }}
+            {{ if not (empty $location.ProxySSL.ProxySSLClientCert.PemFileName) }}
+            proxy_ssl_certificate                   {{ $location.ProxySSL.ProxySSLClientCert.PemFileName }};
+            proxy_ssl_certificate_key               {{ $location.ProxySSL.ProxySSLClientCert.PemFileName }};
+            {{ else if not (empty $location.ProxySSL.PemFileName) }}
             proxy_ssl_certificate                   {{ $location.ProxySSL.PemFileName }};
             proxy_ssl_certificate_key               {{ $location.ProxySSL.PemFileName }};
             {{ end }}
