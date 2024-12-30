@@ -2,7 +2,7 @@
 
 [ingress-nginx](https://github.com/kubernetes/ingress-nginx) Ingress controller for Kubernetes using NGINX as a reverse proxy and load balancer
 
-![Version: 4.10.5](https://img.shields.io/badge/Version-4.10.5-informational?style=flat-square) ![AppVersion: 1.10.5](https://img.shields.io/badge/AppVersion-1.10.5-informational?style=flat-square)
+![Version: 4.10.6](https://img.shields.io/badge/Version-4.10.6-informational?style=flat-square) ![AppVersion: 1.10.6](https://img.shields.io/badge/AppVersion-1.10.6-informational?style=flat-square)
 
 To use, add `ingressClassName: nginx` spec field or the `kubernetes.io/ingress.class: nginx` annotation to your Ingress resources.
 
@@ -335,8 +335,8 @@ metadata:
 | controller.hostname | object | `{}` | Optionally customize the pod hostname. |
 | controller.image.allowPrivilegeEscalation | bool | `false` |  |
 | controller.image.chroot | bool | `false` |  |
-| controller.image.digest | string | `"sha256:c84d11b1f7bd14ebbf49918a7f0dc01b31c0c6e757e0129520ea93453096315c"` |  |
-| controller.image.digestChroot | string | `"sha256:030a43bdd5f0212a7e135cc4da76b15a6706ef65a6824eb4cc401f87a81c2987"` |  |
+| controller.image.digest | string | `"sha256:b6fbd102255edb3ba8e5421feebe14fd3e94cf53d199af9e40687f536152189c"` |  |
+| controller.image.digestChroot | string | `"sha256:44ceedafc0e04a75521b5d472c1b6b5cc08afb8038b5bbfd79c21d066ccf300e"` |  |
 | controller.image.image | string | `"ingress-nginx/controller"` |  |
 | controller.image.pullPolicy | string | `"IfNotPresent"` |  |
 | controller.image.readOnlyRootFilesystem | bool | `false` |  |
@@ -344,7 +344,7 @@ metadata:
 | controller.image.runAsNonRoot | bool | `true` |  |
 | controller.image.runAsUser | int | `101` |  |
 | controller.image.seccompProfile.type | string | `"RuntimeDefault"` |  |
-| controller.image.tag | string | `"v1.10.5"` |  |
+| controller.image.tag | string | `"v1.10.6"` |  |
 | controller.ingressClass | string | `"nginx"` | For backwards compatibility with ingress.class annotation, use ingressClass. Algorithm is as follows, first ingressClassName is considered, if not present, controller looks for ingress.class annotation |
 | controller.ingressClassByName | bool | `false` | Process IngressClass per name (additionally as per spec.controller). |
 | controller.ingressClassResource | object | `{"controllerValue":"k8s.io/ingress-nginx","default":false,"enabled":true,"name":"nginx","parameters":{}}` | This section refers to the creation of the IngressClass resource. IngressClasses are immutable and cannot be changed after creation. We do not support namespaced IngressClasses, yet, so a ClusterRole and a ClusterRoleBinding is required. |
