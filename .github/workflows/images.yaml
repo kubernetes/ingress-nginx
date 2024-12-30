@@ -81,6 +81,8 @@ jobs:
     uses: ./.github/workflows/zz-tmpl-images.yaml
     with:
       name: custom-error-pages
+      platforms-test: linux/amd64,linux/arm64
+      platforms-publish: linux/amd64,linux/arm64
     secrets: inherit
 
   e2e-test-echo:
