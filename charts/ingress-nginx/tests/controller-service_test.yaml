@@ -50,3 +50,12 @@ tests:
           value:
             - 10.0.0.1
             - fd00::1
+
+  - it: should create a Service with `trafficDistribution` when specified for external service
+    set:
+      controller.service.external.enabled: true
+      controller.service.trafficDistribution: PreferClose
+    asserts:
+      - equal:
+          path: spec.trafficDistribution
+          value: PreferClose
