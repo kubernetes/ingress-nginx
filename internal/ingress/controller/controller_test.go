@@ -121,6 +121,14 @@ func (fakeIngressStore) GetAuthCertificate(string) (*resolver.AuthSSLCert, error
 	return nil, fmt.Errorf("test error")
 }
 
+func (fakeIngressStore) GetSSLClientCert(string) (*resolver.SSLClientCert, error) {
+	return nil, fmt.Errorf("test error")
+}
+
+func (fakeIngressStore) GetSSLCA(string) (*resolver.SSLCA, error) {
+	return nil, fmt.Errorf("test error")
+}
+
 func (fakeIngressStore) GetDefaultBackend() defaults.Backend {
 	return defaults.Backend{}
 }
