@@ -102,7 +102,7 @@ jobs:
 
       - name: Set up Go
         id: go
-        uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed # v5.1.0
+        uses: actions/setup-go@3041bf56c941b39c61721a86cd11f3bb1338122a # v5.2.0
         with:
           go-version: ${{ env.GOLANG_VERSION }}
           check-latest: true
@@ -124,7 +124,7 @@ jobs:
         run: echo "GOLANG_VERSION=$(cat GOLANG_VERSION)" >> $GITHUB_ENV
       - name: Set up Go
         id: go
-        uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed # v5.1.0
+        uses: actions/setup-go@3041bf56c941b39c61721a86cd11f3bb1338122a # v5.2.0
         with:
           go-version: ${{ env.GOLANG_VERSION }}
           check-latest: true
@@ -153,7 +153,7 @@ jobs:
 
       - name: Set up Go
         id: go
-        uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed # v5.1.0
+        uses: actions/setup-go@3041bf56c941b39c61721a86cd11f3bb1338122a # v5.2.0
         with:
           go-version: ${{ steps.golangversion.outputs.version }}
           check-latest: true
@@ -163,7 +163,7 @@ jobs:
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v3.7.1
+        uses: docker/setup-buildx-action@6524bf65af31da8d45b59e8c27de4bd072b392f5 # v3.8.0
         with:
           version: latest
 
@@ -202,7 +202,7 @@ jobs:
             | gzip > docker.tar.gz
 
       - name: cache
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         with:
           name: docker.tar.gz
           path: docker.tar.gz
@@ -270,7 +270,7 @@ jobs:
 
     strategy:
       matrix:
-        k8s: [v1.28.15, v1.29.10, v1.30.6, v1.31.2]
+        k8s: [v1.28.15, v1.29.12, v1.30.8, v1.31.4, v1.32.0]
 
     steps:
       - name: Checkout code
@@ -301,7 +301,7 @@ jobs:
       (needs.changes.outputs.go == 'true') || (needs.changes.outputs.baseimage == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
     strategy:
       matrix:
-        k8s: [v1.28.15, v1.29.10, v1.30.6, v1.31.2]
+        k8s: [v1.28.15, v1.29.12, v1.30.8, v1.31.4, v1.32.0]
     uses: ./.github/workflows/zz-tmpl-k8s-e2e.yaml
     with:
       k8s-version: ${{ matrix.k8s }}
@@ -315,7 +315,7 @@ jobs:
       (needs.changes.outputs.go == 'true') || (needs.changes.outputs.baseimage == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
     strategy:
       matrix:
-        k8s: [v1.28.15, v1.29.10, v1.30.6, v1.31.2]
+        k8s: [v1.28.15, v1.29.12, v1.30.8, v1.31.4, v1.32.0]
     uses: ./.github/workflows/zz-tmpl-k8s-e2e.yaml
     with:
       k8s-version: ${{ matrix.k8s }}

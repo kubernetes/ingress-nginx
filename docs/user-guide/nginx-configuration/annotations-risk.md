@@ -73,6 +73,7 @@
 | Proxy | proxy-buffer-size | Low | location |
 | Proxy | proxy-buffering | Low | location |
 | Proxy | proxy-buffers-number | Low | location |
+| Proxy | proxy-busy-buffers-size | Low | location |
 | Proxy | proxy-connect-timeout | Low | location |
 | Proxy | proxy-cookie-domain | Medium | location |
 | Proxy | proxy-cookie-path | Medium | location |

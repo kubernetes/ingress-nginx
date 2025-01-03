@@ -32,9 +32,6 @@ export MORE_HEADERS_VERSION=v0.37
 # Check for recent changes: https://github.com/atomx/nginx-http-auth-digest/compare/v1.0.0...atomx:master
 export NGINX_DIGEST_AUTH=v1.0.0
 
-# Check for recent changes: https://github.com/yaoweibin/ngx_http_substitutions_filter_module/compare/v0.6.4...master
-export NGINX_SUBSTITUTIONS=e12e965ac1837ca709709f9a26f572a54d83430e
-
 # Check for recent changes: https://github.com/SpiderLabs/ModSecurity-nginx/compare/v1.0.3...master
 export MODSECURITY_VERSION=v1.0.3
 
@@ -212,9 +209,6 @@ get_src 0c0d2ced2ce895b3f45eb2b230cd90508ab2a773299f153de14a43e44c1209b3 \
 
 get_src f09851e6309560a8ff3e901548405066c83f1f6ff88aa7171e0763bd9514762b \
         "https://github.com/atomx/nginx-http-auth-digest/archive/$NGINX_DIGEST_AUTH.tar.gz" "nginx-http-auth-digest"
-
-get_src a98b48947359166326d58700ccdc27256d2648218072da138ab6b47de47fbd8f \
-        "https://github.com/yaoweibin/ngx_http_substitutions_filter_module/archive/$NGINX_SUBSTITUTIONS.tar.gz" "ngx_http_substitutions_filter_module"
 
 get_src 32a42256616cc674dca24c8654397390adff15b888b77eb74e0687f023c8751b \
         "https://github.com/SpiderLabs/ModSecurity-nginx/archive/$MODSECURITY_VERSION.tar.gz" "ModSecurity-nginx"
@@ -414,6 +408,21 @@ Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-980-CORRELATION.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
 " > /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
 
+# NGINX compiles a small test program to check if an added module works as expected.
+#
+# ModSecurity-nginx provides 'printf("hello");' as a test, but newer versions of GCC,
+# as included in Alpine 3.21, do not allow implicit declaration of function 'printf':
+#
+#   objs/autotest.c:7:5: error: implicit declaration of function 'printf' [-Wimplicit-function-declaration]
+#
+# For this reason we replace 'printf("hello");' by 'msc_init();', which is always available.
+#
+# This fix is taken from a PR, that has been proposed to the ModSecurity-nginx project:
+#
+#   https://github.com/owasp-modsecurity/ModSecurity-nginx/pull/275
+#
+sed -i "s/ngx_feature_test='printf(\"hello\");'/ngx_feature_test='msc_init();'/" $BUILD_PATH/ModSecurity-nginx/config
+
 # build nginx
 cd "$BUILD_PATH/nginx-$NGINX_VERSION"
 
@@ -474,7 +483,6 @@ WITH_MODULES=" \
   --add-module=$BUILD_PATH/ngx_devel_kit \
   --add-module=$BUILD_PATH/set-misc-nginx-module \
   --add-module=$BUILD_PATH/headers-more-nginx-module \
-  --add-module=$BUILD_PATH/ngx_http_substitutions_filter_module \
   --add-module=$BUILD_PATH/lua-nginx-module \
   --add-module=$BUILD_PATH/stream-lua-nginx-module \
   --add-module=$BUILD_PATH/lua-upstream-nginx-module \
@@ -609,7 +617,7 @@ adduser -S -D -H -u 101 -h /usr/local/nginx -s /sbin/nologin -G www-data -g www-
 
 for dir in "${writeDirs[@]}"; do
   mkdir -p ${dir};
-  chown -R www-data.www-data ${dir};
+  chown -R www-data:www-data ${dir};
 done
 
 rm -rf /etc/nginx/owasp-modsecurity-crs/.git
