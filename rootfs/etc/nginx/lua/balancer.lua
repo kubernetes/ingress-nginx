@@ -108,7 +108,7 @@ end
 local function sync_backend(backend)
   -- We resolve external names before checking if the endpoints are empty
   -- because the behavior for resolve_external_names when the name was not
-  -- resolved is to return an empty table so we set the balncer to nil below
+  -- resolved is to return an empty table so we set the balancer to nil below
   -- see https://github.com/kubernetes/ingress-nginx/pull/10989
   if is_backend_with_external_name(backend) then
     backend = resolve_external_names(backend)
