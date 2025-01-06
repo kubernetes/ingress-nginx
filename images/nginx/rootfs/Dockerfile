@@ -51,6 +51,8 @@ RUN apk update \
   tzdata \
   grpc-cpp \
   libprotobuf \
+  abseil-cpp-crc-cpu-detect \
+  abseil-cpp-vlog-config-internal \
   && ln -s /usr/local/nginx/sbin/nginx /sbin/nginx \
   && adduser -S -D -H -u 101 -h /usr/local/nginx \
   -s /sbin/nologin -G www-data -g www-data www-data \

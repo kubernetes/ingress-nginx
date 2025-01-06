@@ -95,13 +95,14 @@ export LUA_RESTY_REDIS_VERSION=8641b9f1b6f75cca50c90cf8ca5c502ad8950aa8
 # Check for recent changes: https://github.com/api7/lua-resty-ipmatcher/compare/v0.6.1...master
 export LUA_RESTY_IPMATCHER_VERSION=3e93c53eb8c9884efe939ef070486a0e507cc5be
 
-# Check for recent changes:  https://github.com/microsoft/mimalloc/compare/v2.1.7...master
+# Check for recent changes: https://github.com/microsoft/mimalloc/compare/v2.1.7...master
 export MIMALOC_VERSION=v2.1.7
 
-# Check on https://github.com/open-telemetry/opentelemetry-cpp
-export OPENTELEMETRY_CPP_VERSION="v1.11.0"
-# Check on https://github.com/open-telemetry/opentelemetry-proto
-export OPENTELEMETRY_PROTO_VERSION="v1.1.0"
+# Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp/compare/v1.18.0...main
+export OPENTELEMETRY_CPP_VERSION="v1.18.0"
+
+# Check for recent changes: https://github.com/open-telemetry/opentelemetry-proto/compare/v1.5.0...main
+export OPENTELEMETRY_PROTO_VERSION="v1.5.0"
 
 export BUILD_PATH=/tmp/build
 
@@ -520,7 +521,8 @@ make
 make modules
 make install
 
-export OPENTELEMETRY_CONTRIB_COMMIT=e11348bb400d5472bf1da5d6128bead66fa111ff
+# Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp-contrib/compare/8933841f0a7f8737f61404cf0a64acf6b079c8a5...main
+export OPENTELEMETRY_CONTRIB_COMMIT=8933841f0a7f8737f61404cf0a64acf6b079c8a5
 cd "$BUILD_PATH"
 
 git clone https://github.com/open-telemetry/opentelemetry-cpp-contrib.git opentelemetry-cpp-contrib-${OPENTELEMETRY_CONTRIB_COMMIT}
