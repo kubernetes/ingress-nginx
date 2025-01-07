@@ -99,7 +99,7 @@ var requestTags = []string{
 	"canary",
 }
 
-var validHttpMethods = []string{
+var validHTTPMethods = []string{
     // Unless otherwise noted, these are defined in RFC 7231 section 4.3.
     "GET",
     "HEAD",
@@ -330,7 +330,7 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 		if sc.reportStatusClasses && stats.Status != "" {
 			stats.Status = fmt.Sprintf("%cxx", stats.Status[0])
 		}
-        if !slices.Contains(validHttpMethods, stats.Method) {
+        if !slices.Contains(validHTTPMethods, stats.Method) {
             stats.Method = "invalid_method"
         }
 
