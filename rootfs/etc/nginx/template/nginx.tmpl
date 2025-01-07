@@ -1104,7 +1104,7 @@ stream {
             modsecurity off;
             {{ end }}
 
-            return 302 {{ buildAuthSignURL $externalAuth.SigninURL $externalAuth.SigninURLRedirectParam }};
+            return 307 {{ buildAuthSignURL $externalAuth.SigninURL $externalAuth.SigninURLRedirectParam }};
         }
         {{ end }}
         {{ end }}

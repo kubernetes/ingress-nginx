@@ -494,7 +494,7 @@ http {
 				WithQuery("a", "b").
 				WithQuery("c", "d").
 				Expect().
-				Status(http.StatusFound).
+				Status(http.StatusTemporaryRedirect).
 				Header("Location").Equal(fmt.Sprintf("http://%s/auth/start?rd=http://%s%s", host, host, url.QueryEscape("/?a=b&c=d")))
 		})
 
@@ -714,7 +714,7 @@ http {
 				WithQuery("a", "b").
 				WithQuery("c", "d").
 				Expect().
-				Status(http.StatusFound).
+				Status(http.StatusTemporaryRedirect).
 				Header("Location").Equal(fmt.Sprintf("http://%s/auth/start?orig=http://%s%s", host, host, url.QueryEscape("/?a=b&c=d")))
 		})
 
@@ -861,7 +861,7 @@ http {
 				WithQuery("a", "b").
 				WithQuery("c", "d").
 				Expect().
-				Status(http.StatusFound).
+				Status(http.StatusTemporaryRedirect).
 				Header("Location").Equal(fmt.Sprintf("http://%s/auth/start?rd=http://%s%s", thisHost, thisHost, url.QueryEscape("/?a=b&c=d")))
 		})
 	})

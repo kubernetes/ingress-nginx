@@ -121,7 +121,7 @@ var _ = framework.DescribeAnnotation("satisfy", func() {
 			WithQuery("a", "b").
 			WithQuery("c", "d").
 			Expect().
-			Status(http.StatusFound).
+			Status(http.StatusTemporaryRedirect).
 			Header("Location").Equal(fmt.Sprintf("http://%s/auth/start?rd=http://%s%s", host, host, url.QueryEscape("/?a=b&c=d")))
 	})
 })
