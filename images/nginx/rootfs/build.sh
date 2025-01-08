@@ -35,11 +35,11 @@ export NGINX_DIGEST_AUTH=v1.0.0
 # Check for recent changes: https://github.com/SpiderLabs/ModSecurity-nginx/compare/v1.0.3...master
 export MODSECURITY_VERSION=v1.0.3
 
-# Check for recent changes: https://github.com/SpiderLabs/ModSecurity/compare/v3.0.8...v3/master
-export MODSECURITY_LIB_VERSION=v3.0.12
+# Check for recent changes: https://github.com/SpiderLabs/ModSecurity/compare/v3.0.13...v3/master
+export MODSECURITY_LIB_VERSION=v3.0.13
 
-# Check for recent changes: https://github.com/coreruleset/coreruleset/compare/v3.3.5...v4.0/main
-export OWASP_MODSECURITY_CRS_VERSION=v4.4.0
+# Check for recent changes: https://github.com/coreruleset/coreruleset/compare/v4.10.0...main
+export OWASP_MODSECURITY_CRS_VERSION=v4.10.0
 
 # Check for recent changes: https://github.com/openresty/lua-nginx-module/compare/v0.10.26``...master
 export LUA_NGX_VERSION=v0.10.26
