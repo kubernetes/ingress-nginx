@@ -342,14 +342,14 @@ func New(
 
 	store.informers.EndpointSlice = infFactory.Discovery().V1().EndpointSlices().Informer()
 	// Add new endpointslices indexer to markup epps upfront for fast pinpoint retrieval
-	if err := store.informers.EndpointSlice.AddIndexers(epssIndexer()); err != nil {
+	if err := store.informers.EndpointSlice.AddIndexers(newEPSsIndexer()); err != nil {
 		// This error only occurs due to errors in code, this panic is not possible in runtime
 		// if the underlying code is correct. Typically, this error signals conflicts in indexer
 		panic(fmt.Sprintf("failed to add new index for endpointslices: %v", err))
 	}
 
 	store.listers.EndpointSlice.Store = store.informers.EndpointSlice.GetStore()
-	store.listers.EndpointSlice.endpointSliceIndex = eppsForServiceFuncFromIndexer(store.informers.EndpointSlice.GetIndexer())
+	store.listers.EndpointSlice.endpointSliceIndex = getEPSsForServiceFuncFromIndexer(store.informers.EndpointSlice.GetIndexer())
 
 	store.informers.Secret = infFactorySecrets.Core().V1().Secrets().Informer()
 	store.listers.Secret.Store = store.informers.Secret.GetStore()

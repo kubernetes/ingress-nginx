@@ -29,11 +29,11 @@ func newEndpointSliceLister(t *testing.T) (*EndpointSliceLister, cache.Indexer) 
 	t.Helper()
 
 	store := cache.NewStore(cache.MetaNamespaceKeyFunc)
-	indexer := cache.NewIndexer(cache.MetaNamespaceKeyFunc, epssIndexer())
+	indexer := cache.NewIndexer(cache.MetaNamespaceKeyFunc, newEPSsIndexer())
 
 	return &EndpointSliceLister{
 		Store:              store,
-		endpointSliceIndex: eppsForServiceFuncFromIndexer(indexer),
+		endpointSliceIndex: getEPSsForServiceFuncFromIndexer(indexer),
 	}, indexer
 }
 

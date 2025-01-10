@@ -23,12 +23,12 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-type getEpssForServiceFunc = func(key string) ([]*discoveryv1.EndpointSlice, error)
+type getEPSsForServiceFunc = func(key string) ([]*discoveryv1.EndpointSlice, error)
 
 // EndpointSliceLister makes a Store that lists Endpoints.
 type EndpointSliceLister struct {
 	cache.Store
-	endpointSliceIndex getEpssForServiceFunc
+	endpointSliceIndex getEPSsForServiceFunc
 }
 
 // MatchByKey returns the EndpointsSlices of the Service matching key in the local Endpoint Store.
@@ -44,7 +44,7 @@ func (s *EndpointSliceLister) MatchByKey(key string) ([]*discoveryv1.EndpointSli
 	return epss, nil
 }
 
-func epssIndexer() cache.Indexers {
+func newEPSsIndexer() cache.Indexers {
 	return cache.Indexers{
 		discoveryv1.LabelServiceName: func(obj interface{}) ([]string, error) {
 			eps, ok := obj.(*discoveryv1.EndpointSlice)
@@ -67,7 +67,7 @@ func epssIndexer() cache.Indexers {
 	}
 }
 
-func epssForServiceFuncFromIndexer(indexer cache.Indexer) getEppsForServiceFunc {
+func getEPSsForServiceFuncFromIndexer(indexer cache.Indexer) getEPSsForServiceFunc {
 	return func(key string) ([]*discoveryv1.EndpointSlice, error) {
 		objs, err := indexer.ByIndex(discoveryv1.LabelServiceName, key)
 		if err != nil {
