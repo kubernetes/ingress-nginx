@@ -105,10 +105,10 @@ export LUA_RESTY_GLOBAL_THROTTLE_VERSION=v0.2.0
 export MIMALOC_VERSION=v2.1.7
 
 # Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp/compare/v1.18.0...main
-export OPENTELEMETRY_CPP_VERSION="v1.18.0"
+export OPENTELEMETRY_CPP_VERSION=v1.18.0
 
 # Check for recent changes: https://github.com/open-telemetry/opentelemetry-proto/compare/v1.5.0...main
-export OPENTELEMETRY_PROTO_VERSION="v1.5.0"
+export OPENTELEMETRY_PROTO_VERSION=v1.5.0
 
 export BUILD_PATH=/tmp/build
 
