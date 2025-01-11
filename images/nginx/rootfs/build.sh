@@ -102,10 +102,10 @@ export LUA_RESTY_IPMATCHER_VERSION=3e93c53eb8c9884efe939ef070486a0e507cc5be
 export MIMALOC_VERSION=v2.1.7
 
 # Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp/compare/v1.18.0...main
-export OPENTELEMETRY_CPP_VERSION="v1.18.0"
+export OPENTELEMETRY_CPP_VERSION=v1.18.0
 
 # Check for recent changes: https://github.com/open-telemetry/opentelemetry-proto/compare/v1.5.0...main
-export OPENTELEMETRY_PROTO_VERSION="v1.5.0"
+export OPENTELEMETRY_PROTO_VERSION=v1.5.0
 
 export BUILD_PATH=/tmp/build
 
