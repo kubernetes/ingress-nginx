@@ -2,11 +2,10 @@ options:
   # Ignore Prow provided substitutions.
   substitution_option: ALLOW_LOOSE
 steps:
-  - name: gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:v20240523-a15ad90fc9
+  - name: gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:v20241217-ff46a068cd
     env:
       - REGISTRY=gcr.io/k8s-staging-ingress-nginx
     entrypoint: bash
     args:
       - -c
       - gcloud auth configure-docker && cd images && make NAME=custom-error-pages push
-timeout: 3600s

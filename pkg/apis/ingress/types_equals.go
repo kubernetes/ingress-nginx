@@ -467,6 +467,10 @@ func (l1 *Location) Equal(l2 *Location) bool {
 		return false
 	}
 
+	if !l1.CustomHeaders.Equal(&l2.CustomHeaders) {
+		return false
+	}
+
 	return true
 }
 

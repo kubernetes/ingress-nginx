@@ -549,6 +549,10 @@ type Configuration struct {
 	// https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_intercept_errors
 	DisableProxyInterceptErrors bool `json:"disable-proxy-intercept-errors,omitempty"`
 
+	// Disable absolute redirects and enables relative redirects.
+	// https://nginx.org/en/docs/http/ngx_http_core_module.html#absolute_redirect
+	RelativeRedirects bool `json:"relative-redirects"`
+
 	// Sets the ipv4 addresses on which the server will accept requests.
 	BindAddressIpv4 []string `json:"bind-address-ipv4,omitempty"`
 
@@ -834,6 +838,7 @@ func NewDefault() Configuration {
 		VariablesHashMaxSize:             2048,
 		UseHTTP2:                         true,
 		DisableProxyInterceptErrors:      false,
+		RelativeRedirects:                false,
 		ProxyStreamTimeout:               "600s",
 		ProxyStreamNextUpstream:          true,
 		ProxyStreamNextUpstreamTimeout:   "600s",
@@ -845,6 +850,7 @@ func NewDefault() Configuration {
 			ProxySendTimeout:            60,
 			ProxyBuffersNumber:          4,
 			ProxyBufferSize:             "4k",
+			ProxyBusyBuffersSize:        "8k",
 			ProxyCookieDomain:           "off",
 			ProxyCookiePath:             "off",
 			ProxyNextUpstream:           "error timeout",
@@ -857,6 +863,7 @@ func NewDefault() Configuration {
 			SSLRedirect:                 true,
 			CustomHTTPErrors:            []int{},
 			DisableProxyInterceptErrors: false,
+			RelativeRedirects:           false,
 			DenylistSourceRange:         []string{},
 			WhitelistSourceRange:        []string{},
 			SkipAccessLogURLs:           []string{},

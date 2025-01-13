@@ -22,6 +22,9 @@ spec:
   replicas: {{ .Values.controller.replicaCount }}
   {{- end }}
   revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  {{- if .Values.controller.progressDeadlineSeconds }}
+  progressDeadlineSeconds: {{ .Values.controller.progressDeadlineSeconds }}
+  {{- end }}
   {{- if .Values.controller.updateStrategy }}
   strategy: {{ toYaml .Values.controller.updateStrategy | nindent 4 }}
   {{- end }}
@@ -78,7 +81,7 @@ spec:
     {{- end }}
       containers:
         - name: {{ .Values.controller.containerName }}
-          {{- with .Values.controller.image }}
+          {{- with (merge .Values.controller.image .Values.global.image) }}
           image: {{ if .repository }}{{ .repository }}{{ else }}{{ .registry }}/{{ include "ingress-nginx.image" . }}{{ end }}:{{ .tag }}{{ include "ingress-nginx.imageDigest" . }}
           {{- end }}
           imagePullPolicy: {{ .Values.controller.image.pullPolicy }}
@@ -147,9 +150,9 @@ spec:
               hostPort: {{ $key }}
               {{- end }}
           {{- end }}
-        {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
+        {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraModules) }}
           volumeMounts:
-          {{- if (or .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
+          {{- if .Values.controller.extraModules }}
             - name: modules
             {{- if .Values.controller.image.chroot }}
               mountPath: /chroot/modules_mount
@@ -177,7 +180,7 @@ spec:
       {{- if .Values.controller.extraContainers }}
         {{- toYaml .Values.controller.extraContainers | nindent 8 }}
       {{- end }}
-    {{- if (or .Values.controller.extraInitContainers .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
+    {{- if (or .Values.controller.extraInitContainers .Values.controller.extraModules) }}
       initContainers:
       {{- if .Values.controller.extraInitContainers }}
         {{- toYaml .Values.controller.extraInitContainers | nindent 8 }}
@@ -185,13 +188,7 @@ spec:
       {{- if .Values.controller.extraModules }}
         {{- range .Values.controller.extraModules }}
           {{- $containerSecurityContext := .containerSecurityContext | default $.Values.controller.containerSecurityContext }}
-          {{- include "extraModules" (dict "name" .name "image" .image "containerSecurityContext" $containerSecurityContext "resources" .resources) | nindent 8 }}
-        {{- end }}
-      {{- end }}
-      {{- if .Values.controller.opentelemetry.enabled }}
-        {{- with .Values.controller.opentelemetry }}
-          {{- $containerSecurityContext := .containerSecurityContext | default $.Values.controller.containerSecurityContext }}
-          {{- include "extraModules" (dict "name" .name "image" .image "containerSecurityContext" $containerSecurityContext "resources" .resources) | nindent 8 }}
+          {{- include "extraModules" (dict "name" .name "image" (merge .image $.Values.global.image) "containerSecurityContext" $containerSecurityContext "resources" .resources) | nindent 8 }}
         {{- end }}
       {{- end }}
     {{- end }}
@@ -211,10 +208,11 @@ spec:
       topologySpreadConstraints: {{ tpl (toYaml .Values.controller.topologySpreadConstraints) $ | nindent 8 }}
     {{- end }}
       serviceAccountName: {{ template "ingress-nginx.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
       terminationGracePeriodSeconds: {{ .Values.controller.terminationGracePeriodSeconds }}
-    {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraVolumes .Values.controller.extraModules .Values.controller.opentelemetry.enabled) }}
+    {{- if (or .Values.controller.customTemplate.configMapName .Values.controller.extraVolumeMounts .Values.controller.admissionWebhooks.enabled .Values.controller.extraVolumes .Values.controller.extraModules) }}
       volumes:
-      {{- if (or .Values.controller.extraModules .Values.controller.opentelemetry.enabled)}}
+      {{- if .Values.controller.extraModules }}
         - name: modules
           emptyDir: {}
       {{- end }}

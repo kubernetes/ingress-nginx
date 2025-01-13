@@ -1,6 +1,16 @@
 
 # FAQ
 
+## Multi-tenant Kubernetes
+
+Do not use in multi-tenant Kubernetes production installations. This project assumes that users that can create Ingress objects are administrators of the cluster.
+
+For example, the Ingress NGINX control plane has global and per Ingress configuration options that make it insecure, if enabled, in a multi-tenant environment. 
+
+For example, enabling snippets, a global configuration, allows any Ingress object to run arbitrary Lua code that could affect the security of all Ingress objects that a controller is running. 
+
+We changed the default to allow snippets to `false` in https://github.com/kubernetes/ingress-nginx/pull/10393.
+
 ## Multiple controller in one cluster
 
 Question - How can I easily install multiple instances of the ingress-nginx controller in the same cluster?

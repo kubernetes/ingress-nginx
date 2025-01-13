@@ -361,10 +361,11 @@ func TestCleanTempNginxCfg(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tmpfile, err := os.CreateTemp("", tempNginxPattern)
+	tmpfile, err := os.CreateTemp(filepath.Join(os.TempDir(), "nginx"), tempNginxPattern)
 	if err != nil {
 		t.Fatal(err)
 	}
+	expectedDeletedFile := tmpfile.Name()
 	defer tmpfile.Close()
 
 	dur, err := time.ParseDuration("-10m")
@@ -378,10 +379,11 @@ func TestCleanTempNginxCfg(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tmpfile, err = os.CreateTemp("", tempNginxPattern)
+	tmpfile, err = os.CreateTemp(filepath.Join(os.TempDir(), "nginx"), tempNginxPattern)
 	if err != nil {
 		t.Fatal(err)
 	}
+	expectedFile := tmpfile.Name()
 	defer tmpfile.Close()
 
 	err = cleanTempNginxCfg()
@@ -391,8 +393,8 @@ func TestCleanTempNginxCfg(t *testing.T) {
 
 	var files []string
 
-	err = filepath.Walk(os.TempDir(), func(path string, info os.FileInfo, _ error) error {
-		if info.IsDir() && os.TempDir() != path {
+	err = filepath.Walk(filepath.Join(os.TempDir(), "nginx"), func(path string, info os.FileInfo, _ error) error {
+		if info.IsDir() && filepath.Join(os.TempDir(), "nginx") != path {
 			return filepath.SkipDir
 		}
 
@@ -405,8 +407,18 @@ func TestCleanTempNginxCfg(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(files) != 1 {
-		t.Errorf("expected one file but %d were found", len(files))
+	// some other files can be created by other tests
+	var found bool
+	for _, file := range files {
+		if file == expectedDeletedFile {
+			t.Errorf("file %s should be deleted", file)
+		}
+		if file == expectedFile {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("file %s should not be deleted", expectedFile)
 	}
 }
 

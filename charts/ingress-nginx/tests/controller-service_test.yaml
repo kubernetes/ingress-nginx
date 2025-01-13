@@ -30,3 +30,35 @@ tests:
       - equal:
           path: spec.type
           value: NodePort
+
+  - it: should create a Service without `clusterIPs` if `controller.service.clusterIPs` is not set
+    set:
+      controller.service.external.enabled: true
+    asserts:
+      - notExists:
+          path: spec.clusterIPs
+
+  - it: should create a Service with `clusterIPs` if `controller.service.clusterIPs` is set
+    set:
+      controller.service.external.enabled: true
+      controller.service.clusterIPs:
+        - 10.0.0.1
+        - fd00::1
+    asserts:
+      - equal:
+          path: spec.clusterIPs
+          value:
+            - 10.0.0.1
+            - fd00::1
+
+  - it: should create a Service with `trafficDistribution` if `controller.service.trafficDistribution` is set
+    capabilities:
+      majorVersion: 1
+      minorVersion: 31
+    set:
+      controller.service.external.enabled: true
+      controller.service.trafficDistribution: PreferClose
+    asserts:
+      - equal:
+          path: spec.trafficDistribution
+          value: PreferClose

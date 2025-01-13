@@ -32,5 +32,8 @@ spec:
   {{- else if .Values.controller.maxUnavailable }}
   maxUnavailable: {{ .Values.controller.maxUnavailable }}
   {{- end }}
+  {{- if .Values.controller.unhealthyPodEvictionPolicy }}
+  unhealthyPodEvictionPolicy: {{ .Values.controller.unhealthyPodEvictionPolicy }}
+  {{- end }}
 {{- end }}
 {{- end }}

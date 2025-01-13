@@ -69,6 +69,11 @@ type Backend struct {
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size)
 	ProxyBufferSize string `json:"proxy-buffer-size"`
 
+	// Limits the total size of buffers that can be busy sending a response to the client while
+	// the response is not yet fully read.
+	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_busy_buffers_size
+	ProxyBusyBuffersSize string `json:"proxy-busy-buffers-size"`
+
 	// Sets a text that should be changed in the path attribute of the “Set-Cookie” header fields of
 	// a proxied server response.
 	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_path
@@ -124,6 +129,11 @@ type Backend struct {
 	// Enables or disables the specification of port in redirects
 	// Default: false
 	UsePortInRedirects bool `json:"use-port-in-redirects"`
+
+	// Enables or disables relative redirects. By default nginx uses absolute redirects.
+	// http://nginx.org/en/docs/http/ngx_http_core_module.html#absolute_redirect
+	// Default: false
+	RelativeRedirects bool `json:"relative-redirects"`
 
 	// Enable stickiness by client-server mapping based on a NGINX variable, text or a combination of both.
 	// A consistent hashing method will be used which ensures only a few keys would be remapped to different

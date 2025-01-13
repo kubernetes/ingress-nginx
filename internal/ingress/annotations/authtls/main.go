@@ -42,7 +42,7 @@ const (
 
 var (
 	authVerifyClientRegex = regexp.MustCompile(`^(on|off|optional|optional_no_ca)$`)
-	redirectRegex         = regexp.MustCompile(`^((https?://)?[A-Za-z0-9\-.]*(:\d+)?/[A-Za-z0-9\-.]*)?$`)
+	redirectRegex         = regexp.MustCompile(`^((https?://)?[A-Za-z0-9\-.]+(:\d+)?)?(/[A-Za-z0-9\-_.]+)*/?$`)
 )
 
 var authTLSAnnotations = parser.Annotation{

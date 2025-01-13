@@ -305,6 +305,7 @@ func (cm *Controller) SetSSLExpireTime(servers []*ingress.Server) {
 		}
 		labels["host"] = s.Hostname
 		labels["secret_name"] = s.SSLCert.Name
+		labels["namespace"] = s.SSLCert.Namespace
 		labels["identifier"] = s.SSLCert.Identifier()
 
 		cm.sslExpireTime.With(labels).Set(float64(s.SSLCert.ExpireTime.Unix()))

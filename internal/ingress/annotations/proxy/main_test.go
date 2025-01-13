@@ -88,6 +88,7 @@ func (m mockBackend) GetDefaultBackend() defaults.Backend {
 		ProxyReadTimeout:         20,
 		ProxyBuffersNumber:       4,
 		ProxyBufferSize:          "10k",
+		ProxyBusyBuffersSize:     "15k",
 		ProxyBodySize:            "3k",
 		ProxyNextUpstream:        "error",
 		ProxyNextUpstreamTimeout: 0,
@@ -108,6 +109,7 @@ func TestProxy(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("proxy-read-timeout")] = "3"
 	data[parser.GetAnnotationWithPrefix("proxy-buffers-number")] = "8"
 	data[parser.GetAnnotationWithPrefix("proxy-buffer-size")] = "1k"
+	data[parser.GetAnnotationWithPrefix("proxy-busy-buffers-size")] = "4k"
 	data[parser.GetAnnotationWithPrefix("proxy-body-size")] = "2k"
 	data[parser.GetAnnotationWithPrefix("proxy-next-upstream")] = off
 	data[parser.GetAnnotationWithPrefix("proxy-next-upstream-timeout")] = "5"
@@ -140,6 +142,9 @@ func TestProxy(t *testing.T) {
 	}
 	if p.BufferSize != "1k" {
 		t.Errorf("expected 1k as buffer-size but returned %v", p.BufferSize)
+	}
+	if p.BusyBuffersSize != "4k" {
+		t.Errorf("expected 4k as busy-buffers-size but returned %v", p.BusyBuffersSize)
 	}
 	if p.BodySize != "2k" {
 		t.Errorf("expected 2k as body-size but returned %v", p.BodySize)
@@ -176,6 +181,7 @@ func TestProxyComplex(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix("proxy-read-timeout")] = "3"
 	data[parser.GetAnnotationWithPrefix("proxy-buffers-number")] = "8"
 	data[parser.GetAnnotationWithPrefix("proxy-buffer-size")] = "1k"
+	data[parser.GetAnnotationWithPrefix("proxy-busy-buffers-size")] = "4k"
 	data[parser.GetAnnotationWithPrefix("proxy-body-size")] = "2k"
 	data[parser.GetAnnotationWithPrefix("proxy-next-upstream")] = "error http_502"
 	data[parser.GetAnnotationWithPrefix("proxy-next-upstream-timeout")] = "5"
@@ -208,6 +214,9 @@ func TestProxyComplex(t *testing.T) {
 	}
 	if p.BufferSize != "1k" {
 		t.Errorf("expected 1k as buffer-size but returned %v", p.BufferSize)
+	}
+	if p.BusyBuffersSize != "4k" {
+		t.Errorf("expected 4k as buffer-size but returned %v", p.BusyBuffersSize)
 	}
 	if p.BodySize != "2k" {
 		t.Errorf("expected 2k as body-size but returned %v", p.BodySize)
@@ -263,6 +272,9 @@ func TestProxyWithNoAnnotation(t *testing.T) {
 	}
 	if p.BufferSize != "10k" {
 		t.Errorf("expected 10k as buffer-size but returned %v", p.BufferSize)
+	}
+	if p.BusyBuffersSize != "15k" {
+		t.Errorf("expected 15k as buffer-size but returned %v", p.BusyBuffersSize)
 	}
 	if p.BodySize != "3k" {
 		t.Errorf("expected 3k as body-size but returned %v", p.BodySize)

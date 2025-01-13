@@ -23,3 +23,41 @@ tests:
       - equal:
           path: metadata.name
           value: RELEASE-NAME-ingress-nginx-controller-internal
+
+  - it: should create a Service without `clusterIPs` if `controller.service.internal.clusterIPs` is not set
+    set:
+      controller.service.internal.enabled: true
+      controller.service.internal.annotations:
+        test.annotation: "true"
+    asserts:
+      - notExists:
+          path: spec.clusterIPs
+
+  - it: should create a Service with `clusterIPs` if `controller.service.internal.clusterIPs` is set
+    set:
+      controller.service.internal.enabled: true
+      controller.service.internal.annotations:
+        test.annotation: "true"
+      controller.service.internal.clusterIPs:
+        - 10.0.0.1
+        - fd00::1
+    asserts:
+      - equal:
+          path: spec.clusterIPs
+          value:
+            - 10.0.0.1
+            - fd00::1
+
+  - it: should create a Service with `trafficDistribution` if `controller.service.internal.trafficDistribution` is set
+    capabilities:
+      majorVersion: 1
+      minorVersion: 31
+    set:
+      controller.service.internal.enabled: true
+      controller.service.internal.annotations:
+        test.annotation: "true"
+      controller.service.internal.trafficDistribution: PreferClose
+    asserts:
+      - equal:
+          path: spec.trafficDistribution
+          value: PreferClose

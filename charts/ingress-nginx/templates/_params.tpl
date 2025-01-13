@@ -54,7 +54,7 @@
 {{- if .Values.controller.watchIngressWithoutClass }}
 - --watch-ingress-without-class=true
 {{- end }}
-{{- if not .Values.controller.metrics.enabled }}
+{{- if .Values.controller.metrics.enabled }}
 - --enable-metrics={{ .Values.controller.metrics.enabled }}
 {{- end }}
 {{- if .Values.controller.enableTopologyAwareRouting }}

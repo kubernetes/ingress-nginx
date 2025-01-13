@@ -1,4 +1,4 @@
-# Copyright 2017 The Kubernetes Authors. All rights reserved.
+# Copyright 2024 The Kubernetes Authors. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ INIT_BUILDX=$(DIR)/../../hack/init-buildx.sh
 
 # 0.0.0 shouldn't clobber any released builds
 SHORT_SHA ?=$(shell git rev-parse --short HEAD)
-TAG ?=v$(shell date +%Y%m%d)-$(SHORT_SHA)
+TAG ?=$(shell cat TAG)
 
 REGISTRY ?= gcr.io/k8s-staging-ingress-nginx
 
@@ -32,7 +32,7 @@ IMAGE = $(REGISTRY)/nginx
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
 # build with buildx
-PLATFORMS?=linux/amd64,linux/arm,linux/arm64,linux/s390x
+PLATFORMS?=linux/amd64,linux/arm,linux/arm64
 OUTPUT=
 PROGRESS=plain
 build: ensure-buildx

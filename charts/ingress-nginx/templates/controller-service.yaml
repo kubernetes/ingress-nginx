@@ -19,6 +19,9 @@ spec:
 {{- if .Values.controller.service.clusterIP }}
   clusterIP: {{ .Values.controller.service.clusterIP }}
 {{- end }}
+{{- if .Values.controller.service.clusterIPs }}
+  clusterIPs: {{ toYaml .Values.controller.service.clusterIPs | nindent 4 }}
+{{- end }}
 {{- if .Values.controller.service.externalIPs }}
   externalIPs: {{ toYaml .Values.controller.service.externalIPs | nindent 4 }}
 {{- end }}
@@ -42,6 +45,11 @@ spec:
 {{- end }}
 {{- if .Values.controller.service.healthCheckNodePort }}
   healthCheckNodePort: {{ .Values.controller.service.healthCheckNodePort }}
+{{- end }}
+{{- if semverCompare ">=1.31.0-0" .Capabilities.KubeVersion.Version -}}
+{{- if .Values.controller.service.trafficDistribution }}
+  trafficDistribution: {{ .Values.controller.service.trafficDistribution }}
+{{- end }}
 {{- end }}
 {{- if semverCompare ">=1.21.0-0" .Capabilities.KubeVersion.Version -}}
 {{- if .Values.controller.service.ipFamilyPolicy }}

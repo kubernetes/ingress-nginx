@@ -59,7 +59,7 @@ image:
 		--build-arg YAML_LINT_VERSION=1.33.0 \
 		--build-arg YAMALE_VERSION=4.0.4 \
 		--build-arg HELM_VERSION=3.14.4 \
-		--build-arg GINKGO_VERSION=2.20.2 \
+		--build-arg GINKGO_VERSION=2.22.2 \
 		--build-arg GOLINT_VERSION=latest \
 		-t ${IMAGE}:${TAG} rootfs
 
@@ -80,7 +80,7 @@ build: ensure-buildx
 		--build-arg YAML_LINT_VERSION=1.33.0 \
 		--build-arg YAMALE_VERSION=4.0.4 \
 		--build-arg HELM_VERSION=3.14.4 \
-		--build-arg GINKGO_VERSION=2.20.2 \
+		--build-arg GINKGO_VERSION=2.22.2 \
 		--build-arg GOLINT_VERSION=latest \
 		-t ${IMAGE}:${TAG} rootfs
 

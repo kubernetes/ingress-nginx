@@ -22,7 +22,6 @@ linters:
     - errcheck
     - errchkjson
     - errname
-    - execinquery
     - ginkgolinter
     - gocheckcompilerdirectives
     - goconst

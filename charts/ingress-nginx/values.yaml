@@ -2,6 +2,10 @@
 ## Ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/index.md
 ##
 
+global:
+  image:
+    # -- Registry host to pull images from.
+    registry: registry.k8s.io
 ## Overrides for generated resource names
 # See templates/_helpers.tpl
 # nameOverride:
@@ -21,14 +25,14 @@ controller:
   image:
     ## Keep false as default for now!
     chroot: false
-    registry: registry.k8s.io
+    # registry: registry.k8s.io
     image: ingress-nginx/controller
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
-    tag: "v1.11.2"
-    digest: sha256:d5f8217feeac4887cb1ed21f27c2674e58be06bd8f5184cacea2a69abaf78dce
-    digestChroot: sha256:21b55a2f0213a18b91612a8c0850167e00a8e34391fd595139a708f9c047e7a8
+    tag: "v1.12.0"
+    digest: sha256:e6b8de175acda6ca913891f0f727bca4527e797d52688cbe9fec9040d6f6b6fa
+    digestChroot: sha256:87c88e1c38a6c8d4483c8f70b69e2cca49853bb3ec3124b9b1be648edf139af3
     pullPolicy: IfNotPresent
     runAsNonRoot: true
     # -- This value must not be changed using the official image.
@@ -41,8 +45,6 @@ controller:
     seccompProfile:
       type: RuntimeDefault
     readOnlyRootFilesystem: false
-  # -- Use an existing PSP instead of creating one
-  existingPsp: ""
   # -- Configures the controller container name
   containerName: controller
   # -- Configures the ports that the nginx-controller listens on
@@ -238,6 +240,9 @@ controller:
   #    maxUnavailable: 1
   #  type: RollingUpdate
 
+  # -- Specifies the number of seconds you want to wait for the controller deployment to progress before the system reports back that it has failed.
+  # Ref.: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#progress-deadline-seconds
+  progressDeadlineSeconds: 0
   # -- `minReadySeconds` to avoid killing pods before we are ready
   ##
   minReadySeconds: 0
@@ -303,6 +308,8 @@ controller:
   #       app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
   #       app.kubernetes.io/instance: '{{ .Release.Name }}'
   #       app.kubernetes.io/component: controller
+  #   matchLabelKeys:
+  #   - pod-template-hash
   #   topologyKey: topology.kubernetes.io/zone
   #   maxSkew: 1
   #   whenUnsatisfiable: ScheduleAnyway
@@ -311,6 +318,8 @@ controller:
   #       app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
   #       app.kubernetes.io/instance: '{{ .Release.Name }}'
   #       app.kubernetes.io/component: controller
+  #   matchLabelKeys:
+  #   - pod-template-hash
   #   topologyKey: kubernetes.io/hostname
   #   maxSkew: 1
   #   whenUnsatisfiable: ScheduleAnyway
@@ -376,7 +385,9 @@ controller:
   minAvailable: 1
   # -- Maximum unavailable pods set in PodDisruptionBudget. If set, 'minAvailable' is ignored.
   # maxUnavailable: 1
-
+  # -- Eviction policy for unhealthy pods guarded by PodDisruptionBudget.
+  # Ref: https://kubernetes.io/blog/2023/01/06/unhealthy-pod-eviction-policy-for-pdbs/
+  unhealthyPodEvictionPolicy: ""
   ## Define requests resources to avoid probe issues due to CPU utilization in busy nodes
   ## ref: https://github.com/kubernetes/ingress-nginx/issues/4735#issuecomment-551204903
   ## Ideally, there should be no limits.
@@ -486,6 +497,10 @@ controller:
     # This value is immutable. Set once, it can not be changed without deleting and re-creating the service.
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#choosing-your-own-ip-address
     clusterIP: ""
+    # -- Pre-defined cluster internal IP addresses of the external controller service. Take care of collisions with existing services.
+    # This value is immutable. Set once, it can not be changed without deleting and re-creating the service.
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#choosing-your-own-ip-address
+    clusterIPs: []
     # -- List of node IP addresses at which the external controller service is available.
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
     externalIPs: []
@@ -511,6 +526,10 @@ controller:
     # If not specified, the service controller allocates a port from your cluster's node port range.
     # Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
     # healthCheckNodePort: 0
+
+    # -- Traffic distribution policy of the external controller service. Set to "PreferClose" to route traffic to endpoints that are topologically closer to the client.
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution
+    trafficDistribution: ""
 
     # -- Represents the dual-stack capabilities of the external controller service. Possible values are SingleStack, PreferDualStack or RequireDualStack.
     # Fields `ipFamilies` and `clusterIP` depend on the value of this field.
@@ -566,6 +585,10 @@ controller:
       # This value is immutable. Set once, it can not be changed without deleting and re-creating the service.
       # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#choosing-your-own-ip-address
       clusterIP: ""
+      # -- Pre-defined cluster internal IP addresses of the internal controller service. Take care of collisions with existing services.
+      # This value is immutable. Set once, it can not be changed without deleting and re-creating the service.
+      # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#choosing-your-own-ip-address
+      clusterIPs: []
       # -- List of node IP addresses at which the internal controller service is available.
       # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
       externalIPs: []
@@ -591,6 +614,10 @@ controller:
       # If not specified, the service controller allocates a port from your cluster's node port range.
       # Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
       # healthCheckNodePort: 0
+
+      # -- Traffic distribution policy of the internal controller service. Set to "PreferClose" to route traffic to endpoints that are topologically closer to the client.
+      # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution
+      trafficDistribution: ""
 
       # -- Represents the dual-stack capabilities of the internal controller service. Possible values are SingleStack, PreferDualStack or RequireDualStack.
       # Fields `ipFamilies` and `clusterIP` depend on the value of this field.
@@ -677,11 +704,11 @@ controller:
   #   image: busybox
   #   command: ['sh', '-c', 'until nslookup myservice; do echo waiting for myservice; sleep 2; done;']
 
-  # -- Modules, which are mounted into the core nginx image. See values.yaml for a sample to add opentelemetry module
+  # -- Modules, which are mounted into the core nginx image.
   extraModules: []
   # - name: mytestmodule
   #   image:
-  #     registry: registry.k8s.io
+  #     # registry: registry.k8s.io
   #     image: ingress-nginx/mytestmodule
   #     ## for backwards compatibility consider setting the full image url via the repository value below
   #     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
@@ -706,31 +733,6 @@ controller:
   # will be executed as initContainers, to move its config files within the
   # mounted volume.
 
-  opentelemetry:
-    enabled: false
-    name: opentelemetry
-    image:
-      registry: registry.k8s.io
-      image: ingress-nginx/opentelemetry-1.25.3
-      ## for backwards compatibility consider setting the full image url via the repository value below
-      ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
-      ## repository:
-      tag: v20240813-b933310d
-      digest: sha256:f7604ac0547ed64d79b98d92133234e66c2c8aade3c1f4809fed5eec1fb7f922
-      distroless: true
-    containerSecurityContext:
-      runAsNonRoot: true
-      # -- The image's default user, inherited from its base image `cgr.dev/chainguard/static`.
-      runAsUser: 65532
-      runAsGroup: 65532
-      allowPrivilegeEscalation: false
-      seccompProfile:
-        type: RuntimeDefault
-      capabilities:
-        drop:
-          - ALL
-      readOnlyRootFilesystem: true
-    resources: {}
   admissionWebhooks:
     name: admission
     annotations: {}
@@ -758,8 +760,6 @@ controller:
     objectSelector: {}
     # -- Labels to be added to admission webhooks
     labels: {}
-    # -- Use an existing PSP instead of creating one
-    existingPsp: ""
     service:
       annotations: {}
       # clusterIP: ""
@@ -807,13 +807,13 @@ controller:
     patch:
       enabled: true
       image:
-        registry: registry.k8s.io
+        # registry: registry.k8s.io
         image: ingress-nginx/kube-webhook-certgen
         ## for backwards compatibility consider setting the full image url via the repository value below
         ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
         ## repository:
-        tag: v1.4.3
-        digest: sha256:a320a50cc91bd15fd2d6fa6de58bd98c1bd64b9a6f926ce23a600d87043455a3
+        tag: v1.5.1
+        digest: sha256:0de05718b59dc33b57ddfb4d8ad5f637cefd13eafdec0e1579d782b3483c27c3
         pullPolicy: IfNotPresent
       # -- Provide a priority class name to the webhook patching job
       ##
@@ -861,6 +861,8 @@ controller:
     # if this port is changed, change healthz-port: in extraArgs: accordingly
     enabled: false
     service:
+      # -- Enable the metrics service or not.
+      enabled: true
       annotations: {}
       # prometheus.io/scrape: "true"
       # prometheus.io/port: "10254"
@@ -896,6 +898,16 @@ controller:
       targetLabels: []
       relabelings: []
       metricRelabelings: []
+      # -- Per-scrape limit on number of labels that will be accepted for a sample.
+      labelLimit: 0
+      # -- Per-scrape limit on length of labels name that will be accepted for a sample.
+      labelNameLengthLimit: 0
+      # -- Per-scrape limit on length of labels value that will be accepted for a sample.
+      labelValueLengthLimit: 0
+      # -- Defines a per-scrape limit on the number of scraped samples that will be accepted.
+      sampleLimit: 0
+      # -- Defines a limit on the number of scraped targets that will be accepted.
+      targetLimit: 0
     prometheusRule:
       enabled: false
       additionalLabels: {}
@@ -964,7 +976,7 @@ defaultBackend:
   enabled: false
   name: defaultbackend
   image:
-    registry: registry.k8s.io
+    # registry: registry.k8s.io
     image: defaultbackend-amd64
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
@@ -979,8 +991,6 @@ defaultBackend:
     seccompProfile:
       type: RuntimeDefault
     readOnlyRootFilesystem: true
-  # -- Use an existing PSP instead of creating one
-  existingPsp: ""
   extraArgs: {}
   serviceAccount:
     create: true
@@ -1074,6 +1084,8 @@ defaultBackend:
   #       app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
   #       app.kubernetes.io/instance: '{{ .Release.Name }}'
   #       app.kubernetes.io/component: default-backend
+  #   matchLabelKeys:
+  #   - pod-template-hash
   #   topologyKey: topology.kubernetes.io/zone
   #   maxSkew: 1
   #   whenUnsatisfiable: ScheduleAnyway
@@ -1082,6 +1094,8 @@ defaultBackend:
   #       app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
   #       app.kubernetes.io/instance: '{{ .Release.Name }}'
   #       app.kubernetes.io/component: default-backend
+  #   matchLabelKeys:
+  #   - pod-template-hash
   #   topologyKey: kubernetes.io/hostname
   #   maxSkew: 1
   #   whenUnsatisfiable: ScheduleAnyway
@@ -1102,7 +1116,14 @@ defaultBackend:
   ##
   podAnnotations: {}
   replicaCount: 1
+  # -- Minimum available pods set in PodDisruptionBudget.
+  # Define either 'minAvailable' or 'maxUnavailable', never both.
   minAvailable: 1
+  # -- Maximum unavailable pods set in PodDisruptionBudget. If set, 'minAvailable' is ignored.
+  # maxUnavailable: 1
+  # -- Eviction policy for unhealthy pods guarded by PodDisruptionBudget.
+  # Ref: https://kubernetes.io/blog/2023/01/06/unhealthy-pod-eviction-policy-for-pdbs/
+  unhealthyPodEvictionPolicy: ""
   resources: {}
   # limits:
   #   cpu: 10m
@@ -1150,6 +1171,10 @@ defaultBackend:
   service:
     annotations: {}
     # clusterIP: ""
+    # -- Pre-defined cluster internal IP addresses of the default backend service. Take care of collisions with existing services.
+    # This value is immutable. Set once, it can not be changed without deleting and re-creating the service.
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#choosing-your-own-ip-address
+    clusterIPs: []
 
     # -- List of IP addresses at which the default backend service is available
     ## Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
@@ -1166,10 +1191,6 @@ defaultBackend:
 rbac:
   create: true
   scope: false
-## If true, create & use Pod Security Policy resources
-## https://kubernetes.io/docs/concepts/policy/pod-security-policy/
-podSecurityPolicy:
-  enabled: false
 serviceAccount:
   create: true
   name: ""

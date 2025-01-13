@@ -643,8 +643,7 @@ func (n *NGINXController) testTemplate(cfg []byte) error {
 	if len(cfg) == 0 {
 		return fmt.Errorf("invalid NGINX configuration (empty)")
 	}
-	tmpDir := os.TempDir() + "/nginx"
-	tmpfile, err := os.CreateTemp(tmpDir, tempNginxPattern)
+	tmpfile, err := os.CreateTemp(filepath.Join(os.TempDir(), "nginx"), tempNginxPattern)
 	if err != nil {
 		return err
 	}
@@ -1112,11 +1111,11 @@ func (n *NGINXController) createLuaConfig(cfg *ngx_config.Configuration) error {
 func cleanTempNginxCfg() error {
 	var files []string
 
-	err := filepath.Walk(os.TempDir(), func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(filepath.Join(os.TempDir(), "nginx"), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		if info.IsDir() && os.TempDir() != path {
+		if info.IsDir() && path != filepath.Join(os.TempDir(), "nginx") {
 			return filepath.SkipDir
 		}
 
@@ -1135,7 +1134,7 @@ func cleanTempNginxCfg() error {
 	}
 
 	for _, file := range files {
-		err := os.Remove(file)
+		err = os.Remove(file)
 		if err != nil {
 			return err
 		}

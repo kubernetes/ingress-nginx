@@ -1,4 +1,4 @@
-# Copyright 2015 The Kubernetes Authors. All rights reserved.
+# Copyright 2024 The Kubernetes Authors. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM alpine:3.20 as builder
+FROM alpine:3.21 as builder
 
 COPY . /
 
@@ -21,7 +21,7 @@ RUN apk update \
   && /build.sh
 
 # Use a multi-stage build
-FROM alpine:3.20
+FROM alpine:3.21
 
 ENV PATH=$PATH:/usr/local/luajit/bin:/usr/local/nginx/sbin:/usr/local/nginx/bin
 
@@ -29,10 +29,9 @@ ENV LUA_PATH="/usr/local/share/luajit-2.1.0-beta3/?.lua;/usr/local/share/lua/5.1
 ENV LUA_CPATH="/usr/local/lib/lua/?/?.so;/usr/local/lib/lua/?.so;;"
 
 COPY --from=builder /usr/local /usr/local
+COPY --from=builder /usr/lib/libopentelemetry* /usr/local/lib
 COPY --from=builder /opt /opt
 COPY --from=builder /etc/nginx /etc/nginx
-
-LABEL org.opencontainers.image.source=https://github.com/kubernetes/ingress-nginx
 
 RUN apk update \
   && apk upgrade \
@@ -50,6 +49,10 @@ RUN apk update \
   yaml-cpp \
   dumb-init \
   tzdata \
+  grpc-cpp \
+  libprotobuf \
+  abseil-cpp-crc-cpu-detect \
+  abseil-cpp-vlog-config-internal \
   && ln -s /usr/local/nginx/sbin/nginx /sbin/nginx \
   && adduser -S -D -H -u 101 -h /usr/local/nginx \
   -s /sbin/nologin -G www-data -g www-data www-data \
@@ -65,7 +68,7 @@ RUN apk update \
   ); \
   for dir in "${writeDirs[@]}"; do \
   mkdir -p ${dir}; \
-  chown -R www-data.www-data ${dir}; \
+  chown -R www-data:www-data ${dir}; \
   done'
 
 EXPOSE 80 443

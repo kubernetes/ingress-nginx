@@ -38,6 +38,7 @@ type Config struct {
 	URL       string `json:"url"`
 	Code      int    `json:"code"`
 	FromToWWW bool   `json:"fromToWWW"`
+	Relative  bool   `json:"relative"`
 }
 
 const (
@@ -46,6 +47,7 @@ const (
 	temporalRedirectAnnotationCode  = "temporal-redirect-code"
 	permanentRedirectAnnotation     = "permanent-redirect"
 	permanentRedirectAnnotationCode = "permanent-redirect-code"
+	relativeRedirectsAnnotation     = "relative-redirects"
 )
 
 var redirectAnnotations = parser.Annotation{
@@ -83,6 +85,12 @@ var redirectAnnotations = parser.Annotation{
 			Risk:          parser.AnnotationRiskLow, // Low, as it allows just a set of options
 			Documentation: `This annotation allows you to modify the status code used for permanent redirects.`,
 		},
+		relativeRedirectsAnnotation: {
+			Validator:     parser.ValidateBool,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `If enabled, redirects issued by nginx will be relative. See https://nginx.org/en/docs/http/ngx_http_core_module.html#absolute_redirect`,
+		},
 	},
 }
 
@@ -105,6 +113,11 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // temporal and then permanent
 func (r redirect) Parse(ing *networking.Ingress) (interface{}, error) {
 	r3w, err := parser.GetBoolAnnotation(fromToWWWRedirAnnotation, ing, r.annotationConfig.Annotations)
+	if err != nil && !errors.IsMissingAnnotations(err) {
+		return nil, err
+	}
+
+	rr, err := parser.GetBoolAnnotation(relativeRedirectsAnnotation, ing, r.annotationConfig.Annotations)
 	if err != nil && !errors.IsMissingAnnotations(err) {
 		return nil, err
 	}
@@ -132,6 +145,7 @@ func (r redirect) Parse(ing *networking.Ingress) (interface{}, error) {
 			URL:       tr,
 			Code:      trc,
 			FromToWWW: r3w,
+			Relative:  rr,
 		}, nil
 	}
 
@@ -154,6 +168,13 @@ func (r redirect) Parse(ing *networking.Ingress) (interface{}, error) {
 			URL:       pr,
 			Code:      prc,
 			FromToWWW: r3w,
+			Relative:  rr,
+		}, nil
+	}
+
+	if rr {
+		return &Config{
+			Relative: rr,
 		}, nil
 	}
 
@@ -175,6 +196,9 @@ func (r1 *Config) Equal(r2 *Config) bool {
 		return false
 	}
 	if r1.FromToWWW != r2.FromToWWW {
+		return false
+	}
+	if r1.Relative != r2.Relative {
 		return false
 	}
 	return true

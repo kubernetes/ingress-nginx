@@ -1,40 +1,17 @@
 # See the OWNERS docs: https://www.kubernetes.dev/docs/guide/owners
 
 aliases:
-  sig-network-leads:
-  - caseydavenport
-  - dcbw
-  - thockin
-
-  ingress-nginx-admins:
-  - Gacko
-  - rikatz
-  - strongjz
-
   ingress-nginx-maintainers:
   - cpanato
   - Gacko
-  - puerco
-  - rikatz
   - strongjz
   - tao12345666333
 
   ingress-nginx-reviewers:
   - cpanato
   - Gacko
-  - puerco
-  - rikatz
   - strongjz
   - tao12345666333
 
-  ingress-nginx-helm-maintainers:
-  - ubergesundheit
-
-  ingress-nginx-helm-reviewers:
-  - ubergesundheit
-
   ingress-nginx-docs-maintainers:
   - longwuyuan
-
-  ingress-nginx-kube-webhook-certgen-reviewers:
-  - invidian

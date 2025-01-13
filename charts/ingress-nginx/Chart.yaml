@@ -1,9 +1,10 @@
 annotations:
   artifacthub.io/changes: |
-    - Update Ingress-Nginx version controller-v1.11.2
+    - 'CI: Fix chart testing. (#12258)'
+    - Update Ingress-Nginx version controller-v1.12.0
   artifacthub.io/prerelease: "false"
 apiVersion: v2
-appVersion: 1.11.2
+appVersion: 1.12.0
 description: Ingress controller for Kubernetes using NGINX as a reverse proxy and
   load balancer
 home: https://github.com/kubernetes/ingress-nginx
@@ -15,11 +16,9 @@ kubeVersion: '>=1.21.0-0'
 maintainers:
 - name: cpanato
 - name: Gacko
-- name: puerco
-- name: rikatz
 - name: strongjz
 - name: tao12345666333
 name: ingress-nginx
 sources:
 - https://github.com/kubernetes/ingress-nginx
-version: 4.11.2
+version: 4.12.0
