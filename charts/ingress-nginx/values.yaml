@@ -486,6 +486,8 @@ controller:
     external:
       # -- Enable the external controller service or not. Useful for internal-only deployments.
       enabled: true
+      # -- Labels to be added to the external controller service.
+      labels: {}
     # -- Annotations to be added to the external controller service. See `controller.service.internal.annotations` for annotations to be added to the internal controller service.
     annotations: {}
     # -- Labels to be added to both controller services.
@@ -574,6 +576,8 @@ controller:
     internal:
       # -- Enable the internal controller service or not. Remember to configure `controller.service.internal.annotations` when enabling this.
       enabled: false
+      # -- Labels to be added to the internal controller service.
+      labels: {}
       # -- Annotations to be added to the internal controller service. Mandatory for the internal controller service to be created. Varies with the cloud service.
       # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
       annotations: {}
