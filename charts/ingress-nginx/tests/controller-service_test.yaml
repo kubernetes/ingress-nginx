@@ -62,3 +62,36 @@ tests:
       - equal:
           path: spec.trafficDistribution
           value: PreferClose
+
+ - it: should create a Service with custom external labels if `controller.service.external.labels` is set
+   set:
+     controller.service.external.enabled: true
+     controller.service.external.labels:
+       custom-external: test-value
+   asserts:
+     - hasDocuments:
+         count: 1
+     - isKind:
+         of: Service
+     - equal:
+         path: metadata.labels.custom-external
+         value: test-value
+
+ - it: should merge service labels with external labels maintaining backward compatibility
+   set:
+     controller.service.external.enabled: true
+     controller.service.labels:
+       global-service: "true"
+     controller.service.external.labels:
+       external-specific: "true"
+   asserts:
+     - hasDocuments:
+         count: 1
+     - isKind:
+         of: Service
+     - equal:
+         path: metadats.labels.global-service
+         value: "true"
+     - equal:
+         path: metadata.labels.external-specific
+         value: "true"

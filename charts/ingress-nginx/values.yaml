@@ -486,12 +486,12 @@ controller:
     external:
       # -- Enable the external controller service or not. Useful for internal-only deployments.
       enabled: true
-    # -- Annotations to be added to the external controller service. See `controller.service.internal.annotations` for annotations to be added to the internal controller service.
-    annotations: {}
-    # -- Labels to be added to both controller services.
-    labels: {}
-    # -- Type of the external controller service.
-    # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+     # -- Annotations to be added to the external controller service. See `controller.service.internal.annotations` for annotations to be added to the internal controller service.
+     annotations: {}
+     # -- Labels to be added to both controller services.
+     labels: {}
+     # -- Type of the external controller service.
+     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
     type: LoadBalancer
     # -- Pre-defined cluster internal IP address of the external controller service. Take care of collisions with existing services.
     # This value is immutable. Set once, it can not be changed without deleting and re-creating the service.
@@ -577,7 +577,9 @@ controller:
       # -- Annotations to be added to the internal controller service. Mandatory for the internal controller service to be created. Varies with the cloud service.
       # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
       annotations: {}
-      # -- Type of the internal controller service.
+      # -- Additional custom labeles specifically for the internal controller service.
+      labels: {}
+      # -- Type of the internal controller service
       # Defaults to the value of `controller.service.type`.
       # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
       type: ""
