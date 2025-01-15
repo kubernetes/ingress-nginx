@@ -956,10 +956,12 @@ func TestBuildRateLimit(t *testing.T) {
 	loc.RateLimit.RPS.Name = "rps"
 	loc.RateLimit.RPS.Limit = 1
 	loc.RateLimit.RPS.Burst = 1
+	loc.RateLimit.RPS.Delay = -1
 
 	loc.RateLimit.RPM.Name = "rpm"
 	loc.RateLimit.RPM.Limit = 2
 	loc.RateLimit.RPM.Burst = 2
+	loc.RateLimit.RPM.Delay = -1
 
 	loc.RateLimit.LimitRateAfter = 1
 	loc.RateLimit.LimitRate = 1
@@ -973,6 +975,56 @@ func TestBuildRateLimit(t *testing.T) {
 	}
 
 	limits := buildRateLimit(loc)
+
+	for i, limit := range limits {
+		if limit != validLimits[i] {
+			t.Errorf("Expected '%v' but returned '%v'", validLimits, limits)
+		}
+	}
+
+	loc = &ingress.Location{}
+
+	loc.RateLimit.RPS.Name = "rps"
+	loc.RateLimit.RPS.Limit = 1
+	loc.RateLimit.RPS.Burst = 5
+	loc.RateLimit.RPS.Delay = 2
+
+	loc.RateLimit.RPM.Name = "rpm"
+	loc.RateLimit.RPM.Limit = 2
+	loc.RateLimit.RPM.Burst = 5
+	loc.RateLimit.RPM.Delay = 3
+
+	validLimits = []string{
+		"limit_req zone=rps burst=5 delay=2;",
+		"limit_req zone=rpm burst=5 delay=3;",
+	}
+
+	limits = buildRateLimit(loc)
+
+	for i, limit := range limits {
+		if limit != validLimits[i] {
+			t.Errorf("Expected '%v' but returned '%v'", validLimits, limits)
+		}
+	}
+
+	loc = &ingress.Location{}
+
+	loc.RateLimit.RPS.Name = "rps_nodelay"
+	loc.RateLimit.RPS.Limit = 1
+	loc.RateLimit.RPS.Burst = 0
+	loc.RateLimit.RPS.Delay = -1
+
+	loc.RateLimit.RPM.Name = "rpm_nodelay"
+	loc.RateLimit.RPM.Limit = 2
+	loc.RateLimit.RPM.Burst = 0
+	loc.RateLimit.RPM.Delay = -1
+
+	validLimits = []string{
+		"limit_req zone=rps_nodelay nodelay;",
+		"limit_req zone=rpm_nodelay nodelay;",
+	}
+
+	limits = buildRateLimit(loc)
 
 	for i, limit := range limits {
 		if limit != validLimits[i] {

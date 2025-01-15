@@ -868,14 +868,34 @@ func buildRateLimit(input interface{}) []string {
 	}
 
 	if loc.RateLimit.RPS.Limit > 0 {
-		limit := fmt.Sprintf("limit_req zone=%v burst=%v nodelay;",
-			loc.RateLimit.RPS.Name, loc.RateLimit.RPS.Burst)
+		limit := fmt.Sprintf("limit_req zone=%v", loc.RateLimit.RPS.Name)
+
+		if loc.RateLimit.RPS.Burst > 0 {
+			limit = fmt.Sprintf("%v burst=%v", limit, loc.RateLimit.RPS.Burst)
+		}
+
+		if loc.RateLimit.RPS.Delay < 0 {
+			limit = fmt.Sprintf("%v nodelay;", limit)
+		} else {
+			limit = fmt.Sprintf("%v delay=%v;", limit, loc.RateLimit.RPS.Delay)
+		}
+
 		limits = append(limits, limit)
 	}
 
 	if loc.RateLimit.RPM.Limit > 0 {
-		limit := fmt.Sprintf("limit_req zone=%v burst=%v nodelay;",
-			loc.RateLimit.RPM.Name, loc.RateLimit.RPM.Burst)
+		limit := fmt.Sprintf("limit_req zone=%v", loc.RateLimit.RPM.Name)
+
+		if loc.RateLimit.RPM.Burst > 0 {
+			limit = fmt.Sprintf("%v burst=%v", limit, loc.RateLimit.RPM.Burst)
+		}
+
+		if loc.RateLimit.RPM.Delay < 0 {
+			limit = fmt.Sprintf("%v nodelay;", limit)
+		} else {
+			limit = fmt.Sprintf("%v delay=%v;", limit, loc.RateLimit.RPM.Delay)
+		}
+
 		limits = append(limits, limit)
 	}
 
