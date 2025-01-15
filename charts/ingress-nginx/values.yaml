@@ -849,12 +849,23 @@ controller:
       rootCert:
         # default to be 5y
         duration: ""
+        # -- Extra configuration for the admission webhook CA certificate. Can contain anything a cert-manager's [`CertificateSpec`](https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1.CertificateSpec) can.
+        extraConfig:
+          privateKey:
+            algorithm: ECDSA
+            size: 256
+
       admissionCert:
         # default to be 1y
         duration: ""
         # issuerRef:
         #   name: "issuer"
         #   kind: "ClusterIssuer"
+        # -- Extra configuration for the admission webhook certificate. Can contain anything a cert-manager's [`CertificateSpec`](https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1.CertificateSpec) can.
+        extraConfig:
+          privateKey:
+            algorithm: ECDSA
+            size: 256
   metrics:
     port: 10254
     portName: metrics
