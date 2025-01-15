@@ -196,3 +196,18 @@ tests:
       - equal:
           path: spec.template.spec.automountServiceAccountToken
           value: false
+
+  - it: should create a Deployment with extraPorts if `defaultBackend.service.extraPorts` is set
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.service.extraPorts[0]:
+        name: example
+        protocol: TCP
+        targetPort: 9999
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            name: example
+            protocol: TCP
+            containerPort: 9999
