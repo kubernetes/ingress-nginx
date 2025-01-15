@@ -12,6 +12,9 @@ metadata:
   {{- if .Values.controller.service.labels }}
     {{- toYaml .Values.controller.service.labels | nindent 4 }}
   {{- end }}
+  {{- if .Values.controller.service.external.labels }}
+    {{- toYaml .Values.controller.service.external.labels | nindent 4 }}
+  {{- end }}
   name: {{ include "ingress-nginx.controller.fullname" . }}
   namespace: {{ include "ingress-nginx.namespace" . }}
 spec:

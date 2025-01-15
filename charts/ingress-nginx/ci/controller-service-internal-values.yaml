@@ -11,3 +11,5 @@ controller:
       enabled: true
       annotations:
         service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+      labels:
+        external-dns.alpha.kubernetes.io/hostname: internal.example.com        
