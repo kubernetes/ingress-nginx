@@ -550,7 +550,7 @@ By default the controller redirects all requests to an existing service that pro
 These annotations define limits on connections and transmission rates.  These can be used to mitigate [DDoS Attacks](https://www.nginx.com/blog/mitigating-ddos-attacks-with-nginx-and-nginx-plus).
 
 !!! attention
-    Rate limits are applied per ingress-nginx controller replica. 
+    Rate limits are applied per Ingress NGINX controller replica. 
     If you're running multiple replicas or using a horizontal pod autoscaler (HPA), the effective rate limit will be multiplied by the number of replicas.
     When using HPA, the exact rate limit becomes dynamic as the number of replicas may change based on load.
 
