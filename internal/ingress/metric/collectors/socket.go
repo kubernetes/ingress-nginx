@@ -21,6 +21,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"slices"
 	"strings"
 	"syscall"
 
@@ -96,6 +97,19 @@ var requestTags = []string{
 	"ingress",
 	"service",
 	"canary",
+}
+
+var validHTTPMethods = []string{
+	// Unless otherwise noted, these are defined in RFC 7231 section 4.3.
+	"GET",
+	"HEAD",
+	"POST",
+	"PUT",
+	"PATCH", // RFC 5789
+	"DELETE",
+	"CONNECT",
+	"OPTIONS",
+	"TRACE",
 }
 
 // NewSocketCollector creates a new SocketCollector instance using
@@ -315,6 +329,9 @@ func (sc *SocketCollector) handleMessage(msg []byte) {
 
 		if sc.reportStatusClasses && stats.Status != "" {
 			stats.Status = fmt.Sprintf("%cxx", stats.Status[0])
+		}
+		if !slices.Contains(validHTTPMethods, stats.Method) {
+			stats.Method = "invalid_method"
 		}
 
 		// Note these must match the order in requestTags at the top

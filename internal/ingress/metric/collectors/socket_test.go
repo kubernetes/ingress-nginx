@@ -648,6 +648,37 @@ func TestCollector(t *testing.T) {
 			metrics:          []string{"nginx_ingress_controller_requests"},
 			useStatusClasses: true,
 		},
+		{
+			name: "invalid http methods should not be set as label values",
+			data: []string{`[{
+				"host":"testshop.com",
+				"status":"200",
+				"bytesSent":150.0,
+				"method":"XYZGET",
+				"path":"/admin",
+				"requestLength":300.0,
+				"requestTime":60.0,
+				"upstreamLatency":1.0,
+				"upstreamHeaderTime":5.0,
+				"upstreamName":"test-upstream",
+				"upstreamIP":"1.1.1.1:8080",
+				"upstreamResponseTime":200,
+				"upstreamStatus":"220",
+				"namespace":"test-app-production",
+				"ingress":"web-yml",
+				"service":"test-app",
+				"canary":""
+			}]`},
+			metrics: []string{"nginx_ingress_controller_requests"},
+			wantBefore: `
+				# HELP nginx_ingress_controller_requests The total number of client requests
+				# TYPE nginx_ingress_controller_requests counter
+				nginx_ingress_controller_requests{canary="",controller_class="ingress",controller_namespace="default",controller_pod="pod",host="testshop.com",ingress="web-yml",method="invalid_method",namespace="test-app-production",path="/admin",service="test-app",status="200"} 1
+			`,
+			removeIngresses: []string{"test-app-production/web-yml"},
+			wantAfter: `
+			`,
+		},
 	}
 
 	for _, c := range cases {
