@@ -191,6 +191,8 @@ field of the `ingress-nginx` Service spec to `Local` ([example][preserve-ip]).
     Requests sent to `host-2` and `host-3` would be forwarded to NGINX and original client's IP would be preserved,
     while requests to `host-1` would get dropped because there is no NGINX replica running on that node.
 
+Other ways to preserve the source IP in a NodePort setup are described here: [Source IP address](https://kubernetes.github.io/ingress-nginx/user-guide/miscellaneous/#source-ip-address).
+
 ### Ingress status
 
 Because NodePort Services do not get a LoadBalancerIP assigned by definition, the Ingress-Nginx Controller **does not
