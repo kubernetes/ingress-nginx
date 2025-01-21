@@ -118,6 +118,8 @@ requests.
 
 ![NodePort request flow](../images/baremetal/nodeport.jpg)
 
+You can **customize the exposed node port numbers** by setting the `controller.service.nodePorts.*` Helm values, but they still have to be in the 30000-32767 range.
+
 !!! example
     Given the NodePort `30100` allocated to the `ingress-nginx` Service
 
