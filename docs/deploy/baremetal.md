@@ -152,7 +152,7 @@ requests.
 
 This approach has a few other limitations one ought to be aware of:
 
-* **Source IP address**
+### Source IP address
 
 Services of type NodePort perform [source address translation][nodeport-nat] by default. This means the source IP of a
 HTTP request is always **the IP address of the Kubernetes node that received the request** from the perspective of
@@ -191,7 +191,7 @@ field of the `ingress-nginx` Service spec to `Local` ([example][preserve-ip]).
     Requests sent to `host-2` and `host-3` would be forwarded to NGINX and original client's IP would be preserved,
     while requests to `host-1` would get dropped because there is no NGINX replica running on that node.
 
-* **Ingress status**
+### Ingress status
 
 Because NodePort Services do not get a LoadBalancerIP assigned by definition, the Ingress-Nginx Controller **does not
 update the status of Ingress objects it manages**.
@@ -241,7 +241,7 @@ Service.
     test-ingress   myapp.example.com   203.0.113.1,203.0.113.2,203.0.113.3   80
     ```
 
-* **Redirects**
+### Redirects
 
 As NGINX is **not aware of the port translation operated by the NodePort Service**, backend applications are responsible
 for generating redirect URLs that take into account the URL used by external clients, including the NodePort.
@@ -326,13 +326,13 @@ configuration of the corresponding manifest at the user's discretion.
 
 Like with NodePorts, this approach has a few quirks it is important to be aware of.
 
-* **DNS resolution**
+### DNS resolution
 
 Pods configured with `hostNetwork: true` do not use the internal DNS resolver (i.e. *kube-dns* or *CoreDNS*), unless
 their `dnsPolicy` spec field is set to [`ClusterFirstWithHostNet`][dnspolicy]. Consider using this setting if NGINX is
 expected to resolve internal names for any reason.
 
-* **Ingress status**
+### Ingress status
 
 Because there is no Service exposing the Ingress-Nginx Controller in a configuration using the host network, the default
 `--publish-service` flag used in standard cloud setups **does not apply** and the status of all Ingress objects remains
