@@ -118,6 +118,8 @@ requests.
 
 ![NodePort request flow](../images/baremetal/nodeport.jpg)
 
+You can **customize the exposed node port numbers** by setting the `controller.service.nodePorts.*` Helm values, but they still have to be in the 30000-32767 range.
+
 !!! example
     Given the NodePort `30100` allocated to the `ingress-nginx` Service
 
@@ -152,7 +154,7 @@ requests.
 
 This approach has a few other limitations one ought to be aware of:
 
-* **Source IP address**
+### Source IP address
 
 Services of type NodePort perform [source address translation][nodeport-nat] by default. This means the source IP of a
 HTTP request is always **the IP address of the Kubernetes node that received the request** from the perspective of
@@ -191,7 +193,9 @@ field of the `ingress-nginx` Service spec to `Local` ([example][preserve-ip]).
     Requests sent to `host-2` and `host-3` would be forwarded to NGINX and original client's IP would be preserved,
     while requests to `host-1` would get dropped because there is no NGINX replica running on that node.
 
-* **Ingress status**
+Other ways to preserve the source IP in a NodePort setup are described here: [Source IP address](https://kubernetes.github.io/ingress-nginx/user-guide/miscellaneous/#source-ip-address).
+
+### Ingress status
 
 Because NodePort Services do not get a LoadBalancerIP assigned by definition, the Ingress-Nginx Controller **does not
 update the status of Ingress objects it manages**.
@@ -241,7 +245,7 @@ Service.
     test-ingress   myapp.example.com   203.0.113.1,203.0.113.2,203.0.113.3   80
     ```
 
-* **Redirects**
+### Redirects
 
 As NGINX is **not aware of the port translation operated by the NodePort Service**, backend applications are responsible
 for generating redirect URLs that take into account the URL used by external clients, including the NodePort.
@@ -262,7 +266,7 @@ for generating redirect URLs that take into account the URL used by external cli
 [nodeport-def]: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
 [nodeport-nat]: https://kubernetes.io/docs/tutorials/services/source-ip/#source-ip-for-services-with-type-nodeport
 [pod-assign]: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
-[preserve-ip]: https://github.com/kubernetes/ingress-nginx/blob/nginx-0.19.0/deploy/provider/aws/service-nlb.yaml#L12-L14
+[preserve-ip]: https://github.com/kubernetes/ingress-nginx/blob/ingress-nginx-3.15.2/deploy/static/provider/aws/deploy.yaml#L290
 
 ## Via the host network
 
@@ -326,13 +330,13 @@ configuration of the corresponding manifest at the user's discretion.
 
 Like with NodePorts, this approach has a few quirks it is important to be aware of.
 
-* **DNS resolution**
+### DNS resolution
 
 Pods configured with `hostNetwork: true` do not use the internal DNS resolver (i.e. *kube-dns* or *CoreDNS*), unless
 their `dnsPolicy` spec field is set to [`ClusterFirstWithHostNet`][dnspolicy]. Consider using this setting if NGINX is
 expected to resolve internal names for any reason.
 
-* **Ingress status**
+### Ingress status
 
 Because there is no Service exposing the Ingress-Nginx Controller in a configuration using the host network, the default
 `--publish-service` flag used in standard cloud setups **does not apply** and the status of all Ingress objects remains
