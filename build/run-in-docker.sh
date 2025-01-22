@@ -26,14 +26,11 @@ set -o nounset
 set -o pipefail
 
 # temporal directory for the /etc/ingress-controller directory
-if [[ "$OSTYPE" == darwin* ]] && [[ "$RUNTIME" == podman ]]; then
+if [[ "$OSTYPE" == darwin* ]]; then
   mkdir -p "tmp"
   INGRESS_VOLUME=$(pwd)/$(mktemp -d tmp/XXXXXX)
 else
   INGRESS_VOLUME=$(mktemp -d)
-  if [[ "$OSTYPE" == darwin* ]]; then
-    INGRESS_VOLUME=/private$INGRESS_VOLUME
-  fi
 fi
 
 # make sure directory for SSL cert storage exists under ingress volume
