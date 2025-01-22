@@ -7,6 +7,10 @@ controller:
   service:
     type: NodePort
 
+    external:
+      labels:
+        external-dns.alpha.kubernetes.io/hostname: external.example.com
+
     nodePorts:
       tcp:
         9000: 30090
