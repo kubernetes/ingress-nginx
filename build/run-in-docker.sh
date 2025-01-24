@@ -26,14 +26,11 @@ set -o nounset
 set -o pipefail
 
 # temporal directory for the /etc/ingress-controller directory
-if [[ "$OSTYPE" == darwin* ]] && [[ "$RUNTIME" == podman ]]; then
+if [[ "$OSTYPE" == darwin* ]]; then
   mkdir -p "tmp"
   INGRESS_VOLUME=$(pwd)/$(mktemp -d tmp/XXXXXX)
 else
   INGRESS_VOLUME=$(mktemp -d)
-  if [[ "$OSTYPE" == darwin* ]]; then
-    INGRESS_VOLUME=/private$INGRESS_VOLUME
-  fi
 fi
 
 # make sure directory for SSL cert storage exists under ingress volume
@@ -44,7 +41,7 @@ function cleanup {
 }
 trap cleanup EXIT
 
-E2E_IMAGE=${E2E_IMAGE:-registry.k8s.io/ingress-nginx/e2e-test-runner:v20241224-68ed4e7b@sha256:871642296ebc0dd386f9a43b0cf2606028d757d6c4a2737d41180f02f8172823}
+E2E_IMAGE=${E2E_IMAGE:-registry.k8s.io/ingress-nginx/e2e-test-runner:v20250112-a188f4eb@sha256:043038b1e30e5a0b64f3f919f096c5c9488ac3f617ac094b07fb9db8215f9441}
 
 if [[ "$RUNTIME" == podman ]]; then
   # Podman does not support both tag and digest

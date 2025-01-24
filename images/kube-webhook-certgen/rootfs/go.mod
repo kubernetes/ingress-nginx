@@ -1,15 +1,15 @@
 module github.com/jet/kube-webhook-certgen
 
-go 1.23.4
+go 1.23.5
 
 require (
 	github.com/onrik/logrus v0.11.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
-	k8s.io/api v0.32.0
-	k8s.io/apimachinery v0.32.0
-	k8s.io/client-go v0.32.0
-	k8s.io/kube-aggregator v0.32.0
+	k8s.io/api v0.32.1
+	k8s.io/apimachinery v0.32.1
+	k8s.io/client-go v0.32.1
+	k8s.io/kube-aggregator v0.32.1
 )
 
 require (

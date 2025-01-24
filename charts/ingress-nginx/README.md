@@ -270,10 +270,10 @@ metadata:
 | controller.admissionWebhooks.namespaceSelector | object | `{}` |  |
 | controller.admissionWebhooks.objectSelector | object | `{}` |  |
 | controller.admissionWebhooks.patch.enabled | bool | `true` |  |
-| controller.admissionWebhooks.patch.image.digest | string | `"sha256:aaafd456bda110628b2d4ca6296f38731a3aaf0bf7581efae824a41c770a8fc4"` |  |
+| controller.admissionWebhooks.patch.image.digest | string | `"sha256:0de05718b59dc33b57ddfb4d8ad5f637cefd13eafdec0e1579d782b3483c27c3"` |  |
 | controller.admissionWebhooks.patch.image.image | string | `"ingress-nginx/kube-webhook-certgen"` |  |
 | controller.admissionWebhooks.patch.image.pullPolicy | string | `"IfNotPresent"` |  |
-| controller.admissionWebhooks.patch.image.tag | string | `"v1.5.0"` |  |
+| controller.admissionWebhooks.patch.image.tag | string | `"v1.5.1"` |  |
 | controller.admissionWebhooks.patch.labels | object | `{}` | Labels to be added to patch job resources |
 | controller.admissionWebhooks.patch.networkPolicy.enabled | bool | `false` | Enable 'networkPolicy' or not |
 | controller.admissionWebhooks.patch.nodeSelector."kubernetes.io/os" | string | `"linux"` |  |
@@ -447,6 +447,7 @@ metadata:
 | controller.service.enableHttps | bool | `true` | Enable the HTTPS listener on both controller services or not. |
 | controller.service.enabled | bool | `true` | Enable controller services or not. This does not influence the creation of either the admission webhook or the metrics service. |
 | controller.service.external.enabled | bool | `true` | Enable the external controller service or not. Useful for internal-only deployments. |
+| controller.service.external.labels | object | `{}` | Labels to be added to the external controller service. |
 | controller.service.externalIPs | list | `[]` | List of node IP addresses at which the external controller service is available. Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips |
 | controller.service.externalTrafficPolicy | string | `""` | External traffic policy of the external controller service. Set to "Local" to preserve source IP on providers supporting it. Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip |
 | controller.service.internal.annotations | object | `{}` | Annotations to be added to the internal controller service. Mandatory for the internal controller service to be created. Varies with the cloud service. Ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer |
@@ -458,6 +459,7 @@ metadata:
 | controller.service.internal.externalTrafficPolicy | string | `""` | External traffic policy of the internal controller service. Set to "Local" to preserve source IP on providers supporting it. Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip |
 | controller.service.internal.ipFamilies | list | `["IPv4"]` | List of IP families (e.g. IPv4, IPv6) assigned to the internal controller service. This field is usually assigned automatically based on cluster configuration and the `ipFamilyPolicy` field. Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services |
 | controller.service.internal.ipFamilyPolicy | string | `"SingleStack"` | Represents the dual-stack capabilities of the internal controller service. Possible values are SingleStack, PreferDualStack or RequireDualStack. Fields `ipFamilies` and `clusterIP` depend on the value of this field. Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services |
+| controller.service.internal.labels | object | `{}` | Labels to be added to the internal controller service. |
 | controller.service.internal.loadBalancerClass | string | `""` | Load balancer class of the internal controller service. Used by cloud providers to select a load balancer implementation other than the cloud provider default. Ref: https://kubernetes.io/docs/concepts/services-networking/service/#load-balancer-class |
 | controller.service.internal.loadBalancerIP | string | `""` | Deprecated: Pre-defined IP address of the internal controller service. Used by cloud providers to connect the resulting load balancer service to a pre-existing static IP. Ref: https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer |
 | controller.service.internal.loadBalancerSourceRanges | list | `[]` | Restrict access to the internal controller service. Values must be CIDRs. Allows any source address by default. |
@@ -468,6 +470,7 @@ metadata:
 | controller.service.internal.ports | object | `{}` |  |
 | controller.service.internal.sessionAffinity | string | `""` | Session affinity of the internal controller service. Must be either "None" or "ClientIP" if set. Defaults to "None". Ref: https://kubernetes.io/docs/reference/networking/virtual-ips/#session-affinity |
 | controller.service.internal.targetPorts | object | `{}` |  |
+| controller.service.internal.trafficDistribution | string | `""` | Traffic distribution policy of the internal controller service. Set to "PreferClose" to route traffic to endpoints that are topologically closer to the client. Ref: https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution |
 | controller.service.internal.type | string | `""` | Type of the internal controller service. Defaults to the value of `controller.service.type`. Ref: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types |
 | controller.service.ipFamilies | list | `["IPv4"]` | List of IP families (e.g. IPv4, IPv6) assigned to the external controller service. This field is usually assigned automatically based on cluster configuration and the `ipFamilyPolicy` field. Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services |
 | controller.service.ipFamilyPolicy | string | `"SingleStack"` | Represents the dual-stack capabilities of the external controller service. Possible values are SingleStack, PreferDualStack or RequireDualStack. Fields `ipFamilies` and `clusterIP` depend on the value of this field. Ref: https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services |
@@ -484,6 +487,7 @@ metadata:
 | controller.service.sessionAffinity | string | `""` | Session affinity of the external controller service. Must be either "None" or "ClientIP" if set. Defaults to "None". Ref: https://kubernetes.io/docs/reference/networking/virtual-ips/#session-affinity |
 | controller.service.targetPorts.http | string | `"http"` | Port of the ingress controller the external HTTP listener is mapped to. |
 | controller.service.targetPorts.https | string | `"https"` | Port of the ingress controller the external HTTPS listener is mapped to. |
+| controller.service.trafficDistribution | string | `""` | Traffic distribution policy of the external controller service. Set to "PreferClose" to route traffic to endpoints that are topologically closer to the client. Ref: https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution |
 | controller.service.type | string | `"LoadBalancer"` | Type of the external controller service. Ref: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types |
 | controller.shareProcessNamespace | bool | `false` |  |
 | controller.sysctls | object | `{}` | sysctls for controller pods # Ref: https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ |

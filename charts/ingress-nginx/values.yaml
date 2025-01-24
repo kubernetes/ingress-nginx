@@ -486,6 +486,8 @@ controller:
     external:
       # -- Enable the external controller service or not. Useful for internal-only deployments.
       enabled: true
+      # -- Labels to be added to the external controller service.
+      labels: {}
     # -- Annotations to be added to the external controller service. See `controller.service.internal.annotations` for annotations to be added to the internal controller service.
     annotations: {}
     # -- Labels to be added to both controller services.
@@ -526,6 +528,10 @@ controller:
     # If not specified, the service controller allocates a port from your cluster's node port range.
     # Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
     # healthCheckNodePort: 0
+
+    # -- Traffic distribution policy of the external controller service. Set to "PreferClose" to route traffic to endpoints that are topologically closer to the client.
+    # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution
+    trafficDistribution: ""
 
     # -- Represents the dual-stack capabilities of the external controller service. Possible values are SingleStack, PreferDualStack or RequireDualStack.
     # Fields `ipFamilies` and `clusterIP` depend on the value of this field.
@@ -570,6 +576,8 @@ controller:
     internal:
       # -- Enable the internal controller service or not. Remember to configure `controller.service.internal.annotations` when enabling this.
       enabled: false
+      # -- Labels to be added to the internal controller service.
+      labels: {}
       # -- Annotations to be added to the internal controller service. Mandatory for the internal controller service to be created. Varies with the cloud service.
       # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
       annotations: {}
@@ -610,6 +618,10 @@ controller:
       # If not specified, the service controller allocates a port from your cluster's node port range.
       # Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
       # healthCheckNodePort: 0
+
+      # -- Traffic distribution policy of the internal controller service. Set to "PreferClose" to route traffic to endpoints that are topologically closer to the client.
+      # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution
+      trafficDistribution: ""
 
       # -- Represents the dual-stack capabilities of the internal controller service. Possible values are SingleStack, PreferDualStack or RequireDualStack.
       # Fields `ipFamilies` and `clusterIP` depend on the value of this field.
@@ -804,8 +816,8 @@ controller:
         ## for backwards compatibility consider setting the full image url via the repository value below
         ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
         ## repository:
-        tag: v1.5.0
-        digest: sha256:aaafd456bda110628b2d4ca6296f38731a3aaf0bf7581efae824a41c770a8fc4
+        tag: v1.5.1
+        digest: sha256:0de05718b59dc33b57ddfb4d8ad5f637cefd13eafdec0e1579d782b3483c27c3
         pullPolicy: IfNotPresent
       # -- Provide a priority class name to the webhook patching job
       ##
