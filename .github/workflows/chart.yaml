@@ -31,7 +31,7 @@ jobs:
         uses: azure/setup-helm@fe7b79cd5ee1e45176fcad797de68ecaf3ca4814 # v4.2.0
 
       - name: Set up Helm Chart Testing
-        uses: helm/chart-testing-action@e6669bcd63d7cb57cb4380c33043eebe5d111992 # v2.6.1
+        uses: helm/chart-testing-action@0d28d3144d3a25ea2cc349d6e59901c4ff469b3b # v2.7.0
 
       - name: Set up Artifact Hub
         run: |
@@ -55,7 +55,7 @@ jobs:
           ah lint --path charts/ingress-nginx
 
       - name: Release chart
-        uses: helm/chart-releaser-action@a917fd15b20e8b64b94d9158ad54cd6345335584 # v1.6.0
+        uses: helm/chart-releaser-action@cae68fefc6b5f367a0275617c9f83181ba54714f # v1.7.0
         env:
           CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CR_RELEASE_NAME_TEMPLATE: helm-chart-{{ .Version }}
