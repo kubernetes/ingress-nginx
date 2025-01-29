@@ -879,7 +879,7 @@ stream {
 
         {{ if not ( empty $server.CertificateAuth.MatchCN ) }}
         {{ if gt (len $server.CertificateAuth.MatchCN) 0 }}
-        if ( $ssl_client_s_dn !~ {{ $server.CertificateAuth.MatchCN }} ) {
+        if ( $ssl_client_s_dn !~ {{ $server.CertificateAuth.MatchCN | quote }} ) {
             return 403 "client certificate unauthorized";
         }
         {{ end }}
