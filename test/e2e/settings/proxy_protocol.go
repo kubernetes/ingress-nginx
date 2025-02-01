@@ -44,6 +44,7 @@ var _ = framework.DescribeSetting("use-proxy-protocol", func() {
 		f.NewEchoDeployment()
 		f.UpdateNginxConfigMapData(setting, "false")
 	})
+
 	//nolint:dupl // Ignore dupl errors for similar test case
 	ginkgo.It("should respect port passed by the PROXY Protocol", func() {
 		host := proxyProtocol
@@ -226,5 +227,87 @@ var _ = framework.DescribeSetting("use-proxy-protocol", func() {
 		logs, err := f.NginxLogs()
 		assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")
 		assert.Contains(ginkgo.GinkgoT(), logs, `192.168.0.1`)
+	})
+
+	ginkgo.Context("when use-forwarded-headers setting is true", func() {
+		cmapData := map[string]string{}
+
+		cmapData[setting] = "true"
+		cmapData["use-forwarded-headers"] = "true"
+
+		ginkgo.It("should not trust X-Forwarded headers when the client IP address is not trusted", func() {
+			host := proxyProtocol
+
+			f.SetNginxConfigMapData(cmapData)
+
+			f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
+
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return strings.Contains(server, "server_name proxy-protocol") &&
+						strings.Contains(server, "listen 80 proxy_protocol")
+				})
+
+			ip := f.GetNginxIP()
+
+			conn, err := net.Dial("tcp", net.JoinHostPort(ip, "80"))
+			assert.Nil(ginkgo.GinkgoT(), err, "unexpected error creating connection to %s:80", ip)
+			defer conn.Close()
+
+			header := "PROXY TCP4 192.168.0.1 192.168.0.11 56324 1234\r\n"
+			_, err = conn.Write([]byte(header))
+			assert.Nil(ginkgo.GinkgoT(), err, "unexpected error writing header")
+
+			_, err = conn.Write([]byte("GET / HTTP/1.1\r\nHost: proxy-protocol\r\nX-Forwarded-For: 192.168.0.111\r\n\r\n"))
+			assert.Nil(ginkgo.GinkgoT(), err, "unexpected error writing request")
+
+			data, err := io.ReadAll(conn)
+			assert.Nil(ginkgo.GinkgoT(), err, "unexpected error reading connection data")
+
+			body := string(data)
+			assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=%v", proxyProtocol))
+			assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-port=1234")
+			assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-proto=http")
+			assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-for=192.168.0.1")
+		})
+
+		ginkgo.It("should trust X-Forwarded headers when the client IP address is trusted", func() {
+			host := proxyProtocol
+
+			// Trust IPs from the private network CIDR block and the client IP address in the proxy protocol header
+			cmapData["proxy-real-ip-cidr"] = "10.0.0.0/8,192.168.0.1/32"
+
+			f.SetNginxConfigMapData(cmapData)
+
+			f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
+
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return strings.Contains(server, "server_name proxy-protocol") &&
+						strings.Contains(server, "listen 80 proxy_protocol")
+				})
+
+			ip := f.GetNginxIP()
+
+			conn, err := net.Dial("tcp", net.JoinHostPort(ip, "80"))
+			assert.Nil(ginkgo.GinkgoT(), err, "unexpected error creating connection to %s:80", ip)
+			defer conn.Close()
+
+			header := "PROXY TCP4 192.168.0.1 192.168.0.11 56324 1234\r\n"
+			_, err = conn.Write([]byte(header))
+			assert.Nil(ginkgo.GinkgoT(), err, "unexpected error writing header")
+
+			_, err = conn.Write([]byte("GET / HTTP/1.1\r\nHost: proxy-protocol\r\nX-Forwarded-For: 192.168.0.111\r\n\r\n"))
+			assert.Nil(ginkgo.GinkgoT(), err, "unexpected error writing request")
+
+			data, err := io.ReadAll(conn)
+			assert.Nil(ginkgo.GinkgoT(), err, "unexpected error reading connection data")
+
+			body := string(data)
+			assert.Contains(ginkgo.GinkgoT(), body, fmt.Sprintf("host=%v", proxyProtocol))
+			assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-port=1234")
+			assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-proto=http")
+			assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-for=192.168.0.111")
+		})
 	})
 })

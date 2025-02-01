@@ -77,7 +77,9 @@ http {
     {{/* Enable the real_ip module only if we use either X-Forwarded headers or Proxy Protocol. */}}
     {{/* we use the value of the real IP for the geo_ip module */}}
     {{ if or (or $cfg.UseForwardedHeaders $cfg.UseProxyProtocol) $cfg.EnableRealIP }}
-    {{ if $cfg.UseProxyProtocol }}
+    {{ if and $cfg.UseForwardedHeaders $cfg.UseProxyProtocol }}
+    real_ip_header      {{ $cfg.ForwardedForProxyProtocolHeader }};
+    {{ else if $cfg.UseProxyProtocol }}
     real_ip_header      proxy_protocol;
     {{ else }}
     real_ip_header      {{ $cfg.ForwardedForHeader }};
@@ -406,6 +408,39 @@ http {
         ''               "$realip_remote_addr";
         {{ end}}
     }
+
+    {{ end }}
+
+    {{ if and $cfg.UseForwardedHeaders $cfg.UseProxyProtocol }}
+    # When the proxy protocol is enabled, we cannot rely solely on the proxy protocol address
+    # due to potential proxy chain issues. Multiple proxies may modify the client IP before
+    # it reaches the ingress controller. We use the proxy-real-ip-cidr list to trust specific proxy
+    # addresses and determine the correct client IP from the forwarded headers.
+    #
+    # --------     --------------             ---------------------                       -----------------
+    # | User | --> | HTTP Proxy | -- http --> | TCP Load Balancer | -- proxy protocol --> | Ingress Nginx |
+    # --------     --------------             ---------------------                       -----------------
+    #
+    # The algorithm for determining the header to be used with the real_ip_header:
+    # 1. Check if the $proxy_protocol_addr is trusted (i.e., whether it's in the proxy-real-ip-cidr list).
+    # 2. If trusted, use the configured forwarded-for header (X-Forwarded-For by default).
+    # 3. If not trusted, fall back to using the $proxy_protocol_addr.
+    #
+    geo $proxy_protocol_addr $proxy_protocol_addr_trusted {
+        default           0;
+        {{ range $trusted_ip := $cfg.ProxyRealIPCIDR }}
+        {{ $trusted_ip }} 1;
+        {{ end }}
+    }
+
+    map $proxy_protocol_addr_trusted $forwarded_for_proxy_protocol {
+        default   $proxy_protocol_addr;
+        1         {{ buildForwardedFor $cfg.ForwardedForHeader }};
+    }
+
+    # The realip module does not support variables for the real_ip_header directive
+    # so we need to define a custom header.
+    more_set_input_headers "{{ $cfg.ForwardedForProxyProtocolHeader }}: $forwarded_for_proxy_protocol";
 
     {{ end }}
 
