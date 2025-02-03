@@ -20,12 +20,12 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"slices"
 
 	"k8s.io/klog/v2"
 
 	networking "k8s.io/api/networking/v1"
 
-	"golang.org/x/exp/slices"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	ing_errors "k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
