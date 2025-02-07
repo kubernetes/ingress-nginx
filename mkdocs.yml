@@ -50,6 +50,7 @@ theme:
     - navigation.tabs.sticky
     - navigation.instant
     - navigation.sections
+    - content.code.copy
 
   palette:
     primary: "teal"
