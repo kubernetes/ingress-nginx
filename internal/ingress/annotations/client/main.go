@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package clientbodybuffersize
+package client
 
 import (
 	networking "k8s.io/api/networking/v1"
@@ -27,7 +27,7 @@ const (
 	clientBodyBufferSizeAnnotation = "client-body-buffer-size"
 )
 
-var clientBodyBufferSizeConfig = parser.Annotation{
+var clientAnnotations = parser.Annotation{
 	Group: "backend",
 	Annotations: parser.AnnotationFields{
 		clientBodyBufferSizeAnnotation: {
@@ -42,30 +42,54 @@ var clientBodyBufferSizeConfig = parser.Annotation{
 	},
 }
 
-type clientBodyBufferSize struct {
+type Config struct {
+	BodyBufferSize string `json:"bodyBufferSize"`
+}
+
+// Equal tests for equality between two Configuration types
+func (l1 *Config) Equal(l2 *Config) bool {
+	if l1 == l2 {
+		return true
+	}
+	if l1 == nil || l2 == nil {
+		return false
+	}
+	if l1.BodyBufferSize != l2.BodyBufferSize {
+		return false
+	}
+
+	return true
+}
+
+type client struct {
 	r                resolver.Resolver
 	annotationConfig parser.Annotation
 }
 
-// NewParser creates a new clientBodyBufferSize annotation parser
+// NewParser creates a new client annotation parser
 func NewParser(r resolver.Resolver) parser.IngressAnnotation {
-	return clientBodyBufferSize{
+	return client{
 		r:                r,
-		annotationConfig: clientBodyBufferSizeConfig,
+		annotationConfig: clientAnnotations,
 	}
 }
 
-func (cbbs clientBodyBufferSize) GetDocumentation() parser.AnnotationFields {
-	return cbbs.annotationConfig.Annotations
+func (c client) GetDocumentation() parser.AnnotationFields {
+	return c.annotationConfig.Annotations
 }
 
 // Parse parses the annotations contained in the ingress rule
-// used to add an client-body-buffer-size to the provided locations
-func (cbbs clientBodyBufferSize) Parse(ing *networking.Ingress) (interface{}, error) {
-	return parser.GetStringAnnotation(clientBodyBufferSizeAnnotation, ing, cbbs.annotationConfig.Annotations)
+// used to add an client related configuration to the provided locations.
+func (c client) Parse(ing *networking.Ingress) (interface{}, error) {
+	config := &Config{}
+
+	var err error
+	config.BodyBufferSize, err = parser.GetStringAnnotation(clientBodyBufferSizeAnnotation, ing, c.annotationConfig.Annotations)
+
+	return config, err
 }
 
-func (cbbs clientBodyBufferSize) Validate(anns map[string]string) error {
-	maxrisk := parser.StringRiskToRisk(cbbs.r.GetSecurityConfiguration().AnnotationsRiskLevel)
-	return parser.CheckAnnotationRisk(anns, maxrisk, clientBodyBufferSizeConfig.Annotations)
+func (c client) Validate(annotations map[string]string) error {
+	maxRisk := parser.StringRiskToRisk(c.r.GetSecurityConfiguration().AnnotationsRiskLevel)
+	return parser.CheckAnnotationRisk(annotations, maxRisk, clientAnnotations.Annotations)
 }
