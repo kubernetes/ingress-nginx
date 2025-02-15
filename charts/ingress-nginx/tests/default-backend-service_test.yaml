@@ -50,3 +50,20 @@ tests:
           value:
             - 10.0.0.1
             - fd00::1
+
+  - it: should create a Service with extraPorts if `defaultBackend.service.extraPorts` is set
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.service.extraPorts[0]:
+        name: example
+        port: 8888
+        protocol: TCP
+        targetPort: 65535
+    asserts:
+      - contains:
+          path: spec.ports
+          content:
+            name: example
+            port: 8888
+            protocol: TCP
+            targetPort: 65535
