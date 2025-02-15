@@ -16,8 +16,10 @@ local function flush_all_ewma_stats()
   ngx.shared.balancer_ewma_last_touched_at:flush_all()
 end
 
-local function store_ewma_stats(endpoint_string, ewma, touched_at)
+local function store_ewma_stats(endpoint_string, ewma, total_ewma, failed_ewma, touched_at)
   ngx.shared.balancer_ewma:set(endpoint_string, ewma)
+  ngx.shared.balancer_ewma_total:set(endpoint_string, total_ewma)
+  ngx.shared.balancer_ewma_failed:set(endpoint_string, failed_ewma)
   ngx.shared.balancer_ewma_last_touched_at:set(endpoint_string, touched_at)
 end
 
@@ -45,9 +47,9 @@ describe("Balancer ewma", function()
         { address = "10.10.10.3", port = "8080", maxFails = 0, failTimeout = 0 },
       }
     }
-    store_ewma_stats("10.10.10.1:8080", 0.2, ngx_now - 1)
-    store_ewma_stats("10.10.10.2:8080", 0.3, ngx_now - 5)
-    store_ewma_stats("10.10.10.3:8080", 1.2, ngx_now - 20)
+    store_ewma_stats("10.10.10.1:8080", 0.2, 0, 0, ngx_now - 1)
+    store_ewma_stats("10.10.10.2:8080", 0.3, 0, 0, ngx_now - 5)
+    store_ewma_stats("10.10.10.3:8080", 1.2, 0, 0, ngx_now - 20)
 
     instance = balancer_ewma:new(backend)
   end)
@@ -80,6 +82,39 @@ describe("Balancer ewma", function()
 
       assert.are.equals(expected_ewma, ngx.shared.balancer_ewma:get("10.10.10.2:8080"))
       assert.are.equals(ngx_now, ngx.shared.balancer_ewma_last_touched_at:get("10.10.10.2:8080"))
+    end)
+
+    it("updates EWMA stats with failed", function()
+      ngx.var = { upstream_addr = "10.10.10.2:8080", upstream_connect_time = "0.02", upstream_response_time = "0.1", status="400" }
+
+      local score = instance:after_balance()
+
+      local weight = math.exp(-5 / 10)
+      local expected_ewma = 0.3 * weight + 0.12 * (1.0 - weight)
+
+      assert.are.equals(expected_ewma, ngx.shared.balancer_ewma:get(ngx.var.upstream_addr))
+      assert.are.equals(ngx_now, ngx.shared.balancer_ewma_last_touched_at:get(ngx.var.upstream_addr))
+      assert.are.equals(score, expected_ewma / 0.1)
+    end)
+
+    it("updates EWMA stats with multi failed requests", function()
+      ngx.var = { upstream_addr = "10.10.10.2:8080", upstream_connect_time = "0.02", upstream_response_time = "0.1", status="400" }
+
+      store_ewma_stats("10.10.10.2:8080", 0.3, 1, 0, ngx_now - 5)
+
+      local score = instance:after_balance()
+
+      local weight = math.exp(-5 / 10)
+      local expected_ewma = 0.3 * weight + 0.12 * (1.0 - weight)
+
+      local total_ewma = ngx.shared.balancer_ewma_total:get(ngx.var.upstream_addr)
+      local failed_ewma = ngx.shared.balancer_ewma_failed:get(ngx.var.upstream_addr)
+      local success_rate = 1 - failed_ewma/total_ewma
+
+      assert.are.not_equals(0.1, success_rate)
+      assert.are.equals(expected_ewma, ngx.shared.balancer_ewma:get(ngx.var.upstream_addr))
+      assert.are.equals(ngx_now, ngx.shared.balancer_ewma_last_touched_at:get(ngx.var.upstream_addr))
+      assert.are.equals(score, expected_ewma / success_rate)
     end)
   end)
 
@@ -134,6 +169,20 @@ describe("Balancer ewma", function()
       }
       local peer = two_endpoints_instance:balance()
       assert.equal("10.10.10.3:8080", peer)
+    end)
+
+    it("the success rate should keep increasing", function()
+      local new_backend = util.deepcopy(backend)
+      table.insert(new_backend.endpoints, { address = "10.10.10.4", port = "8080", maxFails = 0, failTimeout = 0 })
+
+      local offsets = {-15, -10, -5}
+      local pre = 0;
+      for _, offset in ipairs(offsets) do
+        store_ewma_stats("10.10.10.4:8080", 1, 10, 1, ngx_now + offset)
+        local score = balancer_ewma.score({ address = "10.10.10.4", port = "8080" })
+        assert.is.True(score > pre)
+        pre = score
+      end
     end)
   end)
 
