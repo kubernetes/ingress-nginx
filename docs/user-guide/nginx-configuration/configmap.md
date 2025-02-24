@@ -15,9 +15,9 @@ data:
 ```
 
 !!! important
-The key and values in a ConfigMap can only be strings.
-This means that we want a value with boolean values we need to quote the values, like "true" or "false".
-Same for numbers, like "100".
+    The key and values in a ConfigMap can only be strings.
+    This means that we want a value with boolean values we need to quote the values, like "true" or "false".
+    Same for numbers, like "100".
 
     "Slice" types (defined below as `[]string` or `[]int`) can be provided as a comma-delimited string.
 
@@ -26,7 +26,7 @@ Same for numbers, like "100".
 The following table shows a configuration option's name, type, and the default value:
 
 | name                                                                            | type         | default                                                                                                                                                                                                                                                                                                                                                      | notes                                                                               |
-| :------------------------------------------------------------------------------ | :----------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------- |
+|:--------------------------------------------------------------------------------|:-------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:------------------------------------------------------------------------------------|
 | [add-headers](#add-headers)                                                     | string       | ""                                                                                                                                                                                                                                                                                                                                                           |                                                                                     |
 | [allow-backend-server-header](#allow-backend-server-header)                     | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
 | [allow-cross-namespace-resources](#allow-cross-namespace-resources)             | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
@@ -68,7 +68,7 @@ The following table shows a configuration option's name, type, and the default v
 | [large-client-header-buffers](#large-client-header-buffers)                     | string       | "4 8k"                                                                                                                                                                                                                                                                                                                                                       |                                                                                     |
 | [log-format-escape-none](#log-format-escape-none)                               | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
 | [log-format-escape-json](#log-format-escape-json)                               | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
-| [log-format-upstream](#log-format-upstream)                                     | string       | `$remote_addr - $remote_user [$time_local] "$request_method $uri $server_protocol" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status $req_id`                            |                                                                                     |
+| [log-format-upstream](#log-format-upstream)                                     | string       | `$remote_addr - $remote_user [$time_local] "$request_method $uri $server_protocol" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status $req_id`                                                         |                                                                                     |
 | [log-format-stream](#log-format-stream)                                         | string       | `[$remote_addr] [$time_local] $protocol $status $bytes_sent $bytes_received $session_time`                                                                                                                                                                                                                                                                   |                                                                                     |
 | [enable-multi-accept](#enable-multi-accept)                                     | bool         | "true"                                                                                                                                                                                                                                                                                                                                                       |                                                                                     |
 | [max-worker-connections](#max-worker-connections)                               | int          | 16384                                                                                                                                                                                                                                                                                                                                                        |                                                                                     |
@@ -240,15 +240,15 @@ Enables users to consume cross namespace resource on annotations, when was previ
 
 **Annotations that may be impacted with this change**:
 
-- `auth-secret`
-- `auth-proxy-set-header`
-- `auth-tls-secret`
-- `fastcgi-params-configmap`
-- `proxy-ssl-secret`
+* `auth-secret`
+* `auth-proxy-set-header`
+* `auth-tls-secret`
+* `fastcgi-params-configmap`
+* `proxy-ssl-secret`
 
 ## allow-snippet-annotations
 
-Enables Ingress to parse and add \*-snippet annotations/directives created by the user. _**default:**_ `false`
+Enables Ingress to parse and add *-snippet annotations/directives created by the user. _**default:**_ `false`
 
 Warning: We recommend enabling this option only if you TRUST users with permission to create Ingress objects, as this
 may allow a user to add restricted configurations to the final nginx.conf file
@@ -294,21 +294,21 @@ _References:_
 
 Access log path for both http and stream context. Goes to `/var/log/nginx/access.log` by default.
 
-**Note:** the file `/var/log/nginx/access.log` is a symlink to `/dev/stdout`
+__Note:__ the file `/var/log/nginx/access.log` is a symlink to `/dev/stdout`
 
 ## http-access-log-path
 
 Access log path for http context globally.
 _**default:**_ ""
 
-**Note:** If not specified, the `access-log-path` will be used.
+__Note:__ If not specified, the `access-log-path` will be used.
 
 ## stream-access-log-path
 
 Access log path for stream context globally.
 _**default:**_ ""
 
-**Note:** If not specified, the `access-log-path` will be used.
+__Note:__ If not specified, the `access-log-path` will be used.
 
 ## enable-access-log-for-default-backend
 
@@ -318,7 +318,7 @@ Enables logging access to default backend. _**default:**_ is disabled.
 
 Error log path. Goes to `/var/log/nginx/error.log` by default.
 
-**Note:** the file `/var/log/nginx/error.log` is a symlink to `/dev/stderr`
+__Note:__ the file `/var/log/nginx/error.log` is a symlink to `/dev/stderr`
 
 _References:_
 [https://nginx.org/en/docs/ngx_core_module.html#error_log](https://nginx.org/en/docs/ngx_core_module.html#error_log)
@@ -406,7 +406,7 @@ _References:_
 ## http2-max-field-size
 
 !!! warning
-This feature was deprecated in 1.1.3 and will be removed in 1.3.0. Use [large-client-header-buffers](#large-client-header-buffers) instead.
+    This feature was deprecated in 1.1.3 and will be removed in 1.3.0. Use [large-client-header-buffers](#large-client-header-buffers) instead.
 
 Limits the maximum size of an HPACK-compressed request header field.
 
@@ -416,7 +416,7 @@ _References:_
 ## http2-max-header-size
 
 !!! warning
-This feature was deprecated in 1.1.3 and will be removed in 1.3.0. Use [large-client-header-buffers](#large-client-header-buffers) instead.
+    This feature was deprecated in 1.1.3 and will be removed in 1.3.0. Use [large-client-header-buffers](#large-client-header-buffers) instead.
 
 Limits the maximum size of the entire request header list after HPACK decompression.
 
@@ -426,7 +426,7 @@ _References:_
 ## http2-max-requests
 
 !!! warning
-This feature was deprecated in 1.1.3 and will be removed in 1.3.0. Use [upstream-keepalive-requests](#upstream-keepalive-requests) instead.
+    This feature was deprecated in 1.1.3 and will be removed in 1.3.0. Use [upstream-keepalive-requests](#upstream-keepalive-requests) instead.
 
 Sets the maximum number of requests (including push requests) that can be served through one HTTP/2 connection, after which the next client request will lead to connection closing and the need of establishing a new connection.
 
@@ -470,7 +470,7 @@ _References:_
 [https://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout](https://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout)
 
 !!! important
-Setting `keep-alive: '0'` will most likely break concurrent http/2 requests due to changes introduced with nginx 1.19.7
+    Setting `keep-alive: '0'` will most likely break concurrent http/2 requests due to changes introduced with nginx 1.19.7
 
 ```
 Changes with nginx 1.19.7                                        16 Feb 2021
@@ -543,7 +543,7 @@ Sets the [maximum number of simultaneous connections](https://nginx.org/en/docs/
 _**default:**_ 16384
 
 !!! tip
-Using 0 in scenarios of high load improves performance at the cost of increasing RAM utilization (even on idle).
+    Using 0 in scenarios of high load improves performance at the cost of increasing RAM utilization (even on idle).
 
 ## max-worker-open-files
 
@@ -562,7 +562,7 @@ _**default:**_ "0.0.0.0/0"
 
 ## proxy-set-headers
 
-Sets custom headers from named configmap before sending traffic to backends. The value format is namespace/name. See [example](https://kubernetes.github.io/ingress-nginx/examples/customization/custom-headers/)
+Sets custom headers from named configmap before sending traffic to backends. The value format is namespace/name.  See [example](https://kubernetes.github.io/ingress-nginx/examples/customization/custom-headers/)
 
 ## server-name-hash-max-size
 
@@ -591,8 +591,8 @@ _References:_
 
 ## reuse-port
 
-Instructs NGINX to create an individual listening socket for each worker process (using the SO\*REUSEPORT socket option), allowing a kernel to distribute incoming connections between worker processes
-**\*default:**\_ true
+Instructs NGINX to create an individual listening socket for each worker process (using the SO_REUSEPORT socket option), allowing a kernel to distribute incoming connections between worker processes
+_**default:**_ true
 
 ## proxy-headers-hash-bucket-size
 
@@ -612,7 +612,7 @@ Send NGINX Server header in responses and display NGINX version in error pages. 
 Sets the [ciphers](https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers) list to enable. The ciphers are specified in the format understood by the OpenSSL library.
 
 The default cipher list is:
-`ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384`.
+ `ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384`.
 
 The ordering of a ciphersuite is very important because it decides which algorithms are going to be selected in priority. The recommendation above prioritizes algorithms that provide perfect [forward secrecy](https://wiki.mozilla.org/Security/Server_Side_TLS#Forward_Secrecy).
 
@@ -620,7 +620,7 @@ DHE-based cyphers will not be available until DH parameter is configured [Custom
 
 Please check the [Mozilla SSL Configuration Generator](https://mozilla.github.io/server-side-tls/ssl-config-generator/).
 
-**Note:** ssl_prefer_server_ciphers directive will be enabled by default for http context.
+__Note:__ ssl_prefer_server_ciphers directive will be enabled by default for http context.
 
 ## ssl-ecdh-curve
 
@@ -707,7 +707,7 @@ Enables or disables compression of HTTP responses using the ["gzip" module](http
 Enables or disables ["geoip" module](https://nginx.org/en/docs/http/ngx_http_geoip_module.html) that creates variables with values depending on the client IP address, using the precompiled MaxMind databases.
 _**default:**_ true
 
-> **Note:** MaxMind legacy databases are discontinued and will not receive updates after 2019-01-02, cf. [discontinuation notice](https://support.maxmind.com/geolite-legacy-discontinuation-notice/). Consider [use-geoip2](#use-geoip2) below.
+> __Note:__ MaxMind legacy databases are discontinued and will not receive updates after 2019-01-02, cf. [discontinuation notice](https://support.maxmind.com/geolite-legacy-discontinuation-notice/). Consider [use-geoip2](#use-geoip2) below.
 
 ## use-geoip2
 
@@ -717,7 +717,7 @@ For this reason, it is required to define a new flag `--maxmind-license-key` in 
 Alternatively, it is possible to use a volume to mount the files `/etc/ingress-controller/geoip/GeoLite2-City.mmdb` and `/etc/ingress-controller/geoip/GeoLite2-ASN.mmdb`, avoiding the overhead of the download.
 
 !!! important
-If the feature is enabled but the files are missing, GeoIP2 will not be enabled.
+    If the feature is enabled but the files are missing, GeoIP2 will not be enabled.
 
 _**default:**_ false
 
@@ -730,10 +730,10 @@ _**default:**_ 0
 ## enable-brotli
 
 Enables or disables compression of HTTP responses using the ["brotli" module](https://github.com/google/ngx_brotli).
-The default mime type list to compress is: `application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component`.
+The default mime type list to compress is: `application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/plain text/x-component`. 
 _**default:**_ false
 
-> **Note:** Brotli does not works in Safari < 11. For more information see [https://caniuse.com/#feat=brotli](https://caniuse.com/#feat=brotli)
+> __Note:__ Brotli does not works in Safari < 11. For more information see [https://caniuse.com/#feat=brotli](https://caniuse.com/#feat=brotli)
 
 ## brotli-level
 
@@ -827,10 +827,11 @@ _**default:**_ 320
 _References:_
 [https://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive](https://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive)
 
+
 ## upstream-keepalive-time
 
 Sets the maximum time during which requests can be processed through one keepalive connection.
-_**default:**_ "1h"
+ _**default:**_ "1h"
 
 _References:_
 [http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_time](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_time)
@@ -838,10 +839,11 @@ _References:_
 ## upstream-keepalive-timeout
 
 Sets a timeout during which an idle keepalive connection to an upstream server will stay open.
-_**default:**_ 60
+ _**default:**_ 60
 
 _References:_
 [https://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_timeout](https://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_timeout)
+
 
 ## upstream-keepalive-requests
 
@@ -849,8 +851,10 @@ Sets the maximum number of requests that can be served through one keepalive con
 requests is made, the connection is closed.
 _**default:**_ 10000
 
+
 _References:_
 [https://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_requests](https://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_requests)
+
 
 ## limit-conn-zone-variable
 
@@ -893,7 +897,7 @@ _References:_
 
 ## bind-address
 
-Sets the addresses on which the server will accept requests instead of \*. It should be noted that these addresses must exist in the runtime environment or the controller will crash loop.
+Sets the addresses on which the server will accept requests instead of *. It should be noted that these addresses must exist in the runtime environment or the controller will crash loop.
 
 ## use-forwarded-headers
 
@@ -1030,11 +1034,10 @@ Specifies the port to use when uploading traces. _**default:**_ 4317
 
 Specifies the service name to use for any traces created. _**default:**_ nginx
 
-## opentelemetry-trust-incoming-span: "true"
-
+##  opentelemetry-trust-incoming-span: "true"
 Enables or disables using spans from incoming requests as parent for created ones. _**default:**_ true
 
-## otel-sampler-parent-based
+##  otel-sampler-parent-based
 
 Uses sampler implementation which by default will take a sample if parent Activity is sampled. _**default:**_ false
 
@@ -1148,7 +1151,6 @@ Sets the global value of redirects (301) to HTTPS if the server has a TLS certif
 _**default:**_ "true"
 
 ## force-ssl-redirect
-
 Sets the global value of redirects (308) to HTTPS if the server has a default TLS certificate (defined in extra-args).
 _**default:**_ "false"
 
@@ -1207,7 +1209,7 @@ Sets the HTTP status code to be used in redirects.
 Supported codes are [301](https://developer.mozilla.org/docs/Web/HTTP/Status/301),[302](https://developer.mozilla.org/docs/Web/HTTP/Status/302),[307](https://developer.mozilla.org/docs/Web/HTTP/Status/307) and [308](https://developer.mozilla.org/docs/Web/HTTP/Status/308)
 _**default:**_ 308
 
-> **Why the default code is 308?**
+> __Why the default code is 308?__
 
 > [RFC 7238](https://tools.ietf.org/html/rfc7238) was created to define the 308 (Permanent Redirect) status code that is similar to 301 (Moved Permanently) but it keeps the payload in the redirect. This is important if we send a redirect in methods like POST.
 
@@ -1357,7 +1359,6 @@ _References:_
 [https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_reject_handshake](https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_reject_handshake)
 
 ## debug-connections
-
 Enables debugging log for selected client connections.
 _**default:**_ ""
 
@@ -1369,14 +1370,14 @@ _References:_
 Ingress objects contains a field called pathType that defines the proxy behavior. It can be `Exact`, `Prefix` and `ImplementationSpecific`.
 
 When pathType is configured as `Exact` or `Prefix`, there should be a more strict validation, allowing only paths starting with "/" and
-containing only alphanumeric characters and "-", "\_" and additional "/".
+containing only alphanumeric characters and "-", "_" and additional "/".
 
 When this option is enabled, the validation will happen on the Admission Webhook, making any Ingress not using pathType `ImplementationSpecific`
 and containing invalid characters to be denied.
 
 This means that Ingress objects that rely on paths containing regex characters should use `ImplementationSpecific` pathType.
 
-The cluster admin should establish validation rules using mechanisms like [Open Policy Agent](https://www.openpolicyagent.org/) to
+The cluster admin should establish validation rules using mechanisms like [Open Policy Agent](https://www.openpolicyagent.org/) to 
 validate that only authorized users can use `ImplementationSpecific` pathType and that only the authorized characters can be used.
 
 _**default:**_ "true"
@@ -1396,6 +1397,5 @@ Similar to the Ingress rule annotation `nginx.ingress.kubernetes.io/relative-red
 _**default:**_ "false"
 
 _References:_
-
 - [https://nginx.org/en/docs/http/ngx_http_core_module.html#absolute_redirect](https://nginx.org/en/docs/http/ngx_http_core_module.html#absolute_redirect)
 - [https://datatracker.ietf.org/doc/html/rfc7231#section-7.1.2](https://datatracker.ietf.org/doc/html/rfc7231#section-7.1.2)

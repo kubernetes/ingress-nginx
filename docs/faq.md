@@ -1,12 +1,13 @@
+
 # FAQ
 
 ## Multi-tenant Kubernetes
 
 Do not use in multi-tenant Kubernetes production installations. This project assumes that users that can create Ingress objects are administrators of the cluster.
 
-For example, the Ingress NGINX control plane has global and per Ingress configuration options that make it insecure, if enabled, in a multi-tenant environment.
+For example, the Ingress NGINX control plane has global and per Ingress configuration options that make it insecure, if enabled, in a multi-tenant environment. 
 
-For example, enabling snippets, a global configuration, allows any Ingress object to run arbitrary Lua code that could affect the security of all Ingress objects that a controller is running.
+For example, enabling snippets, a global configuration, allows any Ingress object to run arbitrary Lua code that could affect the security of all Ingress objects that a controller is running. 
 
 We changed the default to allow snippets to `false` in https://github.com/kubernetes/ingress-nginx/pull/10393.
 
@@ -115,7 +116,7 @@ DESCRIPTION:
     LoadBalancer IP from within the cluster will always get "Cluster" semantics,
     but clients sending to a NodePort from within the cluster may need to take
     traffic policy into account when picking a node.
-
+    
     Possible enum values:
      - `"Cluster"` routes traffic to all endpoints.
      - `"Local"` preserves the source IP of the traffic by routing only to
@@ -156,32 +157,32 @@ above, then please read [the migration guide here](./user-guide/k8s-122-migratio
 ## Validation Of **`path`**
 
 - For improving security and also following desired standards on Kubernetes API
-  spec, the next release, scheduled for v1.8.0, will include a new & optional
-  feature of validating the value for the key `ingress.spec.rules.http.paths.path`.
+spec, the next release, scheduled for v1.8.0, will include a new & optional
+feature of validating the value for the key `ingress.spec.rules.http.paths.path`.
 
 - This behavior will be disabled by default on the 1.8.0 release and enabled by
-  default on the next breaking change release, set for 2.0.0.
+default on the next breaking change release, set for 2.0.0.
 
 - When "`ingress.spec.rules.http.pathType=Exact`" or "`pathType=Prefix`", this
-  validation will limit the characters accepted on the field "`ingress.spec.rules.http.paths.path`",
-  to "`alphanumeric characters`", and "`/`", "`_`", "`-`". Also, in this case,
-  the path should start with "`/`".
+validation will limit the characters accepted on the field "`ingress.spec.rules.http.paths.path`",
+to "`alphanumeric characters`", and  "`/`", "`_`", "`-`". Also, in this case,
+the path should start with "`/`".
 
 - When the ingress resource path contains other characters (like on rewrite
-  configurations), the pathType value should be "`ImplementationSpecific`".
+configurations), the pathType value should be "`ImplementationSpecific`".
 
 - API Spec on pathType is documented [here](https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types)
 
 - When this option is enabled, the validation will happen on the Admission
-  Webhook. So if any new ingress object contains characters other than
-  alphanumeric characters, and, "`/`", "`_`", "`-`", in the `path` field, but
-  is not using `pathType` value as `ImplementationSpecific`, then the ingress
-  object will be denied admission.
+Webhook. So if any new ingress object contains characters other than
+alphanumeric characters, and, "`/`", "`_`", "`-`", in the `path` field, but
+is not using `pathType` value as `ImplementationSpecific`, then the ingress
+object will be denied admission.
 
 - The cluster admin should establish validation rules using mechanisms like
-  "`Open Policy Agent`", to validate that only authorized users can use
-  ImplementationSpecific pathType and that only the authorized characters can be
-  used. [The configmap value is here](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#strict-validate-path-type)
+"`Open Policy Agent`", to validate that only authorized users can use
+ImplementationSpecific pathType and that only the authorized characters can be
+used. [The configmap value is here](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#strict-validate-path-type)
 
 - A complete example of an Openpolicyagent gatekeeper rule is available [here](https://kubernetes.github.io/ingress-nginx/examples/openpolicyagent/)
 
@@ -193,7 +194,7 @@ above, then please read [the migration guide here](./user-guide/k8s-122-migratio
 ## Why is chunking not working since controller v1.10 ?
 
 - If your code is setting the HTTP header `"Transfer-Encoding: chunked"` and
-  the controller log messages show an error about duplicate header, it is
-  because of this change <http://hg.nginx.org/nginx/rev/2bf7792c262e>
+the controller log messages show an error about duplicate header, it is
+because of this change <http://hg.nginx.org/nginx/rev/2bf7792c262e>
 
 - More details are available in this issue <https://github.com/kubernetes/ingress-nginx/issues/11162>
