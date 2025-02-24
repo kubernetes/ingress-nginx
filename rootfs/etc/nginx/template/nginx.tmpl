@@ -820,7 +820,7 @@ stream {
             proxy_set_header       X-Service-Port     $service_port;
             proxy_set_header       X-Request-ID       $req_id;
             proxy_set_header       X-Forwarded-For    $remote_addr;
-            proxy_set_header       Host               $best_http_host;
+            proxy_set_header       Host               $host;
 
             set $proxy_upstream_name {{ $upstreamName | quote }};
 
@@ -1241,7 +1241,7 @@ stream {
             {{ if not (empty $location.UpstreamVhost) }}
             {{ $proxySetHeader }} Host                   {{ $location.UpstreamVhost | quote }};
             {{ else }}
-            {{ $proxySetHeader }} Host                   $best_http_host;
+            {{ $proxySetHeader }} Host                   $host;
             {{ end }}
 
             # Pass the extracted client certificate to the backend
