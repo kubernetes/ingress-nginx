@@ -195,7 +195,6 @@ type SecurityConfiguration struct {
 	// AllowCrossNamespaceResources enables users to consume cross namespace resource on annotations
 	// Case disabled, attempts to use secrets or configmaps from a namespace different from Ingress will
 	// be denied
-	// This valid will default to `false` on future releases
 	AllowCrossNamespaceResources bool `json:"allow-cross-namespace-resources"`
 
 	// AnnotationsRiskLevel represents the risk accepted on an annotation. If the risk is, for instance `Medium`, annotations
