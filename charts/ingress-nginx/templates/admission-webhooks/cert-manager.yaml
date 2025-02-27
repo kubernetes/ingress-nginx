@@ -19,6 +19,9 @@ metadata:
 spec:
   secretName: {{ include "ingress-nginx.fullname" . }}-root-cert
   duration: {{ .Values.controller.admissionWebhooks.certManager.rootCert.duration | default "43800h0m0s" | quote }}
+  {{- with .Values.controller.admissionWebhooks.certManager.rootCert.revisionHistoryLimit }}
+  revisionHistoryLimit: {{ . }}
+  {{- end }}
   issuerRef:
     name: {{ include "ingress-nginx.fullname" . }}-self-signed-issuer
   commonName: "ca.webhook.ingress-nginx"
@@ -47,6 +50,9 @@ metadata:
 spec:
   secretName: {{ include "ingress-nginx.admissionWebhooks.fullname" . }}
   duration: {{ .Values.controller.admissionWebhooks.certManager.admissionCert.duration | default "8760h0m0s" | quote }}
+  {{- with .Values.controller.admissionWebhooks.certManager.admissionCert.revisionHistoryLimit }}
+  revisionHistoryLimit: {{ . }}
+  {{- end }}
   issuerRef:
     {{- if .Values.controller.admissionWebhooks.certManager.issuerRef }}
     {{- toYaml .Values.controller.admissionWebhooks.certManager.issuerRef | nindent 4 }}

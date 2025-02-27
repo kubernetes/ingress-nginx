@@ -853,9 +853,17 @@ controller:
       rootCert:
         # default to be 5y
         duration: ""
+        # -- Set the revisionHistoryLimit on the Certificate. See
+        # https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1.CertificateSpec
+        # Defaults to nil.
+        revisionHistoryLimit: ""
       admissionCert:
         # default to be 1y
         duration: ""
+        # -- Set the revisionHistoryLimit on the Certificate. See
+        # https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1.CertificateSpec
+        # Defaults to nil.
+        revisionHistoryLimit: ""
         # issuerRef:
         #   name: "issuer"
         #   kind: "ClusterIssuer"
