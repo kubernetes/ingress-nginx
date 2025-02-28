@@ -98,9 +98,7 @@ func rlimitMaxNumFiles() int {
 }
 
 const (
-	defBinary  = "/usr/bin/nginx"
-	cfgPath    = "/etc/nginx/nginx.conf"
-	luaCfgPath = "/etc/nginx/lua/cfg.json"
+	defBinary = "/usr/bin/nginx"
 )
 
 // NginxExecTester defines the interface to execute
@@ -113,6 +111,22 @@ type NginxExecTester interface {
 // NginxCommand stores context around a given nginx executable path
 type NginxCommand struct {
 	Binary string
+}
+
+func luaCfgPath() string {
+	cfgPath := os.Getenv("NGINX_LUA_CONFIG_PATH")
+	if cfgPath == "" {
+		return "/etc/nginx/lua/cfg.json"
+	}
+	return cfgPath
+}
+
+func cfgPath() string {
+	cfgPath := os.Getenv("NGINX_CONFIG_PATH")
+	if cfgPath == "" {
+		return "/etc/nginx/nginx.conf"
+	}
+	return cfgPath
 }
 
 // NewNginxCommand returns a new NginxCommand from which path
@@ -134,7 +148,7 @@ func NewNginxCommand() NginxCommand {
 func (nc NginxCommand) ExecCommand(args ...string) *exec.Cmd {
 	cmdArgs := []string{}
 
-	cmdArgs = append(cmdArgs, "-c", cfgPath)
+	cmdArgs = append(cmdArgs, "-c", cfgPath())
 	cmdArgs = append(cmdArgs, args...)
 	//nolint:gosec // Ignore G204 error
 	return exec.Command(nc.Binary, cmdArgs...)
