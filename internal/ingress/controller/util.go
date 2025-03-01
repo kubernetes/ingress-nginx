@@ -64,7 +64,7 @@ func upstreamName(namespace string, service *networking.IngressServiceBackend) s
 func upstreamServiceNameAndPort(service *networking.IngressServiceBackend) (string, intstr.IntOrString) {
 	if service != nil {
 		if service.Port.Number > 0 {
-			return service.Name, intstr.FromInt(int(service.Port.Number))
+			return service.Name, intstr.FromInt32(service.Port.Number)
 		}
 		if service.Port.Name != "" {
 			return service.Name, intstr.FromString(service.Port.Name)
