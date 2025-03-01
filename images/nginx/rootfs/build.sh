@@ -38,8 +38,8 @@ export NGINX_SUBSTITUTIONS=e12e965ac1837ca709709f9a26f572a54d83430e
 # Check for recent changes: https://github.com/SpiderLabs/ModSecurity-nginx/compare/v1.0.3...master
 export MODSECURITY_VERSION=v1.0.3
 
-# Check for recent changes: https://github.com/SpiderLabs/ModSecurity/compare/v3.0.13...v3/master
-export MODSECURITY_LIB_VERSION=v3.0.13
+# Check for recent changes: https://github.com/SpiderLabs/ModSecurity/compare/v3.0.14...v3/master
+export MODSECURITY_LIB_VERSION=v3.0.14
 
 # Check for recent changes: https://github.com/coreruleset/coreruleset/compare/v4.10.0...main
 export OWASP_MODSECURITY_CRS_VERSION=v4.10.0
