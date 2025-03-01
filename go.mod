@@ -17,7 +17,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.22.2
 	github.com/opencontainers/runc v1.2.5
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
-	github.com/prometheus/client_golang v1.20.5
+	github.com/prometheus/client_golang v1.21.0
 	github.com/prometheus/client_model v0.6.1
 	github.com/prometheus/common v0.62.0
 	github.com/spf13/cobra v1.9.1
@@ -25,7 +25,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/yudai/gojsondiff v1.0.0
 	github.com/zakjan/cert-chain-resolver v0.0.0-20221221105603-fcedb00c5b30
-	golang.org/x/crypto v0.33.0
+	golang.org/x/crypto v0.34.0
 	google.golang.org/grpc v1.70.0
 	google.golang.org/grpc/examples v0.0.0-20240223204917-5ccf176a08ab
 	gopkg.in/go-playground/pool.v3 v3.1.1
@@ -47,7 +47,7 @@ require (
 require (
 	github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be // indirect
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
-	github.com/klauspost/compress v1.17.9 // indirect
+	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/moby/sys/userns v0.1.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	go.opentelemetry.io/otel v1.32.0 // indirect
