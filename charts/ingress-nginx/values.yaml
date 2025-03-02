@@ -859,9 +859,8 @@ controller:
       admissionCert:
         # default to be 1y
         duration: ""
-        # -- Set the revisionHistoryLimit on the Certificate. See
-        # https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1.CertificateSpec
-        # Defaults to nil.
+        # -- Revision history limit of the webhook certificate.
+        # Ref.: https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1.CertificateSpec
         revisionHistoryLimit: ""
         # issuerRef:
         #   name: "issuer"
