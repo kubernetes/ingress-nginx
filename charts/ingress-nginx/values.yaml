@@ -853,9 +853,15 @@ controller:
       rootCert:
         # default to be 5y
         duration: ""
+        # -- Revision history limit of the root certificate.
+        # Ref.: https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1.CertificateSpec
+        revisionHistoryLimit: 0
       admissionCert:
         # default to be 1y
         duration: ""
+        # -- Revision history limit of the webhook certificate.
+        # Ref.: https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1.CertificateSpec
+        revisionHistoryLimit: 0
         # issuerRef:
         #   name: "issuer"
         #   kind: "ClusterIssuer"
