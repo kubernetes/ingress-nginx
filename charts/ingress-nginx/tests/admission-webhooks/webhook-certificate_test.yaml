@@ -23,7 +23,7 @@ tests:
           path: metadata.name
           value: RELEASE-NAME-ingress-nginx-admission
 
-  - it: should create a Certificate with custom revisionHistoryLimit if `controller.admissionWebhooks.certManager.admissionCert.revisionHistoryLimit` is set
+  - it: should create a Certificate with `revisionHistoryLimit` if `controller.admissionWebhooks.certManager.admissionCert.revisionHistoryLimit` is set
     set:
       controller.admissionWebhooks.certManager.enabled: true
       controller.admissionWebhooks.certManager.issuerRef: "nginx-issuer"
