@@ -861,7 +861,7 @@ controller:
         duration: ""
         # -- Revision history limit of the webhook certificate.
         # Ref.: https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1.CertificateSpec
-        revisionHistoryLimit: ""
+        revisionHistoryLimit: 0
         # issuerRef:
         #   name: "issuer"
         #   kind: "ClusterIssuer"
