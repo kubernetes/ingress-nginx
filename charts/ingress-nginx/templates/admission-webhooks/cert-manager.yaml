@@ -50,7 +50,9 @@ metadata:
 spec:
   secretName: {{ include "ingress-nginx.admissionWebhooks.fullname" . }}
   duration: {{ .Values.controller.admissionWebhooks.certManager.admissionCert.duration | default "8760h0m0s" | quote }}
+  {{- if gt .Values.controller.admissionWebhooks.certManager.admissionCert.revisionHistoryLimit 0 }}
   revisionHistoryLimit: {{ .Values.controller.admissionWebhooks.certManager.admissionCert.revisionHistoryLimit }}
+  {{- end }}
   issuerRef:
     {{- if .Values.controller.admissionWebhooks.certManager.issuerRef }}
     {{- toYaml .Values.controller.admissionWebhooks.certManager.issuerRef | nindent 4 }}
