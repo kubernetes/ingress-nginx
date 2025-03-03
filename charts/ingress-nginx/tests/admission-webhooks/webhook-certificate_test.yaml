@@ -13,7 +13,7 @@ tests:
   - it: should create a Certificate if `controller.admissionWebhooks.certManager.enabled` is true
     set:
       controller.admissionWebhooks.certManager.enabled: true
-      controller.admissionWebhooks.certManager.issuerRef: "nginx-issuer"
+      controller.admissionWebhooks.certManager.issuerRef: ingress-nginx-issuer
     asserts:
       - hasDocuments:
           count: 1
