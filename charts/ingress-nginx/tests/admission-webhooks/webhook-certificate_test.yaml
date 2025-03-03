@@ -1,4 +1,4 @@
-suite: Admission Webhooks > Certificate
+suite: Admission Webhooks > CertManager
 templates:
   - admission-webhooks/cert-manager.yaml
 
