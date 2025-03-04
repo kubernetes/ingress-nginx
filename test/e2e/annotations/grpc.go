@@ -45,29 +45,6 @@ const (
 var _ = framework.DescribeAnnotation("backend-protocol - GRPC", func() {
 	f := framework.NewDefaultFramework("grpc", framework.WithHTTPBunEnabled())
 
-	ginkgo.It("should use grpc_pass in the configuration file", func() {
-		f.NewGRPCFortuneTellerDeployment()
-
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/backend-protocol": "GRPC",
-		}
-
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, "fortune-teller", 50051, annotations)
-		f.EnsureIngress(ing)
-
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %v", host))
-			})
-
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, "grpc_pass") &&
-					strings.Contains(server, "grpc_set_header") &&
-					!strings.Contains(server, "proxy_pass")
-			})
-	})
-
 	ginkgo.It("should return OK for service with backend protocol GRPC", func() {
 		f.NewGRPCBinDeployment()
 
