@@ -38,6 +38,9 @@ spec:
     {{- if semverCompare ">=1.20.0-0" .Capabilities.KubeVersion.Version }}
       appProtocol: http
     {{- end }}
+  {{- if .Values.defaultBackend.service.extraPorts }}
+    {{ toYaml .Values.defaultBackend.service.extraPorts | nindent 4 }}
+  {{- end}}
   selector:
     {{- include "ingress-nginx.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: default-backend
