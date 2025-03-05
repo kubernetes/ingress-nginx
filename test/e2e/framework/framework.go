@@ -35,6 +35,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -129,7 +130,9 @@ func (f *Framework) CreateEnvironment() {
 		// TODO: remove after k8s v1.22
 		f.KubeConfig.WarningHandler = rest.NoWarnings{}
 
-		f.KubeClientSet, err = kubernetes.NewForConfig(f.KubeConfig)
+		coreConfig := rest.CopyConfig(f.KubeConfig)
+		coreConfig.ContentType = runtime.ContentTypeProtobuf
+		f.KubeClientSet, err = kubernetes.NewForConfig(coreConfig)
 		assert.Nil(ginkgo.GinkgoT(), err, "creating a kubernetes client")
 	}
 
