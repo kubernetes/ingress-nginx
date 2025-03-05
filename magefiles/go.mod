@@ -1,6 +1,6 @@
 module k8s.io/ingress-nginx/magefiles
 
-go 1.23.6
+go 1.24.1
 
 require (
 	github.com/blang/semver/v4 v4.0.0
