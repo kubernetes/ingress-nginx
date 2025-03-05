@@ -654,7 +654,6 @@ http {
         listen 127.0.0.1:{{ .StatusPort }};
         set $proxy_upstream_name "internal";
 
-        keepalive_timeout 0;
         gzip off;
 
         access_log off;
