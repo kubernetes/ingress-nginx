@@ -1063,7 +1063,7 @@ max_export_batch_size = {{ .OtelMaxExportBatchSize }}
 name = "{{ .OtelServiceName }}" # Opentelemetry resource name
 
 [sampler]
-name = "{{ .OtelSampler }}" # Also: AlwaysOff, TraceIdRatioBased
+name = "{{ .OtelSampler }}"
 ratio = {{ .OtelSamplerRatio }}
 parent_based = {{ .OtelSamplerParentBased }}
 `
