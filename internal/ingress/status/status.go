@@ -173,6 +173,30 @@ func nameOrIPToLoadBalancerIngress(nameOrIP string) v1.IngressLoadBalancerIngres
 	return v1.IngressLoadBalancerIngress{Hostname: nameOrIP}
 }
 
+func filterLabels(toFilter map[string]string) map[string]string {
+	// As a standard, app.kubernetes.io are "reserved well-known" labels.
+	// In our case, we add those labels as identifiers of the Ingress
+	// deployment in this namespace, so we can select it as a set of Ingress instances.
+	// As those labels are also generated as part of a HELM deployment, we can be "safe" they
+	// cover 95% of the cases
+
+	podLabels := make(map[string]string)
+	for k, v := range toFilter {
+		switch k {
+		case "pod-template-hash":
+		case "controller-revision-hash":
+		case "pod-template-generation":
+		// Handle helm upgrade
+		case "app.kubernetes.io/version":
+		case "helm.sh/chart":
+		default:
+			podLabels[k] = v
+		}
+	}
+
+	return podLabels
+}
+
 // runningAddresses returns a list of IP addresses and/or FQDN where the
 // ingress controller is currently running
 func (s *statusSync) runningAddresses() ([]v1.IngressLoadBalancerIngress, error) {
@@ -190,9 +214,11 @@ func (s *statusSync) runningAddresses() ([]v1.IngressLoadBalancerIngress, error)
 		return statusAddressFromService(s.PublishService, s.Client)
 	}
 
+	podLabels := filterLabels(k8s.IngressPodDetails.Labels)
+
 	// get information about all the pods running the ingress controller
 	pods, err := s.Client.CoreV1().Pods(k8s.IngressPodDetails.Namespace).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: labels.SelectorFromSet(k8s.IngressPodDetails.Labels).String(),
+		LabelSelector: labels.SelectorFromSet(podLabels).String(),
 	})
 	if err != nil {
 		return nil, err
@@ -220,6 +246,11 @@ func (s *statusSync) runningAddresses() ([]v1.IngressLoadBalancerIngress, error)
 			continue
 		}
 
+		if pod.GetDeletionTimestamp() != nil {
+			klog.InfoS("POD is terminating", "pod", klog.KObj(&pod), "node", pod.Spec.NodeName)
+			continue
+		}
+
 		name := k8s.GetNodeIPOrName(s.Client, pod.Spec.NodeName, s.UseNodeInternalIP)
 		if !stringInIngresses(name, addrs) {
 			addrs = append(addrs, nameOrIPToLoadBalancerIngress(name))
@@ -230,26 +261,27 @@ func (s *statusSync) runningAddresses() ([]v1.IngressLoadBalancerIngress, error)
 }
 
 func (s *statusSync) isRunningMultiplePods() bool {
-	// As a standard, app.kubernetes.io are "reserved well-known" labels.
-	// In our case, we add those labels as identifiers of the Ingress
-	// deployment in this namespace, so we can select it as a set of Ingress instances.
-	// As those labels are also generated as part of a HELM deployment, we can be "safe" they
-	// cover 95% of the cases
-	podLabel := make(map[string]string)
-	for k, v := range k8s.IngressPodDetails.Labels {
-		if k != "pod-template-hash" && k != "controller-revision-hash" && k != "pod-template-generation" {
-			podLabel[k] = v
-		}
-	}
+	podLabels := filterLabels(k8s.IngressPodDetails.Labels)
 
 	pods, err := s.Client.CoreV1().Pods(k8s.IngressPodDetails.Namespace).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: labels.SelectorFromSet(podLabel).String(),
+		LabelSelector: labels.SelectorFromSet(podLabels).String(),
 	})
 	if err != nil {
 		return false
 	}
 
-	return len(pods.Items) > 1
+	runningPods := make([]apiv1.Pod, 0)
+	for i := range pods.Items {
+		pod := pods.Items[i]
+		if pod.GetDeletionTimestamp() != nil {
+			klog.InfoS("POD is terminating", "pod", klog.KObj(&pod), "node", pod.Spec.NodeName)
+			continue
+		}
+
+		runningPods = append(runningPods, pod)
+	}
+
+	return len(runningPods) > 1
 }
 
 // standardizeLoadBalancerIngresses sorts the list of loadbalancer by
