@@ -18,3 +18,6 @@ FROM scratch
 
 # Copy binary.
 COPY --from=builder /build/main /main
+
+# Run binary.
+ENTRYPOINT ["/main"]
