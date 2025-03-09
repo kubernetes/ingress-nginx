@@ -26,3 +26,10 @@ steps:
   args:
   - buildx
   - inspect
+# Create builder.
+- name: gcr.io/cloud-builders/docker
+  args:
+  - buildx
+  - create
+  - --bootstrap
+  - --use
