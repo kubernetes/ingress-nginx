@@ -1,0 +1,8 @@
+options:
+  # Ignore Prow provided substitutions.
+  substitution_option: ALLOW_LOOSE
+steps:
+# Show version.
+- name: gcr.io/cloud-builders/docker
+  args:
+  - version
