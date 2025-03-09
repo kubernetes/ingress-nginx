@@ -15,3 +15,6 @@ RUN gcc main.c -static -o main
 
 # Start from scratch.
 FROM scratch
+
+# Copy binary.
+COPY --from=builder /build/main /main
