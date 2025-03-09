@@ -2,30 +2,6 @@ options:
   # Ignore Prow provided substitutions.
   substitution_option: ALLOW_LOOSE
 steps:
-# Show version.
-- name: gcr.io/cloud-builders/docker
-  args:
-  - version
-# Show info.
-- name: gcr.io/cloud-builders/docker
-  args:
-  - info
-# Show version.
-- name: gcr.io/cloud-builders/docker
-  args:
-  - buildx
-  - version
-# List builders.
-- name: gcr.io/cloud-builders/docker
-  args:
-  - buildx
-  - ls
-  - --no-trunc
-# Inspect builder.
-- name: gcr.io/cloud-builders/docker
-  args:
-  - buildx
-  - inspect
 # Create builder.
 - name: gcr.io/cloud-builders/docker
   args:
@@ -33,17 +9,6 @@ steps:
   - create
   - --bootstrap
   - --use
-# List builders.
-- name: gcr.io/cloud-builders/docker
-  args:
-  - buildx
-  - ls
-  - --no-trunc
-# Inspect builder.
-- name: gcr.io/cloud-builders/docker
-  args:
-  - buildx
-  - inspect
 # Build image.
 - name: gcr.io/cloud-builders/docker
   dir: images/nginx
