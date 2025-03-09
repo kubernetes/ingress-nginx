@@ -15,3 +15,9 @@ steps:
   args:
   - buildx
   - version
+# List builders.
+- name: gcr.io/cloud-builders/docker
+  args:
+  - buildx
+  - ls
+  - --no-trunc
