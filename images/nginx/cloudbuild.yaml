@@ -53,3 +53,5 @@ steps:
   - --platform
   - linux/amd64,linux/arm,linux/arm64
   - rootfs
+  - --tag
+  - us-central1-docker.pkg.dev/${PROJECT_ID}/ingress-nginx/nginx
