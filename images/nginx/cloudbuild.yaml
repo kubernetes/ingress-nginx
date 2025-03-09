@@ -21,3 +21,8 @@ steps:
   - buildx
   - ls
   - --no-trunc
+# Inspect builder.
+- name: gcr.io/cloud-builders/docker
+  args:
+  - buildx
+  - inspect
