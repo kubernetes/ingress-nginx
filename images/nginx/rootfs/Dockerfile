@@ -12,3 +12,6 @@ COPY main.c .
 
 # Build binary.
 RUN gcc main.c -static -o main
+
+# Start from scratch.
+FROM scratch
