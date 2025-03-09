@@ -44,3 +44,12 @@ steps:
   args:
   - buildx
   - inspect
+# Build image.
+- name: gcr.io/cloud-builders/docker
+  dir: images/nginx
+  args:
+  - buildx
+  - build
+  - --platform
+  - linux/amd64,linux/arm,linux/arm64
+  - rootfs
