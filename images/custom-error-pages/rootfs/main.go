@@ -25,6 +25,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -59,15 +60,26 @@ const (
 	// RequestId is a unique ID that identifies the request - same as for backend service
 	RequestId = "X-Request-ID"
 
-	// ErrFilesPathVar is the name of the environment variable indicating
+	// ErrFilesPathEnvVar is the name of the environment variable indicating
 	// the location on disk of files served by the handler.
-	ErrFilesPathVar = "ERROR_FILES_PATH"
+	ErrFilesPathEnvVar = "ERROR_FILES_PATH"
 
-	// DefaultFormatVar is the name of the environment variable indicating
+	// DefaultFormatEnvVar is the name of the environment variable indicating
 	// the default error MIME type that should be returned if either the
 	// client does not specify an Accept header, or the Accept header provided
 	// cannot be mapped to a file extension.
-	DefaultFormatVar = "DEFAULT_RESPONSE_FORMAT"
+	DefaultFormatEnvVar = "DEFAULT_RESPONSE_FORMAT"
+
+	//  IsMetricsExportEnvVar is the name of the environment variable indicating
+	// whether or not to export /metrics and /debug/vars.
+	IsMetricsExportEnvVar = "IS_METRICS_EXPORT"
+
+	// MetricsPortEnvVar is the name of the environment variable indicating
+	// the port on which to export /metrics and /debug/vars.
+	MetricsPortEnvVar = "METRICS_PORT"
+
+	// CustomErrorPagesPort is the port on which to listen to serve custom error pages.
+	CustomErrorPagesPort = "8080"
 )
 
 func init() {
@@ -76,25 +88,97 @@ func init() {
 }
 
 func main() {
+	listeners := createListeners()
+	startListeners(listeners)
+}
+
+func createListeners() []Listener {
 	errFilesPath := "/www"
-	if os.Getenv(ErrFilesPathVar) != "" {
-		errFilesPath = os.Getenv(ErrFilesPathVar)
+	if os.Getenv(ErrFilesPathEnvVar) != "" {
+		errFilesPath = os.Getenv(ErrFilesPathEnvVar)
 	}
 
 	defaultFormat := "text/html"
-	if os.Getenv(DefaultFormatVar) != "" {
-		defaultFormat = os.Getenv(DefaultFormatVar)
+	if os.Getenv(DefaultFormatEnvVar) != "" {
+		defaultFormat = os.Getenv(DefaultFormatEnvVar)
 	}
 
-	http.HandleFunc("/", errorHandler(errFilesPath, defaultFormat))
+	isExportMetrics := true
+	if os.Getenv(IsMetricsExportEnvVar) != "" {
+		val, err := strconv.ParseBool(os.Getenv(IsMetricsExportEnvVar))
+		if err == nil {
+			isExportMetrics = val
+		}
+	}
 
-	http.Handle("/metrics", promhttp.Handler())
+	metricsPort := "8080"
+	if os.Getenv(MetricsPortEnvVar) != "" {
+		metricsPort = os.Getenv(MetricsPortEnvVar)
+	}
 
-	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+	var listeners []Listener
+
+	// MUST use NewServerMux when not exporting /metrics because expvar HTTP handler registers
+	// against DefaultServerMux as a consequence of importing it in client_golang/prometheus.
+	if !isExportMetrics {
+		mux := http.NewServeMux()
+		mux.HandleFunc("/", errorHandler(errFilesPath, defaultFormat))
+		mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		})
+		listeners = append(listeners, Listener{mux, CustomErrorPagesPort})
+		return listeners
+	}
+
+	// MUST use DefaultServerMux when exporting /metrics to the public because /debug/vars is
+	// only available with DefaultServerMux.
+	if metricsPort == CustomErrorPagesPort {
+		mux := http.DefaultServeMux
+		mux.Handle("/metrics", promhttp.Handler())
+		mux.HandleFunc("/", errorHandler(errFilesPath, defaultFormat))
+		mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		})
+		listeners = append(listeners, Listener{mux, CustomErrorPagesPort})
+		return listeners
+	}
+
+	// MUST use DefaultServerMux for /metrics and NewServerMux for custom error pages when you
+	// wish to expose /metrics only to internal services, because expvar HTTP handler registers
+	// against DefaultServerMux.
+	metricsMux := http.DefaultServeMux
+	metricsMux.Handle("/metrics", promhttp.Handler())
+
+	errorsMux := http.NewServeMux()
+	errorsMux.HandleFunc("/", errorHandler(errFilesPath, defaultFormat))
+	errorsMux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	http.ListenAndServe(fmt.Sprintf(":8080"), nil)
+	listeners = append(listeners, Listener{metricsMux, metricsPort}, Listener{errorsMux, CustomErrorPagesPort})
+	return listeners
+}
+
+func startListeners(listeners []Listener) {
+	var wg sync.WaitGroup
+
+	for _, listener := range listeners {
+		wg.Add(1)
+		go func(l Listener) {
+			defer wg.Done()
+			err := http.ListenAndServe(fmt.Sprintf(":%s", l.port), l.mux)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}(listener)
+	}
+
+	wg.Wait()
+}
+
+type Listener struct {
+	mux  *http.ServeMux
+	port string
 }
 
 func errorHandler(path, defaultFormat string) func(http.ResponseWriter, *http.Request) {
