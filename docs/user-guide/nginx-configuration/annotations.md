@@ -59,6 +59,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/cors-expose-headers](#enable-cors)|string|
 |[nginx.ingress.kubernetes.io/cors-allow-credentials](#enable-cors)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/cors-max-age](#enable-cors)|number|
+|[nginx.ingress.kubernetes.io/force-ssl-forbid-http](#server-side-https-enforcement-through-forbidden-errors)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/force-ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/from-to-www-redirect](#redirect-fromto-www)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/http2-push-preload](#http2-push-preload)|"true" or "false"|
@@ -104,6 +105,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/session-cookie-path](#cookie-affinity)|string|
 |[nginx.ingress.kubernetes.io/session-cookie-samesite](#cookie-affinity)|string|"None", "Lax" or "Strict"|
 |[nginx.ingress.kubernetes.io/session-cookie-secure](#cookie-affinity)|string|
+|[nginx.ingress.kubernetes.io/ssl-forbid-http](#server-side-https-enforcement-through-forbidden-errors)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/ssl-redirect](#server-side-https-enforcement-through-redirect)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/ssl-passthrough](#ssl-passthrough)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/stream-snippet](#stream-snippet)|string|
@@ -626,6 +628,21 @@ even when there is no TLS certificate available.
 This can be achieved by using the `nginx.ingress.kubernetes.io/force-ssl-redirect: "true"` annotation in the particular resource.
 
 To preserve the trailing slash in the URI with `ssl-redirect`, set `nginx.ingress.kubernetes.io/preserve-trailing-slash: "true"` annotation for that particular resource.
+
+### Server-side HTTPS enforcement through forbidden errors
+
+In certain scenarios, you might prefer to return a 403 Forbidden error response instead of redirecting traffic to the HTTPS port.
+This approach helps prevent misconfigured clients from inadvertently leaking sensitive data over unencrypted connections.
+
+This can be enabled globally using `ssl-forbid-http: "true"` in the [ConfigMap][./configmap.md#ssl-forbid-http].
+
+To configure this feature for specific Ingress resources, you can use the `nginx.ingress.kubernetes.io/ssl-forbid-http: "true"`
+annotation in the particular resource.
+
+When using SSL off-loading outside of the cluster (e.g. AWS ELB), it may be useful to enforce 403 Forbidden errors to HTTP requests
+even when there is no TLS certificate available.
+
+This can be achieved by using the `nginx.ingress.kubernetes.io/force-ssl-forbid-http: "true"` annotation in the particular resource.
 
 ### Redirect from/to www
 
