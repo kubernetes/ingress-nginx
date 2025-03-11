@@ -80,6 +80,24 @@ func NewGetStatusRequest(path string) (statusCode int, data []byte, err error) {
 	return res.StatusCode, data, nil
 }
 
+func NewGetHealthzRequest(port int, path string) (int, []byte, error) {
+	url := fmt.Sprintf("http://127.0.0.1:%v%v", port, path)
+
+	client := http.Client{}
+	res, err := client.Get(url)
+	if err != nil {
+		return 0, nil, err
+	}
+	defer res.Body.Close()
+
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return res.StatusCode, data, nil
+}
+
 // NewPostStatusRequest creates a new POST request to the internal NGINX status server
 func NewPostStatusRequest(path, contentType string, data interface{}) (statusCode int, body []byte, err error) {
 	url := fmt.Sprintf("http://127.0.0.1:%v%v", StatusPort, path)
