@@ -139,7 +139,7 @@ set_real_ip_from 0.0.0.0/0; # Trust all IPs (use your VPC CIDR block in producti
 real_ip_header X-Forwarded-For;
 real_ip_recursive on;
 
-log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+log_format main '$remote_addr - $remote_user [$time_local] "$request_method $uri $server_protocol" '
                 '$status $body_bytes_sent "$http_referer" '
                 '"$http_user_agent" '
                 'host=$host x-forwarded-for=$http_x_forwarded_for';
