@@ -329,6 +329,27 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 			})
 	})
 
+	ginkgo.It(`should set "proxy_set_header 'My-Custom-Header' '42';" when auth-headers are set without specified namespace`, func() {
+		host := authHost
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/auth-url":               "http://foo.bar/basic-auth/user/password",
+			"nginx.ingress.kubernetes.io/auth-proxy-set-headers": "auth-headers",
+		}
+
+		f.CreateConfigMap("auth-headers", map[string]string{
+			"My-Custom-Header": "42",
+		})
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, `proxy_set_header 'My-Custom-Header' '42';`)
+			})
+	})
+
 	ginkgo.It(`should set cache_key when external auth cache is configured`, func() {
 		host := authHost
 
