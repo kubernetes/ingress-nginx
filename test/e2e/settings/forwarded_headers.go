@@ -121,6 +121,7 @@ var _ = framework.DescribeSetting("use-forwarded-headers", func() {
 		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-proto=http")
 		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-scheme=http")
 		assert.Contains(ginkgo.GinkgoT(), body, "x-original-forwarded-for=1.2.3.4")
+		assert.Contains(ginkgo.GinkgoT(), body, "x-original-forwarded-host=myhost")
 		assert.NotContains(ginkgo.GinkgoT(), body, "host=myhost")
 		assert.NotContains(ginkgo.GinkgoT(), body, "x-forwarded-host=myhost")
 		assert.NotContains(ginkgo.GinkgoT(), body, "x-forwarded-proto=myproto")
