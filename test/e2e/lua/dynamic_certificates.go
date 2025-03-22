@@ -62,6 +62,10 @@ var _ = framework.IngressNginxDescribe("[Lua] dynamic certificates", func() {
 		_, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Update(context.TODO(), ing, metav1.UpdateOptions{})
 		assert.Nil(ginkgo.GinkgoT(), err)
 
+		ing.Annotations = map[string]string{
+			"nginx.ingress.kubernetes.io/proxy-read-timeout": "20",
+			"nginx.ingress.kubernetes.io/load-balance":       "ewma",
+		}
 		time.Sleep(waitForLuaSync)
 
 		ensureHTTPSRequest(f, f.GetURL(framework.HTTPS), host, host)
