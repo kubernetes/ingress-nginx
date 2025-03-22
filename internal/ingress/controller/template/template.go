@@ -300,6 +300,7 @@ var funcMap = text_template.FuncMap{
 	"getenv":                          os.Getenv,
 	"contains":                        strings.Contains,
 	"split":                           strings.Split,
+	"join":                            strings.Join,
 	"hasPrefix":                       strings.HasPrefix,
 	"hasSuffix":                       strings.HasSuffix,
 	"trimSpace":                       strings.TrimSpace,
@@ -1675,10 +1676,10 @@ func buildOriginRegex(origin string) string {
 
 func buildCorsOriginRegex(corsOrigins []string) string {
 	if len(corsOrigins) == 1 && corsOrigins[0] == "*" {
-		return "set $http_origin *;\nset $cors 'true';"
+		return ".*"
 	}
 
-	originsRegex := "if ($http_origin ~* ("
+	originsRegex := "("
 	for i, origin := range corsOrigins {
 		originTrimmed := strings.TrimSpace(origin)
 		if originTrimmed != "" {
@@ -1689,6 +1690,6 @@ func buildCorsOriginRegex(corsOrigins []string) string {
 			}
 		}
 	}
-	originsRegex += ")$ ) { set $cors 'true'; }"
+	originsRegex += ")"
 	return originsRegex
 }
