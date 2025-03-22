@@ -126,6 +126,12 @@ func errorHandler(path, defaultFormat string) func(http.ResponseWriter, *http.Re
 			log.Printf("format not specified. Using %v", format)
 		}
 
+		// if multiple formats are provided, use the first one
+		index := strings.Index(format, ",")
+		if index != -1 {
+			format = format[:index]
+		}
+
 		cext, err := mime.ExtensionsByType(format)
 		if err != nil {
 			log.Printf("unexpected error reading media type extension: %v. Using %v", err, ext)
