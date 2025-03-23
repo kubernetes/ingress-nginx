@@ -135,7 +135,7 @@ jobs:
       (needs.changes.outputs.kube-webhook-certgen == 'true')
     strategy:
       matrix:
-        k8s: [v1.28.15, v1.29.14, v1.30.10, v1.31.6, v1.32.2]
+        k8s: [v1.28.15, v1.29.14, v1.30.10, v1.31.6, v1.32.3]
     steps:
     - name: Checkout
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
