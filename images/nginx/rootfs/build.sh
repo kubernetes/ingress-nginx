@@ -186,10 +186,6 @@ apk add \
 
 # apk add -X http://dl-cdn.alpinelinux.org/alpine/edge/testing opentelemetry-cpp-dev
 
-# There is some bug with some platforms and git, so force HTTP/1.1
-git config --global http.version HTTP/1.1
-git config --global http.postBuffer 157286400
-
 mkdir -p /etc/nginx
 
 mkdir --verbose -p "$BUILD_PATH"
