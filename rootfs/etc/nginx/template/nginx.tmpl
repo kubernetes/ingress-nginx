@@ -1013,7 +1013,7 @@ stream {
 
         {{ if not ( empty $server.CertificateAuth.MatchCN ) }}
         {{ if gt (len $server.CertificateAuth.MatchCN) 0 }}
-        if ( $ssl_client_s_dn !~ {{ $server.CertificateAuth.MatchCN }} ) {
+        if ( $ssl_client_s_dn !~ {{ $server.CertificateAuth.MatchCN | quote }} ) {
             return 403 "client certificate unauthorized";
         }
         {{ end }}
@@ -1219,7 +1219,7 @@ stream {
             set $target {{ changeHostPort $externalAuth.URL $authUpstreamName }};
             {{ else }}
             proxy_http_version {{ $location.Proxy.ProxyHTTPVersion }};
-            set $target {{ $externalAuth.URL }};
+            set $target {{ $externalAuth.URL | quote }};
             {{ end }}
             proxy_pass $target;
         }
@@ -1258,7 +1258,7 @@ stream {
             {{ buildOpentelemetryForLocation $all.Cfg.EnableOpentelemetry $all.Cfg.OpentelemetryTrustIncomingSpan $location }}
 
             {{ if $location.Mirror.Source }}
-            mirror {{ $location.Mirror.Source }};
+            mirror {{ $location.Mirror.Source | quote }};
             mirror_request_body {{ $location.Mirror.RequestBody }};
             {{ end }}
 
