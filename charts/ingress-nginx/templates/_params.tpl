@@ -1,8 +1,6 @@
 {{- define "ingress-nginx.params" -}}
 - /nginx-ingress-controller
-{{- if not .Values.controller.enableAnnotationValidations }}
-- --enable-annotation-validation=false
-{{- end }}
+- --enable-annotation-validation={{ .Values.controller.enableAnnotationValidations | default "false" }}
 {{- if .Values.defaultBackend.enabled }}
 - --default-backend-service=$(POD_NAMESPACE)/{{ include "ingress-nginx.defaultBackend.fullname" . }}
 {{- end }}
