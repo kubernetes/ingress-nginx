@@ -32,7 +32,7 @@ import (
 // PodExecString takes a pod and a command, uses kubectl exec to run the command in the pod
 // and returns stdout as a string
 func PodExecString(flags *genericclioptions.ConfigFlags, pod *apiv1.Pod, container string, args []string) (string, error) {
-	args = append([]string{"exec", "-n", pod.Namespace, "-c", container, pod.Name}, args...)
+	args = append([]string{"exec", "-n", pod.Namespace, "-c", container, pod.Name, "--"}, args...)
 	return ExecToString(flags, args)
 }
 
