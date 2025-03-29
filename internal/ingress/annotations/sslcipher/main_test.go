@@ -57,6 +57,7 @@ func TestParse(t *testing.T) {
 		{map[string]string{annotationSSLCiphers: "ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP", annotationSSLPreferServerCiphers: "true"}, Config{"ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP", "on"}, false},
 		{map[string]string{annotationSSLCiphers: "ALL:SOMETHING:;locationXPTO"}, Config{"", ""}, true},
 		{map[string]string{}, Config{"", ""}, false},
+		{map[string]string{annotationSSLCiphers: "TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256"}, Config{"TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256", ""}, false},
 		{nil, Config{"", ""}, false},
 	}
 
