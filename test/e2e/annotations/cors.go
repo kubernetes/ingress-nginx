@@ -48,13 +48,21 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "more_set_headers 'Access-Control-Allow-Methods: GET, PUT, POST, DELETE, PATCH, OPTIONS';") &&
+				return (strings.Contains(server, "more_set_headers 'Access-Control-Allow-Methods: GET, PUT, POST, DELETE, PATCH, OPTIONS';") &&
 					strings.Contains(server, "more_set_headers 'Access-Control-Allow-Origin: $http_origin';") &&
 					strings.Contains(server, "more_set_headers 'Access-Control-Allow-Headers: DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization';") &&
 					strings.Contains(server, "more_set_headers 'Access-Control-Max-Age: 1728000';") &&
 					strings.Contains(server, "more_set_headers 'Access-Control-Allow-Credentials: true';") &&
 					strings.Contains(server, "set $http_origin *;") &&
-					strings.Contains(server, "$cors 'true';")
+					strings.Contains(server, "$cors 'true';")) ||
+					// Assertions for crossplane mode
+					(strings.Contains(server, `more_set_headers "Access-Control-Allow-Methods: GET, PUT, POST, DELETE, PATCH, OPTIONS";`) &&
+						strings.Contains(server, `more_set_headers "Access-Control-Allow-Origin: $http_origin";`) &&
+						strings.Contains(server, `more_set_headers "Access-Control-Allow-Headers: DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization";`) &&
+						strings.Contains(server, `more_set_headers "Access-Control-Max-Age: 1728000";`) &&
+						strings.Contains(server, `more_set_headers "Access-Control-Allow-Credentials: true";`) &&
+						strings.Contains(server, "set $http_origin *;") &&
+						strings.Contains(server, "$cors true;"))
 			})
 
 		f.HTTPTestClient().
@@ -76,7 +84,8 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "more_set_headers 'Access-Control-Allow-Methods: POST, GET';")
+				return strings.Contains(server, "more_set_headers 'Access-Control-Allow-Methods: POST, GET';") ||
+					strings.Contains(server, `more_set_headers "Access-Control-Allow-Methods: POST, GET";`)
 			})
 	})
 
@@ -92,7 +101,8 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "more_set_headers 'Access-Control-Max-Age: 200';")
+				return strings.Contains(server, "more_set_headers 'Access-Control-Max-Age: 200';") ||
+					strings.Contains(server, `more_set_headers "Access-Control-Max-Age: 200";`)
 			})
 	})
 
@@ -151,7 +161,8 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "more_set_headers 'Access-Control-Allow-Headers: DNT, User-Agent';")
+				return strings.Contains(server, "more_set_headers 'Access-Control-Allow-Headers: DNT, User-Agent';") ||
+					strings.Contains(server, `more_set_headers "Access-Control-Allow-Headers: DNT, User-Agent";`)
 			})
 	})
 
@@ -167,7 +178,8 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "more_set_headers 'Access-Control-Expose-Headers: X-CustomResponseHeader, X-CustomSecondHeader';")
+				return strings.Contains(server, "more_set_headers 'Access-Control-Expose-Headers: X-CustomResponseHeader, X-CustomSecondHeader';") ||
+					strings.Contains(server, `more_set_headers "Access-Control-Expose-Headers: X-CustomResponseHeader, X-CustomSecondHeader";`)
 			})
 	})
 

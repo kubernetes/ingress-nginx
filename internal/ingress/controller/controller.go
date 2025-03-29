@@ -61,89 +61,59 @@ const (
 
 // Configuration contains all the settings required by an Ingress controller
 type Configuration struct {
-	APIServerHost string
-	RootCAFile    string
-
-	KubeConfigFile string
-
-	Client clientset.Interface
-
-	ResyncPeriod time.Duration
-
-	ConfigMapName  string
-	DefaultService string
-
-	Namespace string
-
-	WatchNamespaceSelector labels.Selector
-
-	// +optional
-	TCPConfigMapName string
-	// +optional
-	UDPConfigMapName string
-
-	DefaultSSLCertificate string
-
-	// +optional
-	PublishService       string
-	PublishStatusAddress string
-
-	UpdateStatus           bool
-	UseNodeInternalIP      bool
-	ElectionID             string
-	ElectionTTL            time.Duration
-	UpdateStatusOnShutdown bool
-
-	HealthCheckHost string
-	ListenPorts     *ngx_config.ListenPorts
-
-	DisableServiceExternalName bool
-
-	EnableSSLPassthrough bool
-
-	DisableLeaderElection bool
-
-	EnableProfiling bool
-
-	EnableMetrics           bool
-	MetricsPerHost          bool
-	MetricsPerUndefinedHost bool
-	MetricsBuckets          *collectors.HistogramBuckets
-	MetricsBucketFactor     float64
-	MetricsMaxBuckets       uint32
-	ReportStatusClasses     bool
-	ExcludeSocketMetrics    []string
-
-	FakeCertificate *ingress.SSLCert
-
-	SyncRateLimit float32
-
-	DisableCatchAll bool
-
-	IngressClassConfiguration *ingressclass.Configuration
-
-	ValidationWebhook         string
-	ValidationWebhookCertPath string
-	ValidationWebhookKeyPath  string
-	DisableFullValidationTest bool
-
-	GlobalExternalAuth  *ngx_config.GlobalExternalAuth
-	MaxmindEditionFiles *[]string
-
-	MonitorMaxBatchSize int
-
-	PostShutdownGracePeriod int
-	ShutdownGracePeriod     int
-
-	InternalLoggerAddress string
-	IsChroot              bool
-	DeepInspector         bool
-
+	APIServerHost               string
+	RootCAFile                  string
+	KubeConfigFile              string
+	Client                      clientset.Interface
+	ResyncPeriod                time.Duration
+	ConfigMapName               string
+	DefaultService              string
+	Namespace                   string
+	WatchNamespaceSelector      labels.Selector
+	TCPConfigMapName            string
+	UDPConfigMapName            string
+	DefaultSSLCertificate       string
+	PublishService              string
+	PublishStatusAddress        string
+	UpdateStatus                bool
+	UseNodeInternalIP           bool
+	ElectionID                  string
+	ElectionTTL                 time.Duration
+	UpdateStatusOnShutdown      bool
+	HealthCheckHost             string
+	ListenPorts                 *ngx_config.ListenPorts
+	DisableServiceExternalName  bool
+	EnableSSLPassthrough        bool
+	DisableLeaderElection       bool
+	EnableProfiling             bool
+	EnableMetrics               bool
+	MetricsPerHost              bool
+	MetricsPerUndefinedHost     bool
+	MetricsBuckets              *collectors.HistogramBuckets
+	MetricsBucketFactor         float64
+	MetricsMaxBuckets           uint32
+	ReportStatusClasses         bool
+	ExcludeSocketMetrics        []string
+	FakeCertificate             *ingress.SSLCert
+	SyncRateLimit               float32
+	DisableCatchAll             bool
+	IngressClassConfiguration   *ingressclass.Configuration
+	ValidationWebhook           string
+	ValidationWebhookCertPath   string
+	ValidationWebhookKeyPath    string
+	DisableFullValidationTest   bool
+	GlobalExternalAuth          *ngx_config.GlobalExternalAuth
+	MaxmindEditionFiles         *[]string
+	MonitorMaxBatchSize         int
+	PostShutdownGracePeriod     int
+	ShutdownGracePeriod         int
+	InternalLoggerAddress       string
+	IsChroot                    bool
+	DeepInspector               bool
 	DynamicConfigurationRetries int
-
-	DisableSyncEvents bool
-
-	EnableTopologyAwareRouting bool
+	DisableSyncEvents           bool
+	EnableTopologyAwareRouting  bool
+	ConfigurationTemplateEngine string
 }
 
 func getIngressPodZone(svc *apiv1.Service) string {

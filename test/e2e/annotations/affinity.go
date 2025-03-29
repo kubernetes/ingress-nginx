@@ -58,7 +58,8 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+				return strings.Contains(server, fmt.Sprintf("server_name %s;", host)) ||
+					strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
 		f.HTTPTestClient().
@@ -80,7 +81,8 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+				return strings.Contains(server, fmt.Sprintf("server_name %s;", host)) ||
+					strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
 		f.HTTPTestClient().
@@ -115,7 +117,8 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+				return strings.Contains(server, fmt.Sprintf("server_name %s;", host)) ||
+					strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
 		f.HTTPTestClient().
@@ -181,7 +184,8 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+				return strings.Contains(server, fmt.Sprintf("server_name %s;", host)) ||
+					strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
 		f.HTTPTestClient().
@@ -212,7 +216,8 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+				return strings.Contains(server, fmt.Sprintf("server_name %s;", host)) ||
+					strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
 		local, err := time.LoadLocation("GMT")
@@ -243,7 +248,8 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+				return strings.Contains(server, fmt.Sprintf("server_name %s;", host)) ||
+					strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
 		f.HTTPTestClient().
@@ -265,7 +271,8 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+				return strings.Contains(server, fmt.Sprintf("server_name %s;", host)) ||
+					strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
 		f.HTTPTestClient().
@@ -289,7 +296,8 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+				return strings.Contains(server, fmt.Sprintf("server_name %s;", host)) ||
+					strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
 		f.HTTPTestClient().
@@ -312,7 +320,8 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+				return strings.Contains(server, fmt.Sprintf("server_name %s;", host)) ||
+					strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
 		f.HTTPTestClient().
@@ -393,7 +402,8 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				// server alias sort by sort.Strings(), see: internal/ingress/annotations/alias/main.go:60
-				return strings.Contains(server, fmt.Sprintf("server_name %s %s %s ;", host, alias1, alias2))
+				return strings.Contains(server, fmt.Sprintf("server_name %s %s %s ;", host, alias1, alias2)) ||
+					strings.Contains(server, fmt.Sprintf("server_name %s %s %s;", host, alias1, alias2))
 			})
 
 		f.HTTPTestClient().
@@ -430,7 +440,8 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+				return strings.Contains(server, fmt.Sprintf("server_name %s;", host)) ||
+					strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
 		f.HTTPTestClient().
@@ -453,7 +464,8 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+				return strings.Contains(server, fmt.Sprintf("server_name %s;", host)) ||
+					strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 			})
 
 		f.HTTPTestClient().
@@ -475,7 +487,8 @@ var _ = framework.DescribeAnnotation("affinity session-cookie-name", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host)) &&
+				return (strings.Contains(server, fmt.Sprintf("server_name %s;", host)) ||
+					strings.Contains(server, fmt.Sprintf("server_name %s ;", host))) &&
 					strings.Contains(server, "listen 443")
 			})
 

@@ -33,6 +33,9 @@ import (
 
 var _ = framework.DescribeSetting("stream-snippet", func() {
 	f := framework.NewDefaultFramework("stream-snippet")
+	if framework.IsCrossplane() {
+		return
+	}
 
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()

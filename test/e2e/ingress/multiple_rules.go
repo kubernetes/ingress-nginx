@@ -17,11 +17,11 @@ limitations under the License.
 package ingress
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/onsi/ginkgo/v2"
-	"github.com/stretchr/testify/assert"
 	networking "k8s.io/api/networking/v1"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
@@ -36,14 +36,19 @@ var _ = framework.IngressNginxDescribe("single ingress - multiple hosts", func()
 	})
 
 	ginkgo.It("should set the correct $service_name NGINX variable", func() {
-		disableSnippet := f.AllowSnippetConfiguration()
-		defer disableSnippet()
+		customHeader := "Service-Name"
+		customHeaderValue := "$service_name"
 
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/configuration-snippet": `more_set_input_headers "service-name: $service_name";`,
-		}
+		h := make(map[string]string)
+		h[customHeader] = customHeaderValue
 
-		ing := framework.NewSingleIngress("simh", "/", "first.host", f.Namespace, "first-service", 80, annotations)
+		cfgMap := "custom-headers"
+
+		f.CreateConfigMap(cfgMap, h)
+
+		f.UpdateNginxConfigMapData("add-headers", fmt.Sprintf("%v/%v", f.Namespace, cfgMap))
+
+		ing := framework.NewSingleIngress("simh", "/", "first.host", f.Namespace, "first-service", 80, nil)
 
 		ing.Spec.Rules = append(ing.Spec.Rules, networking.IngressRule{
 			Host: "second.host",
@@ -79,26 +84,19 @@ var _ = framework.IngressNginxDescribe("single ingress - multiple hosts", func()
 				return strings.Contains(server, "second.host")
 			})
 
-		body := f.HTTPTestClient().
+		f.HTTPTestClient().
 			GET("/exact").
 			WithHeader("Host", "first.host").
 			Expect().
 			Status(http.StatusOK).
-			Body().
-			Raw()
+			Headers().ValueEqual("Service-Name", []string{"first-service"})
 
-		assert.Contains(ginkgo.GinkgoT(), body, "service-name=first-service")
-		assert.NotContains(ginkgo.GinkgoT(), body, "service-name=second-service")
-
-		body = f.HTTPTestClient().
+		f.HTTPTestClient().
 			GET("/exact").
 			WithHeader("Host", "second.host").
 			Expect().
 			Status(http.StatusOK).
-			Body().
-			Raw()
+			Headers().ValueEqual("Service-Name", []string{"second-service"})
 
-		assert.NotContains(ginkgo.GinkgoT(), body, "service-name=first-service")
-		assert.Contains(ginkgo.GinkgoT(), body, "service-name=second-service")
 	})
 })

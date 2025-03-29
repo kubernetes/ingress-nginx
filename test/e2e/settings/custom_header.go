@@ -79,8 +79,10 @@ var _ = framework.DescribeSetting("add-headers", func() {
 		f.UpdateNginxConfigMapData("add-headers", fmt.Sprintf("%v/%v", f.Namespace, cfgMap))
 
 		f.WaitForNginxConfiguration(func(server string) bool {
-			return strings.Contains(server, fmt.Sprintf("more_set_headers \"%s: %s\";", firstCustomHeader, firstCustomHeaderValue)) &&
-				strings.Contains(server, fmt.Sprintf("more_set_headers \"%s: %s\";", secondCustomHeader, secondCustomHeaderValue))
+			return (strings.Contains(server, fmt.Sprintf(`more_set_headers "%s: %s";`, firstCustomHeader, firstCustomHeaderValue)) &&
+				strings.Contains(server, fmt.Sprintf(`more_set_headers "%s: %s";`, secondCustomHeader, secondCustomHeaderValue))) ||
+				(strings.Contains(server, fmt.Sprintf("more_set_headers %s: %s;", firstCustomHeader, firstCustomHeaderValue)) &&
+					strings.Contains(server, fmt.Sprintf("more_set_headers %s: %s;", secondCustomHeader, secondCustomHeaderValue)))
 		})
 
 		resp := f.HTTPTestClient().

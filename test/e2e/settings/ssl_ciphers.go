@@ -35,7 +35,7 @@ var _ = framework.DescribeSetting("ssl-ciphers", func() {
 		f.UpdateNginxConfigMapData(wlKey, wlValue)
 
 		f.WaitForNginxConfiguration(func(cfg string) bool {
-			return strings.Contains(cfg, fmt.Sprintf("ssl_ciphers '%s';", wlValue))
+			return strings.Contains(cfg, fmt.Sprintf("ssl_ciphers '%s';", wlValue)) || strings.Contains(cfg, fmt.Sprintf("ssl_ciphers %s;", wlValue))
 		})
 	})
 })

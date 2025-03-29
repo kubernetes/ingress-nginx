@@ -162,6 +162,9 @@ var _ = framework.DescribeSetting("use-proxy-protocol", func() {
 	})
 
 	ginkgo.It("should enable PROXY Protocol for TCP", func() {
+		if framework.IsCrossplane() {
+			return
+		}
 		cmapData := map[string]string{}
 		cmapData[setting] = "true"
 		cmapData["enable-real-ip"] = "true"

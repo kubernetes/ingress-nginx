@@ -106,7 +106,7 @@ var _ = framework.DescribeSetting("gzip", func() {
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
 				return strings.Contains(cfg, "gzip on;") &&
-					strings.Contains(cfg, `gzip_disable "msie6";`)
+					(strings.Contains(cfg, `gzip_disable "msie6";`) || strings.Contains(cfg, `gzip_disable msie6;`))
 			},
 		)
 

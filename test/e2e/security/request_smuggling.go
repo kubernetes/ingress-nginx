@@ -37,6 +37,9 @@ var _ = framework.IngressNginxDescribe("[Security] request smuggling", func() {
 	})
 
 	ginkgo.It("should not return body content from error_page", func() {
+		if framework.IsCrossplane() {
+			ginkgo.Skip("Crossplane does not support snippets") // TODO: Re-add this test when we enable admin defined snippets
+		}
 		host := "foo.bar.com"
 
 		snippet := `

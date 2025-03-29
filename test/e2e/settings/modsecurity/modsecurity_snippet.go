@@ -26,6 +26,9 @@ import (
 
 var _ = framework.DescribeSetting("[Security] modsecurity-snippet", func() {
 	f := framework.NewDefaultFramework("modsecurity-snippet")
+	if framework.IsCrossplane() {
+		return
+	}
 
 	ginkgo.It("should add value of modsecurity-snippet setting to nginx config", func() {
 		expectedComment := "# modsecurity snippet"

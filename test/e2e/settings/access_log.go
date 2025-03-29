@@ -31,6 +31,10 @@ var _ = framework.DescribeSetting("access-log", func() {
 		ginkgo.It("use the default configuration", func() {
 			f.WaitForNginxConfiguration(
 				func(cfg string) bool {
+					if framework.IsCrossplane() {
+						return strings.Contains(cfg, "access_log /var/log/nginx/access.log upstreaminfo") ||
+							strings.Contains(cfg, "access_log syslog:server=127.0.0.1:11514 upstreaminfo")
+					}
 					return (strings.Contains(cfg, "access_log /var/log/nginx/access.log upstreaminfo") &&
 						strings.Contains(cfg, "access_log /var/log/nginx/access.log log_stream")) ||
 						(strings.Contains(cfg, "access_log syslog:server=127.0.0.1:11514 upstreaminfo") &&
@@ -42,6 +46,9 @@ var _ = framework.DescribeSetting("access-log", func() {
 			f.UpdateNginxConfigMapData("access-log-path", "/tmp/nginx/access.log")
 			f.WaitForNginxConfiguration(
 				func(cfg string) bool {
+					if framework.IsCrossplane() {
+						return strings.Contains(cfg, "access_log /tmp/nginx/access.log upstreaminfo")
+					}
 					return strings.Contains(cfg, "access_log /tmp/nginx/access.log upstreaminfo") &&
 						strings.Contains(cfg, "access_log /tmp/nginx/access.log log_stream")
 				})
@@ -53,6 +60,9 @@ var _ = framework.DescribeSetting("access-log", func() {
 			f.UpdateNginxConfigMapData("http-access-log-path", "/tmp/nginx/http-access.log")
 			f.WaitForNginxConfiguration(
 				func(cfg string) bool {
+					if framework.IsCrossplane() {
+						return strings.Contains(cfg, "access_log /tmp/nginx/http-access.log upstreaminfo")
+					}
 					return strings.Contains(cfg, "access_log /tmp/nginx/http-access.log upstreaminfo") &&
 						(strings.Contains(cfg, "access_log /var/log/nginx/access.log log_stream") ||
 							strings.Contains(cfg, "access_log syslog:server=127.0.0.1:11514 log_stream"))
@@ -62,6 +72,9 @@ var _ = framework.DescribeSetting("access-log", func() {
 
 	ginkgo.Context("stream-access-log-path", func() {
 		ginkgo.It("use the specified configuration", func() {
+			if framework.IsCrossplane() {
+				ginkgo.Skip("Crossplane does not support stream")
+			}
 			f.UpdateNginxConfigMapData("stream-access-log-path", "/tmp/nginx/stream-access.log")
 			f.WaitForNginxConfiguration(
 				func(cfg string) bool {
@@ -74,6 +87,9 @@ var _ = framework.DescribeSetting("access-log", func() {
 
 	ginkgo.Context("http-access-log-path & stream-access-log-path", func() {
 		ginkgo.It("use the specified configuration", func() {
+			if framework.IsCrossplane() {
+				ginkgo.Skip("Crossplane does not support stream")
+			}
 			f.SetNginxConfigMapData(map[string]string{
 				"http-access-log-path":   "/tmp/nginx/http-access.log",
 				"stream-access-log-path": "/tmp/nginx/stream-access.log",

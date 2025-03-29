@@ -1091,13 +1091,21 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer("_",
 				func(server string) bool {
-					upstreamName := fmt.Sprintf(`set $proxy_upstream_name "%s-%s-%s";`, f.Namespace, framework.HTTPBunService, "80")
-					canaryUpstreamName := fmt.Sprintf(`set $proxy_upstream_name "%s-%s-%s";`, f.Namespace, canaryService, "80")
+					upstreamName := fmt.Sprintf(`set $proxy_upstream_name "%s-%s-80";`, f.Namespace, framework.HTTPBunService)
+					upstreamNameCrossplane := fmt.Sprintf(`set $proxy_upstream_name %s-%s-80;`, f.Namespace, framework.HTTPBunService)
 
-					return strings.Contains(server, fmt.Sprintf(`set $ingress_name "%v";`, host)) &&
+					canaryUpstreamName := fmt.Sprintf(`set $proxy_upstream_name "%s-%s-80";`, f.Namespace, canaryService)
+					canaryUpstreamNameCrossplane := fmt.Sprintf(`set $proxy_upstream_name %s-%s-80;`, f.Namespace, canaryService)
+
+					return (strings.Contains(server, fmt.Sprintf(`set $ingress_name "%v";`, host)) &&
 						!strings.Contains(server, `set $proxy_upstream_name "upstream-default-backend";`) &&
 						!strings.Contains(server, canaryUpstreamName) &&
-						strings.Contains(server, upstreamName)
+						strings.Contains(server, upstreamName)) ||
+						// Crossplane assertion
+						(strings.Contains(server, fmt.Sprintf(`set $ingress_name %s;`, host)) &&
+							!strings.Contains(server, `set $proxy_upstream_name "pstream-default-backend;`) &&
+							!strings.Contains(server, canaryUpstreamNameCrossplane) &&
+							strings.Contains(server, upstreamNameCrossplane))
 				})
 		})
 

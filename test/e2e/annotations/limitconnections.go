@@ -41,7 +41,8 @@ var _ = framework.DescribeAnnotation("Annotation - limit-connections", func() {
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.SlowEchoService, 80, nil)
 		f.EnsureIngress(ing)
 		f.WaitForNginxServer(host, func(server string) bool {
-			return strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
+			return strings.Contains(server, fmt.Sprintf("server_name %s;", host)) ||
+				strings.Contains(server, fmt.Sprintf("server_name %s ;", host))
 		})
 
 		// limit connections

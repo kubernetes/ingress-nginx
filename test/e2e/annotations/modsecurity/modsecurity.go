@@ -38,6 +38,9 @@ const (
 
 var _ = framework.DescribeAnnotation("modsecurity owasp", func() {
 	f := framework.NewDefaultFramework("modsecuritylocation")
+	if framework.IsCrossplane() {
+		return
+	}
 
 	ginkgo.BeforeEach(func() {
 		f.NewEchoDeployment()

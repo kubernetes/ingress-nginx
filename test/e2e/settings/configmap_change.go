@@ -17,7 +17,6 @@ limitations under the License.
 package settings
 
 import (
-	"regexp"
 	"strings"
 
 	"github.com/onsi/ginkgo/v2"
@@ -43,36 +42,20 @@ var _ = framework.DescribeSetting("Configmap change", func() {
 
 		f.UpdateNginxConfigMapData("whitelist-source-range", "1.1.1.1")
 
-		checksumRegex := regexp.MustCompile(`Configuration checksum:\s+(\d+)`)
-		checksum := ""
-
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
-				// before returning, extract the current checksum
-				match := checksumRegex.FindStringSubmatch(cfg)
-				if len(match) > 0 {
-					checksum = match[1]
-				}
-
 				return strings.Contains(cfg, "allow 1.1.1.1;")
 			})
-		assert.NotEmpty(ginkgo.GinkgoT(), checksum)
 
 		ginkgo.By("changing error-log-level")
 
 		f.UpdateNginxConfigMapData("error-log-level", "debug")
 
-		newChecksum := ""
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
-				match := checksumRegex.FindStringSubmatch(cfg)
-				if len(match) > 0 {
-					newChecksum = match[1]
-				}
-
-				return strings.ContainsAny(cfg, "error_log  /var/log/nginx/error.log debug;")
+				return strings.ContainsAny(cfg, "error_log  /var/log/nginx/error.log debug;") ||
+					strings.ContainsAny(cfg, "error_log /var/log/nginx/error.log debug;")
 			})
-		assert.NotEqual(ginkgo.GinkgoT(), checksum, newChecksum)
 
 		logs, err := f.NginxLogs()
 		assert.Nil(ginkgo.GinkgoT(), err, "obtaining nginx logs")

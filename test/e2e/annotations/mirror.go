@@ -60,7 +60,8 @@ var _ = framework.DescribeAnnotation("mirror-*", func() {
 			func(server string) bool {
 				return strings.Contains(server, fmt.Sprintf("mirror \"/_mirror-%v\";", ing.UID)) &&
 					strings.Contains(server, "mirror_request_body on;") &&
-					strings.Contains(server, `proxy_pass "https://test.env.com/$request_uri";`)
+					(strings.Contains(server, `proxy_pass "https://test.env.com/$request_uri";`) ||
+						strings.Contains(server, `proxy_pass https://test.env.com/$request_uri;`))
 			})
 	})
 

@@ -34,14 +34,15 @@ var _ = framework.IngressNginxDescribe("Dynamic $proxy_host", func() {
 	})
 
 	ginkgo.It("should exist a proxy_host", func() {
-		disableSnippet := f.AllowSnippetConfiguration()
-		defer disableSnippet()
+		h := make(map[string]string)
+		h["Custom-Header"] = "$proxy_host"
+		cfgMap := "add-headers-configmap"
+
+		f.CreateConfigMap(cfgMap, h)
+		f.UpdateNginxConfigMapData("add-headers", fmt.Sprintf("%s/%s", f.Namespace, cfgMap))
 
 		upstreamName := fmt.Sprintf("%v-%v-80", f.Namespace, framework.EchoService)
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/configuration-snippet": `more_set_headers "Custom-Header: $proxy_host"`,
-		}
-		f.EnsureIngress(framework.NewSingleIngress(test, "/", test, f.Namespace, framework.EchoService, 80, annotations))
+		f.EnsureIngress(framework.NewSingleIngress(test, "/", test, f.Namespace, framework.EchoService, 80, nil))
 
 		f.WaitForNginxConfiguration(
 			func(server string) bool {
@@ -58,15 +59,19 @@ var _ = framework.IngressNginxDescribe("Dynamic $proxy_host", func() {
 	})
 
 	ginkgo.It("should exist a proxy_host using the upstream-vhost annotation value", func() {
-		disableSnippet := f.AllowSnippetConfiguration()
-		defer disableSnippet()
+		h := make(map[string]string)
+		h["Custom-Header"] = "$proxy_host"
+		cfgMap := "add-headers-configmap"
+
+		f.CreateConfigMap(cfgMap, h)
+		f.UpdateNginxConfigMapData("add-headers", fmt.Sprintf("%s/%s", f.Namespace, cfgMap))
 
 		upstreamName := fmt.Sprintf("%v-%v-80", f.Namespace, framework.EchoService)
 		upstreamVHost := "different.host"
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/upstream-vhost":        upstreamVHost,
-			"nginx.ingress.kubernetes.io/configuration-snippet": `more_set_headers "Custom-Header: $proxy_host"`,
+			"nginx.ingress.kubernetes.io/upstream-vhost": upstreamVHost,
 		}
+
 		f.EnsureIngress(framework.NewSingleIngress(test, "/", test, f.Namespace, framework.EchoService, 80, annotations))
 
 		f.WaitForNginxConfiguration(
