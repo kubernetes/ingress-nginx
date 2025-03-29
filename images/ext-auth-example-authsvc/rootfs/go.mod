@@ -1,4 +1,4 @@
-module example.com/authsvc
+module k8s.io/ingress-nginx/ext-auth-example-authsvc
 
 go 1.24.1
 
