@@ -137,6 +137,7 @@ jobs:
     if: |
       (needs.changes.outputs.kube-webhook-certgen == 'true')
     strategy:
+      fail-fast: false
       matrix:
         k8s: [v1.26.15, v1.27.16, v1.28.15, v1.29.14, v1.30.10]
     steps:
