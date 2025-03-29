@@ -14,7 +14,7 @@
 
 ARG BASE_IMAGE
 
-FROM ${BASE_IMAGE} as chroot
+FROM ${BASE_IMAGE} AS chroot
 
 # This intermediary image will be used only to copy all the required files to the chroot
 # TODO: Simplify in a future to a single Dockerfile
