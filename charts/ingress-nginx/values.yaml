@@ -796,8 +796,8 @@ controller:
       extraVolumeMounts: []
       ## Additional volumeMounts to the AdmissionsWebhook createSecretJob.
       #  - name: kube-api-access
-      #   mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-      #   readOnly: true  
+      #    mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      #    readOnly: true  
       extraVolumes: []
       ## Additional volume to the AdmissionsWebhook createSecretJob.
       #  - name: kube-api-access
@@ -820,8 +820,8 @@ controller:
       extraVolumeMounts: []
       ## Additional volumeMounts to the AdmissionsWebhook patchWebhookJob.
       #  - name: kube-api-access
-      #   mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-      #   readOnly: true  
+      #    mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      #    readOnly: true  
       extraVolumes: []
       ## Additional volume to the AdmissionsWebhook patchWebhookJob.
       #  - name: kube-api-access
