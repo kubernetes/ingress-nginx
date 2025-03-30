@@ -43,6 +43,12 @@ const (
 var (
 	authVerifyClientRegex = regexp.MustCompile(`^(on|off|optional|optional_no_ca)$`)
 	redirectRegex         = regexp.MustCompile(`^((https?://)?[A-Za-z0-9\-.]+(:\d+)?)?(/[A-Za-z0-9\-_.]+)*/?$`)
+
+	// This regex should be valid to all the "CN" with regexes case. Please note:
+	// The dash (-) and question (?) should be at the beginning of the string.
+	// Also, adding new characters here should be validated with extreme care so
+	// additional characters that may be malicious are not added.
+	commonNameRegex = regexp.MustCompile(`^CN=[-?A-Za-z0-9_~().\\|*]+$`)
 )
 
 var authTLSAnnotations = parser.Annotation{
@@ -79,7 +85,7 @@ var authTLSAnnotations = parser.Annotation{
 			Documentation: `This annotation defines if the received certificates should be passed or not to the upstream server in the header "ssl-client-cert"`,
 		},
 		annotationAuthTLSMatchCN: {
-			Validator:     parser.CommonNameAnnotationValidator,
+			Validator:     parser.ValidateRegex(commonNameRegex, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskHigh,
 			Documentation: `This annotation adds a sanity check for the CN of the client certificate that is sent over using a string / regex starting with "CN="`,
