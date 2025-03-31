@@ -253,6 +253,7 @@ jobs:
     if: fromJSON(needs.changes.outputs.charts) || fromJSON(needs.changes.outputs.baseimage) || fromJSON(github.event.workflow_dispatch.run_e2e)
 
     strategy:
+      fail-fast: false
       matrix:
         k8s: [v1.26.15, v1.27.16, v1.28.15, v1.29.14, v1.30.10]
 
@@ -284,6 +285,7 @@ jobs:
     if: |
       (needs.changes.outputs.go == 'true') || (needs.changes.outputs.baseimage == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
     strategy:
+      fail-fast: false
       matrix:
         k8s: [v1.26.15, v1.27.16, v1.28.15, v1.29.14, v1.30.10]
     uses: ./.github/workflows/zz-tmpl-k8s-e2e.yaml
@@ -313,6 +315,7 @@ jobs:
     if: |
       (needs.changes.outputs.go == 'true') || (needs.changes.outputs.baseimage == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
     strategy:
+      fail-fast: false
       matrix:
         k8s: [v1.26.15, v1.27.16, v1.28.15, v1.29.14, v1.30.10]
     uses: ./.github/workflows/zz-tmpl-k8s-e2e.yaml
