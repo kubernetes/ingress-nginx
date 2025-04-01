@@ -263,6 +263,8 @@ metadata:
 | controller.admissionWebhooks.createSecretJob.name | string | `"create"` |  |
 | controller.admissionWebhooks.createSecretJob.resources | object | `{}` |  |
 | controller.admissionWebhooks.createSecretJob.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsGroup":65532,"runAsNonRoot":true,"runAsUser":65532,"seccompProfile":{"type":"RuntimeDefault"}}` | Security context for secret creation containers |
+| controller.admissionWebhooks.createSecretJob.volumeMounts | list | `[]` | volumeMounts to the AdmissionsWebhook createSecretJob.    Example:    - name: kube-api-access      mountPath: /var/run/secrets/kubernetes.io/serviceaccount      readOnly: true |
+| controller.admissionWebhooks.createSecretJob.volumes | list | `[]` | volume to the AdmissionsWebhook createSecretJob.  - name: kube-api-access    emptyDir: {} |
 | controller.admissionWebhooks.enabled | bool | `true` |  |
 | controller.admissionWebhooks.extraEnvs | list | `[]` | Additional environment variables to set |
 | controller.admissionWebhooks.failurePolicy | string | `"Fail"` | Admission Webhook failure policy to use |
@@ -280,7 +282,7 @@ metadata:
 | controller.admissionWebhooks.patch.networkPolicy.enabled | bool | `false` | Enable 'networkPolicy' or not |
 | controller.admissionWebhooks.patch.nodeSelector."kubernetes.io/os" | string | `"linux"` |  |
 | controller.admissionWebhooks.patch.podAnnotations | object | `{}` |  |
-| controller.admissionWebhooks.patch.priorityClassName | string | `""` | Provide a priority class name to the webhook patching job # |
+| controller.admissionWebhooks.patch.priorityClassName | string | `""` | Provide a priority class name to the webhook patching job |
 | controller.admissionWebhooks.patch.rbac | object | `{"create":true}` | Admission webhook patch job RBAC |
 | controller.admissionWebhooks.patch.rbac.create | bool | `true` | Create RBAC or not |
 | controller.admissionWebhooks.patch.securityContext | object | `{}` | Security context for secret creation & webhook patch pods |
@@ -292,15 +294,17 @@ metadata:
 | controller.admissionWebhooks.patchWebhookJob.name | string | `"patch"` |  |
 | controller.admissionWebhooks.patchWebhookJob.resources | object | `{}` |  |
 | controller.admissionWebhooks.patchWebhookJob.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsGroup":65532,"runAsNonRoot":true,"runAsUser":65532,"seccompProfile":{"type":"RuntimeDefault"}}` | Security context for webhook patch containers |
+| controller.admissionWebhooks.patchWebhookJob.volumeMounts | list | `[]` | volumeMounts to the AdmissionsWebhook patchWebhookJob.    Example:    - name: kube-api-access      mountPath: /var/run/secrets/kubernetes.io/serviceaccount      readOnly: true |
+| controller.admissionWebhooks.patchWebhookJob.volumes | list | `[]` | volume to the AdmissionsWebhook patchWebhookJob.  - name: kube-api-access    emptyDir: {} |
 | controller.admissionWebhooks.port | int | `8443` |  |
 | controller.admissionWebhooks.service.annotations | object | `{}` |  |
 | controller.admissionWebhooks.service.externalIPs | list | `[]` |  |
 | controller.admissionWebhooks.service.loadBalancerSourceRanges | list | `[]` |  |
 | controller.admissionWebhooks.service.servicePort | int | `443` |  |
 | controller.admissionWebhooks.service.type | string | `"ClusterIP"` |  |
-| controller.affinity | object | `{}` | Affinity and anti-affinity rules for server scheduling to nodes # Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity # |
+| controller.affinity | object | `{}` | Affinity and anti-affinity rules for server scheduling to nodes |
 | controller.allowSnippetAnnotations | bool | `false` | This configuration defines if Ingress Controller should allow users to set their own *-snippet annotations, otherwise this is forbidden / dropped when users add those annotations. Global snippets in ConfigMap are still respected |
-| controller.annotations | object | `{}` | Annotations to be added to the controller Deployment or DaemonSet # |
+| controller.annotations | object | `{}` | Annotations to be added to the controller Deployment or DaemonSet |
 | controller.autoscaling.annotations | object | `{}` |  |
 | controller.autoscaling.behavior | object | `{}` |  |
 | controller.autoscaling.enabled | bool | `false` |  |
@@ -323,7 +327,7 @@ metadata:
 | controller.electionID | string | `""` | Election ID to use for status update, by default it uses the controller name combined with a suffix of 'leader' |
 | controller.electionTTL | string | `""` | Duration a leader election is valid before it's getting re-elected, e.g. `15s`, `10m` or `1h`. (Default: 30s) |
 | controller.enableAnnotationValidations | bool | `true` |  |
-| controller.enableMimalloc | bool | `true` | Enable mimalloc as a drop-in replacement for malloc. # ref: https://github.com/microsoft/mimalloc # |
+| controller.enableMimalloc | bool | `true` | Enable mimalloc as a drop-in replacement for malloc. |
 | controller.enableTopologyAwareRouting | bool | `false` | This configuration enables Topology Aware Routing feature, used together with service annotation service.kubernetes.io/topology-mode="auto" Defaults to false |
 | controller.extraArgs | object | `{}` | Additional command line arguments to pass to Ingress-Nginx Controller E.g. to specify the default SSL certificate you can use |
 | controller.extraContainers | list | `[]` | Additional containers to be added to the controller pod. See https://github.com/lemonldap-ng-controller/lemonldap-ng-controller as example. |
@@ -373,8 +377,8 @@ metadata:
 | controller.keda.scaledObject.annotations | object | `{}` |  |
 | controller.keda.triggers | list | `[]` |  |
 | controller.kind | string | `"Deployment"` | Use a `DaemonSet` or `Deployment` |
-| controller.labels | object | `{}` | Labels to be added to the controller Deployment or DaemonSet and other resources that do not have option to specify labels # |
-| controller.lifecycle | object | `{"preStop":{"exec":{"command":["/wait-shutdown"]}}}` | Improve connection draining when ingress controller pod is deleted using a lifecycle hook: With this new hook, we increased the default terminationGracePeriodSeconds from 30 seconds to 300, allowing the draining of connections up to five minutes. If the active connections end before that, the pod will terminate gracefully at that time. To effectively take advantage of this feature, the Configmap feature worker-shutdown-timeout new value is 240s instead of 10s. # |
+| controller.labels | object | `{}` | Labels to be added to the controller Deployment or DaemonSet and other resources that do not have option to specify labels |
+| controller.lifecycle | object | `{"preStop":{"exec":{"command":["/wait-shutdown"]}}}` | Improve connection draining when ingress controller pod is deleted using a lifecycle hook: With this new hook, we increased the default terminationGracePeriodSeconds from 30 seconds to 300, allowing the draining of connections up to five minutes. If the active connections end before that, the pod will terminate gracefully at that time. To effectively take advantage of this feature, the Configmap feature worker-shutdown-timeout new value is 240s instead of 10s. |
 | controller.livenessProbe.failureThreshold | int | `5` |  |
 | controller.livenessProbe.httpGet.path | string | `"/healthz"` |  |
 | controller.livenessProbe.httpGet.port | int | `10254` |  |
@@ -383,7 +387,7 @@ metadata:
 | controller.livenessProbe.periodSeconds | int | `10` |  |
 | controller.livenessProbe.successThreshold | int | `1` |  |
 | controller.livenessProbe.timeoutSeconds | int | `1` |  |
-| controller.maxmindLicenseKey | string | `""` | Maxmind license key to download GeoLite2 Databases. # https://blog.maxmind.com/2019/12/significant-changes-to-accessing-and-using-geolite2-databases/ |
+| controller.maxmindLicenseKey | string | `""` | Maxmind license key to download GeoLite2 Databases. |
 | controller.metrics.enabled | bool | `false` |  |
 | controller.metrics.port | int | `10254` |  |
 | controller.metrics.portName | string | `"metrics"` |  |
@@ -393,7 +397,7 @@ metadata:
 | controller.metrics.prometheusRule.rules | list | `[]` |  |
 | controller.metrics.service.annotations | object | `{}` |  |
 | controller.metrics.service.enabled | bool | `true` | Enable the metrics service or not. |
-| controller.metrics.service.externalIPs | list | `[]` | List of IP addresses at which the stats-exporter service is available # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips # |
+| controller.metrics.service.externalIPs | list | `[]` | List of IP addresses at which the stats-exporter service is available |
 | controller.metrics.service.labels | object | `{}` | Labels to be added to the metrics service resource |
 | controller.metrics.service.loadBalancerSourceRanges | list | `[]` |  |
 | controller.metrics.service.servicePort | int | `10254` |  |
@@ -413,11 +417,11 @@ metadata:
 | controller.metrics.serviceMonitor.targetLabels | list | `[]` |  |
 | controller.metrics.serviceMonitor.targetLimit | int | `0` | Defines a limit on the number of scraped targets that will be accepted. |
 | controller.minAvailable | int | `1` | Minimum available pods set in PodDisruptionBudget. Define either 'minAvailable' or 'maxUnavailable', never both. |
-| controller.minReadySeconds | int | `0` | `minReadySeconds` to avoid killing pods before we are ready # |
+| controller.minReadySeconds | int | `0` | `minReadySeconds` to avoid killing pods before we are ready |
 | controller.name | string | `"controller"` |  |
 | controller.networkPolicy.enabled | bool | `false` | Enable 'networkPolicy' or not |
-| controller.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node labels for controller pod assignment # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ # |
-| controller.podAnnotations | object | `{}` | Annotations to be added to controller pods # |
+| controller.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node labels for controller pod assignment |
+| controller.podAnnotations | object | `{}` | Annotations to be added to controller pods |
 | controller.podLabels | object | `{}` | Labels to add to the pod container metadata |
 | controller.podSecurityContext | object | `{}` | Security context for controller pods |
 | controller.priorityClassName | string | `""` |  |
@@ -492,18 +496,18 @@ metadata:
 | controller.service.trafficDistribution | string | `""` | Traffic distribution policy of the external controller service. Set to "PreferClose" to route traffic to endpoints that are topologically closer to the client. Ref: https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution |
 | controller.service.type | string | `"LoadBalancer"` | Type of the external controller service. Ref: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types |
 | controller.shareProcessNamespace | bool | `false` |  |
-| controller.sysctls | object | `{}` | sysctls for controller pods # Ref: https://kubernetes.io/docs/tasks/administer-cluster/sysctl-cluster/ |
+| controller.sysctls | object | `{}` | sysctls for controller pods |
 | controller.tcp.annotations | object | `{}` | Annotations to be added to the tcp config configmap |
 | controller.tcp.configMapNamespace | string | `""` | Allows customization of the tcp-services-configmap; defaults to $(POD_NAMESPACE) |
-| controller.terminationGracePeriodSeconds | int | `300` | `terminationGracePeriodSeconds` to avoid killing pods before we are ready # wait up to five minutes for the drain of connections # |
-| controller.tolerations | list | `[]` | Node tolerations for server scheduling to nodes with taints # Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/ # |
-| controller.topologySpreadConstraints | list | `[]` | Topology spread constraints rely on node labels to identify the topology domain(s) that each Node is in. # Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/ # |
+| controller.terminationGracePeriodSeconds | int | `300` | `terminationGracePeriodSeconds` to avoid killing pods before we are ready |
+| controller.tolerations | list | `[]` | Node tolerations for server scheduling to nodes with taints |
+| controller.topologySpreadConstraints | list | `[]` | Topology spread constraints rely on node labels to identify the topology domain(s) that each Node is in. |
 | controller.udp.annotations | object | `{}` | Annotations to be added to the udp config configmap |
 | controller.udp.configMapNamespace | string | `""` | Allows customization of the udp-services-configmap; defaults to $(POD_NAMESPACE) |
 | controller.unhealthyPodEvictionPolicy | string | `""` | Eviction policy for unhealthy pods guarded by PodDisruptionBudget. Ref: https://kubernetes.io/blog/2023/01/06/unhealthy-pod-eviction-policy-for-pdbs/ |
-| controller.updateStrategy | object | `{}` | The update strategy to apply to the Deployment or DaemonSet # |
+| controller.updateStrategy | object | `{}` | The update strategy to apply to the Deployment or DaemonSet |
 | controller.watchIngressWithoutClass | bool | `false` | Process Ingress objects without ingressClass annotation/ingressClassName field Overrides value for --watch-ingress-without-class flag of the controller binary Defaults to false |
-| defaultBackend.affinity | object | `{}` | Affinity and anti-affinity rules for server scheduling to nodes # Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity |
+| defaultBackend.affinity | object | `{}` | Affinity and anti-affinity rules for server scheduling to nodes |
 | defaultBackend.autoscaling.annotations | object | `{}` |  |
 | defaultBackend.autoscaling.enabled | bool | `false` |  |
 | defaultBackend.autoscaling.maxReplicas | int | `2` |  |
@@ -533,11 +537,11 @@ metadata:
 | defaultBackend.livenessProbe.successThreshold | int | `1` |  |
 | defaultBackend.livenessProbe.timeoutSeconds | int | `5` |  |
 | defaultBackend.minAvailable | int | `1` | Minimum available pods set in PodDisruptionBudget. Define either 'minAvailable' or 'maxUnavailable', never both. |
-| defaultBackend.minReadySeconds | int | `0` | `minReadySeconds` to avoid killing pods before we are ready # |
+| defaultBackend.minReadySeconds | int | `0` | `minReadySeconds` to avoid killing pods before we are ready |
 | defaultBackend.name | string | `"defaultbackend"` |  |
 | defaultBackend.networkPolicy.enabled | bool | `false` | Enable 'networkPolicy' or not |
-| defaultBackend.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node labels for default backend pod assignment # Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ # |
-| defaultBackend.podAnnotations | object | `{}` | Annotations to be added to default backend pods # |
+| defaultBackend.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node labels for default backend pod assignment |
+| defaultBackend.podAnnotations | object | `{}` | Annotations to be added to default backend pods |
 | defaultBackend.podLabels | object | `{}` | Labels to add to the pod container metadata |
 | defaultBackend.podSecurityContext | object | `{}` | Security context for default backend pods |
 | defaultBackend.port | int | `8080` |  |
@@ -551,28 +555,28 @@ metadata:
 | defaultBackend.resources | object | `{}` |  |
 | defaultBackend.service.annotations | object | `{}` |  |
 | defaultBackend.service.clusterIPs | list | `[]` | Pre-defined cluster internal IP addresses of the default backend service. Take care of collisions with existing services. This value is immutable. Set once, it can not be changed without deleting and re-creating the service. Ref: https://kubernetes.io/docs/concepts/services-networking/service/#choosing-your-own-ip-address |
-| defaultBackend.service.externalIPs | list | `[]` | List of IP addresses at which the default backend service is available # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips # |
+| defaultBackend.service.externalIPs | list | `[]` | List of IP addresses at which the default backend service is available |
 | defaultBackend.service.loadBalancerSourceRanges | list | `[]` |  |
 | defaultBackend.service.servicePort | int | `80` |  |
 | defaultBackend.service.type | string | `"ClusterIP"` |  |
 | defaultBackend.serviceAccount.automountServiceAccountToken | bool | `true` |  |
 | defaultBackend.serviceAccount.create | bool | `true` |  |
 | defaultBackend.serviceAccount.name | string | `""` |  |
-| defaultBackend.tolerations | list | `[]` | Node tolerations for server scheduling to nodes with taints # Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/ # |
+| defaultBackend.tolerations | list | `[]` | Node tolerations for server scheduling to nodes with taints |
 | defaultBackend.topologySpreadConstraints | list | `[]` | Topology spread constraints rely on node labels to identify the topology domain(s) that each Node is in. Ref.: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/ |
 | defaultBackend.unhealthyPodEvictionPolicy | string | `""` | Eviction policy for unhealthy pods guarded by PodDisruptionBudget. Ref: https://kubernetes.io/blog/2023/01/06/unhealthy-pod-eviction-policy-for-pdbs/ |
-| defaultBackend.updateStrategy | object | `{}` | The update strategy to apply to the Deployment or DaemonSet # |
-| dhParam | string | `""` | A base64-encoded Diffie-Hellman parameter. This can be generated with: `openssl dhparam 4096 2> /dev/null | base64` # Ref: https://github.com/kubernetes/ingress-nginx/tree/main/docs/examples/customization/ssl-dh-param |
+| defaultBackend.updateStrategy | object | `{}` | The update strategy to apply to the Deployment or DaemonSet |
+| dhParam | string | `""` | (string) A base64-encoded Diffie-Hellman parameter. This can be generated with: `openssl dhparam 4096 2> /dev/null | base64` |
 | global.image.registry | string | `"registry.k8s.io"` | Registry host to pull images from. |
-| imagePullSecrets | list | `[]` | Optional array of imagePullSecrets containing private registry credentials # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
+| imagePullSecrets | list | `[]` | Optional array of imagePullSecrets containing private registry credentials |
 | namespaceOverride | string | `""` | Override the deployment namespace; defaults to .Release.Namespace |
-| portNamePrefix | string | `""` | Prefix for TCP and UDP ports names in ingress controller service # Some cloud providers, like Yandex Cloud may have a requirements for a port name regex to support cloud load balancer integration |
+| portNamePrefix | string | `""` | Prefix for TCP and UDP ports names in ingress controller service |
 | rbac.create | bool | `true` |  |
 | rbac.scope | bool | `false` |  |
-| revisionHistoryLimit | int | `10` | Rollback limit # |
+| revisionHistoryLimit | int | `10` | Rollback limit |
 | serviceAccount.annotations | object | `{}` | Annotations for the controller service account |
 | serviceAccount.automountServiceAccountToken | bool | `true` |  |
 | serviceAccount.create | bool | `true` |  |
 | serviceAccount.name | string | `""` |  |
-| tcp | object | `{}` | TCP service key-value pairs # Ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/exposing-tcp-udp-services.md # |
-| udp | object | `{}` | UDP service key-value pairs # Ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/exposing-tcp-udp-services.md # |
+| tcp | object | `{}` | TCP service key-value pairs |
+| udp | object | `{}` | UDP service key-value pairs |
