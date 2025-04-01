@@ -260,11 +260,11 @@ metadata:
 | controller.admissionWebhooks.certManager.rootCert.duration | string | `""` |  |
 | controller.admissionWebhooks.certManager.rootCert.revisionHistoryLimit | int | `0` | Revision history limit of the root certificate. Ref.: https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1.CertificateSpec |
 | controller.admissionWebhooks.certificate | string | `"/usr/local/certificates/cert"` |  |
+| controller.admissionWebhooks.createSecretJob.extraVolumeMounts | list | `[]` | extraVolumeMounts to the AdmissionsWebhook createSecretJob. |
+| controller.admissionWebhooks.createSecretJob.extraVolumes | list | `[]` | extraVolume to the AdmissionsWebhook createSecretJob. |
 | controller.admissionWebhooks.createSecretJob.name | string | `"create"` |  |
 | controller.admissionWebhooks.createSecretJob.resources | object | `{}` |  |
 | controller.admissionWebhooks.createSecretJob.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsGroup":65532,"runAsNonRoot":true,"runAsUser":65532,"seccompProfile":{"type":"RuntimeDefault"}}` | Security context for secret creation containers |
-| controller.admissionWebhooks.createSecretJob.volumeMounts | list | `[]` | volumeMounts to the AdmissionsWebhook createSecretJob.    Example:    - name: kube-api-access      mountPath: /var/run/secrets/kubernetes.io/serviceaccount      readOnly: true |
-| controller.admissionWebhooks.createSecretJob.volumes | list | `[]` | volume to the AdmissionsWebhook createSecretJob.  - name: kube-api-access    emptyDir: {} |
 | controller.admissionWebhooks.enabled | bool | `true` |  |
 | controller.admissionWebhooks.extraEnvs | list | `[]` | Additional environment variables to set |
 | controller.admissionWebhooks.failurePolicy | string | `"Fail"` | Admission Webhook failure policy to use |
@@ -291,11 +291,11 @@ metadata:
 | controller.admissionWebhooks.patch.serviceAccount.create | bool | `true` | Create a service account or not |
 | controller.admissionWebhooks.patch.serviceAccount.name | string | `""` | Custom service account name |
 | controller.admissionWebhooks.patch.tolerations | list | `[]` |  |
+| controller.admissionWebhooks.patchWebhookJob.extraVolumeMounts | list | `[]` | extraVolumeMounts to the AdmissionsWebhook patchWebhookJob. |
+| controller.admissionWebhooks.patchWebhookJob.extraVolumes | list | `[]` | extraVolume to the AdmissionsWebhook patchWebhookJob. |
 | controller.admissionWebhooks.patchWebhookJob.name | string | `"patch"` |  |
 | controller.admissionWebhooks.patchWebhookJob.resources | object | `{}` |  |
 | controller.admissionWebhooks.patchWebhookJob.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsGroup":65532,"runAsNonRoot":true,"runAsUser":65532,"seccompProfile":{"type":"RuntimeDefault"}}` | Security context for webhook patch containers |
-| controller.admissionWebhooks.patchWebhookJob.volumeMounts | list | `[]` | volumeMounts to the AdmissionsWebhook patchWebhookJob.    Example:    - name: kube-api-access      mountPath: /var/run/secrets/kubernetes.io/serviceaccount      readOnly: true |
-| controller.admissionWebhooks.patchWebhookJob.volumes | list | `[]` | volume to the AdmissionsWebhook patchWebhookJob.  - name: kube-api-access    emptyDir: {} |
 | controller.admissionWebhooks.port | int | `8443` |  |
 | controller.admissionWebhooks.service.annotations | object | `{}` |  |
 | controller.admissionWebhooks.service.externalIPs | list | `[]` |  |
