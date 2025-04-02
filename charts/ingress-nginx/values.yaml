@@ -793,6 +793,17 @@ controller:
       # requests:
       #   cpu: 10m
       #   memory: 20Mi
+      # -- extraVolumeMounts to the AdmissionsWebhook createSecretJob.
+      extraVolumeMounts: []
+      #    Example:
+      #    - name: kube-api-access
+      #      mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      #      readOnly: true
+      # -- extraVolume to the AdmissionsWebhook createSecretJob.
+      extraVolumes: []
+      #    Example:
+      #  - name: kube-api-access
+      #    emptyDir: {}
     patchWebhookJob:
       name: patch
       # -- Security context for webhook patch containers
@@ -808,6 +819,17 @@ controller:
             - ALL
         readOnlyRootFilesystem: true
       resources: {}
+      # -- extraVolumeMounts to the AdmissionsWebhook patchWebhookJob.
+      extraVolumeMounts: []
+      #    Example:
+      #    - name: kube-api-access
+      #      mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      #      readOnly: true
+      # -- extraVolume to the AdmissionsWebhook patchWebhookJob.
+      extraVolumes: []
+      #    Example:
+      #  - name: kube-api-access
+      #    emptyDir: {}
     patch:
       enabled: true
       image:
