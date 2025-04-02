@@ -99,6 +99,11 @@ controller:
   # when users add those annotations.
   # Global snippets in ConfigMap are still respected
   allowSnippetAnnotations: false
+  # -- Represents the risk accepted on an annotation. If the risk is, for instance Medium, annotations with risk High and Critical will not be accepted.
+  # Complete risk level annotation list: https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations-risk/
+  # Default is high.
+  # Ref.: https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#annotations-risk-level
+  annotationsRiskLevel: "high"
   # -- Required for use with CNI based kubernetes installations (such as ones set up by kubeadm),
   # since CNI and hostport don't mix yet. Can be deprecated once https://github.com/kubernetes/kubernetes/issues/23920
   # is merged

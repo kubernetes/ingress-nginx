@@ -16,6 +16,9 @@ data:
 {{- if .Values.controller.allowSnippetAnnotations }}
   allow-snippet-annotations: "true"
 {{- end }}
+{{- if .Values.controller.annotationsRiskLevel }}
+  annotations-risk-level: {{ .Values.controller.annotationsRiskLevel }}
+{{- end }}
 {{- if .Values.controller.addHeaders }}
   add-headers: {{ include "ingress-nginx.namespace" . }}/{{ include "ingress-nginx.fullname" . }}-custom-add-headers
 {{- end }}
