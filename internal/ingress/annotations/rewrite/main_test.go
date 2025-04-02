@@ -213,6 +213,70 @@ func TestForceSSLRedirect(t *testing.T) {
 	}
 }
 
+func TestSSLForbidHTTP(t *testing.T) {
+	ing := buildIngress()
+
+	i, err := NewParser(mockBackend{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	forbid, ok := i.(*Config)
+	if !ok {
+		t.Errorf("expected a Forbid type")
+	}
+	if forbid.SSLForbidHTTP {
+		t.Errorf("Expected false but returned true")
+	}
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix("ssl-forbid-http")] = "true"
+	ing.SetAnnotations(data)
+
+	i, err = NewParser(mockBackend{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	forbid, ok = i.(*Config)
+	if !ok {
+		t.Errorf("expected a Forbid type")
+	}
+	if !forbid.SSLForbidHTTP {
+		t.Errorf("Expected true but returned false")
+	}
+}
+
+func TestForceSSLForbidHTTP(t *testing.T) {
+	ing := buildIngress()
+
+	i, err := NewParser(mockBackend{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	forbid, ok := i.(*Config)
+	if !ok {
+		t.Errorf("expected a Forbid type")
+	}
+	if forbid.ForceSSLForbidHTTP {
+		t.Errorf("Expected false but returned true")
+	}
+
+	data := map[string]string{}
+	data[parser.GetAnnotationWithPrefix("force-ssl-forbid-http")] = "true"
+	ing.SetAnnotations(data)
+
+	i, err = NewParser(mockBackend{}).Parse(ing)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	forbid, ok = i.(*Config)
+	if !ok {
+		t.Errorf("expected a Forbid type")
+	}
+	if !forbid.ForceSSLForbidHTTP {
+		t.Errorf("Expected true but returned false")
+	}
+}
+
 func TestAppRoot(t *testing.T) {
 	ap := NewParser(mockBackend{redirect: true})
 
