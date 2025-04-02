@@ -1,3 +1,5 @@
+version: 2
+
 project_name: ingress-nginx
 release:
   github:
@@ -23,7 +25,8 @@ builds:
       -X k8s.io/ingress-nginx/version.RELEASE={{ .Tag }}
 archives:
   - id: ingress-nginx
-    builds:
+    ids:
     - ingress-nginx
     name_template: "kubectl-{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
-    format: tar.gz
+    formats:
+    - tar.gz
