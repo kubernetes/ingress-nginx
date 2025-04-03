@@ -2,9 +2,6 @@ version: 2
 
 project_name: ingress-nginx
 release:
-  github:
-    owner: alexintech
-    name: ingress-nginx
   disable: true
 builds:
   - id: ingress-nginx
@@ -31,3 +28,5 @@ archives:
     name_template: "kubectl-{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
     formats:
     - tar.gz
+checksum:
+  name_template: "kubectl-{{ .ProjectName }}_checksums.txt"
