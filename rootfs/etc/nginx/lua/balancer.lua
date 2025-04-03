@@ -73,6 +73,10 @@ local function get_implementation(backend)
 end
 
 local function resolve_external_names(original_backend)
+  if not original_backend.endpoints or
+     #original_backend.endpoints == 0 then
+    return original_backend
+  end
   local backend = util.deepcopy(original_backend)
   local endpoints = {}
   for _, endpoint in ipairs(backend.endpoints) do
