@@ -30,3 +30,10 @@ archives:
     - tar.gz
 checksum:
   name_template: "kubectl-{{ .ProjectName }}_checksums.txt"
+
+krews:
+  - skip_upload: true
+    homepage: "https://kubernetes.github.io/ingress-nginx/kubectl-plugin/"
+    description: "The official kubectl plugin for ingress-nginx."
+    short_description: "Interact with ingress-nginx"
+    url_template: "http://github.com/alexintech/ingress-nginx/releases/download/controller-{{ .Tag }}/{{ .ArtifactName }}"
