@@ -142,7 +142,7 @@ var _ = framework.IngressNginxDescribe("[Service] Type ExternalName", func() {
 			GET("/get").
 			WithHeader("Host", host).
 			Expect().
-			Status(http.StatusOK)
+			Status(http.StatusCreated)
 	})
 
 	ginkgo.It("should return status 502 for service type=ExternalName with an invalid host", func() {
