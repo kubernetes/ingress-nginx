@@ -56,7 +56,6 @@ jobs:
         with:
           files: |
             dist/kubectl-ingress-nginx_*
-            dist/*_checksums.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
