@@ -22,7 +22,7 @@ builds:
     ldflags: |
       -s -w
       -X k8s.io/ingress-nginx/version.COMMIT={{ .Commit }}
-      -X k8s.io/ingress-nginx/version.RELEASE={{ .Tag }}
+      -X k8s.io/ingress-nginx/version.RELEASE=controller-{{ .Tag }}
 archives:
   - id: ingress-nginx
     ids:
