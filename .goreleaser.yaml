@@ -3,7 +3,7 @@ version: 2
 project_name: ingress-nginx
 release:
   github:
-    owner: kubernetes
+    owner: alexintech
     name: ingress-nginx
 builds:
   - id: ingress-nginx
