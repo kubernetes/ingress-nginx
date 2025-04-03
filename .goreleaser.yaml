@@ -5,6 +5,7 @@ release:
   github:
     owner: alexintech
     name: ingress-nginx
+  disable: true
 builds:
   - id: ingress-nginx
     goos:
