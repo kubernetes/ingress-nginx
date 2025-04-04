@@ -1834,11 +1834,11 @@ func checkOverlap(ing *networking.Ingress, servers []*ingress.Server) error {
 				isExistingCanaryEnabled, existingAnnotationErr := parser.GetBoolAnnotation("canary", existing, canary.CanaryAnnotations.Annotations)
 
 				if isCanaryEnabled && isExistingCanaryEnabled {
-					return fmt.Errorf(`host "%s" and path "%s" is already defined in ingress %s/%s`, rule.Host, path.Path, existing.Namespace, existing.Name)
+					return fmt.Errorf(`host "%s" and path "%s" is already defined`, rule.Host, path.Path)
 				}
 
 				if annotationErr == errors.ErrMissingAnnotations && existingAnnotationErr == errors.ErrMissingAnnotations {
-					return fmt.Errorf(`host "%s" and path "%s" is already defined in ingress %s/%s`, rule.Host, path.Path, existing.Namespace, existing.Name)
+					return fmt.Errorf(`host "%s" and path "%s" is already defined`, rule.Host, path.Path)
 				}
 			}
 
