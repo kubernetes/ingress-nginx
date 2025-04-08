@@ -108,9 +108,11 @@
 | Redirect | temporal-redirect | Medium | location |
 | Redirect | temporal-redirect-code | Low | location |
 | Rewrite | app-root | Medium | location |
+| Rewrite | force-ssl-forbid-http | Medium | location |
 | Rewrite | force-ssl-redirect | Medium | location |
 | Rewrite | preserve-trailing-slash | Medium | location |
 | Rewrite | rewrite-target | Medium | ingress |
+| Rewrite | ssl-forbid-http | Low | location |
 | Rewrite | ssl-redirect | Low | location |
 | Rewrite | use-regex | Low | location |
 | SSLCipher | ssl-ciphers | Low | ingress |
