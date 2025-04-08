@@ -567,6 +567,12 @@ type Configuration struct {
 	// Default is X-Forwarded-For
 	ForwardedForHeader string `json:"forwarded-for-header,omitempty"`
 
+	// Sets the name of the intermediate header used to determine the client's originating IP
+	// when both use-proxy-protocol and use-forwarded-headers are enabled. This doesn't impact
+	// functionality and should not typically be modified.
+	// Default is X-Forwarded-For-Proxy-Protocol
+	ForwardedForProxyProtocolHeader string `json:"forwarded-for-proxy-protocol-header,omitempty"`
+
 	// Append the remote address to the X-Forwarded-For header instead of replacing it
 	// Default: false
 	ComputeFullForwardedFor bool `json:"compute-full-forwarded-for,omitempty"`
@@ -778,6 +784,7 @@ func NewDefault() Configuration {
 		UseForwardedHeaders:              false,
 		EnableRealIP:                     false,
 		ForwardedForHeader:               "X-Forwarded-For",
+		ForwardedForProxyProtocolHeader:  "X-Forwarded-For-Proxy-Protocol",
 		ComputeFullForwardedFor:          false,
 		ProxyAddOriginalURIHeader:        false,
 		GenerateRequestID:                true,
