@@ -19,7 +19,6 @@ package controller
 import (
 	"fmt"
 	"net"
-	"reflect"
 	"strconv"
 	"strings"
 
@@ -53,16 +52,15 @@ func getEndpointsFromSlices(s *corev1.Service, port *corev1.ServicePort, proto c
 
 	// ExternalName services
 	if s.Spec.Type == corev1.ServiceTypeExternalName {
-		if ip := net.ParseIP(s.Spec.ExternalName); s.Spec.ExternalName == "localhost" ||
-			(ip != nil && ip.IsLoopback()) {
+		externalIP := net.ParseIP(s.Spec.ExternalName)
+		if s.Spec.ExternalName == "localhost" || (externalIP != nil && externalIP.IsLoopback()) {
 			klog.Errorf("Invalid attempt to use localhost name %s in %q", s.Spec.ExternalName, svcKey)
 			return upsServers
 		}
 
 		klog.V(3).Infof("Ingress using Service %q of type ExternalName.", svcKey)
 		targetPort := port.TargetPort.IntValue()
-		// if the externalName is not an IP address we need to validate is a valid FQDN
-		if net.ParseIP(s.Spec.ExternalName) == nil {
+		if externalIP == nil {
 			externalName := strings.TrimSuffix(s.Spec.ExternalName, ".")
 			if errs := validation.IsDNS1123Subdomain(externalName); len(errs) > 0 {
 				klog.Errorf("Invalid DNS name %s: %v", s.Spec.ExternalName, errs)
@@ -84,14 +82,15 @@ func getEndpointsFromSlices(s *corev1.Service, port *corev1.ServicePort, proto c
 	}
 	// loop over all endpointSlices generated for service
 	for _, eps := range epss {
-		var ports []int32
+		ports := make([]int32, 0, len(eps.Ports))
 		if len(eps.Ports) == 0 && port.TargetPort.Type == intstr.Int {
 			// When ports is empty, it indicates that there are no defined ports, using svc targePort if it's a number
 			klog.V(3).Infof("No ports found on endpointSlice, using service TargetPort %v for Service %q", port.String(), svcKey)
 			ports = append(ports, port.TargetPort.IntVal)
 		} else {
-			for _, epPort := range eps.Ports {
-				if !reflect.DeepEqual(*epPort.Protocol, proto) {
+			for i := range eps.Ports {
+				epPort := &eps.Ports[i]
+				if epPort.Protocol == nil || *epPort.Protocol != proto {
 					continue
 				}
 				var targetPort int32
@@ -127,14 +126,15 @@ func getEndpointsFromSlices(s *corev1.Service, port *corev1.ServicePort, proto c
 			}
 		}
 
-		for _, ep := range eps.Endpoints {
-			if (ep.Conditions.Ready != nil) && !(*ep.Conditions.Ready) {
+		for i := range eps.Endpoints {
+			ep := &eps.Endpoints[i]
+			if ep.Conditions.Ready != nil && !(*ep.Conditions.Ready) {
 				continue
 			}
 			epHasZone := false
 			if useTopologyHints {
-				for _, epzone := range ep.Hints.ForZones {
-					if epzone.Name == zoneForHints {
+				for j := range ep.Hints.ForZones {
+					if ep.Hints.ForZones[j].Name == zoneForHints {
 						epHasZone = true
 						break
 					}
