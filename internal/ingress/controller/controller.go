@@ -435,7 +435,7 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 	ngconfparserInstance := ngconfparser.NewStringParser(string(content))
 	_, err = ngconfparserInstance.Parse()
 	if err != nil {
-		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
+		n.metricCollector.IncCheckErrorCount(ing.Namespace, ing.Name)
 		return err
 	}
 	/*use pure go to check nginx.conf instead of  nginx -t  --end*/
