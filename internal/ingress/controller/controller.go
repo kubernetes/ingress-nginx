@@ -48,6 +48,7 @@ import (
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 	utilingress "k8s.io/ingress-nginx/pkg/util/ingress"
 	"k8s.io/klog/v2"
+	ngconfparser "github.com/tufanbarisyildirim/gonginx/parser"
 )
 
 const (
@@ -428,6 +429,16 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 		return err
 	}
 	*/
+
+	/*Deactivated to mitigate CVE-2025-1974*/
+	/*use pure go to check nginx.conf instead of  nginx -t --start*/
+	ngconfparserInstance := ngconfparser.NewStringParser(string(content))
+	_, err = ngconfparserInstance.Parse()
+	if err != nil {
+		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
+		return err
+	}
+	/*use pure go to check nginx.conf instead of  nginx -t  --end*/
 
 	n.metricCollector.IncCheckCount(ing.ObjectMeta.Namespace, ing.Name)
 	endCheck := time.Now().UnixNano() / 1000000

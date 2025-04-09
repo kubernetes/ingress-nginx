@@ -58,6 +58,7 @@ require (
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/moby/sys/userns v0.1.0 // indirect
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
+	github.com/tufanbarisyildirim/gonginx v0.0.0-20250225174229-c03497ddaef6 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	go.opentelemetry.io/otel v1.35.0 // indirect
 	go.opentelemetry.io/otel/trace v1.35.0 // indirect
