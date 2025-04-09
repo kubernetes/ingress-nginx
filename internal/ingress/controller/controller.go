@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/mitchellh/hashstructure/v2"
+	ngconfparser "github.com/tufanbarisyildirim/gonginx/parser"
 	apiv1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
@@ -48,7 +49,6 @@ import (
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 	utilingress "k8s.io/ingress-nginx/pkg/util/ingress"
 	"k8s.io/klog/v2"
-	ngconfparser "github.com/tufanbarisyildirim/gonginx/parser"
 )
 
 const (
