@@ -434,9 +434,7 @@ By default, the controller watches Ingress objects from all namespaces. If you w
 use the flag `--watch-namespace` or check the Helm chart value `controller.scope` to limit the controller to a single
 namespace. Although the use of this flag is not popular, one important fact to note is that the secret containing the default-ssl-certificate needs to also be present in the watched namespace(s).
 
-See also
-[“How to easily install multiple instances of the Ingress NGINX controller in the same cluster”](https://kubernetes.github.io/ingress-nginx/#how-to-easily-install-multiple-instances-of-the-ingress-nginx-controller-in-the-same-cluster)
-for more details.
+See also [“How to install multiple Ingress controllers in the same cluster”](https://kubernetes.github.io/ingress-nginx/user-guide/multiple-ingress/) for more details.
 
 ### Webhook network access
 
