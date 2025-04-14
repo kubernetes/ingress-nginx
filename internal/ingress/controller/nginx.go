@@ -355,10 +355,6 @@ func (n *NGINXController) Start() {
 			}
 
 		case event := <-n.updateCh.Out():
-			if n.isShuttingDown {
-				break
-			}
-
 			if evt, ok := event.(store.Event); ok {
 				klog.V(3).InfoS("Event received", "type", evt.Type, "object", evt.Obj)
 				if evt.Type == store.ConfigurationEvent {
