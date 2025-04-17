@@ -72,6 +72,9 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
              spec:
                containers:
                  - name: controller
+                   args:
+                     ..
+                     - '--enable-metrics=true'  
                    ports:
                      - name: prometheus
                        containerPort: 10254
