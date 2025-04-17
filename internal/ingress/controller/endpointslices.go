@@ -44,6 +44,10 @@ func getEndpointsFromSlices(s *corev1.Service, port *corev1.ServicePort, proto c
 		return upsServers
 	}
 
+	// we need to check if there is at least one endpoint with controller zone
+	// if we use traffic distribution
+	useTrafficDistribution := s.Spec.TrafficDistribution != nil && *s.Spec.TrafficDistribution == corev1.ServiceTrafficDistributionPreferClose
+
 	// using a map avoids duplicated upstream servers when the service
 	// contains multiple port definitions sharing the same targetport
 	processedUpstreamServers := make(map[string]struct{})
@@ -115,6 +119,27 @@ func getEndpointsFromSlices(s *corev1.Service, port *corev1.ServicePort, proto c
 		useTopologyHints = false
 		if zoneForHints != emptyZone {
 			useTopologyHints = true
+
+			// check if endpointslices have zone hints with controller zone
+			if useTrafficDistribution {
+				foundEndpointsForZone := false
+				for _, ep := range eps.Endpoints {
+					if ep.Hints == nil {
+						continue
+					}
+					for _, epzone := range ep.Hints.ForZones {
+						if epzone.Name == zoneForHints {
+							foundEndpointsForZone = true
+							break
+						}
+					}
+				}
+				if !foundEndpointsForZone {
+					klog.V(3).Infof("No endpoints found for zone %q in Service %q", zoneForHints, svcKey)
+					useTopologyHints = false
+				}
+			}
+
 			// check if all endpointslices have zone hints
 			for _, ep := range eps.Endpoints {
 				if ep.Hints == nil || len(ep.Hints.ForZones) == 0 {

@@ -156,6 +156,13 @@ func getIngressPodZone(svc *apiv1.Service) string {
 			}
 		}
 	}
+	if svc.Spec.TrafficDistribution != nil && *svc.Spec.TrafficDistribution == apiv1.ServiceTrafficDistributionPreferClose {
+		if foundZone, ok := k8s.IngressNodeDetails.GetLabels()[apiv1.LabelTopologyZone]; ok {
+			klog.V(3).Infof("Svc has traffic distribution enabled, try to use zone %q where controller pod is running for Service %q ", foundZone, svcKey)
+			return foundZone
+		}
+	}
+
 	return emptyZone
 }
 
