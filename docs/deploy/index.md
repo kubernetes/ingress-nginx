@@ -308,11 +308,11 @@ This section explains how to do that on AWS using an NLB.
 
 ##### NLB Idle Timeouts
 
-The default idle timeout value for TCP flows is 350 seconds and [can be modified to any value between 60-6000 seconds.](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#connection-idle-timeout).
+The default idle timeout value for TCP flows is 350 seconds and [can be modified to any value between 60-6000 seconds.](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#connection-idle-timeout)
 
 For this reason, you need to ensure the
 [keepalive_timeout](https://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout)
-value is configured less than 350 seconds to work as expected.
+value is configured less than your configured idle timeout to work as expected.
 
 By default, NGINX `keepalive_timeout` is set to `75s`.
 
