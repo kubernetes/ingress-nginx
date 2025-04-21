@@ -1,3 +1,5 @@
+
 # Build files
 **/pom.xml  @onehouseinc/dependency-change-reviewers
 **/build.gradle @onehouseinc/dependency-change-reviewers
+**/Dockerfile* @onehouseinc/core-infra
