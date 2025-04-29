@@ -59,7 +59,7 @@ func (f *Framework) NewNewFastCGIHelloServerDeploymentWithReplicas(replicas int3
 					Containers: []corev1.Container{
 						{
 							Name:  "fastcgi-helloserver",
-							Image: "registry.k8s.io/ingress-nginx/fastcgi-helloserver:v1.1.2@sha256:67133b24b7a9f556aa6977484db5af7e16f6a9509dba757cc2c003834c0af489",
+							Image: "registry.k8s.io/ingress-nginx/fastcgi-helloserver:v1.1.3@sha256:c150b9db05d67312168ff7a07c0b6cbf39f0339a6adfef945f8d4c16fc4d588e",
 							Env:   []corev1.EnvVar{},
 							Ports: []corev1.ContainerPort{
 								{
