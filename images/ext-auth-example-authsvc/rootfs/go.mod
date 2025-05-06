@@ -1,6 +1,6 @@
 module k8s.io/ingress-nginx/ext-auth-example-authsvc
 
-go 1.24.2
+go 1.24.3
 
 require k8s.io/apimachinery v0.33.0
 
