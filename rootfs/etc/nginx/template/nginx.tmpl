@@ -1280,7 +1280,8 @@ stream {
 
             # Pass the original X-Forwarded-For
             {{ $proxySetHeader }} X-Original-Forwarded-For  {{ buildForwardedFor $all.Cfg.ForwardedForHeader }};
-            {{ $proxySetHeader }} X-Original-Forwarded-Host {{ buildForwardedFor $all.Cfg.ForwardedHostHeader }};
+            # Pass the original X-Forwarded-Host
+            {{ $proxySetHeader }} X-Original-Forwarded-Host {{ buildForwardedHost $all.Cfg.ForwardedHostHeader }};
 
             # mitigate HTTPoxy Vulnerability
             # https://www.nginx.com/blog/mitigating-the-httpoxy-vulnerability-with-nginx/
