@@ -1,0 +1,60 @@
+# HG changeset patch
+# User Thibault Charbonnier <thibaultcha@fastmail.com>
+# Date 1481847421 28800
+#      Thu Dec 15 16:17:01 2016 -0800
+# Node ID 8bf038fe006fd8ae253d6b41fc6cf109a8912d3e
+# Parent  a3dc657f4e9530623683e6b85bd7492662e4dc47
+Resolver: ignore ipv6=off resolver option when no ipv6 support
+
+Makes the resolver directive more robust: we only error out when ipv6
+resolution is desired but not supported (ipv6=on).
+
+use case 1: some configurations are sometimes re-used between builds with and
+without ipv6 support. This patch avoids the need to remove the "ipv6=off" flag.
+
+use case 2: currently, some tools rely on the --with-ipv6 configure option from
+"nginx -V" to determine if ipv6 resolution should be disabled in some cases.
+With this option disappearing in Nginx 1.11.5, this patch would allow such tools
+to assume "ipv6=off" to be safe regardless of ipv6 support in the current
+build.
+
+diff --git a/src/core/ngx_resolver.c b/src/core/ngx_resolver.c
+index dade1846..5a3f0aa4 100644
+--- a/src/core/ngx_resolver.c
++++ b/src/core/ngx_resolver.c
+@@ -425,7 +425,6 @@ ngx_resolver_create(ngx_conf_t *cf, ngx_str_t *names, ngx_uint_t n)
+             continue;
+         }
+ 
+-#if (NGX_HAVE_INET6)
+         if (ngx_strncmp(names[i].data, "ipv4=", 5) == 0) {
+ 
+             if (ngx_strcmp(&names[i].data[5], "on") == 0) {
+@@ -446,10 +445,19 @@ ngx_resolver_create(ngx_conf_t *cf, ngx_str_t *names, ngx_uint_t n)
+         if (ngx_strncmp(names[i].data, "ipv6=", 5) == 0) {
+ 
+             if (ngx_strcmp(&names[i].data[5], "on") == 0) {
++#if (NGX_HAVE_INET6)
+                 r->ipv6 = 1;
++#else
++                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
++                                   "no ipv6 support but \"%V\" in resolver",
++                                   &names[i]);
++                return NULL;
++#endif
+ 
+             } else if (ngx_strcmp(&names[i].data[5], "off") == 0) {
++#if (NGX_HAVE_INET6)
+                 r->ipv6 = 0;
++#endif
+ 
+             } else {
+                 ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+@@ -459,7 +467,6 @@ ngx_resolver_create(ngx_conf_t *cf, ngx_str_t *names, ngx_uint_t n)
+ 
+             continue;
+         }
+-#endif
+ 
+ #if !(NGX_WIN32)
+         if (ngx_strncmp(names[i].data, "local=", 6) == 0) {

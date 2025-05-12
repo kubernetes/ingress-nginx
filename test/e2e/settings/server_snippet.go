@@ -38,6 +38,7 @@ var _ = framework.DescribeSetting("configmap server-snippet", func() {
 
 		f.SetNginxConfigMapData(map[string]string{
 			"allow-snippet-annotations": "true",
+			"annotations-risk-level":    "Critical",
 			"server-snippet": `
 			more_set_headers "Globalfoo: Foooo";`,
 		})
@@ -45,6 +46,7 @@ var _ = framework.DescribeSetting("configmap server-snippet", func() {
 		defer func() {
 			f.SetNginxConfigMapData(map[string]string{
 				"allow-snippet-annotations": "false",
+				"annotations-risk-level":    "High",
 			})
 		}()
 		annotations := map[string]string{
@@ -101,6 +103,7 @@ var _ = framework.DescribeSetting("configmap server-snippet", func() {
 
 		f.SetNginxConfigMapData(map[string]string{
 			"allow-snippet-annotations": "false",
+			"annotations-risk-level":    "Critical", // To allow Configuration Snippet
 			"server-snippet": `
 			more_set_headers "Globalfoo: Foooo";`,
 		})
@@ -108,6 +111,7 @@ var _ = framework.DescribeSetting("configmap server-snippet", func() {
 		defer func() {
 			f.SetNginxConfigMapData(map[string]string{
 				"allow-snippet-annotations": "false",
+				"annotations-risk-level":    "High",
 			})
 		}()
 		annotations := map[string]string{

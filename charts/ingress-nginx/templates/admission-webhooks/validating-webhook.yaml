@@ -40,6 +40,7 @@ webhooks:
       service:
         name: {{ include "ingress-nginx.controller.fullname" . }}-admission
         namespace: {{ include "ingress-nginx.namespace" . }}
+        port: {{ .Values.controller.admissionWebhooks.service.servicePort }}
         path: /networking/v1/ingresses
     {{- if .Values.controller.admissionWebhooks.timeoutSeconds }}
     timeoutSeconds: {{ .Values.controller.admissionWebhooks.timeoutSeconds }}

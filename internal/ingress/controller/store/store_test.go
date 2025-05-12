@@ -1208,13 +1208,13 @@ func TestStore(t *testing.T) {
 			}
 		}(updateCh)
 
-		namesapceSelector, err := labels.Parse("foo=bar")
+		namespaceSelector, err := labels.Parse("foo=bar")
 		if err != nil {
 			t.Errorf("unexpected error: %v", err)
 		}
 		storer := New(
 			ns,
-			namesapceSelector,
+			namespaceSelector,
 			fmt.Sprintf("%v/config", ns),
 			fmt.Sprintf("%v/tcp", ns),
 			fmt.Sprintf("%v/udp", ns),
@@ -1274,7 +1274,7 @@ func TestStore(t *testing.T) {
 			t.Errorf("expected 0 events of type Delete but %v occurred", del)
 		}
 	})
-	// test add ingress with secret it doesn't exists and then add secret
+	// test add ingress with secret it doesn't exist and then add secret
 	// check secret is generated on fs
 	// check ocsp
 	// check invalid secret (missing crt)

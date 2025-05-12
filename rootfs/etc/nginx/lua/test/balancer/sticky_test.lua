@@ -357,7 +357,7 @@ describe("Sticky", function()
         for _ = 1, 100 do
           local new_upstream = sticky_balancer_instance:balance()
           if change_on_failure == false then
-            -- upstream should be the same inspite of error, if change_on_failure option is false
+            -- upstream should be the same in spite of error, if change_on_failure option is false
             assert.equal(new_upstream, old_upstream)
           else
             -- upstream should change after error, if change_on_failure option is true

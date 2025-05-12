@@ -390,9 +390,6 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	if !(&l1.RateLimit).Equal(&l2.RateLimit) {
 		return false
 	}
-	if !(&l1.GlobalRateLimit).Equal(&l2.GlobalRateLimit) {
-		return false
-	}
 	if !(&l1.Redirect).Equal(&l2.Redirect) {
 		return false
 	}
@@ -467,6 +464,10 @@ func (l1 *Location) Equal(l2 *Location) bool {
 	}
 
 	if l1.DisableProxyInterceptErrors != l2.DisableProxyInterceptErrors {
+		return false
+	}
+
+	if !l1.CustomHeaders.Equal(&l2.CustomHeaders) {
 		return false
 	}
 

@@ -277,14 +277,8 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 			"nginx.ingress.kubernetes.io/auth-snippet": `
 				proxy_set_header My-Custom-Header 42;`,
 		}
-		f.SetNginxConfigMapData(map[string]string{
-			"allow-snippet-annotations": "true",
-		})
-		defer func() {
-			f.SetNginxConfigMapData(map[string]string{
-				"allow-snippet-annotations": "false",
-			})
-		}()
+		disableSnippet := f.AllowSnippetConfiguration()
+		defer disableSnippet()
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
@@ -297,15 +291,8 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 
 	ginkgo.It(`should not set snippet "proxy_set_header My-Custom-Header 42;" when external auth is not configured`, func() {
 		host := authHost
-
-		f.SetNginxConfigMapData(map[string]string{
-			"allow-snippet-annotations": "true",
-		})
-		defer func() {
-			f.SetNginxConfigMapData(map[string]string{
-				"allow-snippet-annotations": "false",
-			})
-		}()
+		disableSnippet := f.AllowSnippetConfiguration()
+		defer disableSnippet()
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/auth-snippet": `
@@ -666,7 +653,7 @@ http {
 				func(server string) bool {
 					return strings.Contains(server, `upstream auth-external-auth`) &&
 						strings.Contains(server, `keepalive 10;`) &&
-						strings.Contains(server, `share_all_vars = false`)
+						strings.Contains(server, `set $auth_keepalive_share_vars false;`)
 				})
 		})
 
@@ -686,7 +673,7 @@ http {
 				func(server string) bool {
 					return strings.Contains(server, `upstream auth-external-auth`) &&
 						strings.Contains(server, `keepalive 10;`) &&
-						strings.Contains(server, `share_all_vars = true`)
+						strings.Contains(server, `set $auth_keepalive_share_vars true;`)
 				})
 		})
 	})

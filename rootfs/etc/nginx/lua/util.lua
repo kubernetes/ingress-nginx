@@ -146,6 +146,10 @@ function _M.is_blank(str)
   return str == nil or string_len(str) == 0
 end
 
+function _M.string_to_bool(str)
+  return str == "true"
+end
+
 -- this implementation is taken from:
 -- https://github.com/luafun/luafun/blob/master/fun.lua#L33
 -- SHA: 04c99f9c393e54a604adde4b25b794f48104e0d0

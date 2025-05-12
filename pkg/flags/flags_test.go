@@ -212,3 +212,29 @@ func TestLeaderElectionTTLParseValueInHours(t *testing.T) {
 		t.Fatalf("Expected --election-ttl and conf.ElectionTTL as 1h, but found: %v", conf.ElectionTTL)
 	}
 }
+
+func TestMetricsPerUndefinedHost(t *testing.T) {
+	ResetForTesting(func() { t.Fatal("Parsing failed") })
+
+	oldArgs := os.Args
+	defer func() { os.Args = oldArgs }()
+	os.Args = []string{"cmd", "--metrics-per-undefined-host=true"}
+
+	_, _, err := ParseFlags()
+	if err != nil {
+		t.Fatalf("Expected no error but got: %s", err)
+	}
+}
+
+func TestMetricsPerUndefinedHostWithMetricsPerHostFalse(t *testing.T) {
+	ResetForTesting(func() { t.Fatal("Parsing failed") })
+
+	oldArgs := os.Args
+	defer func() { os.Args = oldArgs }()
+	os.Args = []string{"cmd", "--metrics-per-host=false", "--metrics-per-undefined-host=true"}
+
+	_, _, err := ParseFlags()
+	if err == nil {
+		t.Fatalf("Expected an error parsing flags but none returned")
+	}
+}

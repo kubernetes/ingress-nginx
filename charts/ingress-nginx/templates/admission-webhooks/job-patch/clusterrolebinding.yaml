@@ -1,4 +1,4 @@
-{{- if and .Values.controller.admissionWebhooks.enabled .Values.controller.admissionWebhooks.patch.enabled (not .Values.controller.admissionWebhooks.certManager.enabled) -}}
+{{- if and .Values.controller.admissionWebhooks.enabled .Values.controller.admissionWebhooks.patch.enabled .Values.controller.admissionWebhooks.patch.rbac.create (not .Values.controller.admissionWebhooks.certManager.enabled) -}}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -18,6 +18,6 @@ roleRef:
   name: {{ include "ingress-nginx.admissionWebhooks.fullname" . }}
 subjects:
   - kind: ServiceAccount
-    name: {{ include "ingress-nginx.admissionWebhooks.fullname" . }}
+    name: {{ include "ingress-nginx.admissionWebhooks.patch.serviceAccountName" . }}
     namespace: {{ include "ingress-nginx.namespace" . }}
 {{- end }}

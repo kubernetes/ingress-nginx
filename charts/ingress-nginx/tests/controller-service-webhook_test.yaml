@@ -1,0 +1,32 @@
+suite: Controller > Service > Webhook
+templates:
+  - controller-service-webhook.yaml
+
+tests:
+  - it: should not create a webhook Service if `controller.admissionWebhooks.enabled` is false
+    set:
+      controller.admissionWebhooks.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create a webhook Service if `controller.admissionWebhooks.enabled` is true
+    set:
+      controller.admissionWebhooks.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-controller-admission
+
+  - it: should create a webhook Service with a custom port if `controller.admissionWebhooks.service.servicePort` is set
+    set:
+      controller.admissionWebhooks.enabled: true
+      controller.admissionWebhooks.service.servicePort: 9443
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 9443

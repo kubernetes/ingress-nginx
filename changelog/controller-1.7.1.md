@@ -15,7 +15,7 @@ Images:
 * Add support for --container flag (#9703)
 * Fix typo in OpenTelemetry (#9903)
 * ensure make lua-test runs locally (#9902)
-* update k8s.io dependecies to v0.26.4 (#9893)
+* update k8s.io dependencies to v0.26.4 (#9893)
 * Adding resource type to default HPA configuration to resolve issues with Terraform helm chart usage (#9803)
 * I have not been able to fulfill my maintainer responsibilities for a while already, making it official now. (#9883)
 * Update k8s versions (#9879)

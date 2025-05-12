@@ -669,4 +669,33 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			Headers().
 			NotContainsKey("Access-Control-Allow-Origin")
 	})
+
+	ginkgo.It("should allow - origins with non-http[s] protocols", func() {
+		host := corsHost
+		origin := "test://localhost"
+		origin2 := "tauri://localhost:3000"
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/enable-cors":       "true",
+			"nginx.ingress.kubernetes.io/cors-allow-origin": "test://localhost, tauri://localhost:3000",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("Origin", origin).
+			Expect().
+			Status(http.StatusOK).Headers().
+			ValueEqual("Access-Control-Allow-Origin", []string{"test://localhost"})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			WithHeader("Origin", origin2).
+			Expect().
+			Status(http.StatusOK).Headers().
+			ValueEqual("Access-Control-Allow-Origin", []string{"tauri://localhost:3000"})
+	})
 })

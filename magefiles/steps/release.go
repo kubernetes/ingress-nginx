@@ -74,7 +74,7 @@ func (Release) NewReleaseFromOld(version, oldversion string) {
 func (Release) E2EDocs() {
 	e2edocs, err := utils.GenerateE2EDocs()
 	utils.CheckIfError(err, "error on template")
-	err = os.WriteFile("docs/e2e-tests.md", []byte(e2edocs), 644)
+	err = os.WriteFile("docs/e2e-tests.md", []byte(e2edocs), 0644)
 	utils.CheckIfError(err, "Could not write new e2e test file ")
 }
 
@@ -158,7 +158,7 @@ func updateIndexMD(old, new string) error {
 	utils.CheckIfError(err, "Could not read INDEX_DOCS file %s", INDEX_DOCS)
 	datString := string(data)
 	datString = strings.Replace(datString, old, new, -1)
-	err = os.WriteFile(INDEX_DOCS, []byte(datString), 644)
+	err = os.WriteFile(INDEX_DOCS, []byte(datString), 0644)
 	if err != nil {
 		utils.ErrorF("Could not write new %s %s", INDEX_DOCS, err)
 		return err
@@ -255,7 +255,7 @@ func makeReleaseNotes(newVersion, oldVersion string) (*utils.ReleaseNote, error)
 
 	// the newControllerVersion should match the latest tag
 	if newControllerVersion != allControllerTags[0] {
-		return nil, errors.New(fmt.Sprintf("Generating release new version %s didnt match the current latest tag %s", newControllerVersion, allControllerTags[0]))
+		return nil, fmt.Errorf("generating release new version %s didnt match the current latest tag %s", newControllerVersion, allControllerTags[0])
 	}
 	// previous version
 	newReleaseNotes.PreviousControllerVersion = allControllerTags[1]
@@ -272,8 +272,8 @@ func makeReleaseNotes(newVersion, oldVersion string) (*utils.ReleaseNote, error)
 	var allUpdates []string
 	var depUpdates []string
 	var helmUpdates []string
-	prRegex := regexp.MustCompile("\\(#\\d+\\)")
-	depBot := regexp.MustCompile("^(\\w){1,10} Bump ")
+	prRegex := regexp.MustCompile(`\(#\d+\)`)
+	depBot := regexp.MustCompile(`^(\w){1,10} Bump `)
 	helmRegex := regexp.MustCompile("helm|chart")
 	for i, s := range commits {
 		// matches on PR
@@ -322,13 +322,13 @@ func makeReleaseNotes(newVersion, oldVersion string) (*utils.ReleaseNote, error)
 	controllerDigest := utils.FindImageDigest(data, "controller", newVersion)
 	if len(controllerDigest) == 0 {
 		utils.ErrorF("Controller Digest could not be found")
-		return nil, errors.New("Controller digest could not be found")
+		return nil, errors.New("controller digest could not be found")
 	}
 
 	controllerChrootDigest := utils.FindImageDigest(data, "controller-chroot", newVersion)
 	if len(controllerChrootDigest) == 0 {
 		utils.ErrorF("Controller Chroot Digest could not be found")
-		return nil, errors.New("Controller Chroot digest could not be found")
+		return nil, errors.New("controller chroot digest could not be found")
 	}
 
 	utils.Debug("Latest Controller Digest %v", controllerDigest)

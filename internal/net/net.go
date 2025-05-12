@@ -19,7 +19,8 @@ package net
 import (
 	"fmt"
 	_net "net"
-	"os/exec"
+	"os"
+	"strings"
 )
 
 // IsIPV6 checks if the input contains a valid IPV6 address
@@ -41,11 +42,25 @@ func IsPortAvailable(p int) bool {
 // IsIPv6Enabled checks if IPV6 is enabled or not and we have
 // at least one configured in the pod
 func IsIPv6Enabled() bool {
-	cmd := exec.Command("test", "-f", "/proc/net/if_inet6")
-	if cmd.Run() != nil {
+	// Skip interface checks if the IPv6 kernel feature is disabled.
+	disable, err := os.ReadFile("/proc/sys/net/ipv6/conf/all/disable_ipv6")
+	if err != nil {
+		return false
+	}
+	if strings.TrimSpace(string(disable)) == "1" {
 		return false
 	}
 
+	// Check that there are interfaces with IPv6 enabled.
+	ifaces, err := os.Stat("/proc/net/if_inet6")
+	if err != nil {
+		return false
+	}
+	if ifaces.IsDir() {
+		return false
+	}
+
+	// Check IPv6 addresses on interfaces.
 	addrs, err := _net.InterfaceAddrs()
 	if err != nil {
 		return false

@@ -26,7 +26,7 @@ Images:
 * Add golangci github action and replace the deprecated golint (#10187)
 * BUGFIX incorrect indentation (#10254)
 * Upgrade OpenTelemetry to v1.11.0 and gRPC to v1.57.0 (#10352)
-* fix: path with sepecial characters warning #10281 #10308 (#10330)
+* fix: path with special characters warning #10281 #10308 (#10330)
 * Fix golangci-lint errors (#10196)
 * chore(build): Fix Run make dev-env syntax error (#10294)
 * Add firewall configuration to quick start documentation (#10357)

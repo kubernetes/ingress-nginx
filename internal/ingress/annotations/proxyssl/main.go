@@ -32,7 +32,7 @@ import (
 
 const (
 	defaultProxySSLCiphers     = "DEFAULT"
-	defaultProxySSLProtocols   = "TLSv1 TLSv1.1 TLSv1.2"
+	defaultProxySSLProtocols   = "TLSv1.2"
 	defaultProxySSLVerify      = "off"
 	defaultProxySSLVerifyDepth = 1
 	defaultProxySSLServerName  = "off"
@@ -40,7 +40,7 @@ const (
 
 var (
 	proxySSLOnOffRegex    = regexp.MustCompile(`^(on|off)$`)
-	proxySSLProtocolRegex = regexp.MustCompile(`^(SSLv2|SSLv3|TLSv1|TLSv1\.1|TLSv1\.2|TLSv1\.3| )*$`)
+	proxySSLProtocolRegex = regexp.MustCompile(`^(TLSv1\.2|TLSv1\.3| )*$`)
 	proxySSLCiphersRegex  = regexp.MustCompile(`^[A-Za-z0-9\+:\_\-!]*$`)
 )
 

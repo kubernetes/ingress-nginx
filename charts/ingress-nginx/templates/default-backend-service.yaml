@@ -18,6 +18,9 @@ spec:
 {{- if .Values.defaultBackend.service.clusterIP }}
   clusterIP: {{ .Values.defaultBackend.service.clusterIP }}
 {{- end }}
+{{- if .Values.defaultBackend.service.clusterIPs }}
+  clusterIPs: {{ toYaml .Values.defaultBackend.service.clusterIPs | nindent 4 }}
+{{- end }}
 {{- if .Values.defaultBackend.service.externalIPs }}
   externalIPs: {{ toYaml .Values.defaultBackend.service.externalIPs | nindent 4 }}
 {{- end }}

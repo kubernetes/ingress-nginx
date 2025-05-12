@@ -37,6 +37,24 @@ tests:
       - notExists:
           path: metadata.annotations["ingressclass.kubernetes.io/is-default-class"]
 
+  - it: should create an IngressClass alias with annotations if `controller.ingressClassResource.annotations` is set
+    set:
+      controller.ingressClassResource.aliases:
+        - nginx-alias
+      controller.ingressClassResource.annotations:
+        my-fancy-annotation: has-a-value
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: IngressClass
+      - equal:
+          path: metadata.name
+          value: nginx-alias
+      - equal:
+          path: metadata.annotations.my-fancy-annotation
+          value: has-a-value
+
   - it: should create an IngressClass alias with controller "k8s.io/ingress-nginx-internal" if `controller.ingressClassResource.controllerValue` is "k8s.io/ingress-nginx-internal"
     set:
       controller.ingressClassResource.aliases:

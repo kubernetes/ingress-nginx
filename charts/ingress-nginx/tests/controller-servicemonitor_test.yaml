@@ -1,0 +1,79 @@
+suite: Controller > ServiceMonitor
+templates:
+  - controller-servicemonitor.yaml
+
+tests:
+  - it: should create a ServiceMonitor if `controller.metrics.serviceMonitor.enabled` is true
+    set:
+      controller.metrics.enabled: true
+      controller.metrics.serviceMonitor.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ServiceMonitor
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-ingress-nginx-controller
+
+  - it: should create a ServiceMonitor with annotations if `controller.metrics.serviceMonitor.annotations` is set
+    set:
+      controller.metrics.enabled: true
+      controller.metrics.serviceMonitor.enabled: true
+      controller.metrics.serviceMonitor.annotations:
+        my-little-annotation: test-value
+    asserts:
+      - equal:
+          path: metadata.annotations
+          value:
+            my-little-annotation: test-value
+
+  - it: should create a ServiceMonitor with `labelLimit` if `controller.metrics.serviceMonitor.labelLimit` is set
+    set:
+      controller.metrics.enabled: true
+      controller.metrics.serviceMonitor.enabled: true
+      controller.metrics.serviceMonitor.labelLimit: 20
+    asserts:
+      - equal:
+          path: spec.labelLimit
+          value: 20
+
+  - it: should create a ServiceMonitor with `labelNameLengthLimit` if `controller.metrics.serviceMonitor.labelNameLengthLimit` is set
+    set:
+      controller.metrics.enabled: true
+      controller.metrics.serviceMonitor.enabled: true
+      controller.metrics.serviceMonitor.labelNameLengthLimit: 50
+    asserts:
+      - equal:
+          path: spec.labelNameLengthLimit
+          value: 50
+
+  - it: should create a ServiceMonitor with `labelValueLengthLimit` if `controller.metrics.serviceMonitor.labelValueLengthLimit` is set
+    set:
+      controller.metrics.enabled: true
+      controller.metrics.serviceMonitor.enabled: true
+      controller.metrics.serviceMonitor.labelValueLengthLimit: 50
+    asserts:
+      - equal:
+          path: spec.labelValueLengthLimit
+          value: 50
+
+  - it: should create a ServiceMonitor with `sampleLimit` if `controller.metrics.serviceMonitor.sampleLimit` is set
+    set:
+      controller.metrics.enabled: true
+      controller.metrics.serviceMonitor.enabled: true
+      controller.metrics.serviceMonitor.sampleLimit: 5000
+    asserts:
+      - equal:
+          path: spec.sampleLimit
+          value: 5000
+
+  - it: should create a ServiceMonitor with `targetLimit` if `controller.metrics.serviceMonitor.targetLimit` is set
+    set:
+      controller.metrics.enabled: true
+      controller.metrics.serviceMonitor.enabled: true
+      controller.metrics.serviceMonitor.targetLimit: 100
+    asserts:
+      - equal:
+          path: spec.targetLimit
+          value: 100

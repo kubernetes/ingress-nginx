@@ -250,6 +250,8 @@ func TestCheckIngress(t *testing.T) {
 			}
 		})
 
+		/* Deactivated to mitigate CVE-2025-1974
+		// TODO: Implement sandboxing so this test can be done safely
 		t.Run("When nginx test returns an error", func(t *testing.T) {
 			nginx.command = testNginxTestCommand{
 				t:        t,
@@ -261,6 +263,7 @@ func TestCheckIngress(t *testing.T) {
 				t.Errorf("with a new ingress with an error, an error should be returned")
 			}
 		})
+		*/
 
 		t.Run("When the default annotation prefix is used despite an override", func(t *testing.T) {
 			defer func() {
@@ -1279,6 +1282,74 @@ func TestMergeAlternativeBackends(t *testing.T) {
 					},
 				},
 			},
+			map[string]*ingress.Server{
+				"example.com": {
+					Hostname: "example.com",
+					Locations: []*ingress.Location{
+						{
+							Path:     "/",
+							PathType: &pathTypePrefix,
+							Backend:  "example-http-svc-80",
+						},
+					},
+				},
+			},
+		},
+		"alternative backend does not merge for missing upstream": {
+			&ingress.Ingress{
+				Ingress: networking.Ingress{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: "example",
+					},
+					Spec: networking.IngressSpec{
+						Rules: []networking.IngressRule{
+							{
+								Host: "example.com",
+								IngressRuleValue: networking.IngressRuleValue{
+									HTTP: &networking.HTTPIngressRuleValue{
+										Paths: []networking.HTTPIngressPath{
+											{
+												Path:     "/",
+												PathType: &pathTypePrefix,
+												Backend: networking.IngressBackend{
+													Service: &networking.IngressServiceBackend{
+														Name: "http-svc-canary",
+														Port: networking.ServiceBackendPort{
+															Number: 80,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			map[string]*ingress.Backend{
+				"example-http-svc-canary-80": {
+					Name:     "example-http-svc-canary-80",
+					NoServer: true,
+					TrafficShapingPolicy: ingress.TrafficShapingPolicy{
+						Weight: 20,
+					},
+				},
+			},
+			map[string]*ingress.Server{
+				"example.com": {
+					Hostname: "example.com",
+					Locations: []*ingress.Location{
+						{
+							Path:     "/",
+							PathType: &pathTypePrefix,
+							Backend:  "example-http-svc-80",
+						},
+					},
+				},
+			},
+			map[string]*ingress.Backend{},
 			map[string]*ingress.Server{
 				"example.com": {
 					Hostname: "example.com",

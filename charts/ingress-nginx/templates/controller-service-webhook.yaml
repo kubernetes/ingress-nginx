@@ -29,7 +29,7 @@ spec:
 {{- end }}
   ports:
     - name: https-webhook
-      port: 443
+      port: {{ .Values.controller.admissionWebhooks.service.servicePort }}
       targetPort: webhook
     {{- if semverCompare ">=1.20.0-0" .Capabilities.KubeVersion.Version }}
       appProtocol: https

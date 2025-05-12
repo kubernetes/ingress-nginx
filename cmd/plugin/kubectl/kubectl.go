@@ -32,7 +32,7 @@ import (
 // PodExecString takes a pod and a command, uses kubectl exec to run the command in the pod
 // and returns stdout as a string
 func PodExecString(flags *genericclioptions.ConfigFlags, pod *apiv1.Pod, container string, args []string) (string, error) {
-	args = append([]string{"exec", "-n", pod.Namespace, "-c", container, pod.Name}, args...)
+	args = append([]string{"exec", "-n", pod.Namespace, "-c", container, pod.Name, "--"}, args...)
 	return ExecToString(flags, args)
 }
 
@@ -73,6 +73,8 @@ func execToWriter(args []string, writer io.Writer) error {
 	//nolint:gosec // Ignore G204 error
 	cmd := exec.Command(args[0], args[1:]...)
 
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
 	op, err := cmd.StdoutPipe()
 	if err != nil {
 		return err
@@ -83,6 +85,9 @@ func execToWriter(args []string, writer io.Writer) error {
 	}()
 	err = cmd.Run()
 	if err != nil {
+		if _, ok := err.(*exec.ExitError); ok {
+			println(stderr.String())
+		}
 		return err
 	}
 

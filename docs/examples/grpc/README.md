@@ -166,11 +166,9 @@ This example demonstrates how to route traffic to a gRPC service through the Ing
 
 ### Notes on using response/request streams
 
+> `grpc_read_timeout` and `grpc_send_timeout` will be set as `proxy_read_timeout` and `proxy_send_timeout` when you set backend protocol to `GRPC` or `GRPCS`.
+
 1. If your server only does response streaming and you expect a stream to be open longer than 60 seconds, you will have to change the `grpc_read_timeout` to accommodate this.
 2. If your service only does request streaming and you expect a stream to be open longer than 60 seconds, you have to change the
 `grpc_send_timeout` and the `client_body_timeout`.
 3. If you do both response and request streaming with an open stream longer than 60 seconds, you have to change all three timeouts: `grpc_read_timeout`, `grpc_send_timeout` and `client_body_timeout`.
-
-Values for the timeouts must be specified as e.g. `"1200s"`.
-
-> On the most recent versions of ingress-nginx, changing these timeouts requires using the `nginx.ingress.kubernetes.io/server-snippet` annotation. There are plans for future releases to allow using the Kubernetes annotations to define each timeout separately.

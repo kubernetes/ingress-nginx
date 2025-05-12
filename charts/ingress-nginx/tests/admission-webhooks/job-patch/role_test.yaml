@@ -1,0 +1,11 @@
+suite: Admission Webhooks > Patch Job > Role
+templates:
+  - admission-webhooks/job-patch/role.yaml
+
+tests:
+  - it: should not create a Role if `controller.admissionWebhooks.patch.rbac.create` is false
+    set:
+      controller.admissionWebhooks.patch.rbac.create: false
+    asserts:
+      - hasDocuments:
+          count: 0

@@ -19,6 +19,7 @@ package auth
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -203,16 +204,24 @@ func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 		return nil, err
 	}
 
-	passFilename := fmt.Sprintf("%v/%v-%v-%v.passwd", a.authDirectory, ing.GetNamespace(), ing.UID, secret.UID)
+	passFileName := fmt.Sprintf("%v-%v-%v.passwd", ing.GetNamespace(), ing.UID, secret.UID)
+	passFilePath := filepath.Join(a.authDirectory, passFileName)
+
+	// Ensure password file name does not contain any path traversal characters.
+	if a.authDirectory != filepath.Dir(passFilePath) || passFileName != filepath.Base(passFilePath) {
+		return nil, ing_errors.LocationDeniedError{
+			Reason: fmt.Errorf("invalid password file name: %s", passFileName),
+		}
+	}
 
 	switch secretType {
 	case fileAuth:
-		err = dumpSecretAuthFile(passFilename, secret)
+		err = dumpSecretAuthFile(passFilePath, secret)
 		if err != nil {
 			return nil, err
 		}
 	case mapAuth:
-		err = dumpSecretAuthMap(passFilename, secret)
+		err = dumpSecretAuthMap(passFilePath, secret)
 		if err != nil {
 			return nil, err
 		}
@@ -225,9 +234,9 @@ func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 	return &Config{
 		Type:       at,
 		Realm:      realm,
-		File:       passFilename,
+		File:       passFilePath,
 		Secured:    true,
-		FileSHA:    file.SHA1(passFilename),
+		FileSHA:    file.SHA1(passFilePath),
 		Secret:     name,
 		SecretType: secretType,
 	}, nil

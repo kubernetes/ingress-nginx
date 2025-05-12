@@ -33,7 +33,7 @@ const (
 
 // Should cover something like "ALL:!aNULL:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP"
 // (?:@STRENGTH) is included twice so it can appear before or after @SECLEVEL=n
-var regexValidSSLCipher = regexp.MustCompile(`^(?:(?:[A-Za-z0-9!:+\-])*(?:@STRENGTH)*(?:@SECLEVEL=[0-5])*(?:@STRENGTH)*)*$`)
+var regexValidSSLCipher = regexp.MustCompile(`^(?:(?:[A-Za-z0-9!:+\-_])*(?:@STRENGTH)*(?:@SECLEVEL=[0-5])*(?:@STRENGTH)*)*$`)
 
 var sslCipherAnnotations = parser.Annotation{
 	Group: "backend",
@@ -43,7 +43,7 @@ var sslCipherAnnotations = parser.Annotation{
 			Scope:     parser.AnnotationScopeIngress,
 			Risk:      parser.AnnotationRiskLow,
 			Documentation: `The following annotation will set the ssl_prefer_server_ciphers directive at the server level. 
-			This configuration specifies that server ciphers should be preferred over client ciphers when using the SSLv3 and TLS protocols.`,
+			This configuration specifies that server ciphers should be preferred over client ciphers when using the TLS protocols.`,
 		},
 		sslCipherAnnotation: {
 			Validator:     parser.ValidateRegex(regexValidSSLCipher, true),

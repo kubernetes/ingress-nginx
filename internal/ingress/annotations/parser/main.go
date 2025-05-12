@@ -210,6 +210,21 @@ func StringRiskToRisk(risk string) AnnotationRisk {
 	}
 }
 
+func (a AnnotationRisk) ToString() string {
+	switch a {
+	case AnnotationRiskCritical:
+		return "Critical"
+	case AnnotationRiskHigh:
+		return "High"
+	case AnnotationRiskMedium:
+		return "Medium"
+	case AnnotationRiskLow:
+		return "Low"
+	default:
+		return "Unknown"
+	}
+}
+
 func normalizeString(input string) string {
 	trimmedContent := []string{}
 	for _, line := range strings.Split(input, "\n") {

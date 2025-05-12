@@ -1,7 +1,0 @@
-controller:
-  watchIngressWithoutClass: true
-  ingressClassResource:
-    name: custom-nginx
-    enabled: true
-    default: true
-    controllerValue: "k8s.io/custom-nginx"

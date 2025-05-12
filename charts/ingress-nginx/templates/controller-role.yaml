@@ -91,14 +91,4 @@ rules:
       - list
       - watch
       - get
-{{- if .Values.podSecurityPolicy.enabled }}
-  - apiGroups:      [{{ template "podSecurityPolicy.apiGroup" . }}]
-    resources:      ['podsecuritypolicies']
-    verbs:          ['use']
-    {{- with .Values.controller.existingPsp }}
-    resourceNames:  [{{ . }}]
-    {{- else }}
-    resourceNames:  [{{ include "ingress-nginx.fullname" . }}]
-    {{- end }}
-{{- end }}
 {{- end }}

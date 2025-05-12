@@ -2,7 +2,7 @@
 
 All New change are in [Changelog](./changelog)
 
-### 1.5.1 
+### 1.5.1
 
 * Upgrade NGINX to 1.21.6
 * Upgrade Golang 1.19.2
@@ -102,18 +102,18 @@ Images:
 ### Community Updates
 
 We will discuss the results of our Community Survey, progress on the stabilization project, and ideas going
-forward with the project at 
-[Kubecon NA 2022 in Detroit](https://events.linuxfoundation.org/kubecon-cloudnativecon-north-america/). Come join us 
+forward with the project at
+[Kubecon NA 2022 in Detroit](https://events.linuxfoundation.org/kubecon-cloudnativecon-north-america/). Come join us
 and let us hear what you'd like to see in the future for ingress-nginx.
 
 https://kccncna2022.sched.com/event/18lgl?iframe=no
 
 [**Kubernetes Registry change notice**](https://twitter.com/BenTheElder/status/1575898507235323904)
-The [@kubernetesio](https://twitter.com/kubernetesio) container image host http://k8s.gcr.io is 
-*actually* getting redirected to the community controlled http://registry.k8s.io starting with a small portion of 
+The [@kubernetesio](https://twitter.com/kubernetesio) container image host http://k8s.gcr.io is
+*actually* getting redirected to the community controlled http://registry.k8s.io starting with a small portion of
 traffic on October 3rd.
 
-If you notice any issues, *please* ping [Ben Elder](https://twitter.com/BenTheElder), 
+If you notice any issues, *please* ping [Ben Elder](https://twitter.com/BenTheElder),
 [@thockin](https://twitter.com/thockin), [@ameukam](https://twitter.com/ameukam),or report issues in slack to
 [sig-k8s-infra slack channel](https://kubernetes.slack.com/archives/CCK68P2Q2).
 
@@ -123,7 +123,7 @@ If you notice any issues, *please* ping [Ben Elder](https://twitter.com/BenTheEl
 [8890](https://github.com/kubernetes/ingress-nginx/pull/8890)
 * Update to Prometheus metric names, more information [available here]( https://github.com/kubernetes/ingress-nginx/pull/8728
 )
-* Deprecated Kubernetes versions 1.20-1.21, Added support for, 1.25, currently supported versions v1.22, v1.23, v1.24, v1.25  
+* Deprecated Kubernetes versions 1.20-1.21, Added support for, 1.25, currently supported versions v1.22, v1.23, v1.24, v1.25
 
 ADDED
 * `_request_duration_seconds` Histogram
@@ -203,11 +203,11 @@ Images:
 
 ### 1.3.1
 
-In v1.3.1 leader elections will be done entirely using the Lease API and no longer using configmaps. 
+In v1.3.1 leader elections will be done entirely using the Lease API and no longer using configmaps.
 v1.3.0 is a safe transition version, using v1.3.0 can automatically complete the merging of election locks, and then you can safely upgrade to v1.3.1.
 
-Also, *important note*, with the Release of Kubernetes v1.25 we are dropping support for the legacy branches, 
-Also, *important note*, with the release of Kubernetes v1.25, we are dropping support for the legacy edition, 
+Also, *important note*, with the Release of Kubernetes v1.25 we are dropping support for the legacy branches,
+Also, *important note*, with the release of Kubernetes v1.25, we are dropping support for the legacy edition,
 that means all version <1.0.0 of the ingress-nginx-controller.
 
 ## Image:
@@ -277,11 +277,11 @@ All other Changes
 
 ### 1.3.0
 
-Image: 
+Image:
 - registry.k8s.io/ingress-nginx/controller:v1.3.0@sha256:d1707ca76d3b044ab8a28277a2466a02100ee9f58a86af1535a3edf9323ea1b5
 - registry.k8s.io/ingress-nginx/controller-chroot:v1.3.0@sha256:0fcb91216a22aae43b374fc2e6a03b8afe9e8c78cbf07a09d75636dc4ea3c191
 
-_IMPORTANT CHANGES:_ 
+_IMPORTANT CHANGES:_
 * This release removes support for Kubernetes v1.19.0
 * This release adds support for Kubernetes v1.24.0
 * Starting with this release, we will need permissions on the `coordination.k8s.io/leases` resource for leaderelection lock
@@ -352,11 +352,11 @@ _Changes:_
 
 ### 1.2.0
 
-Image: 
+Image:
 - k8s.gcr.io/ingress-nginx/controller:v1.2.0@sha256:d8196e3bc1e72547c5dec66d6556c0ff92a23f6d0919b206be170bc90d5f9185
 - k8s.gcr.io/ingress-nginx/controller-chroot:v1.2.0@sha256:fb17f1700b77d4fcc52ca6f83ffc2821861ae887dbb87149cf5cbc52bea425e5
 
-This minor version release, introduces 2 breaking changes. For the first time, an option to jail/chroot the nginx process, inside the controller container, is being introduced.. This provides an additional layer of security, for sensitive information like K8S serviceaccounts. This release also brings a special new feature of deep inspection into objects. The inspection is a walk through of all the spec, checking for possible attempts to escape configs. Currently such an inspection only occurs for `networking.Ingress`.  Additionally there are fixes for the recently announced CVEs on busybox & ssl_client. And there is a fix to a recently introduced redirection related bug, that was setting the protocol on URLs to "nil".
+This minor version release, introduces 2 breaking changes. For the first time, an option to jail/chroot the nginx process, inside the controller container, is being introduced. This provides an additional layer of security, for sensitive information like K8S serviceaccounts. This release also brings a special new feature of deep inspection into objects. The inspection is a walk through of all the spec, checking for possible attempts to escape configs. Currently such an inspection only occurs for `networking.Ingress`.  Additionally there are fixes for the recently announced CVEs on busybox & ssl_client. And there is a fix to a recently introduced redirection related bug, that was setting the protocol on URLs to "nil".
 
 _Changes:_
 
@@ -419,7 +419,7 @@ _Changes:_
 **Image:**
 - k8s.gcr.io/ingress-nginx/controller:v1.1.3@sha256:31f47c1e202b39fadecf822a9b76370bd4baed199a005b3e7d4d1455f4fd3fe2
 
-This release upgrades Alpine to 3.14.4 and nginx to 1.19.10 
+This release upgrades Alpine to 3.14.4 and nginx to 1.19.10
 
 Patches [OpenSSL CVE-2022-0778](https://github.com/kubernetes/ingress-nginx/issues/8339)
 
@@ -460,7 +460,7 @@ _Changes:_
 
 ### 1.1.2
 
-**Image:** 
+**Image:**
 - k8s.gcr.io/ingress-nginx/controller:v1.1.2@sha256:28b11ce69e57843de44e3db6413e98d09de0f6688e33d4bd384002a44f78405c
 
 This release bumps grpc version to 1.44.0 & runc to version 1.1.0. The release also re-introduces the ingress.class annotation, which was previously declared as deprecated. Besides that, several bug fixes and improvements are listed below.
@@ -502,7 +502,7 @@ _Changes:_
 
 ### 1.1.1
 
-**Image:** 
+**Image:**
 - k8s.gcr.io/ingress-nginx/controller:v1.1.1@sha256:0bc88eb15f9e7f84e8e56c14fa5735aaa488b840983f87bd79b1054190e660de
 
 This release contains several fixes and improvements. This image is now built using Go v1.17.6 and gRPC v1.43.0. See detailed list below.
@@ -571,9 +571,9 @@ _Changes:_
 
 _Possible Breaking Change_
 We now implement string sanitization in annotation values. This means that words like "location", "by_lua" and
-others will drop the reconciliation of an Ingress object. 
+others will drop the reconciliation of an Ingress object.
 
-Users from mod_security and other features should be aware that some blocked values may be used by those features 
+Users from mod_security and other features should be aware that some blocked values may be used by those features
 and must be manually unblocked by the Ingress Administrator.
 
 For more details please check [https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#annotation-value-word-blocklist]
@@ -592,7 +592,7 @@ _Changes:_
 - k8s.gcr.io/ingress-nginx/controller:v1.0.4@sha256:545cff00370f28363dad31e3b59a94ba377854d3a11f18988f5f9e56841ef9ef
 
 _Possible Breaking Change_
-We have disabled the builtin ssl_session_cache due to possible memory fragmentation. This should not impact the majority of users, but please let us know 
+We have disabled the builtin ssl_session_cache due to possible memory fragmentation. This should not impact the majority of users, but please let us know
 if you face any problem
 
 _Changes:_
@@ -608,7 +608,7 @@ _Changes:_
 - k8s.gcr.io/ingress-nginx/controller:v1.0.3@sha256:4ade87838eb8256b094fbb5272d7dda9b6c7fa8b759e6af5383c1300996a7452
 
 **Known Issues**
-* Ingress controller now (starting from v1.0.0) mandates cluster scoped access to IngressClass. This leads to problems when updating old Ingress controller to newest version, as described [here](https://github.com/kubernetes/ingress-nginx/issues/7510). We plan to fix it in v1.0.4, see [this](https://github.com/kubernetes/ingress-nginx/pull/7578). 
+* Ingress controller now (starting from v1.0.0) mandates cluster scoped access to IngressClass. This leads to problems when updating old Ingress controller to newest version, as described [here](https://github.com/kubernetes/ingress-nginx/issues/7510). We plan to fix it in v1.0.4, see [this](https://github.com/kubernetes/ingress-nginx/pull/7578).
 
 _New Features:_
 
@@ -624,7 +624,7 @@ _Changes:_
 - k8s.gcr.io/ingress-nginx/controller:v1.0.2@sha256:85b53b493d6d658d8c013449223b0ffd739c76d76dc9bf9000786669ec04e049
 
 **Known Issues**
-* Ingress controller now (starting from v1.0.0) mandates cluster scoped access to IngressClass. This leads to problems when updating old Ingress controller to newest version, as described [here](https://github.com/kubernetes/ingress-nginx/issues/7510). We plan to fix it in v1.0.3, see [this](https://github.com/kubernetes/ingress-nginx/pull/7578). 
+* Ingress controller now (starting from v1.0.0) mandates cluster scoped access to IngressClass. This leads to problems when updating old Ingress controller to newest version, as described [here](https://github.com/kubernetes/ingress-nginx/issues/7510). We plan to fix it in v1.0.3, see [this](https://github.com/kubernetes/ingress-nginx/pull/7578).
 
 _New Features:_
 
@@ -640,7 +640,7 @@ _Changes:_
 - k8s.gcr.io/ingress-nginx/controller:v1.0.1@sha256:26bbd57f32bac3b30f90373005ef669aae324a4de4c19588a13ddba399c6664e
 
 **Known Issues**
-* Ingress controller now (starting from v1.0.0) mandates cluster scoped access to IngressClass. This leads to problems when updating old Ingress controller to newest version, as described [here](https://github.com/kubernetes/ingress-nginx/issues/7510). We plan to fix it in v1.0.2, see [this](https://github.com/kubernetes/ingress-nginx/pull/7578). 
+* Ingress controller now (starting from v1.0.0) mandates cluster scoped access to IngressClass. This leads to problems when updating old Ingress controller to newest version, as described [here](https://github.com/kubernetes/ingress-nginx/issues/7510). We plan to fix it in v1.0.2, see [this](https://github.com/kubernetes/ingress-nginx/pull/7578).
 
 _New Features:_
 
@@ -883,7 +883,7 @@ _Changes:_
   test #7255 
 - [X] [#7216](https://github.com/kubernetes/ingress-nginx/pull/7216) Admission: Skip validation checks if an ingress 
   is marked as deleted #7216
-  
+
 ### 1.0.0-beta.3
 ** This is a breaking change**
 
@@ -2057,7 +2057,7 @@ _Breaking Changes:_
 
   ```
   Due to upcoming data privacy regulations, we are making significant changes to how you access free GeoLite2 databases starting December 30, 2019.
-  Learn more on our blog https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases/
+  Learn more on our blog https://blog.maxmind.com/2019/12/significant-changes-to-accessing-and-using-geolite2-databases/
   ```
 
   Because of this change, it is not clear we can provide the databases directly from the docker image.
@@ -2193,7 +2193,7 @@ _New Features:_
 
   If the active connections end before that, the pod will terminate gracefully at that time.
 
-  To efectively take advantage of this feature, the Configmap feature [worker-shutdown-timeout](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#worker-shutdown-timeout) new value is `240s` instead of `10s`.
+  To effectively take advantage of this feature, the Configmap feature [worker-shutdown-timeout](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#worker-shutdown-timeout) new value is `240s` instead of `10s`.
 
   **IMPORTANT:** this value has a side effect during reloads, consuming more memory until the old NGINX workers are replaced.
 
@@ -2603,7 +2603,7 @@ _New Features:_
 _Breaking changes:_
 
 - The NGINX server listening in port 18080 was removed. It was replaced by a server using an unix socket as port [#3684](https://github.com/kubernetes/ingress-nginx/pull/3684)
-  This server was internal to the ingress controller. In case this was being acceded from the outside, you can restore the old server using the `http-snipet` feature in the configuration configmap like:
+  This server was internal to the ingress controller. In case this was being acceded from the outside, you can restore the old server using the `http-snippet` feature in the configuration configmap like:
 
   ```yaml
   http-snippet: |

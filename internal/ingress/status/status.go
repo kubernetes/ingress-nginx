@@ -393,7 +393,7 @@ func statusAddressFromService(service string, kubeClient clientset.Interface) ([
 	return nil, fmt.Errorf("unable to extract IP address/es from service %v", service)
 }
 
-// stringInSlice returns true if s is in list
+// stringInIngresses returns true if s is in list
 func stringInIngresses(s string, list []v1.IngressLoadBalancerIngress) bool {
 	for _, v := range list {
 		if v.IP == s || v.Hostname == s {

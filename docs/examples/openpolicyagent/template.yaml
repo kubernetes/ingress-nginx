@@ -17,11 +17,11 @@ spec:
           properties:
             blockedTypes:
               type: array
-              items: 
-                type: string 
+              items:
+                type: string
             namespacesExceptions:
               type: array
-              items: 
+              items:
                 type: string
   targets:
     - target: admission.k8s.gatekeeper.sh
@@ -31,8 +31,8 @@ spec:
         violation[{"msg": msg}] {
           input.review.kind.kind == "Ingress"
           ns := input.review.object.metadata.namespace
-          excemptNS := [good | excempts = input.parameters.namespacesExceptions[_] ; good = excempts == ns]
-          not any(excemptNS)
+          exemptNS := [good | exempts = input.parameters.namespacesExceptions[_] ; good = exempts == ns]
+          not any(exemptNS)
           pathType := object.get(input.review.object.spec.rules[_].http.paths[_], "pathType", "")
           blockedPath := [blocked | blockedTypes = input.parameters.blockedTypes[_] ; blocked = blockedTypes == pathType]
           any(blockedPath)

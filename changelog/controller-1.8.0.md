@@ -39,7 +39,7 @@ on our new [ingress-nginx-dev mailing list](https://groups.google.com/a/kubernet
 * Correct annotations in monitoring docs (#9976)
 * fix: avoid builds and tests for changes to markdown (#9962)
 * Validate path types (#9967)
-* HPA: Use capabilites & align manifests. (#9521)
+* HPA: Use capabilities & align manifests. (#9521)
 * Use dl.k8s.io instead of hardcoded GCS URIs (#9946)
 * add option for annotations in PodDisruptionBudget (#9843)
 * chore: update httpbin to httpbun (#9919)

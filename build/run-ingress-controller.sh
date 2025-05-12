@@ -49,7 +49,7 @@ fi
 SSL_VOLUME=$(mktemp -d)
 
 function cleanup {
-    echo -e "${BGREEN}Stoping kubectl proxy${NC}"
+    echo -e "${BGREEN}Stopping kubectl proxy${NC}"
     rm -rf "${SSL_VOLUME}"
     kill "$proxy_pid"
 }

@@ -115,7 +115,7 @@ func getEndpointsFromSlices(s *corev1.Service, port *corev1.ServicePort, proto c
 		useTopologyHints = false
 		if zoneForHints != emptyZone {
 			useTopologyHints = true
-			// check if all endpointslices has zone hints
+			// check if all endpointslices have zone hints
 			for _, ep := range eps.Endpoints {
 				if ep.Hints == nil || len(ep.Hints.ForZones) == 0 {
 					useTopologyHints = false

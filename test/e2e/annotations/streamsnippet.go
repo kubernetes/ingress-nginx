@@ -39,14 +39,8 @@ var _ = framework.DescribeSetting("stream-snippet", func() {
 	})
 
 	ginkgo.It("should add value of stream-snippet to nginx config", func() {
-		f.SetNginxConfigMapData(map[string]string{
-			"allow-snippet-annotations": "true",
-		})
-		defer func() {
-			f.SetNginxConfigMapData(map[string]string{
-				"allow-snippet-annotations": "false",
-			})
-		}()
+		disableSnippet := f.AllowSnippetConfiguration()
+		defer disableSnippet()
 
 		host := "foo.com"
 

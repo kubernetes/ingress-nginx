@@ -1,6 +1,8 @@
 
 # Hardening Guide
 
+Do not use in multi-tenant Kubernetes production installations. This project assumes that users that can create Ingress objects are administrators of the cluster.
+
 ## Overview
 There are several ways to do hardening and securing of nginx. In this documentation two guides are used, the guides are
 overlapping in some points:

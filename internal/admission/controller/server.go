@@ -47,7 +47,7 @@ type AdmissionControllerServer struct {
 	AdmissionController AdmissionController
 }
 
-// NewAdmissionControllerServer instanciates an admission controller server with
+// NewAdmissionControllerServer instantiates an admission controller server with
 // a default codec
 func NewAdmissionControllerServer(ac AdmissionController) *AdmissionControllerServer {
 	return &AdmissionControllerServer{

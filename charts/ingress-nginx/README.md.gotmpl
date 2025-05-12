@@ -226,4 +226,22 @@ Detail of how and why are in [this issue](https://github.com/helm/charts/pull/13
 
 As of version `1.26.0` of this chart, by simply not providing any clusterIP value, `invalid: spec.clusterIP: Invalid value: "": field is immutable` will no longer occur since `clusterIP: ""` will not be rendered.
 
+### Pod Security Admission
+
+You can use Pod Security Admission by applying labels to the `ingress-nginx` namespace as instructed by the [documentation](https://kubernetes.io/docs/tasks/configure-pod-container/enforce-standards-namespace-labels).
+
+Example:
+
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ingress-nginx
+  labels:
+    kubernetes.io/metadata.name: ingress-nginx
+    name: ingress-nginx
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: v1.31
+```
+
 {{ template "chart.valuesSection" . }}

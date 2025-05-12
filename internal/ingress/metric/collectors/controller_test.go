@@ -88,6 +88,8 @@ func TestControllerCounters(t *testing.T) {
 						Hostname: "demo",
 						SSLCert: &ingress.SSLCert{
 							ExpireTime: t1,
+							Name:       "secret-name",
+							Namespace:  "secret-namespace",
 							Certificate: &x509.Certificate{
 								PublicKeyAlgorithm: x509.ECDSA,
 								Issuer: pkix.Name{
@@ -111,7 +113,7 @@ func TestControllerCounters(t *testing.T) {
 			want: `
 				# HELP nginx_ingress_controller_ssl_expire_time_seconds Number of seconds since 1970 to the SSL Certificate expire.\n			An example to check if this certificate will expire in 10 days is: "nginx_ingress_controller_ssl_expire_time_seconds < (time() + (10 * 24 * 3600))"
 				# TYPE nginx_ingress_controller_ssl_expire_time_seconds gauge
-				nginx_ingress_controller_ssl_expire_time_seconds{class="nginx",host="demo",identifier="abcd1234-100",namespace="default",secret_name=""} 1.351807721e+09
+				nginx_ingress_controller_ssl_expire_time_seconds{class="nginx",host="demo",identifier="abcd1234-100",namespace="secret-namespace",secret_name="secret-name"} 1.351807721e+09
 			`,
 			metrics: []string{"nginx_ingress_controller_ssl_expire_time_seconds"},
 		},

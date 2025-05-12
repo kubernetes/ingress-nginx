@@ -36,12 +36,11 @@ SHDICT_ARGS=(
     "--shdict" "high_throughput_tracker 1M"
     "--shdict" "balancer_ewma_last_touched_at 1M"
     "--shdict" "balancer_ewma_locks 512k"
-    "--shdict" "global_throttle_cache 5M"
     "./rootfs/etc/nginx/lua/test/run.lua"
 )
 
 if [ $# -eq 0 ]; then
-    resty "${SHDICT_ARGS[@]}" ./rootfs/etc/nginx/lua/test/ ./rootfs/etc/nginx/lua/plugins/**/test ${BUSTED_ARGS}
+    resty "${SHDICT_ARGS[@]}" ./rootfs/etc/nginx/lua/test/ ${BUSTED_ARGS}
 else
     resty "${SHDICT_ARGS[@]}" $@ ${BUSTED_ARGS}
 fi

@@ -11,6 +11,9 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
   name: {{ . }}
+  {{- if $.Values.controller.ingressClassResource.annotations }}
+  annotations: {{ toYaml $.Values.controller.ingressClassResource.annotations | nindent 4 }}
+  {{- end }}
 spec:
   controller: {{ $.Values.controller.ingressClassResource.controllerValue }}
   {{- with $.Values.controller.ingressClassResource.parameters }}

@@ -32,7 +32,7 @@ const (
 	proxySslCiphers   = "HIGH:-SHA"
 	off               = "off"
 	sslServerName     = "w00t"
-	defaultProtocol   = "SSLv2 TLSv1 TLSv1.2 TLSv1.3"
+	defaultProtocol   = "TLSv1.2 TLSv1.3"
 )
 
 func buildIngress() *networking.Ingress {
@@ -103,7 +103,7 @@ func TestAnnotations(t *testing.T) {
 	data[parser.GetAnnotationWithPrefix(proxySSLSecretAnnotation)] = defaultDemoSecret
 	data[parser.GetAnnotationWithPrefix("proxy-ssl-ciphers")] = proxySslCiphers
 	data[parser.GetAnnotationWithPrefix("proxy-ssl-name")] = "$host"
-	data[parser.GetAnnotationWithPrefix("proxy-ssl-protocols")] = "TLSv1.3 SSLv2 TLSv1   TLSv1.2"
+	data[parser.GetAnnotationWithPrefix("proxy-ssl-protocols")] = "TLSv1.3 TLSv1.2"
 	data[parser.GetAnnotationWithPrefix("proxy-ssl-server-name")] = "on"
 	data[parser.GetAnnotationWithPrefix("proxy-ssl-session-reuse")] = off
 	data[parser.GetAnnotationWithPrefix("proxy-ssl-verify")] = "on"

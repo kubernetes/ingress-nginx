@@ -1,0 +1,15 @@
+controller:
+  image:
+    repository: ingress-controller/controller
+    tag: 1.0.0-dev
+    digest: null
+
+  service:
+    type: ClusterIP
+
+  ingressClassResource:
+    name: custom-nginx
+    default: true
+    controllerValue: k8s.io/custom-nginx
+
+  watchIngressWithoutClass: true

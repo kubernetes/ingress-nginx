@@ -84,7 +84,7 @@ var _ = framework.IngressNginxDescribeSerial("[TopologyHints] topology aware rou
 		}
 
 		if gotHints {
-			// we have 2 replics, if there is just one backend it means that we are routing according slices hints to same zone as controller is
+			// we have 2 replicas, if there is just one backend it means that we are routing according slices hints to same zone as controller is
 			assert.Equal(ginkgo.GinkgoT(), 1, gotBackends)
 		} else {
 			// two replicas should have two endpoints without topology hints

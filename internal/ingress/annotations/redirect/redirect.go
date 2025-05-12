@@ -28,20 +28,26 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
-const defaultPermanentRedirectCode = http.StatusMovedPermanently
+const (
+	defaultPermanentRedirectCode = http.StatusMovedPermanently
+	defaultTemporalRedirectCode  = http.StatusFound
+)
 
 // Config returns the redirect configuration for an Ingress rule
 type Config struct {
 	URL       string `json:"url"`
 	Code      int    `json:"code"`
 	FromToWWW bool   `json:"fromToWWW"`
+	Relative  bool   `json:"relative"`
 }
 
 const (
 	fromToWWWRedirAnnotation        = "from-to-www-redirect"
 	temporalRedirectAnnotation      = "temporal-redirect"
+	temporalRedirectAnnotationCode  = "temporal-redirect-code"
 	permanentRedirectAnnotation     = "permanent-redirect"
 	permanentRedirectAnnotationCode = "permanent-redirect-code"
+	relativeRedirectsAnnotation     = "relative-redirects"
 )
 
 var redirectAnnotations = parser.Annotation{
@@ -51,7 +57,7 @@ var redirectAnnotations = parser.Annotation{
 			Validator:     parser.ValidateBool,
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskLow, // Low, as it allows just a set of options
-			Documentation: `In some scenarios is required to redirect from www.domain.com to domain.com or vice versa. To enable this feature use this annotation.`,
+			Documentation: `In some scenarios, it is required to redirect from www.domain.com to domain.com or vice versa, which way the redirect is performed depends on the configured host value in the Ingress object.`,
 		},
 		temporalRedirectAnnotation: {
 			Validator: parser.ValidateRegex(parser.URLIsValidRegex, false),
@@ -59,6 +65,12 @@ var redirectAnnotations = parser.Annotation{
 			Risk:      parser.AnnotationRiskMedium, // Medium, as it allows arbitrary URLs that needs to be validated
 			Documentation: `This annotation allows you to return a temporal redirect (Return Code 302) instead of sending data to the upstream. 
 			For example setting this annotation to https://www.google.com would redirect everything to Google with a Return Code of 302 (Moved Temporarily).`,
+		},
+		temporalRedirectAnnotationCode: {
+			Validator:     parser.ValidateInt,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow, // Low, as it allows just a set of options
+			Documentation: `This annotation allows you to modify the status code used for temporal redirects.`,
 		},
 		permanentRedirectAnnotation: {
 			Validator: parser.ValidateRegex(parser.URLIsValidRegex, false),
@@ -72,6 +84,12 @@ var redirectAnnotations = parser.Annotation{
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskLow, // Low, as it allows just a set of options
 			Documentation: `This annotation allows you to modify the status code used for permanent redirects.`,
+		},
+		relativeRedirectsAnnotation: {
+			Validator:     parser.ValidateBool,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `If enabled, redirects issued by nginx will be relative. See https://nginx.org/en/docs/http/ngx_http_core_module.html#absolute_redirect`,
 		},
 	},
 }
@@ -99,20 +117,35 @@ func (r redirect) Parse(ing *networking.Ingress) (interface{}, error) {
 		return nil, err
 	}
 
+	rr, err := parser.GetBoolAnnotation(relativeRedirectsAnnotation, ing, r.annotationConfig.Annotations)
+	if err != nil && !errors.IsMissingAnnotations(err) {
+		return nil, err
+	}
+
 	tr, err := parser.GetStringAnnotation(temporalRedirectAnnotation, ing, r.annotationConfig.Annotations)
 	if err != nil && !errors.IsMissingAnnotations(err) {
 		return nil, err
 	}
 
 	if tr != "" {
+		trc, err := parser.GetIntAnnotation(temporalRedirectAnnotationCode, ing, r.annotationConfig.Annotations)
+		if err != nil && !errors.IsMissingAnnotations(err) {
+			return nil, err
+		}
+
+		if trc < http.StatusMultipleChoices || trc > http.StatusTemporaryRedirect {
+			trc = defaultTemporalRedirectCode
+		}
+
 		if err := isValidURL(tr); err != nil {
 			return nil, err
 		}
 
 		return &Config{
 			URL:       tr,
-			Code:      http.StatusFound,
+			Code:      trc,
 			FromToWWW: r3w,
+			Relative:  rr,
 		}, nil
 	}
 
@@ -135,6 +168,13 @@ func (r redirect) Parse(ing *networking.Ingress) (interface{}, error) {
 			URL:       pr,
 			Code:      prc,
 			FromToWWW: r3w,
+			Relative:  rr,
+		}, nil
+	}
+
+	if rr {
+		return &Config{
+			Relative: rr,
 		}, nil
 	}
 
@@ -156,6 +196,9 @@ func (r1 *Config) Equal(r2 *Config) bool {
 		return false
 	}
 	if r1.FromToWWW != r2.FromToWWW {
+		return false
+	}
+	if r1.Relative != r2.Relative {
 		return false
 	}
 	return true

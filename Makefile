@@ -58,7 +58,7 @@ ifneq ($(PLATFORM),)
 	PLATFORM_FLAG="--platform"
 endif
 
-REGISTRY ?= gcr.io/k8s-staging-ingress-nginx
+REGISTRY ?= us-central1-docker.pkg.dev/k8s-staging-images/ingress-nginx
 
 BASE_IMAGE ?= $(shell cat NGINX_BASE)
 
@@ -110,7 +110,7 @@ clean-chroot-image: ## Removes local image
 
 .PHONY: build
 build:  ## Build ingress controller, debug tool and pre-stop hook.
-	E2E_IMAGE=golang:$(GO_VERSION)-alpine3.19 USE_SHELL=/bin/sh build/run-in-docker.sh \
+	E2E_IMAGE=golang:$(GO_VERSION)-alpine3.21 USE_SHELL=/bin/sh build/run-in-docker.sh \
 		MAC_OS=$(MAC_OS) \
 		PKG=$(PKG) \
 		ARCH=$(ARCH) \
@@ -124,6 +124,9 @@ build:  ## Build ingress controller, debug tool and pre-stop hook.
 clean: ## Remove .gocache directory.
 	rm -rf bin/ .gocache/ .cache/
 
+.PHONY: verify-docs
+verify-docs: ## Verify doc generation
+	hack/verify-annotation-docs.sh
 
 .PHONY: static-check
 static-check: ## Run verification script for boilerplate, codegen, gofmt, golint, lualint and chart-lint.
@@ -229,19 +232,21 @@ misspell:  ## Check for spelling errors.
 run-ingress-controller: ## Run the ingress controller locally using a kubectl proxy connection.
 	@build/run-ingress-controller.sh
 
-.PHONY: ensure-buildx
-ensure-buildx:
-	./hack/init-buildx.sh
+.PHONY: builder
+builder:
+	docker buildx create --name $(BUILDER) --bootstrap --use || :
+	docker buildx inspect $(BUILDER)
 
 .PHONY: show-version
 show-version:
 	echo -n $(TAG)
 
+BUILDER ?= ingress-nginx
 PLATFORMS ?= amd64 arm arm64
 BUILDX_PLATFORMS ?= linux/amd64,linux/arm,linux/arm64
 
 .PHONY: release # Build a multi-arch docker image
-release: ensure-buildx clean
+release: builder clean
 	echo "Building binaries..."
 	$(foreach PLATFORM,$(PLATFORMS), echo -n "$(PLATFORM)..."; ARCH=$(PLATFORM) make build;)
 

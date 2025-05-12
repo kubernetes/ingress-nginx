@@ -1,8 +1,8 @@
 local ngx_re_split = require("ngx.re").split
+local string_to_bool = require("util").string_to_bool
 
 local certificate_configured_for_current_request =
   require("certificate").configured_for_current_request
-local global_throttle = require("global_throttle")
 
 local ngx = ngx
 local io = io
@@ -109,7 +109,16 @@ end
 -- rewrite gets called in every location context.
 -- This is where we do variable assignments to be used in subsequent
 -- phases or redirection
-function _M.rewrite(location_config)
+function _M.rewrite()
+
+  local location_config = {
+    force_ssl_redirect = string_to_bool(ngx.var.force_ssl_redirect),
+    ssl_redirect = string_to_bool(ngx.var.ssl_redirect),
+    force_no_ssl_redirect = string_to_bool(ngx.var.force_no_ssl_redirect),
+    preserve_trailing_slash = string_to_bool(ngx.var.preserve_trailing_slash),
+    use_port_in_redirects = string_to_bool(ngx.var.use_port_in_redirects),
+  }
+
   ngx.var.pass_access_scheme = ngx.var.scheme
 
   ngx.var.best_http_host = ngx.var.http_host or ngx.var.host
@@ -164,7 +173,6 @@ function _M.rewrite(location_config)
     return ngx_redirect(uri, config.http_redirect_code)
   end
 
-  global_throttle.throttle(config.global_throttle, location_config.global_throttle)
 end
 
 function _M.header()

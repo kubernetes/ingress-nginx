@@ -31,7 +31,6 @@ type IngressChartValue struct {
 			RunAsUser                int    `yaml:"runAsUser"`
 			AllowPrivilegeEscalation bool   `yaml:"allowPrivilegeEscalation"`
 		} `yaml:"image"`
-		ExistingPsp   string `yaml:"existingPsp"`
 		ContainerName string `yaml:"containerName"`
 		ContainerPort struct {
 			HTTP  int `yaml:"http"`
@@ -208,13 +207,6 @@ type IngressChartValue struct {
 		ExtraVolumes          []interface{} `yaml:"extraVolumes"`
 		ExtraInitContainers   []interface{} `yaml:"extraInitContainers"`
 		ExtraModules          []interface{} `yaml:"extraModules"`
-		Opentelemetry         struct {
-			Enabled                  bool   `yaml:"enabled"`
-			Image                    string `yaml:"image"`
-			ContainerSecurityContext struct {
-				AllowPrivilegeEscalation bool `yaml:"allowPrivilegeEscalation"`
-			} `yaml:"containerSecurityContext"`
-		} `yaml:"opentelemetry"`
 		AdmissionWebhooks struct {
 			Annotations          struct{}      `yaml:"annotations"`
 			Enabled              bool          `yaml:"enabled"`
@@ -226,7 +218,6 @@ type IngressChartValue struct {
 			NamespaceSelector    struct{}      `yaml:"namespaceSelector"`
 			ObjectSelector       struct{}      `yaml:"objectSelector"`
 			Labels               struct{}      `yaml:"labels"`
-			ExistingPsp          string        `yaml:"existingPsp"`
 			NetworkPolicyEnabled bool          `yaml:"networkPolicyEnabled"`
 			Service              struct {
 				Annotations              struct{}      `yaml:"annotations"`
@@ -329,7 +320,6 @@ type IngressChartValue struct {
 			ReadOnlyRootFilesystem   bool   `yaml:"readOnlyRootFilesystem"`
 			AllowPrivilegeEscalation bool   `yaml:"allowPrivilegeEscalation"`
 		} `yaml:"image"`
-		ExistingPsp    string   `yaml:"existingPsp"`
 		ExtraArgs      struct{} `yaml:"extraArgs"`
 		ServiceAccount struct {
 			Create                       bool   `yaml:"create"`
@@ -388,9 +378,6 @@ type IngressChartValue struct {
 		Create bool `yaml:"create"`
 		Scope  bool `yaml:"scope"`
 	} `yaml:"rbac"`
-	PodSecurityPolicy struct {
-		Enabled bool `yaml:"enabled"`
-	} `yaml:"podSecurityPolicy"`
 	ServiceAccount struct {
 		Create                       bool     `yaml:"create"`
 		Name                         string   `yaml:"name"`

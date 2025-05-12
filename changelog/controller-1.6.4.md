@@ -83,7 +83,7 @@ Images:
 * ModSecurity dependencies update to avoid Memory Leaks (#9330)
 * fix(hpa): deprecated api version, bump to v2 (#9348)
 * fix(typo): pluralize provider (#9346)
-* removed deprecation messsage for ingressClass annotation (#9357)
+* removed deprecation message for ingressClass annotation (#9357)
 * added ginkgo junit reports (#9350)
 * Fix typos found by codespell (#9353)
 * bumped ginkgo to v2.5.1 in testrunner (#9340)

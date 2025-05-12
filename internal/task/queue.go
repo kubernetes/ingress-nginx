@@ -36,7 +36,7 @@ var keyFunc = cache.DeletionHandlingMetaNamespaceKeyFunc
 // which timestamp is older than the last successful get operation.
 type Queue struct {
 	// queue is the work queue the worker polls
-	queue workqueue.RateLimitingInterface
+	queue workqueue.TypedRateLimitingInterface[any]
 	// sync is called for each item in the queue
 	sync func(interface{}) error
 	// workerDone is closed when the worker exits
@@ -172,7 +172,7 @@ func NewTaskQueue(syncFn func(interface{}) error) *Queue {
 // NewCustomTaskQueue creates a new custom task queue with the given sync function.
 func NewCustomTaskQueue(syncFn func(interface{}) error, fn func(interface{}) (interface{}, error)) *Queue {
 	q := &Queue{
-		queue:      workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
+		queue:      workqueue.NewTypedRateLimitingQueue(workqueue.DefaultTypedControllerRateLimiter[any]()),
 		sync:       syncFn,
 		workerDone: make(chan bool),
 		fn:         fn,

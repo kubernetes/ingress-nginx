@@ -33,15 +33,8 @@ var _ = framework.DescribeAnnotation("configuration-snippet", func() {
 
 	ginkgo.It("set snippet more_set_headers in all locations", func() {
 		host := "configurationsnippet.foo.com"
-
-		f.SetNginxConfigMapData(map[string]string{
-			"allow-snippet-annotations": "true",
-		})
-		defer func() {
-			f.SetNginxConfigMapData(map[string]string{
-				"allow-snippet-annotations": "false",
-			})
-		}()
+		disableSnippet := f.AllowSnippetConfiguration()
+		defer disableSnippet()
 
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/configuration-snippet": `more_set_headers "Foo1: Bar1";`,
@@ -71,6 +64,8 @@ var _ = framework.DescribeAnnotation("configuration-snippet", func() {
 	})
 
 	ginkgo.It("drops snippet more_set_header in all locations if disabled by admin", func() {
+		f.UpdateNginxConfigMapData("annotations-risk-level", "Critical") // To enable snippet configurations
+		defer f.UpdateNginxConfigMapData("annotations-risk-level", "High")
 		host := "noconfigurationsnippet.foo.com"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/configuration-snippet": `more_set_headers "Foo1: Bar1";`,

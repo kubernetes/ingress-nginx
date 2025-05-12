@@ -48,8 +48,8 @@ var _ = framework.IngressNginxDescribeSerial("annotation validations", func() {
 		framework.Sleep()
 
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/default-backend":       "default/bla", // low risk
-			"nginx.ingress.kubernetes.io/denylist-source-range": "1.1.1.1/32",  // medium risk
+			"nginx.ingress.kubernetes.io/default-backend":       "bla",        // low risk
+			"nginx.ingress.kubernetes.io/denylist-source-range": "1.1.1.1/32", // medium risk
 		}
 
 		ginkgo.By("allow ingress with low/medium risk annotations")
@@ -82,8 +82,8 @@ var _ = framework.IngressNginxDescribeSerial("annotation validations", func() {
 		framework.Sleep()
 
 		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/default-backend":       "default/bla", // low risk
-			"nginx.ingress.kubernetes.io/denylist-source-range": "1.1.1.1/32",  // medium risk
+			"nginx.ingress.kubernetes.io/default-backend":       "bla",        // low risk
+			"nginx.ingress.kubernetes.io/denylist-source-range": "1.1.1.1/32", // medium risk
 		}
 
 		ginkgo.By("allow ingress with low/medium risk annotations")

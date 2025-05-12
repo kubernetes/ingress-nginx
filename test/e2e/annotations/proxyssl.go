@@ -47,7 +47,7 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
-		assertProxySSL(f, host, "", "DEFAULT", "TLSv1 TLSv1.1 TLSv1.2", "off", 1, "")
+		assertProxySSL(f, host, "", "DEFAULT", "TLSv1.2", "off", 1, "")
 
 		f.HTTPTestClient().
 			GET("/").
@@ -77,7 +77,7 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
-		assertProxySSL(f, host, "", "DEFAULT", "TLSv1 TLSv1.1 TLSv1.2", "on", 2, "on")
+		assertProxySSL(f, host, "", "DEFAULT", "TLSv1.2", "on", 2, "on")
 
 		f.HTTPTestClient().
 			GET("/").
@@ -105,7 +105,7 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 		ing := framework.NewSingleIngressWithTLS(host, "/", host, []string{host}, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
-		assertProxySSL(f, host, "", "HIGH:!AES", "TLSv1 TLSv1.1 TLSv1.2", "off", 1, "")
+		assertProxySSL(f, host, "", "HIGH:!AES", "TLSv1.2", "off", 1, "")
 
 		f.HTTPTestClient().
 			GET("/").
@@ -171,7 +171,7 @@ var _ = framework.DescribeAnnotation("proxy-ssl-*", func() {
 		wlValue := "true"
 		f.UpdateNginxConfigMapData(wlKey, wlValue)
 
-		assertProxySSL(f, host, secretName, "DEFAULT", "TLSv1 TLSv1.1 TLSv1.2", "on", 1, "on")
+		assertProxySSL(f, host, secretName, "DEFAULT", "TLSv1.2", "on", 1, "on")
 
 		f.WaitForNginxCustomConfiguration("## start server proxyssl.com", "location ", func(server string) bool {
 			return (!strings.Contains(server, "proxy_ssl_trusted_certificate") &&
