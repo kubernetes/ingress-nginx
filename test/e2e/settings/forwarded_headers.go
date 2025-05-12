@@ -66,6 +66,7 @@ var _ = framework.DescribeSetting("use-forwarded-headers", func() {
 			Body().
 			Raw()
 
+		// we use a regexp to prevent matching the expression in the middle of the x-original-forwarded-host header
 		assert.Regexp(ginkgo.GinkgoT(), `(\s)host=myhost`, body)
 		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-host=myhost")
 		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-proto=myproto")
@@ -86,7 +87,8 @@ var _ = framework.DescribeSetting("use-forwarded-headers", func() {
 			Body().
 			Raw()
 
-		assert.Regexp(ginkgo.GinkgoT(), `(\s)host=myhost`, body)
+		// we use a regexp to prevent matching the expression in the middle of the x-original-forwarded-host header
+		assert.Regexp(ginkgo.GinkgoT(), `(\s)host=myhost.com`, body)
 		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-host=myhost.com")
 	})
 
@@ -122,6 +124,7 @@ var _ = framework.DescribeSetting("use-forwarded-headers", func() {
 		assert.Contains(ginkgo.GinkgoT(), body, "x-forwarded-scheme=http")
 		assert.Contains(ginkgo.GinkgoT(), body, "x-original-forwarded-for=1.2.3.4")
 		assert.Contains(ginkgo.GinkgoT(), body, "x-original-forwarded-host=myhost")
+		// we use a regexp to prevent matching the expression in the middle of the x-original-forwarded-host header
 		assert.NotRegexp(ginkgo.GinkgoT(), `(\s)host=myhost`, body)
 		assert.NotContains(ginkgo.GinkgoT(), body, "x-forwarded-host=myhost")
 		assert.NotContains(ginkgo.GinkgoT(), body, "x-forwarded-proto=myproto")
