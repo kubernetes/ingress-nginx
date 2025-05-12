@@ -567,7 +567,7 @@ type Configuration struct {
 	// Default is X-Forwarded-For
 	ForwardedForHeader string `json:"forwarded-for-header,omitempty"`
 
-	// Sets the header field for identifying the originating host of a client
+	// Sets the header field for identifying the originating Host header of a client
 	// Default is X-Forwarded-Host
 	ForwardedHostHeader string `json:"forwarded-host-header,omitempty"`
 
