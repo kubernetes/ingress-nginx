@@ -526,12 +526,16 @@ func buildLocation(input interface{}, enforceRegex bool) string {
 	}
 
 	path := location.Path
-	if enforceRegex {
-		return fmt.Sprintf(`~* "^%s"`, path)
-	}
 
 	if location.PathType != nil && *location.PathType == networkingv1.PathTypeExact {
+		if enforceRegex {
+			return fmt.Sprintf(`~* "^%s$"`, path)
+		}
 		return fmt.Sprintf(`= %s`, path)
+	}
+
+	if enforceRegex {
+		return fmt.Sprintf(`~* "^%s"`, path)
 	}
 
 	return path
