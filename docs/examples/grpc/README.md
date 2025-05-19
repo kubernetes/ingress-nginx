@@ -129,7 +129,7 @@ This example demonstrates how to route traffic to a gRPC service through the Ing
 
 - The takeaway is that we are not doing any TLS configuration on the server (as we are terminating TLS at the ingress level, gRPC traffic will travel unencrypted inside the cluster and arrive "insecure").
 
-- For your own application you may or may not want to do this.  If you prefer to forward encrypted traffic to your POD and terminate TLS at the gRPC server itself, add the ingress annotation `nginx.ingress.kubernetes.io/backend-protocol: "GRPCS"`.
+- For your own application you may or may not want to do this.  If you prefer to forward encrypted traffic to your POD and terminate TLS at the gRPC server itself, add the ingress annotation `nginx.ingress.kubernetes.io/backend-protocol: "GRPC"`.
 
 - A few more things to note:
 
