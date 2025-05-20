@@ -223,3 +223,11 @@ tests:
       - equal:
           path: spec.template.spec.automountServiceAccountToken
           value: false
+
+  - it: should create a Deployment with a custom runtime if `controller.runtimeClassName` is set
+    set:
+      controller.runtimeClassName: myClass
+    asserts:
+      - equal:
+          path: spec.template.spec.runtimeClassName
+          value: myClass
