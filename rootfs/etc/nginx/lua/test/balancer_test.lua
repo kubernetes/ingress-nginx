@@ -447,7 +447,7 @@ describe("Balancer", function()
         }
       }
 
-      helpers.mock_resty_dns_query("example.com", nil, "Mock was instructed to return error")
+      helpers.mock_resty_dns_query("example.com", {}, "Mock was instructed to return error")
       local mock_instance = { sync = function(backend) end }
       setmetatable(mock_instance, implementation)
       implementation.new = function(self, backend) return mock_instance end
@@ -463,7 +463,7 @@ describe("Balancer", function()
         endpoints = nil
       }
 
-      helpers.mock_resty_dns_query("example.com", nil, "Mock was instructed to return error")
+      helpers.mock_resty_dns_query("example.com", {}, "Mock was instructed to return error")
       local mock_instance = { sync = function(backend) end }
       setmetatable(mock_instance, implementation)
       implementation.new = function(self, backend) return mock_instance end
