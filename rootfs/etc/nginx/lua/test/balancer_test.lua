@@ -453,7 +453,7 @@ describe("Balancer", function()
       implementation.new = function(self, backend) return mock_instance end
       local s = spy.on(implementation, "new")
       assert.has_no.errors(function() balancer.sync_backend(backend) end)
-      assert.spy(s).was.not.called()
+      assert.spy(s).was_not_called()
       assert.is_nil(balancer.get_balancer_by_upstream_name(backend.name))
     end)
 
@@ -469,7 +469,7 @@ describe("Balancer", function()
       implementation.new = function(self, backend) return mock_instance end
       local s = spy.on(implementation, "new")
       assert.has_no.errors(function() balancer.sync_backend(backend) end)
-      assert.spy(s).was.not.called()
+      assert.spy(s).was_not_called()
       assert.is_nil(balancer.get_balancer_by_upstream_name(backend.name))
     end)
 
