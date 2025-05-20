@@ -45,6 +45,9 @@ spec:
     {{- if .Values.defaultBackend.priorityClassName }}
       priorityClassName: {{ .Values.defaultBackend.priorityClassName }}
     {{- end }}
+    {{- if .Values.defaultBackend.runtimeClassName }}
+      runtimeClassName: {{ .Values.defaultBackend.runtimeClassName | quote }}
+    {{- end }}
     {{- if .Values.defaultBackend.podSecurityContext }}
       securityContext: {{ toYaml .Values.defaultBackend.podSecurityContext | nindent 8 }}
     {{- end }}
