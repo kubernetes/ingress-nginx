@@ -284,27 +284,29 @@ This section explains how to do that on AWS using an NLB.
 
 1. Download the [deploy.yaml](https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.2/deploy/static/provider/aws/nlb-with-tls-termination/deploy.yaml) template
 
-  ```console
-  wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.2/deploy/static/provider/aws/nlb-with-tls-termination/deploy.yaml
-  ```
+    ```console
+    wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.2/deploy/static/provider/aws/nlb-with-tls-termination/deploy.yaml
+    ```
 
 2. Edit the file and change the VPC CIDR in use for the Kubernetes cluster:
 
-   ```
-   proxy-real-ip-cidr: XXX.XXX.XXX/XX
-   ```
+    ```
+    proxy-real-ip-cidr: XXX.XXX.XXX/XX
+    ```
 
 3. Change the AWS Certificate Manager (ACM) ID as well:
 
-   ```
-   arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX
-   ```
+    ```
+    arn:aws:acm:us-west-2:XXXXXXXX:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX
+    ```
 
 4. Deploy the manifest:
 
-   ```console
-   kubectl apply -f deploy.yaml
-   ```
+    ```console
+    kubectl apply -f deploy.yaml
+    ```
+
+
 
 ##### NLB Idle Timeouts
 
