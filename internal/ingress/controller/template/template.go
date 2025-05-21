@@ -314,6 +314,7 @@ var funcMap = text_template.FuncMap{
 	},
 	"isValidByteSize":                    isValidByteSize,
 	"buildForwardedFor":                  buildForwardedFor,
+	"buildForwardedHost":                 buildForwardedHost,
 	"buildAuthSignURL":                   buildAuthSignURL,
 	"buildAuthSignURLLocation":           buildAuthSignURLLocation,
 	"buildOpentelemetry":                 buildOpentelemetry,
@@ -1151,6 +1152,18 @@ func buildForwardedFor(input interface{}) string {
 	ffh := strings.ReplaceAll(s, "-", "_")
 	ffh = strings.ToLower(ffh)
 	return fmt.Sprintf("$http_%v", ffh)
+}
+
+func buildForwardedHost(input interface{}) string {
+	s, ok := input.(string)
+	if !ok {
+		klog.Errorf("expected a 'string' type but %T was returned", input)
+		return ""
+	}
+
+	fhh := strings.ReplaceAll(s, "-", "_")
+	fhh = strings.ToLower(fhh)
+	return fmt.Sprintf("$http_%v", fhh)
 }
 
 func buildAuthSignURL(authSignURL, authRedirectParam string) string {
