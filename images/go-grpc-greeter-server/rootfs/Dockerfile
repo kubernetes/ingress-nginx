@@ -7,7 +7,7 @@ WORKDIR /go/src/greeter-server
 COPY . .
 RUN go build -o /greeter-server
 
-FROM gcr.io/distroless/base-debian10
+FROM scratch
 
 COPY --from=build /greeter-server /
 
