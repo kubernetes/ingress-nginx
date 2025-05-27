@@ -44,6 +44,7 @@ TODO:
 - buildDenyVariable:
 - buildUpstreamName:
 - buildForwardedFor:
+- buildForwardedHost:
 - buildAuthSignURL:
 - buildNextUpstream:
 - filterRateLimits:

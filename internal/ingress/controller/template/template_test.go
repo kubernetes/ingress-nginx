@@ -857,6 +857,24 @@ func TestBuildForwardedFor(t *testing.T) {
 	}
 }
 
+func TestBuildForwardedHost(t *testing.T) {
+	invalidType := &ingress.Ingress{}
+	expected := ""
+	actual := buildForwardedHost(invalidType)
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	inputStr := "X-Forwarded-Host"
+	expected = "$http_x_forwarded_host"
+	actual = buildForwardedHost(inputStr)
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+}
+
 func TestBuildResolvers(t *testing.T) {
 	ipOne := net.ParseIP("192.0.0.1")
 	ipTwo := net.ParseIP("2001:db8:1234:0000:0000:0000:0000:0000")
