@@ -755,9 +755,9 @@ func TestListControllerPods(t *testing.T) {
 			useElectionIDSelector: true,
 			electionID:            "test-election-id",
 			podLabels: map[string]string{
-				"app":                          "ingress-nginx",
-				"pod-template-hash":           "abc123",
-				ElectionIDLabelKey:             "test-election-id",
+				"app":               "ingress-nginx",
+				"pod-template-hash": "abc123",
+				ElectionIDLabelKey:  "test-election-id",
 			},
 			expectedLabelSelectorContains: ElectionIDLabelKey,
 		},
@@ -766,7 +766,7 @@ func TestListControllerPods(t *testing.T) {
 			useElectionIDSelector: false,
 			electionID:            "test-election-id",
 			podLabels: map[string]string{
-				"app":                "ingress-nginx",
+				"app":               "ingress-nginx",
 				"pod-template-hash": "abc123",
 			},
 			expectedLabelSelectorContains: "app=ingress-nginx",
@@ -802,9 +802,9 @@ func TestListControllerPods(t *testing.T) {
 			// Create a status sync with our test configuration
 			st := &statusSync{
 				Config: Config{
-					Client:                         client,
+					Client:                          client,
 					UseElectionIDSelectorOnShutdown: tc.useElectionIDSelector,
-					ElectionID:                     tc.electionID,
+					ElectionID:                      tc.electionID,
 				},
 			}
 
@@ -824,11 +824,8 @@ func TestListControllerPods(t *testing.T) {
 				if len(podList.Items) != 0 && tc.podLabels[ElectionIDLabelKey] != tc.electionID {
 					t.Errorf("expected 0 pods but got %d", len(podList.Items))
 				}
-			} else {
-				// Should have exactly one pod
-				if len(podList.Items) != 1 {
-					t.Errorf("expected 1 pod but got %d", len(podList.Items))
-				}
+			} else if len(podList.Items) != 1 {
+				t.Errorf("expected 1 pod but got %d", len(podList.Items))
 			}
 		})
 	}
@@ -837,11 +834,11 @@ func TestListControllerPods(t *testing.T) {
 // TestIsRunningMultiplePods tests the isRunningMultiplePods function with different label selectors
 func TestIsRunningMultiplePods(t *testing.T) {
 	testCases := []struct {
-		name              string
-		useElectionID     bool
-		electionID        string
-		podLabels         []map[string]string
-		expectedMultiple  bool
+		name             string
+		useElectionID    bool
+		electionID       string
+		podLabels        []map[string]string
+		expectedMultiple bool
 	}{
 		{
 			name:          "multiple pods with same electionID",
@@ -849,14 +846,14 @@ func TestIsRunningMultiplePods(t *testing.T) {
 			electionID:    "test-election-id",
 			podLabels: []map[string]string{
 				{
-					"app":                "ingress-nginx",
+					"app":               "ingress-nginx",
 					"pod-template-hash": "abc123",
-					ElectionIDLabelKey:   "test-election-id",
+					ElectionIDLabelKey:  "test-election-id",
 				},
 				{
-					"app":                "ingress-nginx",
+					"app":               "ingress-nginx",
 					"pod-template-hash": "def456",
-					ElectionIDLabelKey:   "test-election-id",
+					ElectionIDLabelKey:  "test-election-id",
 				},
 			},
 			expectedMultiple: true,
@@ -867,14 +864,14 @@ func TestIsRunningMultiplePods(t *testing.T) {
 			electionID:    "test-election-id",
 			podLabels: []map[string]string{
 				{
-					"app":                "ingress-nginx",
+					"app":               "ingress-nginx",
 					"pod-template-hash": "abc123",
-					ElectionIDLabelKey:   "test-election-id",
+					ElectionIDLabelKey:  "test-election-id",
 				},
 				{
-					"app":                "ingress-nginx",
+					"app":               "ingress-nginx",
 					"pod-template-hash": "def456",
-					ElectionIDLabelKey:   "other-election-id",
+					ElectionIDLabelKey:  "other-election-id",
 				},
 			},
 			expectedMultiple: false,
@@ -885,9 +882,9 @@ func TestIsRunningMultiplePods(t *testing.T) {
 			electionID:    "test-election-id",
 			podLabels: []map[string]string{
 				{
-					"app":                "ingress-nginx",
+					"app":               "ingress-nginx",
 					"pod-template-hash": "abc123",
-					ElectionIDLabelKey:   "test-election-id",
+					ElectionIDLabelKey:  "test-election-id",
 				},
 			},
 			expectedMultiple: false,
@@ -898,11 +895,11 @@ func TestIsRunningMultiplePods(t *testing.T) {
 			electionID:    "test-election-id",
 			podLabels: []map[string]string{
 				{
-					"app":                "ingress-nginx",
+					"app":               "ingress-nginx",
 					"pod-template-hash": "abc123",
 				},
 				{
-					"app":                "ingress-nginx",
+					"app":               "ingress-nginx",
 					"pod-template-hash": "def456",
 				},
 			},
@@ -943,9 +940,9 @@ func TestIsRunningMultiplePods(t *testing.T) {
 			// Create a status sync with our test configuration
 			st := &statusSync{
 				Config: Config{
-					Client:                         client,
+					Client:                          client,
 					UseElectionIDSelectorOnShutdown: tc.useElectionID,
-					ElectionID:                     tc.electionID,
+					ElectionID:                      tc.electionID,
 				},
 			}
 

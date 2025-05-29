@@ -146,14 +146,14 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 
 	if config.UpdateStatus {
 		n.syncStatus = status.NewStatusSyncer(status.Config{
-			Client:                 config.Client,
-			PublishService:         config.PublishService,
-			PublishStatusAddress:   config.PublishStatusAddress,
-			IngressLister:          n.store,
-			UpdateStatusOnShutdown: config.UpdateStatusOnShutdown,
-			UseNodeInternalIP:      config.UseNodeInternalIP,
+			Client:                          config.Client,
+			PublishService:                  config.PublishService,
+			PublishStatusAddress:            config.PublishStatusAddress,
+			IngressLister:                   n.store,
+			UpdateStatusOnShutdown:          config.UpdateStatusOnShutdown,
+			UseNodeInternalIP:               config.UseNodeInternalIP,
 			UseElectionIDSelectorOnShutdown: config.UseElectionIDSelectorOnShutdown,
-			ElectionID:             config.ElectionID,
+			ElectionID:                      config.ElectionID,
 		})
 	} else {
 		klog.Warning("Update of Ingress status is disabled (flag --update-status)")

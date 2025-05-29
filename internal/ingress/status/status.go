@@ -187,12 +187,12 @@ func nameOrIPToLoadBalancerIngress(nameOrIP string) v1.IngressLoadBalancerIngres
 // listControllerPods returns a list of running pods with controller labels
 func (s *statusSync) listControllerPods(useElectionID bool) (*apiv1.PodList, error) {
 	podLabel := make(map[string]string)
-	
+
 	if useElectionID {
 		// When using electionID, only look for pods with the electionID label
 		// This is more specific and will correctly identify pods belonging to the same controller group
 		// Note: This requires the electionID label to be set on the pods (done by helm chart)
-		podLabel[ElectionIDLabelKey] = s.Config.ElectionID
+		podLabel[ElectionIDLabelKey] = s.ElectionID
 	} else {
 		// As a standard, app.kubernetes.io are "reserved well-known" labels.
 		// In our case, we add those labels as identifiers of the Ingress
@@ -206,9 +206,8 @@ func (s *statusSync) listControllerPods(useElectionID bool) (*apiv1.PodList, err
 			}
 		}
 	}
-	
 	return s.Client.CoreV1().Pods(k8s.IngressPodDetails.Namespace).List(
-		context.TODO(), 
+		context.TODO(),
 		metav1.ListOptions{
 			LabelSelector: labels.SelectorFromSet(podLabel).String(),
 		})
