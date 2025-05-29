@@ -143,6 +143,8 @@ type Configuration struct {
 
 	DisableSyncEvents bool
 
+	UseElectionIDSelectorOnShutdown bool
+
 	EnableTopologyAwareRouting bool
 }
 

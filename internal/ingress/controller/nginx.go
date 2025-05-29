@@ -152,6 +152,8 @@ func NewNGINXController(config *Configuration, mc metric.Collector) *NGINXContro
 			IngressLister:          n.store,
 			UpdateStatusOnShutdown: config.UpdateStatusOnShutdown,
 			UseNodeInternalIP:      config.UseNodeInternalIP,
+			UseElectionIDSelectorOnShutdown: config.UseElectionIDSelectorOnShutdown,
+			ElectionID:             config.ElectionID,
 		})
 	} else {
 		klog.Warning("Update of Ingress status is disabled (flag --update-status)")

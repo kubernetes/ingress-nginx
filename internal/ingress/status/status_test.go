@@ -18,6 +18,7 @@ package status
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -738,5 +739,221 @@ func TestIngressSliceEqual(t *testing.T) {
 		if r != fooTest.er {
 			t.Errorf("returned %v but expected %v", r, fooTest.er)
 		}
+	}
+}
+
+func TestListControllerPods(t *testing.T) {
+	testCases := []struct {
+		name                          string
+		useElectionIDSelector         bool
+		electionID                    string
+		podLabels                     map[string]string
+		expectedLabelSelectorContains string
+	}{
+		{
+			name:                  "use election ID selector",
+			useElectionIDSelector: true,
+			electionID:            "test-election-id",
+			podLabels: map[string]string{
+				"app":                          "ingress-nginx",
+				"pod-template-hash":           "abc123",
+				ElectionIDLabelKey:             "test-election-id",
+			},
+			expectedLabelSelectorContains: ElectionIDLabelKey,
+		},
+		{
+			name:                  "don't use election ID selector",
+			useElectionIDSelector: false,
+			electionID:            "test-election-id",
+			podLabels: map[string]string{
+				"app":                "ingress-nginx",
+				"pod-template-hash": "abc123",
+			},
+			expectedLabelSelectorContains: "app=ingress-nginx",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create a client with a single pod
+			client := testclient.NewSimpleClientset(
+				&apiv1.PodList{Items: []apiv1.Pod{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "ingress-controller",
+							Namespace: apiv1.NamespaceDefault,
+							Labels:    tc.podLabels,
+						},
+					},
+				}},
+			)
+
+			// Store the old pod details and set new ones for testing
+			origPodDetails := k8s.IngressPodDetails
+			defer func() { k8s.IngressPodDetails = origPodDetails }()
+			k8s.IngressPodDetails = &k8s.PodInfo{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "ingress-controller",
+					Namespace: apiv1.NamespaceDefault,
+					Labels:    tc.podLabels,
+				},
+			}
+
+			// Create a status sync with our test configuration
+			st := &statusSync{
+				Config: Config{
+					Client:                         client,
+					UseElectionIDSelectorOnShutdown: tc.useElectionIDSelector,
+					ElectionID:                     tc.electionID,
+				},
+			}
+
+			// Call listControllerPods
+			podList, err := st.listControllerPods(tc.useElectionIDSelector)
+			if err != nil {
+				t.Fatalf("listControllerPods returned an error: %v", err)
+			}
+
+			// Verify the result
+			if tc.useElectionIDSelector {
+				// Should have exactly one pod when electionID selector matches
+				if len(podList.Items) != 1 && tc.podLabels[ElectionIDLabelKey] == tc.electionID {
+					t.Errorf("expected 1 pod but got %d", len(podList.Items))
+				}
+				// Should have no pods when electionID selector doesn't match
+				if len(podList.Items) != 0 && tc.podLabels[ElectionIDLabelKey] != tc.electionID {
+					t.Errorf("expected 0 pods but got %d", len(podList.Items))
+				}
+			} else {
+				// Should have exactly one pod
+				if len(podList.Items) != 1 {
+					t.Errorf("expected 1 pod but got %d", len(podList.Items))
+				}
+			}
+		})
+	}
+}
+
+// TestIsRunningMultiplePods tests the isRunningMultiplePods function with different label selectors
+func TestIsRunningMultiplePods(t *testing.T) {
+	testCases := []struct {
+		name              string
+		useElectionID     bool
+		electionID        string
+		podLabels         []map[string]string
+		expectedMultiple  bool
+	}{
+		{
+			name:          "multiple pods with same electionID",
+			useElectionID: true,
+			electionID:    "test-election-id",
+			podLabels: []map[string]string{
+				{
+					"app":                "ingress-nginx",
+					"pod-template-hash": "abc123",
+					ElectionIDLabelKey:   "test-election-id",
+				},
+				{
+					"app":                "ingress-nginx",
+					"pod-template-hash": "def456",
+					ElectionIDLabelKey:   "test-election-id",
+				},
+			},
+			expectedMultiple: true,
+		},
+		{
+			name:          "multiple pods with different electionIDs",
+			useElectionID: true,
+			electionID:    "test-election-id",
+			podLabels: []map[string]string{
+				{
+					"app":                "ingress-nginx",
+					"pod-template-hash": "abc123",
+					ElectionIDLabelKey:   "test-election-id",
+				},
+				{
+					"app":                "ingress-nginx",
+					"pod-template-hash": "def456",
+					ElectionIDLabelKey:   "other-election-id",
+				},
+			},
+			expectedMultiple: false,
+		},
+		{
+			name:          "single pod with matching electionID",
+			useElectionID: true,
+			electionID:    "test-election-id",
+			podLabels: []map[string]string{
+				{
+					"app":                "ingress-nginx",
+					"pod-template-hash": "abc123",
+					ElectionIDLabelKey:   "test-election-id",
+				},
+			},
+			expectedMultiple: false,
+		},
+		{
+			name:          "multiple pods when not using electionID",
+			useElectionID: false,
+			electionID:    "test-election-id",
+			podLabels: []map[string]string{
+				{
+					"app":                "ingress-nginx",
+					"pod-template-hash": "abc123",
+				},
+				{
+					"app":                "ingress-nginx",
+					"pod-template-hash": "def456",
+				},
+			},
+			expectedMultiple: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create pods for this test case
+			var pods []apiv1.Pod
+			for i, labels := range tc.podLabels {
+				pods = append(pods, apiv1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      fmt.Sprintf("ingress-controller-%d", i),
+						Namespace: apiv1.NamespaceDefault,
+						Labels:    labels,
+					},
+					Status: apiv1.PodStatus{
+						Phase: apiv1.PodRunning,
+					},
+				})
+			}
+
+			client := testclient.NewSimpleClientset(&apiv1.PodList{Items: pods})
+
+			// Store the old pod details and set new ones for testing
+			origPodDetails := k8s.IngressPodDetails
+			defer func() { k8s.IngressPodDetails = origPodDetails }()
+			k8s.IngressPodDetails = &k8s.PodInfo{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "ingress-controller-0",
+					Namespace: apiv1.NamespaceDefault,
+					Labels:    tc.podLabels[0],
+				},
+			}
+
+			// Create a status sync with our test configuration
+			st := &statusSync{
+				Config: Config{
+					Client:                         client,
+					UseElectionIDSelectorOnShutdown: tc.useElectionID,
+					ElectionID:                     tc.electionID,
+				},
+			}
+
+			// Test the isRunningMultiplePods method
+			result := st.isRunningMultiplePods()
+			if result != tc.expectedMultiple {
+				t.Errorf("isRunningMultiplePods returned %v but expected %v", result, tc.expectedMultiple)
+			}
+		})
 	}
 }
