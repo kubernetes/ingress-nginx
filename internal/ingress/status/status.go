@@ -230,7 +230,7 @@ func (s *statusSync) runningAddresses() ([]v1.IngressLoadBalancerIngress, error)
 	}
 
 	// get information about all the pods running the ingress controller
-	pods, err := s.listControllerPods(false)
+	pods, err := s.listControllerPods(s.UseElectionIDSelectorOnShutdown)
 	if err != nil {
 		return nil, err
 	}
