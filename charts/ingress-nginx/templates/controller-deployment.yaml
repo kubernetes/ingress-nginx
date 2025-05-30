@@ -22,7 +22,7 @@ spec:
   replicas: {{ .Values.controller.replicaCount }}
   {{- end }}
   revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
-  {{- if .Values.controller.progressDeadlineSeconds }}
+  {{- if and .Values.controller.progressDeadlineSeconds (ne .Values.controller.progressDeadlineSeconds 0) }}
   progressDeadlineSeconds: {{ .Values.controller.progressDeadlineSeconds }}
   {{- end }}
   {{- if .Values.controller.updateStrategy }}
