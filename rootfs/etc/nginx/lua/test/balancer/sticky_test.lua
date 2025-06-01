@@ -304,6 +304,68 @@ describe("Sticky", function()
       it("returns the correct endpoint for the client", function() test_correct_endpoint(sticky_balanced) end)
       it("returns the correct endpoint for the client", function() test_correct_endpoint(sticky_persistent) end)
     end)
+
+    -- Note below that endpoints are only marked this way when persistent
+    describe("when an endpoint is draining", function()
+      it("persists client with cookie to endpoint", function()
+        local s = {}
+        local cookie_jar = {}
+        cookie.new = function(self)
+          local cookie_instance = {
+            set = function(self, ck)
+              cookie_jar[ck.key] = ck.value
+              return true, nil
+            end,
+            get = function(self, k) return cookie_jar[k] end,
+          }
+          s = spy.on(cookie_instance, "set")
+          return cookie_instance, false
+        end
+
+        local b = get_test_backend()
+        b.sessionAffinityConfig.cookieSessionAffinity.locations = {}
+        b.sessionAffinityConfig.cookieSessionAffinity.locations["test.com"] = {"/"}
+
+        local expectedPeer = b.endpoints[1]
+
+        local sticky_balancer_instance = sticky_persistent:new(b)
+        local peer = sticky_balancer_instance:balance()
+        assert.equal(peer, test_backend_endpoint)
+
+        expectedPeer.isDraining = true
+        sticky_balancer_instance:sync(b)
+        sticky_balancer_instance.TESTING = true
+        peer = sticky_balancer_instance:balance()
+        assert.equal(peer, test_backend_endpoint)
+      end)
+
+      it("does not route client without cookie to endpoint", function()
+        local s = {}
+        local cookie_jar = {}
+        cookie.new = function(self)
+          local cookie_instance = {
+            set = function(self, ck)
+              cookie_jar[ck.key] = ck.value
+              return true, nil
+            end,
+            get = function(self, k) return cookie_jar[k] end,
+          }
+          s = spy.on(cookie_instance, "set")
+          return cookie_instance, false
+        end
+
+        local b = get_test_backend()
+        b.sessionAffinityConfig.cookieSessionAffinity.locations = {}
+        b.sessionAffinityConfig.cookieSessionAffinity.locations["test.com"] = {"/"}
+
+        local expectedPeer = b.endpoints[1]
+        expectedPeer.isDraining = true
+
+        local sticky_balancer_instance = sticky_persistent:new(b)
+        local peer = sticky_balancer_instance:balance()
+        assert.equal(peer, nil)
+      end)
+    end)
   end)
 
   local function get_several_test_backends(change_on_failure)
