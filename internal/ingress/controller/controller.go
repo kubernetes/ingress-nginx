@@ -1132,6 +1132,10 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 						n.metricCollector.IncOrphanIngress(ing.Namespace, ing.Name, orphanMetricLabelNoEndpoint)
 					} else {
 						n.metricCollector.DecOrphanIngress(ing.Namespace, ing.Name, orphanMetricLabelNoEndpoint)
+
+						if allEndpointsAreDraining(endp) {
+							klog.Warningf("All Endpoints for Service %q are draining.", svcKey)
+						}
 					}
 					upstreams[name].Endpoints = endp
 				}
@@ -1907,4 +1911,13 @@ func newTrafficShapingPolicy(cfg *canary.Config) ingress.TrafficShapingPolicy {
 		HeaderPattern: cfg.HeaderPattern,
 		Cookie:        cfg.Cookie,
 	}
+}
+
+func allEndpointsAreDraining(eps []ingress.Endpoint) bool {
+	for _, ep := range eps {
+		if !ep.IsDraining {
+			return false
+		}
+	}
+	return true
 }
