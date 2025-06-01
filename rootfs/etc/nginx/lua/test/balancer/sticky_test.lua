@@ -73,7 +73,7 @@ describe("Sticky", function()
   end)
 
   local test_backend = get_test_backend()
-  local test_backend_endpoint= test_backend.endpoints[1].address .. ":" .. test_backend.endpoints[1].port
+  local test_backend_endpoint= util.get_endpoint_string(test_backend.endpoints[1])
 
   local legacy_cookie_value = test_backend_endpoint
   local function create_current_cookie_value(backend_key)
