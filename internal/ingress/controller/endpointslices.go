@@ -34,9 +34,16 @@ import (
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 )
 
+type EndpointSelectionMode int
+
+const (
+	ReadyEndpoints EndpointSelectionMode = iota
+	ServingEndpoints
+)
+
 // getEndpointsFromSlices returns a list of Endpoint structs for a given service/target port combination.
 func getEndpointsFromSlices(s *corev1.Service, port *corev1.ServicePort, proto corev1.Protocol, zoneForHints string,
-	getServiceEndpointsSlices func(string) ([]*discoveryv1.EndpointSlice, error),
+	epSelectionMode EndpointSelectionMode, getServiceEndpointsSlices func(string) ([]*discoveryv1.EndpointSlice, error),
 ) []ingress.Endpoint {
 	upsServers := []ingress.Endpoint{}
 
@@ -153,9 +160,19 @@ func getEndpointsFromSlices(s *corev1.Service, port *corev1.ServicePort, proto c
 		}
 
 		for _, ep := range eps.Endpoints {
-			if (ep.Conditions.Ready != nil) && !(*ep.Conditions.Ready) {
-				continue
+			epIsReady := (ep.Conditions.Ready == nil) || *ep.Conditions.Ready
+			if epSelectionMode == ReadyEndpoints {
+				if !epIsReady {
+					continue
+				}
+			} else {
+				// assume epSelectionMode == ServingEndpoints.
+				epIsServing := (ep.Conditions.Serving == nil) || *ep.Conditions.Serving
+				if !epIsServing {
+					continue
+				}
 			}
+
 			epHasZone := false
 			if useTopologyHints {
 				for _, epzone := range ep.Hints.ForZones {
@@ -176,10 +193,12 @@ func getEndpointsFromSlices(s *corev1.Service, port *corev1.ServicePort, proto c
 					if _, exists := processedUpstreamServers[hostPort]; exists {
 						continue
 					}
+
 					ups := ingress.Endpoint{
-						Address: epAddress,
-						Port:    fmt.Sprintf("%v", epPort),
-						Target:  ep.TargetRef,
+						Address:    epAddress,
+						Port:       fmt.Sprintf("%v", epPort),
+						Target:     ep.TargetRef,
+						IsDraining: !epIsReady,
 					}
 					upsServers = append(upsServers, ups)
 					processedUpstreamServers[hostPort] = struct{}{}

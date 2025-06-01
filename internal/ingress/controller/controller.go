@@ -536,7 +536,7 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 				sp := svc.Spec.Ports[i]
 				if sp.Name == svcPort {
 					if sp.Protocol == proto {
-						endps = getEndpointsFromSlices(svc, &sp, proto, zone, n.store.GetServiceEndpointsSlices)
+						endps = getEndpointsFromSlices(svc, &sp, proto, zone, ReadyEndpoints, n.store.GetServiceEndpointsSlices)
 						break
 					}
 				}
@@ -548,7 +548,7 @@ func (n *NGINXController) getStreamServices(configmapName string, proto apiv1.Pr
 				//nolint:gosec // Ignore G109 error
 				if sp.Port == int32(targetPort) {
 					if sp.Protocol == proto {
-						endps = getEndpointsFromSlices(svc, &sp, proto, zone, n.store.GetServiceEndpointsSlices)
+						endps = getEndpointsFromSlices(svc, &sp, proto, zone, ReadyEndpoints, n.store.GetServiceEndpointsSlices)
 						break
 					}
 				}
@@ -605,7 +605,7 @@ func (n *NGINXController) getDefaultUpstream() *ingress.Backend {
 	} else {
 		zone = emptyZone
 	}
-	endps := getEndpointsFromSlices(svc, &svc.Spec.Ports[0], apiv1.ProtocolTCP, zone, n.store.GetServiceEndpointsSlices)
+	endps := getEndpointsFromSlices(svc, &svc.Spec.Ports[0], apiv1.ProtocolTCP, zone, ReadyEndpoints, n.store.GetServiceEndpointsSlices)
 	if len(endps) == 0 {
 		klog.Warningf("Service %q does not have any active Endpoint", svcKey)
 		endps = []ingress.Endpoint{n.DefaultEndpoint()}
@@ -940,7 +940,7 @@ func (n *NGINXController) getBackendServers(ingresses []*ingress.Ingress) ([]*in
 				} else {
 					zone = emptyZone
 				}
-				endps := getEndpointsFromSlices(location.DefaultBackend, &sp, apiv1.ProtocolTCP, zone, n.store.GetServiceEndpointsSlices)
+				endps := getEndpointsFromSlices(location.DefaultBackend, &sp, apiv1.ProtocolTCP, zone, ReadyEndpoints, n.store.GetServiceEndpointsSlices)
 				// custom backend is valid only if contains at least one endpoint
 				if len(endps) > 0 {
 					name := fmt.Sprintf("custom-default-backend-%v-%v", location.DefaultBackend.GetNamespace(), location.DefaultBackend.GetName())
@@ -1050,7 +1050,7 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 
 			if len(upstreams[defBackend].Endpoints) == 0 {
 				_, port := upstreamServiceNameAndPort(ing.Spec.DefaultBackend.Service)
-				endps, err := n.serviceEndpoints(svcKey, port.String())
+				endps, err := n.serviceEndpoints(svcKey, port.String(), ReadyEndpoints)
 				upstreams[defBackend].Endpoints = append(upstreams[defBackend].Endpoints, endps...)
 				if err != nil {
 					klog.Warningf("Error creating upstream %q: %v", defBackend, err)
@@ -1115,7 +1115,8 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 
 				if len(upstreams[name].Endpoints) == 0 {
 					_, port := upstreamServiceNameAndPort(path.Backend.Service)
-					endp, err := n.serviceEndpoints(svcKey, port.String())
+					endp, err := n.serviceEndpoints(svcKey, port.String(), ReadyEndpoints)
+
 					if err != nil {
 						klog.Warningf("Error obtaining Endpoints for Service %q: %v", svcKey, err)
 						n.metricCollector.IncOrphanIngress(ing.Namespace, ing.Name, orphanMetricLabelNoService)
@@ -1184,7 +1185,7 @@ func (n *NGINXController) getServiceClusterEndpoint(svcKey string, backend *netw
 }
 
 // serviceEndpoints returns the upstream servers (Endpoints) associated with a Service.
-func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingress.Endpoint, error) {
+func (n *NGINXController) serviceEndpoints(svcKey, backendPort string, epSelectionMode EndpointSelectionMode) ([]ingress.Endpoint, error) {
 	var upstreams []ingress.Endpoint
 
 	svc, err := n.store.GetService(svcKey)
@@ -1205,7 +1206,7 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 			return upstreams, nil
 		}
 		servicePort := externalNamePorts(backendPort, svc)
-		endps := getEndpointsFromSlices(svc, servicePort, apiv1.ProtocolTCP, zone, n.store.GetServiceEndpointsSlices)
+		endps := getEndpointsFromSlices(svc, servicePort, apiv1.ProtocolTCP, zone, epSelectionMode, n.store.GetServiceEndpointsSlices)
 		if len(endps) == 0 {
 			klog.Warningf("Service %q does not have any active Endpoint.", svcKey)
 			return upstreams, nil
@@ -1221,7 +1222,7 @@ func (n *NGINXController) serviceEndpoints(svcKey, backendPort string) ([]ingres
 		if strconv.Itoa(int(servicePort.Port)) == backendPort ||
 			servicePort.TargetPort.String() == backendPort ||
 			servicePort.Name == backendPort {
-			endps := getEndpointsFromSlices(svc, &servicePort, apiv1.ProtocolTCP, zone, n.store.GetServiceEndpointsSlices)
+			endps := getEndpointsFromSlices(svc, &servicePort, apiv1.ProtocolTCP, zone, epSelectionMode, n.store.GetServiceEndpointsSlices)
 			if len(endps) == 0 {
 				klog.Warningf("Service %q does not have any active Endpoint.", svcKey)
 			}
