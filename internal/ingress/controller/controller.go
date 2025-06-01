@@ -1114,9 +1114,13 @@ func (n *NGINXController) createUpstreams(data []*ingress.Ingress, du *ingress.B
 				}
 
 				if len(upstreams[name].Endpoints) == 0 {
-					_, port := upstreamServiceNameAndPort(path.Backend.Service)
-					endp, err := n.serviceEndpoints(svcKey, port.String(), ReadyEndpoints)
+					epSelectionMode := ReadyEndpoints
+					if anns.SessionAffinity.Mode == "persistent-drainable" {
+						epSelectionMode = ServingEndpoints
+					}
 
+					_, port := upstreamServiceNameAndPort(path.Backend.Service)
+					endp, err := n.serviceEndpoints(svcKey, port.String(), epSelectionMode)
 					if err != nil {
 						klog.Warningf("Error obtaining Endpoints for Service %q: %v", svcKey, err)
 						n.metricCollector.IncOrphanIngress(ing.Namespace, ing.Name, orphanMetricLabelNoService)
