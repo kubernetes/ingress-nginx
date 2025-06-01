@@ -17,7 +17,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |---------------------------|------|
 |[nginx.ingress.kubernetes.io/app-root](#rewrite)|string|
 |[nginx.ingress.kubernetes.io/affinity](#session-affinity)|cookie|
-|[nginx.ingress.kubernetes.io/affinity-mode](#session-affinity)|"balanced" or "persistent"|
+|[nginx.ingress.kubernetes.io/affinity-mode](#session-affinity)|"balanced" or "persistent" or "persistent-drainable"|
 |[nginx.ingress.kubernetes.io/affinity-canary-behavior](#session-affinity)|"sticky" or "legacy"|
 |[nginx.ingress.kubernetes.io/auth-realm](#authentication)|string|
 |[nginx.ingress.kubernetes.io/auth-secret](#authentication)|string|
@@ -173,7 +173,19 @@ If the Application Root is exposed in a different path and needs to be redirecte
 The annotation `nginx.ingress.kubernetes.io/affinity` enables and sets the affinity type in all Upstreams of an Ingress. This way, a request will always be directed to the same upstream server.
 The only affinity type available for NGINX is `cookie`.
 
-The annotation `nginx.ingress.kubernetes.io/affinity-mode` defines the stickiness of a session. Setting this to `balanced` (default) will redistribute some sessions if a deployment gets scaled up, therefore rebalancing the load on the servers. Setting this to `persistent` will not rebalance sessions to new servers, therefore providing maximum stickiness.
+The annotation `nginx.ingress.kubernetes.io/affinity-mode` defines the stickiness of a session.
+
+- `balanced` (default)
+
+  Setting this to `balanced` will redistribute some sessions if a deployment gets scaled up, therefore rebalancing the load on the servers.
+
+- `persistent`
+
+  Setting this to `persistent` will not rebalance sessions to new servers, therefore providing greater stickiness. Sticky sessions will continue to be routed to the same server as long as its [Endpoint's condition](https://kubernetes.io/docs/concepts/services-networking/endpoint-slices/#conditions) remains `Ready`. If the Endpoint stops being `Ready`, such when a server pod receives a deletion timestamp, sessions will be rebalanced to another server.
+
+- `persistent-drainable`
+
+  Setting this to `persistent-drainable` behaves like `persistent`, but sticky sessions will continue to be routed to the same server as long as its [Endpoint's condition](https://kubernetes.io/docs/concepts/services-networking/endpoint-slices/#conditions) remains `Serving`, even after the server pod receives a deletion timestamp. This allows graceful session draining during the `preStop` lifecycle hook. New sessions will *not* be directed to these draining servers and will only be routed to a server whose Endpoint is `Ready`, except potentially when all servers are draining.
 
 The annotation `nginx.ingress.kubernetes.io/affinity-canary-behavior` defines the behavior of canaries when session affinity is enabled. Setting this to `sticky` (default) will ensure that users that were served by canaries, will continue to be served by canaries. Setting this to `legacy` will restore original canary behavior, when session affinity was ignored.
 
