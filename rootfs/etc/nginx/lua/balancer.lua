@@ -47,7 +47,8 @@ local function get_implementation(backend)
 
   if backend["sessionAffinityConfig"] and
      backend["sessionAffinityConfig"]["name"] == "cookie" then
-    if backend["sessionAffinityConfig"]["mode"] == "persistent" then
+    local mode = backend["sessionAffinityConfig"]["mode"]
+    if mode == "persistent" or mode == "persistent-drainable" then
       name = "sticky_persistent"
     else
       name = "sticky_balanced"
