@@ -439,6 +439,40 @@ describe("Balancer", function()
       assert.stub(mock_instance.sync).was_called_with(mock_instance, expected_backend)
     end)
 
+    it("sets balancer to nil when service is of type External name and DNS could not resolve", function()
+      backend = {
+        name = "example2-com", service = { spec = { ["type"] = "ExternalName" } },
+        endpoints = {
+          { address = "example2.com", port = "80", maxFails = 0, failTimeout = 0 }
+        }
+      }
+
+      helpers.mock_resty_dns_query(nil, { errcode = 3, errstr = "NXDNS: no such host (mock)" })
+      local mock_instance = { sync = function(backend) end }
+      setmetatable(mock_instance, implementation)
+      implementation.new = function(self, backend) return mock_instance end
+      local s = spy.on(implementation, "new")
+      assert.has_no.errors(function() balancer.sync_backend(backend) end)
+      assert.spy(s).was_not_called()
+      assert.is_nil(balancer.get_balancer_by_upstream_name(backend.name))
+    end)
+
+    it("sets balancer to nil when service is of type External name and endpoints in nil (omitted by go calling POST /configuration/backends)", function()
+      backend = {
+        name = "example-com", service = { spec = { ["type"] = "ExternalName" } },
+        endpoints = nil
+      }
+
+      helpers.mock_resty_dns_query(nil, { errcode = 3, errstr = "NXDNS: no such host (mock)" })
+      local mock_instance = { sync = function(backend) end }
+      setmetatable(mock_instance, implementation)
+      implementation.new = function(self, backend) return mock_instance end
+      local s = spy.on(implementation, "new")
+      assert.has_no.errors(function() balancer.sync_backend(backend) end)
+      assert.spy(s).was_not_called()
+      assert.is_nil(balancer.get_balancer_by_upstream_name(backend.name))
+    end)
+
     it("wraps IPv6 addresses into square brackets", function()
       local backend = {
         name = "example-com",

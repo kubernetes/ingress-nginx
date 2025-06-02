@@ -12,6 +12,9 @@ metadata:
   {{- if .Values.controller.service.labels }}
     {{- toYaml .Values.controller.service.labels | nindent 4 }}
   {{- end }}
+  {{- if .Values.controller.service.internal.labels }}
+    {{- toYaml .Values.controller.service.internal.labels | nindent 4 }}
+  {{- end }}
   name: {{ include "ingress-nginx.controller.fullname" . }}-internal
   namespace: {{ include "ingress-nginx.namespace" . }}
 spec:
@@ -45,6 +48,11 @@ spec:
 {{- end }}
 {{- if .Values.controller.service.internal.healthCheckNodePort }}
   healthCheckNodePort: {{ .Values.controller.service.internal.healthCheckNodePort }}
+{{- end }}
+{{- if semverCompare ">=1.31.0-0" .Capabilities.KubeVersion.Version -}}
+{{- if .Values.controller.service.internal.trafficDistribution }}
+  trafficDistribution: {{ .Values.controller.service.internal.trafficDistribution }}
+{{- end }}
 {{- end }}
 {{- if semverCompare ">=1.21.0-0" .Capabilities.KubeVersion.Version -}}
 {{- if .Values.controller.service.internal.ipFamilyPolicy }}

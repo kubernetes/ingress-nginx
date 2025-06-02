@@ -47,7 +47,7 @@ const NIPService = "external-nip"
 var HTTPBunImage = os.Getenv("HTTPBUN_IMAGE")
 
 // EchoImage is the default image to be used by the echo service
-const EchoImage = "registry.k8s.io/ingress-nginx/e2e-test-echo:v1.1.0@sha256:0713ba47b3e4359b38ad53cd785c34b158e168a91636520a4a5e54cd500d8356" //#nosec G101
+const EchoImage = "registry.k8s.io/ingress-nginx/e2e-test-echo:v1.1.3@sha256:77e8f7aa7e5651409cbe4ca38430e61828873c7df325e6f83c7345e34011f6b2" //#nosec G101
 
 // TODO: change all Deployment functions to use these options
 // in order to reduce complexity and have a unified API across the

@@ -22,7 +22,7 @@ In nginx, we want to modify the property `proxy-buffer-size`. The size is arbitr
 that a high value can lower the performance of your ingress proxy. In general a value of 16k should get you covered.
 
 ### Using helm
-If you're using helm you can simply use the [`config` properties](https://github.com/kubernetes/ingress-nginx/blob/main/charts/ingress-nginx/values.yaml#L37).
+If you're using helm you can simply use the [`config` properties](https://github.com/kubernetes/ingress-nginx/blob/main/charts/ingress-nginx/values.yaml#L56).
 ```yaml
  # -- Will add custom configuration options to Nginx https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/
   config: 

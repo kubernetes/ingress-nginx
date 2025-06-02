@@ -65,6 +65,11 @@ func TestValidateArrayOfServerName(t *testing.T) {
 			value:   "something.com,lolo;xpto.com,nothing.com",
 			wantErr: true,
 		},
+		{
+			name:    "should deny names with malicous chars",
+			value:   "http://something.com/#;\nournewinjection",
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

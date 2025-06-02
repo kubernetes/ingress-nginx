@@ -325,9 +325,9 @@ minikube start
 🐳  Preparing Kubernetes v1.23.3 on Docker 20.10.12 ...
     ▪ kubelet.housekeeping-interval=5m
 🔎  Verifying Kubernetes components...
-    ▪ Using image k8s.gcr.io/ingress-nginx/kube-webhook-certgen:v1.1.1
-    ▪ Using image k8s.gcr.io/ingress-nginx/kube-webhook-certgen:v1.1.1
-    ▪ Using image k8s.gcr.io/ingress-nginx/controller:v1.2.1
+    ▪ Using image registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.1.1
+    ▪ Using image registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.1.1
+    ▪ Using image registry.k8s.io/ingress-nginx/controller:v1.2.1
     ▪ Using image gcr.io/k8s-minikube/storage-provisioner:v5
 🔎  Verifying ingress addon...
 🌟  Enabled addons: ingress, storage-provisioner, default-storageclass

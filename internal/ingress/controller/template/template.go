@@ -314,6 +314,7 @@ var funcMap = text_template.FuncMap{
 	},
 	"isValidByteSize":                    isValidByteSize,
 	"buildForwardedFor":                  buildForwardedFor,
+	"buildForwardedHost":                 buildForwardedHost,
 	"buildAuthSignURL":                   buildAuthSignURL,
 	"buildAuthSignURLLocation":           buildAuthSignURLLocation,
 	"buildOpentelemetry":                 buildOpentelemetry,
@@ -1162,6 +1163,18 @@ func buildForwardedFor(input interface{}) string {
 	return fmt.Sprintf("$http_%v", ffh)
 }
 
+func buildForwardedHost(input interface{}) string {
+	s, ok := input.(string)
+	if !ok {
+		klog.Errorf("expected a 'string' type but %T was returned", input)
+		return ""
+	}
+
+	fhh := strings.ReplaceAll(s, "-", "_")
+	fhh = strings.ToLower(fhh)
+	return fmt.Sprintf("$http_%v", fhh)
+}
+
 func buildAuthSignURL(authSignURL, authRedirectParam string) string {
 	u, err := url.Parse(authSignURL)
 	if err != nil {
@@ -1631,11 +1644,11 @@ func buildMirrorLocations(locs []*ingress.Location) string {
 		mapped.Insert(loc.Mirror.Source)
 		buffer.WriteString(fmt.Sprintf(`location = %v {
 internal;
-proxy_set_header Host "%v";
-proxy_pass "%v";
+proxy_set_header Host %v;
+proxy_pass %v;
 }
 
-`, loc.Mirror.Source, loc.Mirror.Host, loc.Mirror.Target))
+`, strconv.Quote(loc.Mirror.Source), strconv.Quote(loc.Mirror.Host), strconv.Quote(loc.Mirror.Target)))
 	}
 
 	return buffer.String()

@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"testing"
 
+	"k8s.io/utils/ptr"
+
 	corev1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -877,6 +879,168 @@ func TestGetEndpointsFromSlices(t *testing.T) {
 							Hints: &[]discoveryv1.EndpointHints{{
 								ForZones: []discoveryv1.ForZone{{
 									Name: "eu-west-1b",
+								}},
+							}}[0],
+						},
+						{
+							Addresses: []string{"1.1.1.3"},
+							Conditions: discoveryv1.EndpointConditions{
+								Ready: &[]bool{true}[0],
+							},
+							Hints: &[]discoveryv1.EndpointHints{{
+								ForZones: []discoveryv1.ForZone{{
+									Name: "eu-west-1c",
+								}},
+							}}[0],
+						},
+					},
+					Ports: []discoveryv1.EndpointPort{
+						{
+							Protocol: &[]corev1.Protocol{corev1.ProtocolTCP}[0],
+							Port:     &[]int32{80}[0],
+							Name:     &[]string{"port-1"}[0],
+						},
+					},
+				}}, nil
+			},
+			[]ingress.Endpoint{
+				{
+					Address: "1.1.1.1",
+					Port:    "80",
+				},
+				{
+					Address: "1.1.1.2",
+					Port:    "80",
+				},
+				{
+					Address: "1.1.1.3",
+					Port:    "80",
+				},
+			},
+		},
+		{
+			"should return one endpoint which belongs to zone",
+			&corev1.Service{
+				Spec: corev1.ServiceSpec{
+					Type:      corev1.ServiceTypeClusterIP,
+					ClusterIP: "1.1.1.1",
+					Ports: []corev1.ServicePort{
+						{
+							Name:       "default",
+							TargetPort: intstr.FromString("port-1"),
+						},
+					},
+					TrafficDistribution: ptr.To(corev1.ServiceTrafficDistributionPreferClose),
+				},
+			},
+			&corev1.ServicePort{
+				Name:       "port-1",
+				TargetPort: intstr.FromString("port-1"),
+			},
+			corev1.ProtocolTCP,
+			"eu-west-1b",
+			func(string) ([]*discoveryv1.EndpointSlice, error) {
+				return []*discoveryv1.EndpointSlice{{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: map[string]string{discoveryv1.LabelServiceName: "default"},
+					},
+					Endpoints: []discoveryv1.Endpoint{
+						{
+							Addresses: []string{"1.1.1.1"},
+							Conditions: discoveryv1.EndpointConditions{
+								Ready: &[]bool{true}[0],
+							},
+							Hints: &[]discoveryv1.EndpointHints{{
+								ForZones: []discoveryv1.ForZone{{
+									Name: "eu-west-1b",
+								}},
+							}}[0],
+						},
+						{
+							Addresses: []string{"1.1.1.2"},
+							Conditions: discoveryv1.EndpointConditions{
+								Ready: &[]bool{true}[0],
+							},
+							Hints: &[]discoveryv1.EndpointHints{{
+								ForZones: []discoveryv1.ForZone{{
+									Name: "eu-west-1a",
+								}},
+							}}[0],
+						},
+						{
+							Addresses: []string{"1.1.1.3"},
+							Conditions: discoveryv1.EndpointConditions{
+								Ready: &[]bool{true}[0],
+							},
+							Hints: &[]discoveryv1.EndpointHints{{
+								ForZones: []discoveryv1.ForZone{{
+									Name: "eu-west-1c",
+								}},
+							}}[0],
+						},
+					},
+					Ports: []discoveryv1.EndpointPort{
+						{
+							Protocol: &[]corev1.Protocol{corev1.ProtocolTCP}[0],
+							Port:     &[]int32{80}[0],
+							Name:     &[]string{"port-1"}[0],
+						},
+					},
+				}}, nil
+			},
+			[]ingress.Endpoint{
+				{
+					Address: "1.1.1.1",
+					Port:    "80",
+				},
+			},
+		},
+		{
+			"should return all endpoints because no endpoints with controller zone",
+			&corev1.Service{
+				Spec: corev1.ServiceSpec{
+					Type:      corev1.ServiceTypeClusterIP,
+					ClusterIP: "1.1.1.1",
+					Ports: []corev1.ServicePort{
+						{
+							Name:       "default",
+							TargetPort: intstr.FromString("port-1"),
+						},
+					},
+					TrafficDistribution: ptr.To(corev1.ServiceTrafficDistributionPreferClose),
+				},
+			},
+			&corev1.ServicePort{
+				Name:       "port-1",
+				TargetPort: intstr.FromString("port-1"),
+			},
+			corev1.ProtocolTCP,
+			"eu-west-1b",
+			func(string) ([]*discoveryv1.EndpointSlice, error) {
+				return []*discoveryv1.EndpointSlice{{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: map[string]string{discoveryv1.LabelServiceName: "default"},
+					},
+					Endpoints: []discoveryv1.Endpoint{
+						{
+							Addresses: []string{"1.1.1.1"},
+							Conditions: discoveryv1.EndpointConditions{
+								Ready: &[]bool{true}[0],
+							},
+							Hints: &[]discoveryv1.EndpointHints{{
+								ForZones: []discoveryv1.ForZone{{
+									Name: "eu-west-1a",
+								}},
+							}}[0],
+						},
+						{
+							Addresses: []string{"1.1.1.2"},
+							Conditions: discoveryv1.EndpointConditions{
+								Ready: &[]bool{true}[0],
+							},
+							Hints: &[]discoveryv1.EndpointHints{{
+								ForZones: []discoveryv1.ForZone{{
+									Name: "eu-west-1c",
 								}},
 							}}[0],
 						},

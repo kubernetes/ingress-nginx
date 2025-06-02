@@ -165,8 +165,8 @@ default on the next breaking change release, set for 2.0.0.
 
 - When "`ingress.spec.rules.http.pathType=Exact`" or "`pathType=Prefix`", this
 validation will limit the characters accepted on the field "`ingress.spec.rules.http.paths.path`",
-to "`alphanumeric characters`", and  `"/," "_," "-."` Also, in this case,
-the path should start with `"/."`
+to "`alphanumeric characters`", and  "`/`", "`_`", "`-`". Also, in this case,
+the path should start with "`/`".
 
 - When the ingress resource path contains other characters (like on rewrite
 configurations), the pathType value should be "`ImplementationSpecific`".
@@ -175,7 +175,7 @@ configurations), the pathType value should be "`ImplementationSpecific`".
 
 - When this option is enabled, the validation will happen on the Admission
 Webhook. So if any new ingress object contains characters other than
-alphanumeric characters, and, `"/,","_","-"`, in the `path` field, but
+alphanumeric characters, and, "`/`", "`_`", "`-`", in the `path` field, but
 is not using `pathType` value as `ImplementationSpecific`, then the ingress
 object will be denied admission.
 

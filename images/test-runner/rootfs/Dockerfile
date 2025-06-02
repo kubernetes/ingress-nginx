@@ -15,8 +15,8 @@ ARG BASE_IMAGE
 ARG GOLANG_VERSION
 ARG ETCD_VERSION
 
-FROM golang:${GOLANG_VERSION}-alpine3.21 as GO
-FROM registry.k8s.io/etcd:${ETCD_VERSION} as etcd
+FROM golang:${GOLANG_VERSION}-alpine3.21 AS go
+FROM registry.k8s.io/etcd:${ETCD_VERSION} AS etcd
 
 FROM ${BASE_IMAGE}
 
@@ -41,9 +41,9 @@ RUN set -eux; \
 		echo 'hosts: files dns' > /etc/nsswitch.conf; \
 	fi
 
-COPY --from=GO   /usr/local/go /usr/local/go
-ENV GOPATH /go
-ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
+COPY --from=go   /usr/local/go /usr/local/go
+ENV GOPATH=/go
+ENV PATH=$GOPATH/bin:/usr/local/go/bin:$PATH
 RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 
 COPY --from=etcd /usr/local/bin/etcd /usr/local/bin/etcd

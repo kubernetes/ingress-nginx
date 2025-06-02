@@ -110,7 +110,7 @@ func TestStatusCollector(t *testing.T) {
 					w.WriteHeader(http.StatusOK)
 
 					if r.URL.Path == "/nginx_status" {
-						_, err := fmt.Fprintf(w, c.mock)
+						_, err := fmt.Fprint(w, c.mock)
 						if err != nil {
 							t.Fatal(err)
 						}

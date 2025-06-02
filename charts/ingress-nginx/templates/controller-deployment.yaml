@@ -63,6 +63,9 @@ spec:
     {{- if .Values.controller.priorityClassName }}
       priorityClassName: {{ .Values.controller.priorityClassName | quote }}
     {{- end }}
+    {{- if .Values.controller.runtimeClassName }}
+      runtimeClassName: {{ .Values.controller.runtimeClassName | quote }}
+    {{- end }}
     {{- if or .Values.controller.podSecurityContext .Values.controller.sysctls }}
       securityContext:
       {{- if .Values.controller.podSecurityContext }}

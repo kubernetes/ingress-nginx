@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM alpine:3.21 as builder
+FROM alpine:3.21 AS builder
 
 COPY . /
 
@@ -51,6 +51,8 @@ RUN apk update \
   tzdata \
   grpc-cpp \
   libprotobuf \
+  abseil-cpp-crc-cpu-detect \
+  abseil-cpp-vlog-config-internal \
   && ln -s /usr/local/nginx/sbin/nginx /sbin/nginx \
   && adduser -S -D -H -u 101 -h /usr/local/nginx \
   -s /sbin/nologin -G www-data -g www-data www-data \

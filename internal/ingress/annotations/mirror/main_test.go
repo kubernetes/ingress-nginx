@@ -117,7 +117,7 @@ func TestParse(t *testing.T) {
 		ing.SetAnnotations(testCase.annotations)
 		result, err := ap.Parse(ing)
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Error(err)
 		}
 		if !reflect.DeepEqual(result, testCase.expected) {
 			t.Errorf("expected %+v but returned %+v, annotations: %s", testCase.expected, result, testCase.annotations)

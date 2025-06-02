@@ -50,3 +50,25 @@ tests:
           value:
             - 10.0.0.1
             - fd00::1
+
+  - it: should create a Service with `trafficDistribution` if `controller.service.trafficDistribution` is set
+    capabilities:
+      majorVersion: 1
+      minorVersion: 31
+    set:
+      controller.service.external.enabled: true
+      controller.service.trafficDistribution: PreferClose
+    asserts:
+      - equal:
+          path: spec.trafficDistribution
+          value: PreferClose
+
+  - it: should create a Service with labels if `controller.service.external.labels` is set
+    set:
+      controller.service.external.enabled: true
+      controller.service.external.labels:
+        external-dns.alpha.kubernetes.io/hostname: external.example.com
+    asserts:
+      - equal:
+          path: metadata.labels["external-dns.alpha.kubernetes.io/hostname"]
+          value: external.example.com

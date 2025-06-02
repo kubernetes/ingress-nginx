@@ -42,7 +42,7 @@ otlp-collector-host: "otel-coll-collector.otel.svc"
 NOTE: While the option is called `otlp-collector-host`, you will need to point this to any backend that receives otlp-grpc.
 
 Next you will need to deploy a distributed telemetry system which uses OpenTelemetry.
-[opentelemetry-collector](https://github.com/open-telemetry/opentelemetry-collector), [Jaeger](https://www.jaegertracing.io/)
+[opentelemetry-collector](https://github.com/open-telemetry/opentelemetry-collector), [Jaeger](https://www.jaegertracing.io/),
 [Tempo](https://github.com/grafana/tempo), and [zipkin](https://zipkin.io/)
 have been tested.
 

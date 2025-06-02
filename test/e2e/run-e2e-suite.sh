@@ -61,7 +61,7 @@ kubectl create clusterrolebinding permissive-binding \
   --user=kubelet \
   --serviceaccount=default:ingress-nginx-e2e || true
 
-VER=$(kubectl version  --client=false -o json |jq '.serverVersion.minor |tonumber')
+VER=$(kubectl version --client=false --output json | (jq ".serverVersion.minor | tonumber" || yq ".serverVersion.minor | tonumber"))
 if [ $VER -lt 24 ]; then
   echo -e "${BGREEN}Waiting service account...${NC}"; \
   until kubectl get secret | grep -q -e ^ingress-nginx-e2e-token; do \

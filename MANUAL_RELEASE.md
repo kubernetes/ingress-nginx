@@ -93,7 +93,7 @@ Promoting the images basically means that images, that were pushed to staging co
 
   ```
   ...
-  pushing manifest for gcr.io/k8s-staging-ingress-nginx/controller:v1.0.2@sha256:e15fac6e8474d77e1f017edc33d804ce72a184e3c0a30963b2a0d7f0b89f6b16
+  pushing manifest for us-central1-docker.pkg.dev/k8s-staging-images/ingress-nginx/controller:v1.0.2@sha256:e15fac6e8474d77e1f017edc33d804ce72a184e3c0a30963b2a0d7f0b89f6b16
   ...
   ```
 
@@ -113,7 +113,7 @@ Promoting the images basically means that images, that were pushed to staging co
 
 - For making, it easier, you can edit your branch directly in the browser. But be careful about making any mistake.
 
-- Insert the sha(s) & the tag(s), in a new line, in this file [Project kubernetes/k8s.io Ingress-Nginx-Controller Images](https://github.com/kubernetes/k8s.io/blob/main/k8s.gcr.io/images/k8s-staging-ingress-nginx/images.yaml)  Look at this [example PR and the diff](https://github.com/kubernetes/k8s.io/pull/2536) to see how it was done before
+- Insert the sha(s) & the tag(s), in a new line, in this file [Project kubernetes/k8s.io Ingress-Nginx-Controller Images](https://github.com/kubernetes/k8s.io/blob/main/registry.k8s.io/images/k8s-staging-ingress-nginx/images.yaml)  Look at this [example PR and the diff](https://github.com/kubernetes/k8s.io/pull/2536) to see how it was done before
 
 - Save and commit
 
