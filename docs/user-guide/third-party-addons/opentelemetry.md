@@ -51,7 +51,7 @@ Other optional configuration options:
 # specifies the name to use for the server span
 opentelemetry-operation-name
 
-# sets whether or not to trust incoming telemetry spans
+# sets whether or not to trust incoming telemetry spans, Default: true
 opentelemetry-trust-incoming-span
 
 # specifies the port to use when uploading traces, Default: 4317
@@ -60,26 +60,23 @@ otlp-collector-port
 # specifies the service name to use for any traces created, Default: nginx
 otel-service-name
 
-# The maximum queue size. After the size is reached data are dropped.
+# The maximum queue size. After the size is reached data are dropped, Default: 2048
 otel-max-queuesize
 
-# The delay interval in milliseconds between two consecutive exports.
+# The delay interval in milliseconds between two consecutive exports, Default: 5000
 otel-schedule-delay-millis
 
-# How long the export can run before it is cancelled.
-otel-schedule-delay-millis
-
-# The maximum batch size of every export. It must be smaller or equal to maxQueueSize.
+# The maximum batch size of every export. It must be smaller or equal to maxQueueSize, Default: 512
 otel-max-export-batch-size
 
 # specifies sample rate for any traces created, Default: 0.01
 otel-sampler-ratio
 
 # specifies the sampler to be used when sampling traces.
-# The available samplers are: AlwaysOn,  AlwaysOff, TraceIdRatioBased, Default: AlwaysOff
+# The available samplers are: AlwaysOn,  AlwaysOff, TraceIdRatioBased, Default: AlwaysOn
 otel-sampler
 
-# Uses sampler implementation which by default will take a sample if parent Activity is sampled, Default: false
+# Uses sampler implementation which by default will take a sample if parent Activity is sampled, Default: true
 otel-sampler-parent-based
 ```
 
