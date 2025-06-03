@@ -8,35 +8,32 @@
 </code></pre></div> NOTE: While the option is called <code>otlp-collector-host</code>, you will need to point this to any backend that receives otlp-grpc.</p> <p>Next you will need to deploy a distributed telemetry system which uses OpenTelemetry. <a href=https://github.com/open-telemetry/opentelemetry-collector>opentelemetry-collector</a>, <a href=https://www.jaegertracing.io/ >Jaeger</a>, <a href=https://github.com/grafana/tempo>Tempo</a>, and <a href=https://zipkin.io/ >zipkin</a> have been tested.</p> <p>Other optional configuration options: <div class=highlight><pre><span></span><code><span class=c1># specifies the name to use for the server span</span>
 <span class="l l-Scalar l-Scalar-Plain">opentelemetry-operation-name</span>
 
-<span class="l l-Scalar l-Scalar-Plain"># sets whether or not to trust incoming telemetry spans</span>
+<span class="l l-Scalar l-Scalar-Plain"># sets whether or not to trust incoming telemetry spans, Default</span><span class="p p-Indicator">:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 <span class="l l-Scalar l-Scalar-Plain">opentelemetry-trust-incoming-span</span>
 
-<span class="l l-Scalar l-Scalar-Plain"># specifies the port to use when uploading traces, Default</span><span class="p p-Indicator">:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">4317</span>
+<span class=c1># specifies the port to use when uploading traces, Default: 4317</span>
 <span class="l l-Scalar l-Scalar-Plain">otlp-collector-port</span>
 
 <span class=c1># specifies the service name to use for any traces created, Default: nginx</span>
 <span class="l l-Scalar l-Scalar-Plain">otel-service-name</span>
 
-<span class=c1># The maximum queue size. After the size is reached data are dropped.</span>
+<span class=c1># The maximum queue size. After the size is reached data are dropped, Default: 2048</span>
 <span class="l l-Scalar l-Scalar-Plain">otel-max-queuesize</span>
 
-<span class=c1># The delay interval in milliseconds between two consecutive exports.</span>
+<span class=c1># The delay interval in milliseconds between two consecutive exports, Default: 5000</span>
 <span class="l l-Scalar l-Scalar-Plain">otel-schedule-delay-millis</span>
 
-<span class=c1># How long the export can run before it is cancelled.</span>
-<span class="l l-Scalar l-Scalar-Plain">otel-schedule-delay-millis</span>
-
-<span class=c1># The maximum batch size of every export. It must be smaller or equal to maxQueueSize.</span>
+<span class=c1># The maximum batch size of every export. It must be smaller or equal to maxQueueSize, Default: 512</span>
 <span class="l l-Scalar l-Scalar-Plain">otel-max-export-batch-size</span>
 
 <span class=c1># specifies sample rate for any traces created, Default: 0.01</span>
 <span class="l l-Scalar l-Scalar-Plain">otel-sampler-ratio</span>
 
 <span class=c1># specifies the sampler to be used when sampling traces.</span>
-<span class=c1># The available samplers are: AlwaysOn,  AlwaysOff, TraceIdRatioBased, Default: AlwaysOff</span>
+<span class=c1># The available samplers are: AlwaysOn,  AlwaysOff, TraceIdRatioBased, Default: AlwaysOn</span>
 <span class="l l-Scalar l-Scalar-Plain">otel-sampler</span>
 
-<span class=c1># Uses sampler implementation which by default will take a sample if parent Activity is sampled, Default: false</span>
+<span class=c1># Uses sampler implementation which by default will take a sample if parent Activity is sampled, Default: true</span>
 <span class="l l-Scalar l-Scalar-Plain">otel-sampler-parent-based</span>
 </code></pre></div></p> <p>Note that you can also set whether to trust incoming spans (global default is true) per-location using annotations like the following: <div class=highlight><pre><span></span><code><span class=nt>kind</span><span class=p>:</span><span class=w> </span><span class="l l-Scalar l-Scalar-Plain">Ingress</span>
 <span class=nt>metadata</span><span class=p>:</span>
