@@ -617,7 +617,7 @@ type Configuration struct {
 	OtelServiceName string `json:"otel-service-name"`
 
 	// OtelSampler specifies the sampler to use for any traces created
-	// Default: AlwaysOn
+	// Default: TraceIdRatioBased
 	OtelSampler string `json:"otel-sampler"`
 
 	// OtelSamplerRatio specifies the sampler ratio to use for any traces created
@@ -628,15 +628,15 @@ type Configuration struct {
 	// Default: true
 	OtelSamplerParentBased bool `json:"otel-sampler-parent-based"`
 
-	// MaxQueueSize specifies the max queue size for uploading traces
+	// OtelMaxQueueSize specifies the max queue size for uploading traces
 	// Default: 2048
 	OtelMaxQueueSize int32 `json:"otel-max-queuesize"`
 
-	// ScheduleDelayMillis specifies the max delay between uploading traces
+	// OtelScheduleDelayMillis specifies the max delay between uploading traces
 	// Default: 5000
 	OtelScheduleDelayMillis int32 `json:"otel-schedule-delay-millis"`
 
-	// MaxExportBatchSize specifies the max export batch size to used when uploading traces
+	// OtelMaxExportBatchSize specifies the max export batch size to used when uploading traces
 	// Default: 512
 	OtelMaxExportBatchSize int32 `json:"otel-max-export-batch-size"`
 
@@ -896,7 +896,7 @@ func NewDefault() Configuration {
 		OpentelemetryConfig:            "/etc/ingress-controller/telemetry/opentelemetry.toml",
 		OtlpCollectorPort:              "4317",
 		OtelServiceName:                "nginx",
-		OtelSampler:                    "AlwaysOn",
+		OtelSampler:                    "TraceIdRatioBased",
 		OtelSamplerRatio:               0.01,
 		OtelSamplerParentBased:         true,
 		OtelScheduleDelayMillis:        5000,

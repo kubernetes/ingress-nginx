@@ -161,12 +161,12 @@ The following table shows a configuration option's name, type, and the default v
 | [opentelemetry-config](#/etc/nginx/opentelemetry.toml)                          | string       | "/etc/nginx/opentelemetry.toml"                                                                                                                                                                                                                                                                                                                              |                                                                                     |
 | [otlp-collector-host](#otlp-collector-host)                                     | string       | ""                                                                                                                                                                                                                                                                                                                                                           |                                                                                     |
 | [otlp-collector-port](#otlp-collector-port)                                     | int          | 4317                                                                                                                                                                                                                                                                                                                                                         |                                                                                     |
-| [otel-max-queuesize](#otel-max-queuesize)                                       | int          |                                                                                                                                                                                                                                                                                                                                                              |                                                                                     |
-| [otel-schedule-delay-millis](#otel-schedule-delay-millis)                       | int          |                                                                                                                                                                                                                                                                                                                                                              |                                                                                     |
-| [otel-max-export-batch-size](#otel-max-export-batch-size)                       | int          |                                                                                                                                                                                                                                                                                                                                                              |                                                                                     |
+| [otel-max-queuesize](#otel-max-queuesize)                                       | int          | 2048                                                                                                                                                                                                                                                                                                                                                         |                                                                                     |
+| [otel-schedule-delay-millis](#otel-schedule-delay-millis)                       | int          | 5000                                                                                                                                                                                                                                                                                                                                                         |                                                                                     |
+| [otel-max-export-batch-size](#otel-max-export-batch-size)                       | int          | 512                                                                                                                                                                                                                                                                                                                                                          |                                                                                     |
 | [otel-service-name](#otel-service-name)                                         | string       | "nginx"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
-| [otel-sampler](#otel-sampler)                                                   | string       | "AlwaysOff"                                                                                                                                                                                                                                                                                                                                                  |                                                                                     |
-| [otel-sampler-parent-based](#otel-sampler-parent-based)                         | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
+| [otel-sampler](#otel-sampler)                                                   | string       | "TraceIdRatioBased"                                                                                                                                                                                                                                                                                                                                          |                                                                                     |
+| [otel-sampler-parent-based](#otel-sampler-parent-based)                         | bool         | "true"                                                                                                                                                                                                                                                                                                                                                       |                                                                                     |
 | [otel-sampler-ratio](#otel-sampler-ratio)                                       | float        | 0.01                                                                                                                                                                                                                                                                                                                                                         |                                                                                     |
 | [main-snippet](#main-snippet)                                                   | string       | ""                                                                                                                                                                                                                                                                                                                                                           |                                                                                     |
 | [http-snippet](#http-snippet)                                                   | string       | ""                                                                                                                                                                                                                                                                                                                                                           |                                                                                     |
@@ -1039,12 +1039,25 @@ Specifies the port to use when uploading traces. _**default:**_ 4317
 
 Specifies the service name to use for any traces created. _**default:**_ nginx
 
-##  opentelemetry-trust-incoming-span: "true"
+## opentelemetry-trust-incoming-span
+
 Enables or disables using spans from incoming requests as parent for created ones. _**default:**_ true
 
-##  otel-sampler-parent-based
+## otel-max-queuesize
 
-Uses sampler implementation which by default will take a sample if parent Activity is sampled. _**default:**_ false
+The maximum queue size. After the size is reached data are dropped. _**default:**_ 2048
+
+## otel-schedule-delay-millis
+
+The delay interval in milliseconds between two consecutive exports. _**default:**_ 5000
+
+## otel-max-export-batch-size
+
+The maximum batch size of every export. It must be smaller or equal to [otel-max-queuesize](#otel-max-queuesize). _**default:**_ 512
+
+## otel-sampler-parent-based
+
+Uses sampler implementation which by default will take a sample if parent Activity is sampled. _**default:**_ true
 
 ## otel-sampler-ratio
 
@@ -1052,7 +1065,7 @@ Specifies sample rate for any traces created. _**default:**_ 0.01
 
 ## otel-sampler
 
-Specifies the sampler to be used when sampling traces. The available samplers are: AlwaysOff, AlwaysOn, TraceIdRatioBased, remote. _**default:**_ AlwaysOff
+Specifies the sampler to be used when sampling traces. The available samplers are: AlwaysOff, AlwaysOn, TraceIdRatioBased. _**default:**_ TraceIdRatioBased
 
 ## main-snippet
 

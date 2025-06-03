@@ -60,26 +60,23 @@ otlp-collector-port
 # specifies the service name to use for any traces created, Default: nginx
 otel-service-name
 
-# The maximum queue size. After the size is reached data are dropped.
+# The maximum queue size. After the size is reached data are dropped, Default: 2048
 otel-max-queuesize
 
-# The delay interval in milliseconds between two consecutive exports.
+# The delay interval in milliseconds between two consecutive exports, Default: 5000
 otel-schedule-delay-millis
 
-# How long the export can run before it is cancelled.
-otel-schedule-delay-millis
-
-# The maximum batch size of every export. It must be smaller or equal to maxQueueSize.
+# The maximum batch size of every export. It must be smaller or equal to otel-max-queuesize, Default: 512
 otel-max-export-batch-size
 
 # specifies sample rate for any traces created, Default: 0.01
 otel-sampler-ratio
 
 # specifies the sampler to be used when sampling traces.
-# The available samplers are: AlwaysOn,  AlwaysOff, TraceIdRatioBased, Default: AlwaysOff
+# The available samplers are: AlwaysOn, AlwaysOff, TraceIdRatioBased, Default: TraceIdRatioBased
 otel-sampler
 
-# Uses sampler implementation which by default will take a sample if parent Activity is sampled, Default: false
+# Uses sampler implementation which by default will take a sample if parent Activity is sampled, Default: true
 otel-sampler-parent-based
 ```
 
@@ -164,9 +161,9 @@ To install the example and collectors run:
         otel-schedule-delay-millis: "5000"
         otel-max-export-batch-size: "512"
         otel-service-name: "nginx-proxy" # Opentelemetry resource name
-        otel-sampler: "AlwaysOn" # Also: AlwaysOff, TraceIdRatioBased
-        otel-sampler-ratio: "1.0"
-        otel-sampler-parent-based: "false"
+        otel-sampler: "TraceIdRatioBased" # Also: AlwaysOn, AlwaysOff
+        otel-sampler-ratio: "0.01"
+        otel-sampler-parent-based: "true"
       metadata:
         name: ingress-nginx-controller
         namespace: ingress-nginx
