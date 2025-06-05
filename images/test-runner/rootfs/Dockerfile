@@ -81,7 +81,7 @@ RUN wget -qO /tmp/resty_cli.tgz \
   && rm -rf /tmp/*
 
 RUN wget -qO /tmp/luarocks.tgz \
-  https://github.com/luarocks/luarocks/archive/v${LUAROCKS_VERSION}.tar.gz \
+  https://github.com/luarocks/luarocks/archive/${LUAROCKS_VERSION}.tar.gz \
   && echo "${LUAROCKS_SHA} */tmp/luarocks.tgz" | sha256sum -c - \
   && tar -C /tmp -xzf /tmp/luarocks.tgz \
   && cd /tmp/luarocks* \
