@@ -38,8 +38,8 @@ build: builder
 		--build-arg K8S_RELEASE=v1.33.1 \
 		--build-arg RESTY_CLI_VERSION=0.27 \
 		--build-arg RESTY_CLI_SHA=e5f4f3128af49ba5c4d039d0554e5ae91bbe05866f60eccfa96d3653274bff90 \
-		--build-arg LUAROCKS_VERSION=3.8.0 \
-		--build-arg LUAROCKS_SHA=ab6612ca9ab87c6984871d2712d05525775e8b50172701a0a1cabddf76de2be7 \
+		--build-arg LUAROCKS_VERSION=418d2ab34891b130cc317df32f65f978640febcf \
+		--build-arg LUAROCKS_SHA=5466eb5663620ef292090148adf1ab53a4fb2ff93780dca3e49f05c92d4d3a38 \
 		--build-arg CHART_TESTING_VERSION=3.8.0 \
 		--build-arg YAML_LINT_VERSION=1.33.0 \
 		--build-arg YAMALE_VERSION=4.0.4 \
