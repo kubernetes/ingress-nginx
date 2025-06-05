@@ -413,7 +413,7 @@ Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTE
 # NGINX compiles a small test program to check if an added module works as expected.
 #
 # ModSecurity-nginx provides 'printf("hello");' as a test, but newer versions of GCC,
-# as included in Alpine 3.21, do not allow implicit declaration of function 'printf':
+# as included in Alpine 3.22, do not allow implicit declaration of function 'printf':
 #
 #   objs/autotest.c:7:5: error: implicit declaration of function 'printf' [-Wimplicit-function-declaration]
 #
