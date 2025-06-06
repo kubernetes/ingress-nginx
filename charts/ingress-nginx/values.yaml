@@ -776,6 +776,7 @@ controller:
       type: ClusterIP
     createSecretJob:
       name: create
+      ttlSecondsAfterFinished: 0
       # -- Security context for secret creation containers
       securityContext:
         runAsNonRoot: true
@@ -797,6 +798,7 @@ controller:
       #   memory: 20Mi
     patchWebhookJob:
       name: patch
+      ttlSecondsAfterFinished: 0
       # -- Security context for webhook patch containers
       securityContext:
         runAsNonRoot: true
