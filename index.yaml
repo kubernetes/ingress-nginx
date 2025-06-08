@@ -10,7 +10,7 @@ entries:
     created: "2025-06-05T05:07:55.742526458Z"
     description: Ingress controller for Kubernetes using NGINX as a reverse proxy
       and load balancer
-    digest: 944b1f335da1ea54d6dda65b1385d326f95a27573809f5aa50ab4e898338f4b7
+    digest: 0992603193d1c6f521fd3c2c8519d61b393656c3fa970cf8f7ab18a5ff0ed9f2
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
     keywords:
