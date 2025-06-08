@@ -10,3 +10,11 @@ tests:
       - equal:
           path: spec.template.spec.automountServiceAccountToken
           value: false
+
+  - it: should create a Job with `activeDeadlineSeconds` if `controller.admissionWebhooks.patchWebhookJob.activeDeadlineSeconds ` is set
+    set:
+      controller.admissionWebhooks.patchWebhookJob.activeDeadlineSeconds: 1
+    asserts:
+      - equal:
+          path: spec.activeDeadlineSeconds
+          value: 1

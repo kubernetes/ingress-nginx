@@ -18,6 +18,9 @@ metadata:
     {{- end }}
 spec:
   ttlSecondsAfterFinished: 0
+{{- if gt (int .Values.controller.admissionWebhooks.patchWebhookJob.activeDeadlineSeconds) 0 }}
+  activeDeadlineSeconds: {{ .Values.controller.admissionWebhooks.patchWebhookJob.activeDeadlineSeconds }}
+{{- end }}
   template:
     metadata:
       name: {{ include "ingress-nginx.admissionWebhooks.patchWebhookJob.fullname" . }}
