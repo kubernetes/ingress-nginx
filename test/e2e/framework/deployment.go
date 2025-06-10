@@ -624,6 +624,10 @@ func (f *Framework) ScaleDeploymentToZero(name string) {
 	assert.Nil(ginkgo.GinkgoT(), err, "getting deployment")
 	assert.NotNil(ginkgo.GinkgoT(), d, "expected a deployment but none returned")
 
+	err = waitForPodsDeleted(f.KubeClientSet, 2*time.Minute, f.Namespace, &metav1.ListOptions{
+		LabelSelector: labelSelectorToString(d.Spec.Selector.MatchLabels),
+	})
+	assert.Nil(ginkgo.GinkgoT(), err, "waiting for no pods")
 	err = WaitForEndpoints(f.KubeClientSet, DefaultTimeout, name, f.Namespace, 0)
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for no endpoints")
 }
