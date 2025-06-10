@@ -430,7 +430,7 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 		klog.V(3).InfoS("auth-set-proxy-headers annotation is undefined and will not be set", "err", err)
 	}
 
-	cns, _, err := cache.SplitMetaNamespaceKey(proxySetHeaderMap)
+	cns, cn, err := cache.SplitMetaNamespaceKey(proxySetHeaderMap)
 	if err != nil {
 		return nil, ing_errors.LocationDeniedError{
 			Reason: fmt.Errorf("error reading configmap name %s from annotation: %w", proxySetHeaderMap, err),
@@ -452,7 +452,7 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 	var proxySetHeaders map[string]string
 
 	if proxySetHeaderMap != "" {
-		proxySetHeadersMapContents, err := a.r.GetConfigMap(proxySetHeaderMap)
+		proxySetHeadersMapContents, err := a.r.GetConfigMap(cns + "/" + cn)
 		if err != nil {
 			return nil, ing_errors.NewLocationDenied(fmt.Sprintf("unable to find configMap %q", proxySetHeaderMap))
 		}
