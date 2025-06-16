@@ -158,7 +158,7 @@ func (f *Framework) NewEchoDeployment(opts ...func(*deploymentOptions)) {
 	assert.Nil(ginkgo.GinkgoT(), err, "waiting for endpoints to become ready")
 }
 
-// BuildNipHost used to generate a nip host for DNS resolving
+// BuildNIPHost used to generate a nip host for DNS resolving
 func BuildNIPHost(ip string) string {
 	return fmt.Sprintf("%s.nip.io", ip)
 }
