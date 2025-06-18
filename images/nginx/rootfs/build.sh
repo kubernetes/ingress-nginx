@@ -24,85 +24,85 @@ export NGINX_VERSION=1.25.5
 export NDK_VERSION=v0.3.3
 
 # Check for recent changes: https://github.com/openresty/set-misc-nginx-module/compare/v0.33...master
-export SETMISC_VERSION=796f5a3e518748eb29a93bd450324e0ad45b704e
+export SETMISC_VERSION=v0.33
 
 # Check for recent changes: https://github.com/openresty/headers-more-nginx-module/compare/v0.37...master
 export MORE_HEADERS_VERSION=v0.37
 
-# Check for recent changes: https://github.com/atomx/nginx-http-auth-digest/compare/v1.0.0...atomx:master
+# Check for recent changes: https://github.com/atomx/nginx-http-auth-digest/compare/v1.0.0...master
 export NGINX_DIGEST_AUTH=v1.0.0
 
-# Check for recent changes: https://github.com/yaoweibin/ngx_http_substitutions_filter_module/compare/v0.6.4...master
+# Check for recent changes: https://github.com/yaoweibin/ngx_http_substitutions_filter_module/compare/e12e965ac1837ca709709f9a26f572a54d83430e...master
 export NGINX_SUBSTITUTIONS=e12e965ac1837ca709709f9a26f572a54d83430e
 
-# Check for recent changes: https://github.com/SpiderLabs/ModSecurity-nginx/compare/v1.0.3...master
-export MODSECURITY_VERSION=v1.0.3
+# Check for recent changes: https://github.com/SpiderLabs/ModSecurity-nginx/compare/v1.0.4...master
+export MODSECURITY_VERSION=v1.0.4
 
 # Check for recent changes: https://github.com/SpiderLabs/ModSecurity/compare/v3.0.14...v3/master
 export MODSECURITY_LIB_VERSION=v3.0.14
 
-# Check for recent changes: https://github.com/coreruleset/coreruleset/compare/v4.10.0...main
-export OWASP_MODSECURITY_CRS_VERSION=v4.10.0
+# Check for recent changes: https://github.com/coreruleset/coreruleset/compare/v4.15.0...main
+export OWASP_MODSECURITY_CRS_VERSION=v4.15.0
 
-# Check for recent changes: https://github.com/openresty/lua-nginx-module/compare/v0.10.26``...master
+# Check for recent changes: https://github.com/openresty/lua-nginx-module/compare/v0.10.26...master
 export LUA_NGX_VERSION=v0.10.26
 
 # Check for recent changes: https://github.com/openresty/stream-lua-nginx-module/compare/bea8a0c0de94cede71554f53818ac0267d675d63...master
 export LUA_STREAM_NGX_VERSION=bea8a0c0de94cede71554f53818ac0267d675d63
 
-# Check for recent changes: https://github.com/openresty/lua-upstream-nginx-module/compare/8aa93ead98ba2060d4efd594ae33a35d153589bf...master
-export LUA_UPSTREAM_VERSION=542be0893543a4e42d89f6dd85372972f5ff2a36
+# Check for recent changes: https://github.com/openresty/lua-upstream-nginx-module/compare/v0.07...master
+export LUA_UPSTREAM_VERSION=v0.07
 
-# Check for recent changes: https://github.com/openresty/lua-cjson/compare/2.1.0.13...openresty:master
+# Check for recent changes: https://github.com/openresty/lua-cjson/compare/2.1.0.13...master
 export LUA_CJSON_VERSION=2.1.0.13
 
-# Check for recent changes: https://github.com/leev/ngx_http_geoip2_module/compare/a607a41a8115fecfc05b5c283c81532a3d605425...master
-export GEOIP2_VERSION=a607a41a8115fecfc05b5c283c81532a3d605425
+# Check for recent changes: https://github.com/leev/ngx_http_geoip2_module/compare/445df24ef3781e488cee3dfe8a1e111997fc1dfe...master
+export GEOIP2_VERSION=445df24ef3781e488cee3dfe8a1e111997fc1dfe
 
-# Check for recent changes: https://github.com/openresty/luajit2/compare/v2.1-20240314...v2.1-agentzh
-export LUAJIT_VERSION=v2.1-20240314
+# Check for recent changes: https://github.com/openresty/luajit2/compare/v2.1-20231117.1...v2.1-agentzh
+export LUAJIT_VERSION=v2.1-20231117.1
 
-# Check for recent changes: https://github.com/openresty/lua-resty-balancer/compare/1cd4363c0a239afe4765ec607dcfbbb4e5900eea...master
-export LUA_RESTY_BALANCER=1cd4363c0a239afe4765ec607dcfbbb4e5900eea
+# Check for recent changes: https://github.com/openresty/lua-resty-balancer/compare/v0.05...master
+export LUA_RESTY_BALANCER=v0.05
 
-# Check for recent changes: https://github.com/openresty/lua-resty-lrucache/compare/99e7578465b40f36f596d099b82eab404f2b42ed...master
-export LUA_RESTY_CACHE=99e7578465b40f36f596d099b82eab404f2b42ed
+# Check for recent changes: https://github.com/openresty/lua-resty-lrucache/compare/v0.13...master
+export LUA_RESTY_CACHE=v0.13
 
-# Check for recent changes: https://github.com/openresty/lua-resty-core/compare/v0.1.27...master
+# Check for recent changes: https://github.com/openresty/lua-resty-core/compare/v0.1.28...master
 export LUA_RESTY_CORE=v0.1.28
 
 # Check for recent changes: https://github.com/cloudflare/lua-resty-cookie/compare/f418d77082eaef48331302e84330488fdc810ef4...master
 export LUA_RESTY_COOKIE_VERSION=f418d77082eaef48331302e84330488fdc810ef4
 
-# Check for recent changes: https://github.com/openresty/lua-resty-dns/compare/8bb53516e2933e61c317db740a9b7c2048847c2f...master
-export LUA_RESTY_DNS=8bb53516e2933e61c317db740a9b7c2048847c2f
+# Check for recent changes: https://github.com/openresty/lua-resty-dns/compare/v0.23...master
+export LUA_RESTY_DNS=v0.23
 
-# Check for recent changes: https://github.com/ledgetech/lua-resty-http/compare/v0.17.1...master
-export LUA_RESTY_HTTP=v0.17.1
+# Check for recent changes: https://github.com/ledgetech/lua-resty-http/compare/v0.17.2...master
+export LUA_RESTY_HTTP=v0.17.2
 
 # Check for recent changes: https://github.com/openresty/lua-resty-lock/compare/v0.09...master
-export LUA_RESTY_LOCK=405d0bf4cbfa74d742c6ed3158d442221e6212a9
+export LUA_RESTY_LOCK=v0.09
 
 # Check for recent changes: https://github.com/openresty/lua-resty-upload/compare/v0.11...master
-export LUA_RESTY_UPLOAD_VERSION=979372cce011f3176af3c9aff53fd0e992c4bfd3
+export LUA_RESTY_UPLOAD_VERSION=v0.11
 
 # Check for recent changes: https://github.com/openresty/lua-resty-string/compare/v0.15...master
-export LUA_RESTY_STRING_VERSION=6f1bc21d86daef804df3cc34d6427ef68da26844
+export LUA_RESTY_STRING_VERSION=v0.15
 
 # Check for recent changes: https://github.com/openresty/lua-resty-memcached/compare/v0.17...master
-export LUA_RESTY_MEMCACHED_VERSION=2f02b68bf65fa2332cce070674a93a69a6c7239b
+export LUA_RESTY_MEMCACHED_VERSION=v0.17
 
 # Check for recent changes: https://github.com/openresty/lua-resty-redis/compare/v0.30...master
-export LUA_RESTY_REDIS_VERSION=8641b9f1b6f75cca50c90cf8ca5c502ad8950aa8
+export LUA_RESTY_REDIS_VERSION=v0.30
 
-# Check for recent changes: https://github.com/api7/lua-resty-ipmatcher/compare/v0.6.1...master
+# Check for recent changes: https://github.com/api7/lua-resty-ipmatcher/compare/3e93c53eb8c9884efe939ef070486a0e507cc5be...master
 export LUA_RESTY_IPMATCHER_VERSION=3e93c53eb8c9884efe939ef070486a0e507cc5be
 
 # Check for recent changes: https://github.com/ElvinEfendi/lua-resty-global-throttle/compare/v0.2.0...main
 export LUA_RESTY_GLOBAL_THROTTLE_VERSION=v0.2.0
 
-# Check for recent changes: https://github.com/microsoft/mimalloc/compare/v2.1.7...master
-export MIMALOC_VERSION=v2.1.7
+# Check for recent changes: https://github.com/microsoft/mimalloc/compare/v2.2.4...main
+export MIMALOC_VERSION=v2.2.4
 
 # Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp/compare/v1.18.0...main
 export OPENTELEMETRY_CPP_VERSION=v1.18.0
@@ -326,8 +326,7 @@ git config --global --add core.compression -1
 cd "$BUILD_PATH"
 git clone --depth=100 https://github.com/google/ngx_brotli.git
 cd ngx_brotli
-# https://github.com/google/ngx_brotli/issues/156
-git reset --hard 63ca02abdcf79c9e788d2eedcc388d2335902e52
+git reset --hard a71f9312c2deb28875acc7bacfdd5695a111aa53
 git submodule init
 git submodule update
 
