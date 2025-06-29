@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -147,10 +148,8 @@ func ValidateOptions(options []string, caseSensitive, trimSpace bool) Annotation
 		if !caseSensitive {
 			s = strings.ToLower(s)
 		}
-		for _, option := range options {
-			if s == option {
-				return nil
-			}
+		if slices.Contains(options, s) {
+			return nil
 		}
 		return fmt.Errorf("value does not match any valid option")
 	}
