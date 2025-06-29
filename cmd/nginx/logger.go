@@ -18,9 +18,7 @@ package main
 
 import (
 	"fmt"
-
 	"k8s.io/klog/v2"
-
 	"gopkg.in/mcuadros/go-syslog.v2"
 )
 
