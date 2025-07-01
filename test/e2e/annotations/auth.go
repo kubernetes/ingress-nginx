@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"regexp"
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
@@ -341,11 +340,9 @@ var _ = framework.DescribeAnnotation("auth-*", func() {
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
-		cacheRegex := regexp.MustCompile(`\$cache_key.*foo`)
-
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return cacheRegex.MatchString(server) &&
+				return strings.Contains(server, "proxy_cache_key \"$njs_cache_key\";") &&
 					strings.Contains(server, `proxy_cache_valid 200 202 401 30m;`)
 			})
 	})
