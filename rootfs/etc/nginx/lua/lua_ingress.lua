@@ -62,6 +62,18 @@ local function randomseed()
   math.randomseed(seed)
 end
 
+local function forbid_http(location_config)
+  if location_config.force_ssl_forbid_http and ngx.var.pass_access_scheme == "http" then
+    return true
+  end
+
+  if ngx.var.pass_access_scheme ~= "http" then
+    return false
+  end
+
+  return location_config.ssl_forbid_http and certificate_configured_for_current_request()
+end
+
 local function redirect_to_https(location_config)
   if location_config.force_no_ssl_redirect then
     return false
@@ -115,6 +127,8 @@ function _M.rewrite()
     force_ssl_redirect = string_to_bool(ngx.var.force_ssl_redirect),
     ssl_redirect = string_to_bool(ngx.var.ssl_redirect),
     force_no_ssl_redirect = string_to_bool(ngx.var.force_no_ssl_redirect),
+    force_ssl_forbid_http = string_to_bool(ngx.var.force_ssl_forbid_http),
+    ssl_forbid_http = string_to_bool(ngx.var.ssl_forbid_http),
     preserve_trailing_slash = string_to_bool(ngx.var.preserve_trailing_slash),
     use_port_in_redirects = string_to_bool(ngx.var.use_port_in_redirects),
   }
@@ -152,6 +166,10 @@ function _M.rewrite()
     end
   elseif ngx.var.pass_server_port == config.listen_ports.https then
     ngx.var.pass_port = 443
+  end
+
+  if forbid_http(location_config) then
+    ngx.exit(ngx.HTTP_FORBIDDEN)
   end
 
   if redirect_to_https(location_config) then
