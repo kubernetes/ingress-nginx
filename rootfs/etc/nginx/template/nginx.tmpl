@@ -444,6 +444,14 @@ http {
 
     {{ end }}
 
+    # CORS with multiple allowed origin need to serve the 'Vary: Origin' header
+    # See https://github.com/kubernetes/ingress-nginx/issues/8469#issuecomment-1195714565
+    # Only set it's value if it is not already set by the backend
+    map $upstream_http_vary $cors_vary {
+       default              "$upstream_http_vary";
+       ''                   "Origin";
+    }
+
     # Create a variable that contains the literal $ character.
     # This works because the geo module will not resolve variables.
     geo $literal_dollar {
@@ -887,6 +895,7 @@ stream {
         more_set_headers 'Access-Control-Allow-Headers: {{ $cors.CorsAllowHeaders }}';
         {{ if not (empty $cors.CorsExposeHeaders) }} more_set_headers 'Access-Control-Expose-Headers: {{ $cors.CorsExposeHeaders }}'; {{ end }}
         more_set_headers 'Access-Control-Max-Age: {{ $cors.CorsMaxAge }}';
+        {{ if isCorsVaryHeaderNeeded $cors.CorsAllowOrigin }} more_set_headers 'Vary: $cors_vary'; {{ end }}
      }
 
      if ($cors = "trueoptions") {
@@ -896,6 +905,7 @@ stream {
         more_set_headers 'Access-Control-Allow-Headers: {{ $cors.CorsAllowHeaders }}';
         {{ if not (empty $cors.CorsExposeHeaders) }} more_set_headers 'Access-Control-Expose-Headers: {{ $cors.CorsExposeHeaders }}'; {{ end }}
         more_set_headers 'Access-Control-Max-Age: {{ $cors.CorsMaxAge }}';
+        {{ if isCorsVaryHeaderNeeded $cors.CorsAllowOrigin }} more_set_headers 'Vary: $cors_vary'; {{ end }}
         more_set_headers 'Content-Type: text/plain charset=UTF-8';
         more_set_headers 'Content-Length: 0';
         return 204;
