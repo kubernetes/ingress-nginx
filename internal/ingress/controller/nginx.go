@@ -970,6 +970,7 @@ func configureBackends(rawBackends []*ingress.Backend) error {
 			endpoints = append(endpoints, ingress.Endpoint{
 				Address: endpoint.Address,
 				Port:    endpoint.Port,
+				IsDraining: endpoint.IsDraining,
 			})
 		}
 
