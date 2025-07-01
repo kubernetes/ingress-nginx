@@ -79,6 +79,8 @@ var (
 	// URLWithNginxVariableRegex defines a url that can contain nginx variables.
 	// It is a risky operation
 	URLWithNginxVariableRegex = regexp.MustCompile("^[" + extendedAlphaNumeric + urlEnabledChars + "$]*$")
+	// Used for NGINX properties that accepts URLs with PCRE regex
+	URLWithPCRERegex = regexp.MustCompile("^[" + regexEnabledChars + alphaNumericChars + urlEnabledChars + "]*$")
 	// MaliciousRegex defines chars that are known to inject RCE
 	MaliciousRegex = regexp.MustCompile(`\r|\n`)
 )
