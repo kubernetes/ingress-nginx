@@ -234,7 +234,6 @@ tests:
 
   - it: should create a Deployment with the electionID label on the pod template when leader election is enabled
     set:
-      controller.disableLeaderElection: false
     asserts:
       - equal:
           path: spec.template.metadata.labels['nginx.ingress.kubernetes.io/electionID']
@@ -242,7 +241,6 @@ tests:
 
   - it: should create a Deployment with the custom electionID label on the pod template when controller.electionID is set and leader election is enabled
     set:
-      controller.disableLeaderElection: false
       controller.electionID: custom-election-id
     asserts:
       - equal:
