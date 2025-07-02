@@ -212,7 +212,6 @@ tests:
   - it: should create a DaemonSet with election ID label
     set:
       controller.kind: DaemonSet
-      controller.disableLeaderElection: false
     asserts:
       - equal:
           path: spec.template.metadata.labels["nginx.ingress.kubernetes.io/election-id"]
@@ -221,7 +220,6 @@ tests:
   - it: should create a DaemonSet with custom election ID label if `controller.electionID` is set
     set:
       controller.kind: DaemonSet
-      controller.disableLeaderElection: false
       controller.electionID: custom-election-id
     asserts:
       - equal:
