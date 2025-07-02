@@ -236,7 +236,7 @@ tests:
     set:
     asserts:
       - equal:
-          path: spec.template.metadata.labels['nginx.ingress.kubernetes.io/electionID']
+          path: spec.template.metadata.labels['nginx.ingress.kubernetes.io/election-id']
           value: RELEASE-NAME-ingress-nginx-leader
 
   - it: should create a Deployment with the custom electionID label on the pod template when controller.electionID is set and leader election is enabled
@@ -244,7 +244,7 @@ tests:
       controller.electionID: custom-election-id
     asserts:
       - equal:
-          path: spec.template.metadata.labels['nginx.ingress.kubernetes.io/electionID']
+          path: spec.template.metadata.labels['nginx.ingress.kubernetes.io/election-id']
           value: custom-election-id
 
   - it: should create a Deployment without the electionID label on the pod template when leader election is disabled
@@ -252,4 +252,4 @@ tests:
       controller.disableLeaderElection: true
     asserts:
       - notExists:
-          path: spec.template.metadata.labels['nginx.ingress.kubernetes.io/electionID']
+          path: spec.template.metadata.labels['nginx.ingress.kubernetes.io/election-id']
