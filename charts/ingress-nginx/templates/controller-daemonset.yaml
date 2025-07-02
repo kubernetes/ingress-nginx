@@ -35,7 +35,7 @@ spec:
         {{- include "ingress-nginx.labels" . | nindent 8 }}
         app.kubernetes.io/component: controller
         {{- if not .Values.controller.disableLeaderElection }}
-        nginx.ingress.kubernetes.io/electionID: {{ include "ingress-nginx.controller.electionID" . }}
+        nginx.ingress.kubernetes.io/election-id: {{ include "ingress-nginx.controller.electionID" . }}
         {{- end }}
         {{- with .Values.controller.labels }}
         {{- toYaml . | nindent 8 }}
