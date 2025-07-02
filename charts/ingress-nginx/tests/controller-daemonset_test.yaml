@@ -209,29 +209,29 @@ tests:
           path: spec.template.spec.runtimeClassName
           value: myClass
 
-  - it: should create a DaemonSet with the electionID label on the pod template when leader election is enabled
+  - it: should create a DaemonSet with election ID label
     set:
       controller.kind: DaemonSet
       controller.disableLeaderElection: false
     asserts:
       - equal:
-          path: spec.template.metadata.labels['nginx.ingress.kubernetes.io/electionID']
+          path: spec.template.metadata.labels["nginx.ingress.kubernetes.io/election-id"]
           value: RELEASE-NAME-ingress-nginx-leader
 
-  - it: should create a DaemonSet with the custom electionID label on the pod template when controller.electionID is set and leader election is enabled
+  - it: should create a DaemonSet with custom election ID label if `controller.electionID` is set
     set:
       controller.kind: DaemonSet
       controller.disableLeaderElection: false
       controller.electionID: custom-election-id
     asserts:
       - equal:
-          path: spec.template.metadata.labels['nginx.ingress.kubernetes.io/electionID']
+          path: spec.template.metadata.labels["nginx.ingress.kubernetes.io/election-id"]
           value: custom-election-id
 
-  - it: should create a DaemonSet without the electionID label on the pod template when leader election is disabled
+  - it: should create a DaemonSet without election ID label if `controller.disableLeaderElection` is true
     set:
       controller.kind: DaemonSet
       controller.disableLeaderElection: true
     asserts:
       - notExists:
-          path: spec.template.metadata.labels['nginx.ingress.kubernetes.io/electionID']
+          path: spec.template.metadata.labels["nginx.ingress.kubernetes.io/election-id"]
