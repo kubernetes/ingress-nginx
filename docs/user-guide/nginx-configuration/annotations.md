@@ -132,6 +132,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/mirror-request-body](#mirror)|string|
 |[nginx.ingress.kubernetes.io/mirror-target](#mirror)|string|
 |[nginx.ingress.kubernetes.io/mirror-host](#mirror)|string|
+|[nginx.ingress.kubernetes.io/upstream-server-max-conns](#upstream-server-max-conns)|number|
 
 ### Canary
 
@@ -418,7 +419,7 @@ CORS can be controlled with the following annotations:
 
 ### HTTP2 Push Preload.
 
-Enables automatic conversion of preload links specified in the “Link” response header fields into push requests.
+Enables automatic conversion of preload links specified in the "Link" response header fields into push requests.
 
 !!! example
 
@@ -986,3 +987,22 @@ metadata:
         proxy_pass 127.0.0.1:80;
       }
 ```
+
+### Upstream Server Max Connections
+
+The annotation `nginx.ingress.kubernetes.io/upstream-server-max-conns` allows you to set [max_conns](https://nginx.org/en/docs/http/ngx_http_upstream_module.html#server) parameter. The default value is `0`, which means no limit is applied.
+
+This can be useful to limit the number of concurrent connections to a backend pod, helping to prevent overloading the backend.
+
+**Example usage:**
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/upstream-server-max-conns: "100"
+spec:
+  # ...
+```
+
