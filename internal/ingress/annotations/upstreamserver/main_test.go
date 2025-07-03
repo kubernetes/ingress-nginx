@@ -25,7 +25,6 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
 	"k8s.io/ingress-nginx/internal/ingress/defaults"
-	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
@@ -97,7 +96,7 @@ func TestIngressAnnotationUpstreamServerMaxConnsSetNegative(t *testing.T) {
 	ing := buildIngress()
 
 	// Test with explicitly set to negative value
-	expectedErr := errors.New(fmt.Sprintf("annotation nginx.ingress.kubernetes.io/%s contains invalid value", upstreamServerMaxConnsAnnotation))
+	expectedErr := fmt.Errorf("annotation nginx.ingress.kubernetes.io/%s contains invalid value", upstreamServerMaxConnsAnnotation)
 	data := map[string]string{}
 	data[parser.GetAnnotationWithPrefix(upstreamServerMaxConnsAnnotation)] = "-1"
 	ing.SetAnnotations(data)
@@ -112,7 +111,7 @@ func TestIngressAnnotationUpstreamServerMaxConnsSetString(t *testing.T) {
 	ing := buildIngress()
 
 	// Test with explicitly set to negative value
-	expectedErr := errors.New(fmt.Sprintf("annotation nginx.ingress.kubernetes.io/%s contains invalid value", upstreamServerMaxConnsAnnotation))
+	expectedErr := fmt.Errorf("annotation nginx.ingress.kubernetes.io/%s contains invalid value", upstreamServerMaxConnsAnnotation)
 	data := map[string]string{}
 	data[parser.GetAnnotationWithPrefix(upstreamServerMaxConnsAnnotation)] = "uhi"
 	ing.SetAnnotations(data)
