@@ -179,6 +179,8 @@ type Endpoint struct {
 	Address string `json:"address"`
 	// Port number of the TCP port
 	Port string `json:"port"`
+	// MaxConns maximum number of connections to the endpoint
+	MaxConns int `json:"maxConns,omitempty"`
 	// Target returns a reference to the object providing the endpoint
 	Target *apiv1.ObjectReference `json:"target,omitempty"`
 }
