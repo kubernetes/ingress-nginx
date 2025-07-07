@@ -59,7 +59,7 @@ tests:
         - labelSelector:
             matchLabels:
               app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
-              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
               app.kubernetes.io/component: default-backend
           topologyKey: topology.kubernetes.io/zone
           maxSkew: 1
@@ -67,7 +67,7 @@ tests:
         - labelSelector:
             matchLabels:
               app.kubernetes.io/name: '{{ include "ingress-nginx.name" . }}'
-              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
               app.kubernetes.io/component: default-backend
           topologyKey: kubernetes.io/hostname
           maxSkew: 1
@@ -108,7 +108,7 @@ tests:
                   - key: app.kubernetes.io/instance
                     operator: In
                     values:
-                      - '{{ .Release.Name }}'
+                      - "{{ .Release.Name }}"
                   - key: app.kubernetes.io/component
                     operator: In
                     values:
@@ -196,3 +196,26 @@ tests:
       - equal:
           path: spec.template.spec.automountServiceAccountToken
           value: false
+
+  - it: should create a Deployment with extra volumes if `defaultBackend.extraVolumes` is set
+    set:
+      defaultBackend.enabled: true
+      defaultBackend.extraVolumes:
+        - name: extra-volume
+          configMap:
+            name: "{{ .Release.Name }}"
+      defaultBackend.extraVolumeMounts:
+        - name: extra-volume
+          mountPath: /extra
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes
+          value:
+            - name: extra-volume
+              configMap:
+                name: RELEASE-NAME
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts
+          value:
+            - name: extra-volume
+              mountPath: /extra
