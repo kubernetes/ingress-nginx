@@ -88,6 +88,9 @@ func DownloadGeoLite2DB(attempts int, period time.Duration) error {
 		attempts = minimumRetriesCount
 	}
 
+	klog.Infof("Starting GeoLite2 DB download (editions: %s, attempts: %d, interval: %s)",
+		MaxmindEditionIDs, attempts, period)
+
 	defaultRetry := wait.Backoff{
 		Steps:    attempts,
 		Duration: period,
@@ -103,7 +106,14 @@ func DownloadGeoLite2DB(attempts int, period time.Duration) error {
 
 	lastErr = wait.ExponentialBackoff(defaultRetry, func() (bool, error) {
 		var dlError error
+
 		for _, dbName := range strings.Split(MaxmindEditionIDs, ",") {
+			dbName = strings.TrimSpace(dbName)
+			if dbName == "" {
+				continue
+			}
+
+			klog.V(2).Infof("Attempting to download GeoIP DB: %s", dbName)
 			dlError = downloadDatabase(dbName)
 			if dlError != nil {
 				break
@@ -112,6 +122,7 @@ func DownloadGeoLite2DB(attempts int, period time.Duration) error {
 
 		lastErr = dlError
 		if dlError == nil {
+			klog.Infof("GeoLite2 DBs downloaded successfully")
 			return true, nil
 		}
 
@@ -120,14 +131,21 @@ func DownloadGeoLite2DB(attempts int, period time.Duration) error {
 				if e, ok := e.Err.(*os.SyscallError); ok {
 					if e.Err == syscall.ECONNREFUSED {
 						retries++
-						klog.InfoS("download failed on attempt " + fmt.Sprint(retries))
+						klog.V(1).Infof("Download attempt %d failed: connection refused", retries)
 						return false, nil
 					}
 				}
 			}
 		}
+
+		klog.Errorf("GeoLite2 DB download failed: %v", dlError)
 		return true, nil
 	})
+
+	if lastErr != nil {
+		klog.Errorf("All attempts to download GeoLite2 DBs failed: %v", lastErr)
+	}
+
 	return lastErr
 }
 
