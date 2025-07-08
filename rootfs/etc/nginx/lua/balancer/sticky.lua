@@ -3,6 +3,7 @@ local ck = require("resty.cookie")
 local ngx_balancer = require("ngx.balancer")
 local split = require("util.split")
 local same_site = require("util.same_site")
+local util = require("util")
 
 local ngx = ngx
 local pairs = pairs
@@ -24,7 +25,8 @@ function _M.new(self)
     alternative_backends = nil,
     cookie_session_affinity = nil,
     traffic_shaping_policy = nil,
-    backend_key = nil
+    backend_key = nil,
+    draining_endpoints = nil
   }
 
   setmetatable(o, self)
@@ -129,12 +131,18 @@ function _M.get_last_failure()
   return ngx_balancer.get_last_failure()
 end
 
-local function get_failed_upstreams()
+local function get_upstreams_to_exclude(self)
   local indexed_upstream_addrs = {}
-  local upstream_addrs = split.split_upstream_var(ngx.var.upstream_addr) or {}
+  local failed_upstream_addrs = split.split_upstream_var(ngx.var.upstream_addr) or {}
 
-  for _, addr in ipairs(upstream_addrs) do
+  for _, addr in ipairs(failed_upstream_addrs) do
     indexed_upstream_addrs[addr] = true
+  end
+
+  if self.draining_endpoints then
+    for addr, _ in pairs(self.draining_endpoints) do
+      indexed_upstream_addrs[addr] = true
+    end
   end
 
   return indexed_upstream_addrs
@@ -188,7 +196,7 @@ function _M.balance(self)
 
   local new_upstream
 
-  new_upstream, key = self:pick_new_upstream(get_failed_upstreams())
+  new_upstream, key = self:pick_new_upstream(get_upstreams_to_exclude(self))
   if not new_upstream then
     ngx.log(ngx.WARN, string.format("failed to get new upstream; using upstream %s", new_upstream))
   elseif should_set_cookie(self) then
@@ -201,6 +209,18 @@ end
 function _M.sync(self, backend)
   -- reload balancer nodes
   balancer_resty.sync(self, backend)
+
+  self.draining_endpoints = nil
+  for _, endpoint in pairs(backend.endpoints) do
+    if endpoint.isDraining then
+      if not self.draining_endpoints then
+        self.draining_endpoints = {}
+      end
+
+      local endpoint_string = util.get_endpoint_string(endpoint)
+      self.draining_endpoints[endpoint_string] = true
+    end
+  end
 
   self.traffic_shaping_policy = backend.trafficShapingPolicy
   self.alternative_backends = backend.alternativeBackends
