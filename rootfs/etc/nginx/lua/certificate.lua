@@ -183,7 +183,7 @@ local function fetch_and_cache_ocsp_response(uid, der_cert)
   if ok then
     local now = ngx.now()
     local grace_period = 300
-    
+
     -- handle nextUpdate field from OCSP
     if  error_or_next_update ~= nil then
       expiry = error_or_next_update - now - grace_period
@@ -195,7 +195,7 @@ local function fetch_and_cache_ocsp_response(uid, der_cert)
       end
     else
       -- fallback to original logic if OCSP server did not provide nextUpdate field
-      expiry = 3600 * 24 * 3 
+      expiry = 3600 * 24 * 3
       ngx.log(ngx.NOTICE, "OCSP did not provide nextUpdate therefore it is set to fixed value of 3 days")
     end
   end
