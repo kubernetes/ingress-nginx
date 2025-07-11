@@ -838,8 +838,11 @@ nginx.ingress.kubernetes.io/enable-opentelemetry: "true"
 The option to trust incoming trace spans can be enabled or disabled globally through the ConfigMap but this will
 sometimes need to be overridden to enable it or disable it for a specific ingress (e.g. only enable on a private endpoint)
 
+!!! note
+    This annotation requires `nginx.ingress.kubernetes.io/enable-opentelemetry` to be set to `"true"`, otherwise it will be ignored.
+
 ```yaml
-nginx.ingress.kubernetes.io/opentelemetry-trust-incoming-spans: "true"
+nginx.ingress.kubernetes.io/opentelemetry-trust-incoming-span: "true"
 ```
 
 ### X-Forwarded-Prefix Header
