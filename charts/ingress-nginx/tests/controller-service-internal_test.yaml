@@ -63,7 +63,7 @@ tests:
           value: PreferClose
 
   - it: should create a Service with labels if `controller.service.internal.labels` is set
-    set: 
+    set:
       controller.service.internal.enabled: true
       controller.service.internal.annotations:
         test.annotation: "true"
