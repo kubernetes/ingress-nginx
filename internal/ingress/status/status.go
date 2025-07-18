@@ -121,12 +121,6 @@ func (s *statusSync) Shutdown() {
 		return
 	}
 
-	if len(addrs) > 1 {
-		// leave the job to the next leader
-		klog.InfoS("leaving status update for next leader")
-		return
-	}
-
 	if s.isRunningMultiplePods() {
 		klog.V(2).InfoS("skipping Ingress status update (multiple pods running - another one will be elected as master)")
 		return
@@ -220,9 +214,12 @@ func (s *statusSync) runningAddresses() ([]v1.IngressLoadBalancerIngress, error)
 			continue
 		}
 
-		name := k8s.GetNodeIPOrName(s.Client, pod.Spec.NodeName, s.UseNodeInternalIP)
-		if !stringInIngresses(name, addrs) {
-			addrs = append(addrs, nameOrIPToLoadBalancerIngress(name))
+		preferExternal := !s.UseNodeInternalIP
+		addresses := k8s.GetNodeAddresses(s.Client, pod.Spec.NodeName, preferExternal)
+		for _, addr := range addresses {
+			if !stringInIngresses(addr, addrs) {
+				addrs = append(addrs, nameOrIPToLoadBalancerIngress(addr))
+			}
 		}
 	}
 
