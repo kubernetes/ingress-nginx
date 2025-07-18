@@ -148,8 +148,8 @@ local function fetch_and_cache_ocsp_response(uid, der_cert)
     return
   end
 
-  local ok
-  ok, err = ocsp.validate_ocsp_response(ocsp_response, der_cert)
+  local ok, error_or_next_update
+  ok, error_or_next_update = ocsp.validate_ocsp_response(ocsp_response, der_cert)
   if not ok then
     -- We are doing the same thing as vanilla Nginx here - if response status is not "good"
     -- we do not use it - no stapling.
@@ -173,14 +173,33 @@ local function fetch_and_cache_ocsp_response(uid, der_cert)
     -- the OCSP responder. Imagine OCSP responder is having an intermittent issue
     -- and we keep sending request. It might make things worse for the responder.
 
-    ngx.log(ngx.NOTICE, "OCSP response validation failed: ", err)
+    ngx.log(ngx.NOTICE, "OCSP response validation failed: ", error_or_next_update)
     return
   end
 
-  -- Normally this should be (nextUpdate - thisUpdate), but Lua API does not expose
-  -- those attributes.
-  local expiry = 3600 * 24 * 3
-  local success, forcible
+  local success, forcible, expiry
+
+  -- nextUpdate field is finally accessible via Lua API through validate_ocsp_response(), therefore we can calculate cache invalidation precisely
+  if ok then
+    local now = ngx.now()
+    local grace_period = 300
+
+    -- handle nextUpdate field from OCSP
+    if  error_or_next_update ~= nil then
+      expiry = error_or_next_update - now - grace_period
+      ngx.log(ngx.NOTICE, "OCSP Response cache was provided by OCSP server and is valid for: ", expiry)
+
+      if expiry <= 0 then
+        ngx.log(ngx.WARN, "OCSP next_update is in the past, setting ocsp_response_cache to 0")
+        expiry = 0
+      end
+    else
+      -- fallback to original logic if OCSP server did not provide nextUpdate field
+      expiry = 3600 * 24 * 3
+      ngx.log(ngx.NOTICE, "OCSP did not provide nextUpdate therefore it is set to fixed value of 3 days")
+    end
+  end
+
   success, err, forcible = ocsp_response_cache:set(uid, ocsp_response, expiry)
   if not success then
     ngx.log(ngx.ERR, "failed to cache OCSP response: ", err)
