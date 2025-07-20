@@ -48,6 +48,7 @@
     "sslSessionTimeout": "10m",
     "useGzip": true,
     "useHttp2": true,
+    "useHttp3": false,
     "proxyStreamTimeout": "600s",
     "workerProcesses": 1,
     "limitConnZoneVariable": "$remote_addr"

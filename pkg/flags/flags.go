@@ -193,6 +193,7 @@ Requires the update-status parameter.`)
 
 		httpPort  = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
 		httpsPort = flags.Int("https-port", 443, `Port to use for servicing HTTPS traffic.`)
+		quicPort  = flags.Int("quic-port", 443, `Port to use for servicing QUIC traffic.`)
 
 		sslProxyPort  = flags.Int("ssl-passthrough-proxy-port", 442, `Port to use internally for SSL Passthrough.`)
 		defServerPort = flags.Int("default-server-port", 8181, `Port to use for exposing the default server (catch-all).`)
@@ -272,6 +273,10 @@ https://blog.maxmind.com/2019/12/significant-changes-to-accessing-and-using-geol
 
 	if !ing_net.IsPortAvailable(*httpsPort) {
 		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --https-port", *httpsPort)
+	}
+
+	if !ing_net.IsPortAvailable(*quicPort) {
+		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --quic-port", *quicPort)
 	}
 
 	if !ing_net.IsPortAvailable(*defServerPort) {
@@ -382,6 +387,7 @@ https://blog.maxmind.com/2019/12/significant-changes-to-accessing-and-using-geol
 			Health:   *healthzPort,
 			HTTP:     *httpPort,
 			HTTPS:    *httpsPort,
+			QUIC:     *quicPort,
 			SSLProxy: *sslProxyPort,
 		},
 		IngressClassConfiguration: &ingressclass.Configuration{

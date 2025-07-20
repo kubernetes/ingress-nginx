@@ -244,6 +244,14 @@ type Configuration struct {
 	// Sets the maximum number of concurrent HTTP/2 streams in a connection.
 	HTTP2MaxConcurrentStreams int `json:"http2-max-concurrent-streams,omitempty"`
 
+	// https://nginx.org/en/docs/http/ngx_http_v3_module.html#http3_max_concurrent_streams
+	// Sets the maximum number of concurrent HTTP/3 request streams in a connection.
+	HTTP3MaxConcurrentStreams int `json:"http3-max-concurrent-streams,omitempty"`
+
+	// https://nginx.org/en/docs/http/ngx_http_v3_module.html#http3_stream_buffer_size
+	// Sets the size of the buffer used for reading and writing of the QUIC streams.
+	HTTP3StreamBufferSize string `json:"http3-stream-buffer-size,omitempty"`
+
 	// Enables or disables the header HSTS in servers running SSL
 	HSTS bool `json:"hsts,omitempty"`
 
@@ -449,6 +457,11 @@ type Configuration struct {
 	// https://nginx.org/en/docs/http/ngx_http_v2_module.html
 	// Default: true
 	UseHTTP2 bool `json:"use-http2,omitempty"`
+
+	// Enables or disables the HTTP/3 support in secure connections
+	// https://nginx.org/en/docs/http/ngx_http_v3_module.html
+	// Default: false
+	UseHTTP3 bool `json:"use-http3,omitempty"`
 
 	// Disables gzipping of responses for requests with "User-Agent" header fields matching any of
 	// the specified regular expressions.
@@ -797,6 +810,8 @@ func NewDefault() Configuration {
 		HTTP2MaxHeaderSize:               "",
 		HTTP2MaxRequests:                 0,
 		HTTP2MaxConcurrentStreams:        128,
+		HTTP3MaxConcurrentStreams:        128,
+		HTTP3StreamBufferSize:            "64k",
 		HTTPRedirectCode:                 308,
 		HSTS:                             true,
 		HSTSIncludeSubdomains:            true,
@@ -847,6 +862,7 @@ func NewDefault() Configuration {
 		VariablesHashBucketSize:          256,
 		VariablesHashMaxSize:             2048,
 		UseHTTP2:                         true,
+		UseHTTP3:                         false,
 		DisableProxyInterceptErrors:      false,
 		RelativeRedirects:                false,
 		ProxyStreamTimeout:               "600s",
@@ -956,6 +972,7 @@ type TemplateConfig struct {
 type ListenPorts struct {
 	HTTP     int `json:"HTTP"`
 	HTTPS    int `json:"HTTPS"`
+	QUIC     int `json:"QUIC"`
 	Health   int `json:"Health"`
 	Default  int `json:"Default"`
 	SSLProxy int `json:"SSLProxy"`

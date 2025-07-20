@@ -36,6 +36,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--healthz-host`                   | Address to bind the healthz endpoint. |
 | `--http-port`                      | Port to use for servicing HTTP traffic. (default 80) |
 | `--https-port`                     | Port to use for servicing HTTPS traffic. (default 443) |
+| `--quic-port`                      | Port to use for servicing QUIC traffic. (default 443) |
 | `--ingress-class`                  | Name of the ingress class this controller satisfies. The class of an Ingress object is set using the field IngressClassName in Kubernetes clusters version v1.18.0 or higher or the annotation "kubernetes.io/ingress.class" (deprecated). If this parameter is not set, or set to the default value of "nginx", it will handle ingresses with either an empty or "nginx" class name. |
 | `--ingress-class-by-name`          | Define if Ingress Controller should watch for Ingress Class by Name together with Controller Class. (default false). |
 | `--internal-logger-address`        | Address to be used when binding internal syslogger. (default 127.0.0.1:11514) |

@@ -59,6 +59,8 @@ The following table shows a configuration option's name, type, and the default v
 | [http2-max-header-size](#http2-max-header-size)                                 | string       | ""                                                                                                                                                                                                                                                                                                                                                           | DEPRECATED in favour of [large_client_header_buffers](#large-client-header-buffers) |
 | [http2-max-requests](#http2-max-requests)                                       | int          | 0                                                                                                                                                                                                                                                                                                                                                            | DEPRECATED in favour of [keepalive_requests](#keepalive-requests)                   |
 | [http2-max-concurrent-streams](#http2-max-concurrent-streams)                   | int          | 128                                                                                                                                                                                                                                                                                                                                                          |                                                                                     |
+| [http3-max-concurrent-streams](#http3-max-concurrent-streams)                   | int          | 128                                                                                                                                                                                                                                                                                                                                                          |                                                                                     |
+| [http3-stream-buffer-size](#http3-stream-buffer-size)                           | string       | "64k"                                                                                                                                                                                                                                                                                                                                                        |                                                                                     |
 | [hsts](#hsts)                                                                   | bool         | "true"                                                                                                                                                                                                                                                                                                                                                       |                                                                                     |
 | [hsts-include-subdomains](#hsts-include-subdomains)                             | bool         | "true"                                                                                                                                                                                                                                                                                                                                                       |                                                                                     |
 | [hsts-max-age](#hsts-max-age)                                                   | string       | "31536000"                                                                                                                                                                                                                                                                                                                                                   |                                                                                     |
@@ -106,6 +108,7 @@ The following table shows a configuration option's name, type, and the default v
 | [brotli-min-length](#brotli-min-length)                                         | int          | 20                                                                                                                                                                                                                                                                                                                                                           |                                                                                     |
 | [brotli-types](#brotli-types)                                                   | string       | "application/xml+rss application/atom+xml application/javascript application/x-javascript application/json application/rss+xml application/vnd.ms-fontobject application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/svg+xml image/x-icon text/css text/javascript text/plain text/x-component" |                                                                                     |
 | [use-http2](#use-http2)                                                         | bool         | "true"                                                                                                                                                                                                                                                                                                                                                       |                                                                                     |
+| [use-http3](#use-http3)                                                         | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
 | [gzip-disable](#gzip-disable)                                                   | string       | ""                                                                                                                                                                                                                                                                                                                                                           |                                                                                     |
 | [gzip-level](#gzip-level)                                                       | int          | 1                                                                                                                                                                                                                                                                                                                                                            |                                                                                     |
 | [gzip-min-length](#gzip-min-length)                                             | int          | 256                                                                                                                                                                                                                                                                                                                                                          |                                                                                     |
@@ -441,6 +444,20 @@ Sets the maximum number of concurrent HTTP/2 streams in a connection.
 _References:_
 [https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_concurrent_streams](https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_concurrent_streams)
 
+## http3-max-concurrent-streams
+
+Sets the maximum number of concurrent HTTP/3 request streams in a connection.
+
+_References:_
+[https://nginx.org/en/docs/http/ngx_http_v3_module.html#http3_max_concurrent_streams](https://nginx.org/en/docs/http/ngx_http_v3_module.html#http3_max_concurrent_streams)
+
+## http3-stream-buffer-size
+
+Sets the size of the buffer used for reading and writing of the QUIC streams.
+
+_References:_
+[https://nginx.org/en/docs/http/ngx_http_v3_module.html#http3_stream_buffer_size](https://nginx.org/en/docs/http/ngx_http_v3_module.html#http3_stream_buffer_size)
+
 ## hsts
 
 Enables or disables the header HSTS in servers running SSL.
@@ -752,6 +769,10 @@ _**default:**_ `application/xml+rss application/atom+xml application/javascript 
 ## use-http2
 
 Enables or disables [HTTP/2](https://nginx.org/en/docs/http/ngx_http_v2_module.html) support in secure connections.
+
+## use-http3
+
+Enables or disables [HTTP/3](https://nginx.org/en/docs/http/ngx_http_v3_module.html) support in secure connections.
 
 ## gzip-disable
 

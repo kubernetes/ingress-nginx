@@ -288,6 +288,9 @@ http {
 
     http2_max_concurrent_streams    {{ $cfg.HTTP2MaxConcurrentStreams }};
 
+    http3_max_concurrent_streams    {{ $cfg.HTTP3MaxConcurrentStreams }};
+    http3_stream_buffer_size        {{ $cfg.HTTP3StreamBufferSize }};
+
     types_hash_max_size             2048;
     server_names_hash_max_size      {{ $cfg.ServerNameHashMaxSize }};
     server_names_hash_bucket_size   {{ $cfg.ServerNameHashBucketSize }};
