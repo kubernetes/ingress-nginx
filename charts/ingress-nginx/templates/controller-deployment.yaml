@@ -127,6 +127,14 @@ spec:
               hostPort: {{ index $.Values.controller.hostPort.ports $key | default $value }}
               {{- end }}
           {{- end }}
+          {{- range $key, $value := .Values.controller.containerUdpPort }}
+            - name: {{ $key }}
+              containerPort: {{ $value }}
+              protocol: UDP
+              {{- if $.Values.controller.hostPort.enabled }}
+              hostPort: {{ index $.Values.controller.hostPort.ports $key | default $value }}
+              {{- end }}
+          {{- end }}
           {{- if .Values.controller.metrics.enabled }}
             - name: {{ .Values.controller.metrics.portName }}
               containerPort: {{ .Values.controller.metrics.port }}

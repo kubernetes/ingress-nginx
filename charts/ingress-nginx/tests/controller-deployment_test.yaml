@@ -231,3 +231,23 @@ tests:
       - equal:
           path: spec.template.spec.runtimeClassName
           value: myClass
+
+  - it: should create a Deployment with a default UDP container port
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            name: quic
+            containerPort: 443
+            protocol: UDP
+
+  - it: should create a Deployment with a custom UDP container port if `controller.containerUdpPort.quic` is set
+    set:
+      controller.containerUdpPort.quic: 1234
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            name: quic
+            containerPort: 1234
+            protocol: UDP
