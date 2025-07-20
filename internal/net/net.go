@@ -39,6 +39,17 @@ func IsPortAvailable(p int) bool {
 	return err == nil
 }
 
+// IsUDPPortAvailable checks if a UDP port is available or not
+func IsUDPPortAvailable(p int) bool {
+	ln, err := _net.ListenPacket("udp", fmt.Sprintf(":%v", p))
+	defer func() {
+		if ln != nil {
+			ln.Close()
+		}
+	}()
+	return err == nil
+}
+
 // IsIPv6Enabled checks if IPV6 is enabled or not and we have
 // at least one configured in the pod
 func IsIPv6Enabled() bool {

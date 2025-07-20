@@ -21,3 +21,14 @@ tests:
       - equal:
           path: metadata.name
           value: RELEASE-NAME-ingress-nginx-controller
+
+  - it: should create a NetworkPolicy with a custom UDP port if `controller.containerUdpPort.quic` is set
+    set:
+      controller.networkPolicy.enabled: true
+      controller.containerUdpPort.quic: 1234
+    asserts:
+      - contains:
+          path: spec.ingress[0].ports
+          content:
+            protocol: UDP
+            port: 1234

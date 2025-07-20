@@ -1385,7 +1385,7 @@ func buildHTTPListener(t, s interface{}) string {
 		addrV4 = tc.Cfg.BindAddressIpv4
 	}
 
-	co := commonListenOptions(&tc, hostname)
+	co := commonListenOptions(&tc, hostname, true)
 
 	out = append(out, httpListener(addrV4, co, &tc)...)
 
@@ -1418,14 +1418,18 @@ func buildHTTPSListener(t, s interface{}) string {
 		return ""
 	}
 
-	co := commonListenOptions(&tc, hostname)
+	httpsCo := commonListenOptions(&tc, hostname, true)
+	quicCo := commonListenOptions(&tc, hostname, false)
 
 	addrV4 := []string{""}
 	if len(tc.Cfg.BindAddressIpv4) > 0 {
 		addrV4 = tc.Cfg.BindAddressIpv4
 	}
 
-	out = append(out, httpsListener(addrV4, co, &tc)...)
+	out = append(out, httpsListener(addrV4, httpsCo, &tc)...)
+	if tc.IsQUICEnabled {
+		out = append(out, quicListener(addrV4, quicCo, &tc)...)
+	}
 
 	if !tc.IsIPV6Enabled {
 		return strings.Join(out, "\n")
@@ -1436,12 +1440,15 @@ func buildHTTPSListener(t, s interface{}) string {
 		addrV6 = tc.Cfg.BindAddressIpv6
 	}
 
-	out = append(out, httpsListener(addrV6, co, &tc)...)
+	out = append(out, httpsListener(addrV6, httpsCo, &tc)...)
+	if tc.IsQUICEnabled {
+		out = append(out, quicListener(addrV6, quicCo, &tc)...)
+	}
 
 	return strings.Join(out, "\n")
 }
 
-func commonListenOptions(template *config.TemplateConfig, hostname string) string {
+func commonListenOptions(template *config.TemplateConfig, hostname string, withBacklog bool) string {
 	var out []string
 
 	if template.Cfg.UseProxyProtocol {
@@ -1460,7 +1467,9 @@ func commonListenOptions(template *config.TemplateConfig, hostname string) strin
 		out = append(out, "reuseport")
 	}
 
-	out = append(out, fmt.Sprintf("backlog=%v", template.BacklogSize))
+	if withBacklog {
+		out = append(out, fmt.Sprintf("backlog=%v", template.BacklogSize))
+	}
 
 	return strings.Join(out, " ")
 }
@@ -1507,6 +1516,25 @@ func httpsListener(addresses []string, co string, tc *config.TemplateConfig) []s
 		}
 
 		lo = append(lo, co, "ssl;")
+
+		out = append(out, strings.Join(lo, " "))
+	}
+
+	return out
+}
+
+func quicListener(addresses []string, co string, tc *config.TemplateConfig) []string {
+	out := make([]string, 0)
+	for _, address := range addresses {
+		lo := []string{"listen"}
+
+		if address == "" {
+			lo = append(lo, fmt.Sprintf("%v", tc.ListenPorts.QUIC))
+		} else {
+			lo = append(lo, fmt.Sprintf("%v:%v", address, tc.ListenPorts.QUIC))
+		}
+
+		lo = append(lo, co, "quic;")
 
 		out = append(out, strings.Join(lo, " "))
 	}

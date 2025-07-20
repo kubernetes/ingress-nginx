@@ -2,6 +2,7 @@
 {{ $servers := .Servers }}
 {{ $cfg := .Cfg }}
 {{ $IsIPV6Enabled := .IsIPV6Enabled }}
+{{ $IsQUICEnabled := .IsQUICEnabled }}
 {{ $healthzURI := .HealthzURI }}
 {{ $backends := .Backends }}
 {{ $proxyHeaders := .ProxySetHeaders }}
@@ -45,6 +46,10 @@ worker_rlimit_nofile {{ $cfg.MaxWorkerOpenFiles }};
 {{/* https://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout */}}
 {{/* avoid waiting too long during a reload */}}
 worker_shutdown_timeout {{ $cfg.WorkerShutdownTimeout }} ;
+
+{{ if $IsQUICEnabled }}
+quic_bpf             {{ if $cfg.QUICBPF }}on{{ else }}off{{ end }};
+{{ end }}
 
 {{ if not (empty $cfg.MainSnippet) }}
 {{ $cfg.MainSnippet }}
@@ -287,6 +292,15 @@ http {
     {{ end }}
 
     http2_max_concurrent_streams    {{ $cfg.HTTP2MaxConcurrentStreams }};
+
+    {{ if $IsQUICEnabled }}
+    http3_hq                        {{ if $cfg.HTTP3HQ }}on{{ else }}off{{ end }};
+    http3_max_concurrent_streams    {{ $cfg.HTTP3MaxConcurrentStreams }};
+    http3_stream_buffer_size        {{ $cfg.HTTP3StreamBufferSize }};
+    quic_active_connection_id_limit {{ $cfg.QUICActiveConnectionIDLimit }};
+    quic_gso                        {{ if $cfg.QUICGSO }}on{{ else }}off{{ end }};
+    quic_retry                      {{ if $cfg.QUICRetry }}on{{ else }}off{{ end }};
+    {{ end }}
 
     types_hash_max_size             2048;
     server_names_hash_max_size      {{ $cfg.ServerNameHashMaxSize }};

@@ -228,3 +228,15 @@ tests:
               restartPolicy: NotRequired
             - resourceName: memory
               restartPolicy: RestartContainer
+
+  - it: should create a DaemonSet with a custom UDP container port if `controller.containerUdpPort.quic` is set
+    set:
+      controller.kind: DaemonSet
+      controller.containerUdpPort.quic: 1234
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            name: quic
+            containerPort: 1234
+            protocol: UDP

@@ -27,6 +27,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--enable-metrics`                 | Enables the collection of NGINX metrics. (Default: false) |
 | `--enable-ssl-chain-completion`    | Autocomplete SSL certificate chains with missing intermediate CA certificates. Certificates uploaded to Kubernetes must have the "Authority Information Access" X.509 v3 extension for this to succeed. (default false)|
 | `--enable-ssl-passthrough`         | Enable SSL Passthrough. (default false) |
+| `--enable-quic`                    | Enable QUIC. (default false) |
 | `--disable-leader-election`        | Disable Leader Election on Nginx Controller. (default false) |
 | `--enable-topology-aware-routing`  | Enable topology aware routing feature, needs service object annotation service.kubernetes.io/topology-mode sets to auto. (default false) |
 | `--exclude-socket-metrics`         | Set of socket request metrics to exclude which won't be exported nor being calculated. The possible socket request metrics to exclude are documented in the monitoring guide e.g. 'nginx_ingress_controller_request_duration_seconds,nginx_ingress_controller_response_size'|
@@ -36,6 +37,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--healthz-host`                   | Address to bind the healthz endpoint. |
 | `--http-port`                      | Port to use for servicing HTTP traffic. (default 80) |
 | `--https-port`                     | Port to use for servicing HTTPS traffic. (default 443) |
+| `--quic-port`                      | Port to use for servicing QUIC traffic. (default 443) |
 | `--ingress-class`                  | Name of the ingress class this controller satisfies. The class of an Ingress object is set using the field IngressClassName in Kubernetes clusters version v1.18.0 or higher or the annotation "kubernetes.io/ingress.class" (deprecated). If this parameter is not set, or set to the default value of "nginx", it will handle ingresses with either an empty or "nginx" class name. |
 | `--ingress-class-by-name`          | Define if Ingress Controller should watch for Ingress Class by Name together with Controller Class. (default false). |
 | `--internal-logger-address`        | Address to be used when binding internal syslogger. (default 127.0.0.1:11514) |

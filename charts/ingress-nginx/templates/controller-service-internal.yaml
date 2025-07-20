@@ -88,6 +88,18 @@ spec:
       nodePort: {{ .Values.controller.service.internal.nodePorts.https }}
     {{- end }}
   {{- end }}
+  {{- if .Values.controller.service.enableQuic }}
+    - name: quic
+      port: {{ .Values.controller.service.internal.ports.quic | default .Values.controller.service.ports.quic }}
+      protocol: UDP
+      targetPort: {{ .Values.controller.service.internal.targetPorts.quic | default .Values.controller.service.targetPorts.quic }}
+    {{- if and (semverCompare ">=1.20.0-0" .Capabilities.KubeVersion.Version) (.Values.controller.service.internal.appProtocol) }}
+      appProtocol: https
+    {{- end }}
+    {{- if (and $setNodePorts (not (empty .Values.controller.service.internal.nodePorts.quic))) }}
+      nodePort: {{ .Values.controller.service.internal.nodePorts.quic }}
+    {{- end }}
+  {{- end }}
   {{- range $key, $value := .Values.tcp }}
     - name: {{ if $.Values.portNamePrefix }}{{ $.Values.portNamePrefix }}-{{ end }}{{ $key }}-tcp
       port: {{ $key }}
