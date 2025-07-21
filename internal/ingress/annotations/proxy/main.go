@@ -301,9 +301,11 @@ func (a proxy) Parse(ing *networking.Ingress) (interface{}, error) {
 		config.BufferSize = defBackend.ProxyBufferSize
 	}
 
+	// Only set BusyBuffersSize if annotation is present, blank is NGINX default
+	// https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_busy_buffers_size
 	config.BusyBuffersSize, err = parser.GetStringAnnotation(proxyBusyBuffersSizeAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
-		config.BusyBuffersSize = defBackend.ProxyBusyBuffersSize
+		config.BusyBuffersSize = ""
 	}
 
 	config.CookiePath, err = parser.GetStringAnnotation(proxyCookiePathAnnotation, ing, a.annotationConfig.Annotations)
