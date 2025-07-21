@@ -458,11 +458,6 @@ type Configuration struct {
 	// Default: true
 	UseHTTP2 bool `json:"use-http2,omitempty"`
 
-	// Enables or disables the HTTP/3 support in secure connections
-	// https://nginx.org/en/docs/http/ngx_http_v3_module.html
-	// Default: false
-	UseHTTP3 bool `json:"use-http3,omitempty"`
-
 	// Disables gzipping of responses for requests with "User-Agent" header fields matching any of
 	// the specified regular expressions.
 	// https://nginx.org/en/docs/http/ngx_http_gzip_module.html#gzip_disable
@@ -862,7 +857,6 @@ func NewDefault() Configuration {
 		VariablesHashBucketSize:          256,
 		VariablesHashMaxSize:             2048,
 		UseHTTP2:                         true,
-		UseHTTP3:                         false,
 		DisableProxyInterceptErrors:      false,
 		RelativeRedirects:                false,
 		ProxyStreamTimeout:               "600s",
@@ -952,6 +946,7 @@ type TemplateConfig struct {
 	Cfg                      Configuration                    `json:"Cfg"`
 	IsIPV6Enabled            bool                             `json:"IsIPV6Enabled"`
 	IsSSLPassthroughEnabled  bool                             `json:"IsSSLPassthroughEnabled"`
+	IsQUICEnabled            bool                             `json:"IsQUICEnabled"`
 	NginxStatusIpv4Whitelist []string                         `json:"NginxStatusIpv4Whitelist"`
 	NginxStatusIpv6Whitelist []string                         `json:"NginxStatusIpv6Whitelist"`
 	RedirectServers          interface{}                      `json:"RedirectServers"`

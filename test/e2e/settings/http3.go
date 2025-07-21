@@ -17,41 +17,60 @@ limitations under the License.
 package settings
 
 import (
+	"context"
 	"strings"
 
 	"github.com/onsi/ginkgo/v2"
+	"github.com/stretchr/testify/assert"
+	appsv1 "k8s.io/api/apps/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
 var _ = framework.DescribeSetting("http3", func() {
 	f := framework.NewDefaultFramework("http3")
+	host := "http3.com"
 
-	ginkgo.It("should disable HTTP/3", func() {
-		host := "http3.com"
+	ginkgo.BeforeEach(func() {
+		err := f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
+			args := deployment.Spec.Template.Spec.Containers[0].Args
+			args = append(args, "--enable-quic")
+			deployment.Spec.Template.Spec.Containers[0].Args = args
+			_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
+			return err
+		})
+		assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller deployment flags")
 		annotations := map[string]string{}
 
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
-		f.UpdateNginxConfigMapData("use-http3", "false")
-
-		f.WaitForNginxConfiguration(func(cfg string) bool {
-			return !strings.Contains(cfg, "quic;")
-		})
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "listen 443 quic;")
+			})
 	})
 
-	ginkgo.It("should enable HTTP/3", func() {
-		host := "http3.com"
-		annotations := map[string]string{}
+	ginkgo.It("should enable HTTP/3 on a custom port", func() {
+		err := f.UpdateIngressControllerDeployment(func(deployment *appsv1.Deployment) error {
+			args := deployment.Spec.Template.Spec.Containers[0].Args
+			args = append(args, "--quic-port=4321")
+			deployment.Spec.Template.Spec.Containers[0].Args = args
+			_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
+			return err
+		})
+		assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller deployment flags")
 
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, "listen 4321 quic;")
+			})
+	})
 
-		f.UpdateNginxConfigMapData("use-http3", "true")
-
+	ginkgo.It("should have default http3_max_concurrent_streams value", func() {
 		f.WaitForNginxConfiguration(func(cfg string) bool {
-			return strings.Contains(cfg, "quic;")
+			return strings.Contains(cfg, "http3_max_concurrent_streams 128;")
 		})
 	})
 
@@ -60,6 +79,12 @@ var _ = framework.DescribeSetting("http3", func() {
 
 		f.WaitForNginxConfiguration(func(cfg string) bool {
 			return strings.Contains(cfg, "http3_max_concurrent_streams 256;")
+		})
+	})
+
+	ginkgo.It("should have default http3_stream_buffer_size value", func() {
+		f.WaitForNginxConfiguration(func(cfg string) bool {
+			return strings.Contains(cfg, "http3_stream_buffer_size 64k;")
 		})
 	})
 

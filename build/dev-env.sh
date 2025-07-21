@@ -89,7 +89,8 @@ controller:
     digest:
   config:
     worker-processes: "1"
-    use-http3: "true"
+  extraArgs:
+    enable-quic: "true"
   podLabels:
     deploy-date: "$(date +%s)"
   updateStrategy:

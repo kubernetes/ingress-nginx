@@ -101,6 +101,8 @@ type Configuration struct {
 
 	EnableSSLPassthrough bool
 
+	EnableQUIC bool
+
 	DisableLeaderElection bool
 
 	EnableProfiling bool

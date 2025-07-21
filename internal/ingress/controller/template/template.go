@@ -1509,15 +1509,11 @@ func httpsListener(addresses []string, co string, tc *config.TemplateConfig) []s
 
 		out = append(out, strings.Join(lo, " "))
 	}
-	if !tc.Cfg.UseHTTP3 {
+	if !tc.IsQUICEnabled {
 		return out
 	}
 	if strings.Contains(co, "backlog=") {
 		klog.V(3).InfoS("Skipping HTTP/3 because of incompatible backlog parameter")
-		return out
-	}
-	if tc.IsSSLPassthroughEnabled {
-		klog.V(3).InfoS("Skipping HTTP/3 in SSL Passthrough mode")
 		return out
 	}
 	for _, address := range addresses {
