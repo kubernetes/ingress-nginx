@@ -275,7 +275,7 @@ https://blog.maxmind.com/2019/12/significant-changes-to-accessing-and-using-geol
 		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --https-port", *httpsPort)
 	}
 
-	if !ing_net.IsPortAvailable(*quicPort) {
+	if !ing_net.IsUDPPortAvailable(*quicPort) {
 		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --quic-port", *quicPort)
 	}
 
