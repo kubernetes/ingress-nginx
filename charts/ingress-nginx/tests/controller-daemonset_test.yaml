@@ -208,18 +208,6 @@ tests:
       - equal:
           path: spec.template.spec.runtimeClassName
           value: myClass
-
-  - it: should create a DaemonSet with a default UDP container port
-    set:
-      controller.kind: DaemonSet
-    asserts:
-      - contains:
-          path: spec.template.spec.containers[0].ports
-          content:
-            name: quic
-            containerPort: 443
-            protocol: UDP
-
   - it: should create a DaemonSet with a custom UDP container port if `controller.containerUdpPort.quic` is set
     set:
       controller.kind: DaemonSet

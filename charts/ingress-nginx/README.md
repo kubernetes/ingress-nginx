@@ -317,7 +317,7 @@ metadata:
 | controller.configMapNamespace | string | `""` | Allows customization of the configmap / nginx-configmap namespace; defaults to $(POD_NAMESPACE) |
 | controller.containerName | string | `"controller"` | Configures the controller container name |
 | controller.containerPort | object | `{"http":80,"https":443}` | Configures the TCP ports that the nginx-controller listens on |
-| controller.containerUdpPort | object | `{"quic":443}` | Configures the UDP ports that the nginx-controller listens on |
+| controller.containerUdpPort | object | `{}` | Configures the UDP ports that the nginx-controller listens on |
 | controller.containerSecurityContext | object | `{}` | Security context for controller containers |
 | controller.customTemplate.configMapKey | string | `""` |  |
 | controller.customTemplate.configMapName | string | `""` |  |
