@@ -809,14 +809,14 @@ _References:_
 Sets the bucket size for the variables hash table.
 
 _References:_
-[https://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_bucket_size](https://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_bucket_size)
+[https://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size](https://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size)
 
 ## variables-hash-max-size
 
 Sets the maximum size of the variables hash table.
 
 _References:_
-[https://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size](https://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size)
+[https://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_max_size](https://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_max_size)
 
 ## upstream-keepalive-connections
 

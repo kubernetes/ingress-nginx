@@ -482,11 +482,11 @@ type Configuration struct {
 	WorkerShutdownTimeout string `json:"worker-shutdown-timeout,omitempty"`
 
 	// Sets the bucket size for the variables hash table.
-	// https://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_bucket_size
+	// https://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size
 	VariablesHashBucketSize int `json:"variables-hash-bucket-size,omitempty"`
 
 	// Sets the maximum size of the variables hash table.
-	// https://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size
+	// https://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_max_size
 	VariablesHashMaxSize int `json:"variables-hash-max-size,omitempty"`
 
 	// Activates the cache for connections to upstream servers.
@@ -510,7 +510,7 @@ type Configuration struct {
 	UpstreamKeepaliveRequests int `json:"upstream-keepalive-requests,omitempty"`
 
 	// Sets the maximum size of the variables hash table.
-	// https://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size
+	// https://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_max_size
 	LimitConnZoneVariable string `json:"limit-conn-zone-variable,omitempty"`
 
 	// Sets the timeout between two successive read or write operations on client or proxied server connections.
