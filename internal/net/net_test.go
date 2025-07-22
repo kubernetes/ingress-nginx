@@ -53,7 +53,11 @@ func TestIsPortAvailable(t *testing.T) {
 	}
 	defer ln.Close()
 
-	p := ln.Addr().(*net.TCPAddr).Port
+	addr, ok := ln.Addr().(*net.TCPAddr)
+	if !ok {
+		t.Fatalf("unexpected type: %T", ln.Addr())
+	}
+	p := addr.Port
 	if IsPortAvailable(p) {
 		t.Fatalf("expected port %v to not be available", p)
 	}
@@ -64,13 +68,17 @@ func TestIsUDPPortAvailable(t *testing.T) {
 		t.Fatal("expected port 0 to be available (random port) but returned false")
 	}
 
-	ln, err := net.ListenPacket("udp", ":0") //nolint:gosec // Ignore the gosec error in testing
+	ln, err := net.ListenPacket("udp", ":0")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	defer ln.Close()
 
-	p := ln.LocalAddr().(*net.UDPAddr).Port
+	addr, ok := ln.LocalAddr().(*net.UDPAddr)
+	if !ok {
+		t.Fatalf("unexpected type: %T", ln.LocalAddr())
+	}
+	p := addr.Port
 	if IsUDPPortAvailable(p) {
 		t.Fatalf("expected port %v to not be available", p)
 	}

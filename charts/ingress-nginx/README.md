@@ -317,8 +317,8 @@ metadata:
 | controller.configMapNamespace | string | `""` | Allows customization of the configmap / nginx-configmap namespace; defaults to $(POD_NAMESPACE) |
 | controller.containerName | string | `"controller"` | Configures the controller container name |
 | controller.containerPort | object | `{"http":80,"https":443}` | Configures the TCP ports that the nginx-controller listens on |
-| controller.containerUdpPort | object | `{}` | Configures the UDP ports that the nginx-controller listens on |
 | controller.containerSecurityContext | object | `{}` | Security context for controller containers |
+| controller.containerUdpPort | list | `[]` | Configures the UDP ports that the nginx-controller listens on |
 | controller.customTemplate.configMapKey | string | `""` |  |
 | controller.customTemplate.configMapName | string | `""` |  |
 | controller.disableLeaderElection | bool | `false` | This configuration disable Nginx Controller Leader Election |
@@ -495,9 +495,11 @@ metadata:
 | controller.service.nodePorts.udp | object | `{}` | Node port mapping for external UDP listeners. If left empty, the service controller allocates them from the configured node port range. Example: udp:   53: 30053 |
 | controller.service.ports.http | int | `80` | Port the external HTTP listener is published with. |
 | controller.service.ports.https | int | `443` | Port the external HTTPS listener is published with. |
+| controller.service.ports.quic | int | `443` | Port the external QUIC listener is published with. |
 | controller.service.sessionAffinity | string | `""` | Session affinity of the external controller service. Must be either "None" or "ClientIP" if set. Defaults to "None". Ref: https://kubernetes.io/docs/reference/networking/virtual-ips/#session-affinity |
 | controller.service.targetPorts.http | string | `"http"` | Port of the ingress controller the external HTTP listener is mapped to. |
 | controller.service.targetPorts.https | string | `"https"` | Port of the ingress controller the external HTTPS listener is mapped to. |
+| controller.service.targetPorts.quic | string | `"quic"` | Port of the ingress controller the external QUIC listener is mapped to. |
 | controller.service.trafficDistribution | string | `""` | Traffic distribution policy of the external controller service. Set to "PreferClose" to route traffic to endpoints that are topologically closer to the client. Ref: https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution |
 | controller.service.type | string | `"LoadBalancer"` | Type of the external controller service. Ref: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types |
 | controller.shareProcessNamespace | bool | `false` |  |
