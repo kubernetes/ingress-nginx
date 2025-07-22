@@ -271,7 +271,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        k8s: [v1.29.14, v1.30.13, v1.31.9, v1.32.5, v1.33.1]
+        k8s: [v1.29.14, v1.30.13, v1.31.9, v1.32.5, v1.33.2]
 
     steps:
       - name: Checkout code
@@ -303,7 +303,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        k8s: [v1.29.14, v1.30.13, v1.31.9, v1.32.5, v1.33.1]
+        k8s: [v1.29.14, v1.30.13, v1.31.9, v1.32.5, v1.33.2]
     uses: ./.github/workflows/zz-tmpl-k8s-e2e.yaml
     with:
       k8s-version: ${{ matrix.k8s }}
@@ -318,7 +318,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        k8s: [v1.29.14, v1.30.13, v1.31.9, v1.32.5, v1.33.1]
+        k8s: [v1.29.14, v1.30.13, v1.31.9, v1.32.5, v1.33.2]
     uses: ./.github/workflows/zz-tmpl-k8s-e2e.yaml
     with:
       k8s-version: ${{ matrix.k8s }}
