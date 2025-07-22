@@ -82,6 +82,12 @@ Valid values are defined in the describe definition of the e2e tests like [Defau
 
 The complete list of tests can be found [here](../e2e-tests.md)
 
+**Run Helm unit tests**
+
+```console
+make helm-test
+```
+
 ### Custom docker image
 
 In some cases, it can be useful to build a docker image and publish such an image to a private or custom registry location.
