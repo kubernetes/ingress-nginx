@@ -156,6 +156,10 @@ test:  ## Run go unit tests.
 		GOFLAGS="-buildvcs=false" \
 		test/test.sh
 
+.PHONY: helm-test
+helm-test: ## Run helm unit tests.
+	helm unittest charts/ingress-nginx --file "tests/**/*_test.yaml"
+
 .PHONY: lua-test
 lua-test: ## Run lua unit tests.
 	@build/run-in-docker.sh \
