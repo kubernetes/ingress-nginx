@@ -66,7 +66,7 @@ type Backend struct {
 
 	// Sets the size of the buffer used for reading the first part of the response received from the
 	// proxied server. This part usually contains a small response header.
-	// https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size)
+	// https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size
 	ProxyBufferSize string `json:"proxy-buffer-size"`
 
 	// Limits the total size of buffers that can be busy sending a response to the client while
