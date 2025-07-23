@@ -601,7 +601,8 @@ cd "$BUILD_PATH/mimalloc"
 mkdir -p out/release
 cd out/release
 
-cmake ../..
+# See this issue for why we disable architecture specific optimizations: https://github.com/kubernetes/ingress-nginx/issues/13608.
+cmake -DMI_NO_OPT_ARCH=ON ../..
 
 make
 make install
