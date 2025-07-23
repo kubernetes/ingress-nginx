@@ -1787,7 +1787,7 @@ func externalNamePorts(name string, svc *apiv1.Service) *apiv1.ServicePort {
 		return &apiv1.ServicePort{
 			Protocol:   "TCP",
 			Port:       svcPort.Port,
-			TargetPort: svcPort.TargetPort,
+			TargetPort: tp,
 		}
 	}
 
