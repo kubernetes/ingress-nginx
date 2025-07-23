@@ -446,15 +446,15 @@ kind: Ingress
 metadata:
   annotations:
     nginx.ingress.kubernetes.io/server-snippet: |
-        set $agentflag 0;
+      set $agentflag 0;
 
-        if ($http_user_agent ~* "(Mobile)" ){
-          set $agentflag 1;
-        }
+      if ($http_user_agent ~* "(Mobile)" ){
+        set $agentflag 1;
+      }
 
-        if ( $agentflag = 1 ) {
-          return 301 https://m.example.com;
-        }
+      if ( $agentflag = 1 ) {
+        return 301 https://m.example.com;
+      }
 ```
 
 !!! attention
@@ -530,7 +530,7 @@ Additionally it is possible to set:
 ```yaml
 nginx.ingress.kubernetes.io/auth-url: http://foo.com/external-auth
 nginx.ingress.kubernetes.io/auth-snippet: |
-    proxy_set_header Foo-Header 42;
+  proxy_set_header Foo-Header 42;
 ```
 > Note: `nginx.ingress.kubernetes.io/auth-snippet` is an optional annotation. However, it may only be used in conjunction with `nginx.ingress.kubernetes.io/auth-url` and will be ignored if `nginx.ingress.kubernetes.io/auth-url` is not set
 
@@ -879,8 +879,8 @@ nginx.ingress.kubernetes.io/modsecurity-transaction-id: "$request_id"
 You can also add your own set of modsecurity rules via a snippet:
 ```yaml
 nginx.ingress.kubernetes.io/modsecurity-snippet: |
-SecRuleEngine On
-SecDebugLog /tmp/modsec_debug.log
+  SecRuleEngine On
+  SecDebugLog /tmp/modsec_debug.log
 ```
 
 Note: If you use both `enable-owasp-core-rules` and `modsecurity-snippet` annotations together, only the
@@ -891,13 +891,13 @@ statement:
 nginx 0.24.1 and below
 ```yaml
 nginx.ingress.kubernetes.io/modsecurity-snippet: |
-Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
-Include /etc/nginx/modsecurity/modsecurity.conf
+  Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
+  Include /etc/nginx/modsecurity/modsecurity.conf
 ```
 nginx 0.25.0 and above
 ```yaml
 nginx.ingress.kubernetes.io/modsecurity-snippet: |
-Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
+  Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
 ```
 
 ### Backend Protocol
