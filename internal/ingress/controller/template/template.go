@@ -993,7 +993,7 @@ func buildNextUpstream(i, r interface{}) string {
 	return strings.Join(nextUpstreamCodes, " ")
 }
 
-// refer to http://nginx.org/en/docs/syntax.html
+// refer to https://nginx.org/en/docs/syntax.html
 // Nginx differentiates between size and offset
 // offset directives support gigabytes in addition
 var (
@@ -1002,7 +1002,7 @@ var (
 )
 
 // isValidByteSize validates size units valid in nginx
-// http://nginx.org/en/docs/syntax.html
+// https://nginx.org/en/docs/syntax.html
 func isValidByteSize(input interface{}, isOffset bool) bool {
 	s, ok := input.(string)
 	if !ok {

@@ -24,7 +24,7 @@ function _M.get_last_value(var)
   return t[#t]
 end
 
--- http://nginx.org/en/docs/http/ngx_http_upstream_module.html#example
+-- https://nginx.org/en/docs/http/ngx_http_upstream_module.html#example
 -- CAVEAT: nginx is giving out : instead of , so the docs are wrong
 -- 127.0.0.1:26157 : 127.0.0.1:26157 , ngx.var.upstream_addr
 -- 200 : 200 , ngx.var.upstream_status

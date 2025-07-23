@@ -75,7 +75,7 @@ func upstreamServiceNameAndPort(service *networking.IngressServiceBackend) (stri
 
 // sysctlSomaxconn returns the maximum number of connections that can be queued
 // for acceptance (value of net.core.somaxconn)
-// http://nginx.org/en/docs/http/ngx_http_core_module.html#listen
+// https://nginx.org/en/docs/http/ngx_http_core_module.html#listen
 func sysctlSomaxconn() int {
 	maxConns, err := getSysctl("net/core/somaxconn")
 	if err != nil || maxConns < 512 {

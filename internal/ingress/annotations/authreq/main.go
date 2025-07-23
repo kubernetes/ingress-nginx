@@ -250,7 +250,7 @@ var (
 	methodsRegex    = regexp.MustCompile("(GET|HEAD|POST|PUT|PATCH|DELETE|CONNECT|OPTIONS|TRACE)")
 	headerRegexp    = regexp.MustCompile(`^[a-zA-Z\d\-_]+$`)
 	statusCodeRegex = regexp.MustCompile(`^\d{3}$`)
-	durationRegex   = regexp.MustCompile(`^\d+(ms|s|m|h|d|w|M|y)$`) // see http://nginx.org/en/docs/syntax.html
+	durationRegex   = regexp.MustCompile(`^\d+(ms|s|m|h|d|w|M|y)$`) // see https://nginx.org/en/docs/syntax.html
 )
 
 // ValidMethod checks is the provided string a valid HTTP method

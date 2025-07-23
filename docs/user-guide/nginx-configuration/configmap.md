@@ -755,7 +755,7 @@ Enables or disables [HTTP/2](https://nginx.org/en/docs/http/ngx_http_v2_module.h
 
 ## gzip-disable
 
-Disables [gzipping](http://nginx.org/en/docs/http/ngx_http_gzip_module.html#gzip_disable) of responses for requests with "User-Agent" header fields matching any of the specified regular expressions.
+Disables [gzipping](https://nginx.org/en/docs/http/ngx_http_gzip_module.html#gzip_disable) of responses for requests with "User-Agent" header fields matching any of the specified regular expressions.
 
 ## gzip-level
 
@@ -809,14 +809,14 @@ _References:_
 Sets the bucket size for the variables hash table.
 
 _References:_
-[https://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_bucket_size](https://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_bucket_size)
+[https://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size](https://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size)
 
 ## variables-hash-max-size
 
 Sets the maximum size of the variables hash table.
 
 _References:_
-[https://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size](https://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size)
+[https://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_max_size](https://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_max_size)
 
 ## upstream-keepalive-connections
 
@@ -835,7 +835,7 @@ Sets the maximum time during which requests can be processed through one keepali
  _**default:**_ "1h"
 
 _References:_
-[http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_time](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_time)
+[https://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_time](https://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_time)
 
 ## upstream-keepalive-timeout
 
@@ -1369,7 +1369,7 @@ Enables debugging log for selected client connections.
 _**default:**_ ""
 
 _References:_
-[http://nginx.org/en/docs/ngx_core_module.html#debug_connection](http://nginx.org/en/docs/ngx_core_module.html#debug_connection)
+[https://nginx.org/en/docs/ngx_core_module.html#debug_connection](https://nginx.org/en/docs/ngx_core_module.html#debug_connection)
 
 ## strict-validate-path-type
 
