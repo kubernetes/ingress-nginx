@@ -72,3 +72,31 @@ tests:
       - equal:
           path: metadata.labels["external-dns.alpha.kubernetes.io/hostname"]
           value: external.example.com
+
+  - it: should create a Service with a default UDP port if `controller.service.enableQuic` is set
+    set:
+      controller.service.enableQuic: true
+    asserts:
+      - contains:
+          path: spec.ports
+          content:
+            name: quic
+            port: 443
+            protocol: UDP
+            targetPort: quic
+            appProtocol: https
+
+  - it: should create a Service with a custom UDP port if `controller.service.enableQuic` is set
+    set:
+      controller.service.enableQuic: true
+      controller.service.ports.quic: 1234
+      controller.service.targetPorts.quic: 5678
+    asserts:
+      - contains:
+          path: spec.ports
+          content:
+            name: quic
+            port: 1234
+            protocol: UDP
+            targetPort: 5678
+            appProtocol: https
