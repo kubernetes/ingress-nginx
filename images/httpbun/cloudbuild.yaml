@@ -3,9 +3,9 @@ options:
   substitution_option: ALLOW_LOOSE
 steps:
 - name: gcr.io/cloud-builders/docker
-  dir: images
+  dir: charts
   env:
-  - NAME=httpbun
+  - NAME=ingress-nginx
   entrypoint: make
   args:
   - push
