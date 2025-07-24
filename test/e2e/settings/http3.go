@@ -46,6 +46,11 @@ var _ = framework.DescribeSetting("http3", func() {
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
+		f.WaitForNginxServer("_",
+			func(server string) bool {
+				return strings.Contains(server, "listen 443 default_server reuseport quic;")
+			})
+
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, "listen 443 quic;")
@@ -62,10 +67,29 @@ var _ = framework.DescribeSetting("http3", func() {
 		})
 		assert.Nil(ginkgo.GinkgoT(), err, "updating ingress controller deployment flags")
 
+		f.WaitForNginxServer("_",
+			func(server string) bool {
+				return strings.Contains(server, "listen 4321 default_server reuseport quic;")
+			})
+
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, "listen 4321 quic;")
 			})
+	})
+
+	ginkgo.It("should have default http3_hq value", func() {
+		f.WaitForNginxConfiguration(func(cfg string) bool {
+			return strings.Contains(cfg, "http3_hq off;")
+		})
+	})
+
+	ginkgo.It("should set http3_hq value", func() {
+		f.UpdateNginxConfigMapData("http3-hq", "true")
+
+		f.WaitForNginxConfiguration(func(cfg string) bool {
+			return strings.Contains(cfg, "http3_hq on;")
+		})
 	})
 
 	ginkgo.It("should have default http3_max_concurrent_streams value", func() {
@@ -93,6 +117,62 @@ var _ = framework.DescribeSetting("http3", func() {
 
 		f.WaitForNginxConfiguration(func(cfg string) bool {
 			return strings.Contains(cfg, "http3_stream_buffer_size 128k;")
+		})
+	})
+
+	ginkgo.It("should have default quic_active_connection_id_limit value", func() {
+		f.WaitForNginxConfiguration(func(cfg string) bool {
+			return strings.Contains(cfg, "quic_active_connection_id_limit 2;")
+		})
+	})
+
+	ginkgo.It("should set quic_active_connection_id_limit value", func() {
+		f.UpdateNginxConfigMapData("quic-active-connection-id-limit", "16")
+
+		f.WaitForNginxConfiguration(func(cfg string) bool {
+			return strings.Contains(cfg, "quic_active_connection_id_limit 16;")
+		})
+	})
+
+	ginkgo.It("should have default quic_bpf value", func() {
+		f.WaitForNginxConfiguration(func(cfg string) bool {
+			return strings.Contains(cfg, "quic_bpf off;")
+		})
+	})
+
+	ginkgo.It("should set quic_bpf value", func() {
+		f.UpdateNginxConfigMapData("quic-bpf", "true")
+
+		f.WaitForNginxConfiguration(func(cfg string) bool {
+			return strings.Contains(cfg, "quic_bpf on;")
+		})
+	})
+
+	ginkgo.It("should have default quic_gso value", func() {
+		f.WaitForNginxConfiguration(func(cfg string) bool {
+			return strings.Contains(cfg, "quic_gso off;")
+		})
+	})
+
+	ginkgo.It("should set quic_gso value", func() {
+		f.UpdateNginxConfigMapData("quic-gso", "true")
+
+		f.WaitForNginxConfiguration(func(cfg string) bool {
+			return strings.Contains(cfg, "quic_gso on;")
+		})
+	})
+
+	ginkgo.It("should have default quic_retry value", func() {
+		f.WaitForNginxConfiguration(func(cfg string) bool {
+			return strings.Contains(cfg, "quic_retry off;")
+		})
+	})
+
+	ginkgo.It("should set quic_retry value", func() {
+		f.UpdateNginxConfigMapData("quic-retry", "true")
+
+		f.WaitForNginxConfiguration(func(cfg string) bool {
+			return strings.Contains(cfg, "quic_retry on;")
 		})
 	})
 })

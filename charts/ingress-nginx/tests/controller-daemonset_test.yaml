@@ -208,6 +208,7 @@ tests:
       - equal:
           path: spec.template.spec.runtimeClassName
           value: myClass
+
   - it: should create a DaemonSet with a custom UDP container port if `controller.containerUdpPort.quic` is set
     set:
       controller.kind: DaemonSet
