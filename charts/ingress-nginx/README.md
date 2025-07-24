@@ -318,7 +318,7 @@ metadata:
 | controller.containerName | string | `"controller"` | Configures the controller container name |
 | controller.containerPort | object | `{"http":80,"https":443}` | Configures the TCP ports that the nginx-controller listens on |
 | controller.containerSecurityContext | object | `{}` | Security context for controller containers |
-| controller.containerUdpPort | list | `[]` | Configures the UDP ports that the nginx-controller listens on |
+| controller.containerUdpPort | object | `{}` | Configures the UDP ports that the nginx-controller listens on |
 | controller.customTemplate.configMapKey | string | `""` |  |
 | controller.customTemplate.configMapName | string | `""` |  |
 | controller.disableLeaderElection | bool | `false` | This configuration disable Nginx Controller Leader Election |
