@@ -15,7 +15,7 @@ ARG BASE_IMAGE
 ARG GOLANG_VERSION
 ARG ETCD_VERSION
 
-FROM golang:${GOLANG_VERSION}-alpine3.21 AS go
+FROM golang:${GOLANG_VERSION}-alpine3.22 AS go
 FROM registry.k8s.io/etcd:${ETCD_VERSION} AS etcd
 
 FROM ${BASE_IMAGE}
@@ -81,7 +81,7 @@ RUN wget -qO /tmp/resty_cli.tgz \
   && rm -rf /tmp/*
 
 RUN wget -qO /tmp/luarocks.tgz \
-  https://github.com/luarocks/luarocks/archive/v${LUAROCKS_VERSION}.tar.gz \
+  https://github.com/luarocks/luarocks/archive/${LUAROCKS_VERSION}.tar.gz \
   && echo "${LUAROCKS_SHA} */tmp/luarocks.tgz" | sha256sum -c - \
   && tar -C /tmp -xzf /tmp/luarocks.tgz \
   && cd /tmp/luarocks* \

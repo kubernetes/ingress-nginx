@@ -35,11 +35,11 @@ build: builder
 		--build-arg BASE_IMAGE=$(BASE_IMAGE) \
 		--build-arg GOLANG_VERSION=$(GOLANG_VERSION) \
 		--build-arg ETCD_VERSION=3.5.13-0 \
-		--build-arg K8S_RELEASE=v1.32.4 \
+		--build-arg K8S_RELEASE=v1.33.3 \
 		--build-arg RESTY_CLI_VERSION=0.27 \
 		--build-arg RESTY_CLI_SHA=e5f4f3128af49ba5c4d039d0554e5ae91bbe05866f60eccfa96d3653274bff90 \
-		--build-arg LUAROCKS_VERSION=3.8.0 \
-		--build-arg LUAROCKS_SHA=ab6612ca9ab87c6984871d2712d05525775e8b50172701a0a1cabddf76de2be7 \
+		--build-arg LUAROCKS_VERSION=v3.12.0 \
+		--build-arg LUAROCKS_SHA=745e3c5df2f955ecaf60ba1361cfc224564ef7ec210e9a784a3858ae853e9f7c \
 		--build-arg CHART_TESTING_VERSION=3.8.0 \
 		--build-arg YAML_LINT_VERSION=1.33.0 \
 		--build-arg YAMALE_VERSION=4.0.4 \

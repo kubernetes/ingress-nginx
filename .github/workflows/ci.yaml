@@ -163,7 +163,7 @@ jobs:
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
         with:
           version: latest
 
@@ -172,7 +172,7 @@ jobs:
 
       - name: Prepare Host
         run: |
-          curl -LO https://dl.k8s.io/release/v1.32.4/bin/linux/amd64/kubectl
+          curl -LO https://dl.k8s.io/release/v1.33.3/bin/linux/amd64/kubectl
           chmod +x ./kubectl
           sudo mv ./kubectl /usr/local/bin/kubectl
 
@@ -271,7 +271,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        k8s: [v1.28.15, v1.29.14, v1.30.10, v1.31.6, v1.32.3]
+        k8s: [v1.29.14, v1.30.13, v1.31.9, v1.32.5, v1.33.2]
 
     steps:
       - name: Checkout code
@@ -303,7 +303,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        k8s: [v1.28.15, v1.29.14, v1.30.10, v1.31.6, v1.32.3]
+        k8s: [v1.29.14, v1.30.13, v1.31.9, v1.32.5, v1.33.2]
     uses: ./.github/workflows/zz-tmpl-k8s-e2e.yaml
     with:
       k8s-version: ${{ matrix.k8s }}
@@ -318,7 +318,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        k8s: [v1.28.15, v1.29.14, v1.30.10, v1.31.6, v1.32.3]
+        k8s: [v1.29.14, v1.30.13, v1.31.9, v1.32.5, v1.33.2]
     uses: ./.github/workflows/zz-tmpl-k8s-e2e.yaml
     with:
       k8s-version: ${{ matrix.k8s }}

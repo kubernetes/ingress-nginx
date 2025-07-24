@@ -73,7 +73,7 @@ The following table shows a configuration option's name, type, and the default v
 | [enable-multi-accept](#enable-multi-accept)                                     | bool         | "true"                                                                                                                                                                                                                                                                                                                                                       |                                                                                     |
 | [max-worker-connections](#max-worker-connections)                               | int          | 16384                                                                                                                                                                                                                                                                                                                                                        |                                                                                     |
 | [max-worker-open-files](#max-worker-open-files)                                 | int          | 0                                                                                                                                                                                                                                                                                                                                                            |                                                                                     |
-| [map-hash-bucket-size](#max-hash-bucket-size)                                   | int          | 64                                                                                                                                                                                                                                                                                                                                                           |                                                                                     |
+| [map-hash-bucket-size](#map-hash-bucket-size)                                   | int          | 64                                                                                                                                                                                                                                                                                                                                                           |                                                                                     |
 | [nginx-status-ipv4-whitelist](#nginx-status-ipv4-whitelist)                     | []string     | "127.0.0.1"                                                                                                                                                                                                                                                                                                                                                  |                                                                                     |
 | [nginx-status-ipv6-whitelist](#nginx-status-ipv6-whitelist)                     | []string     | "::1"                                                                                                                                                                                                                                                                                                                                                        |                                                                                     |
 | [proxy-real-ip-cidr](#proxy-real-ip-cidr)                                       | []string     | "0.0.0.0/0"                                                                                                                                                                                                                                                                                                                                                  |                                                                                     |
@@ -131,6 +131,7 @@ The following table shows a configuration option's name, type, and the default v
 | [use-forwarded-headers](#use-forwarded-headers)                                 | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
 | [enable-real-ip](#enable-real-ip)                                               | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
 | [forwarded-for-header](#forwarded-for-header)                                   | string       | "X-Forwarded-For"                                                                                                                                                                                                                                                                                                                                            |                                                                                     |
+| [forwarded-for-proxy-protocol-header](#forwarded-for-proxy-protocol-header)     | string       | "X-Forwarded-For-Proxy-Protocol"                                                                                                                                                                                                                                                                                                                             |                                                                                     |
 | [compute-full-forwarded-for](#compute-full-forwarded-for)                       | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
 | [proxy-add-original-uri-header](#proxy-add-original-uri-header)                 | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
 | [generate-request-id](#generate-request-id)                                     | bool         | "true"                                                                                                                                                                                                                                                                                                                                                       |                                                                                     |
@@ -754,7 +755,7 @@ Enables or disables [HTTP/2](https://nginx.org/en/docs/http/ngx_http_v2_module.h
 
 ## gzip-disable
 
-Disables [gzipping](http://nginx.org/en/docs/http/ngx_http_gzip_module.html#gzip_disable) of responses for requests with "User-Agent" header fields matching any of the specified regular expressions.
+Disables [gzipping](https://nginx.org/en/docs/http/ngx_http_gzip_module.html#gzip_disable) of responses for requests with "User-Agent" header fields matching any of the specified regular expressions.
 
 ## gzip-level
 
@@ -808,14 +809,14 @@ _References:_
 Sets the bucket size for the variables hash table.
 
 _References:_
-[https://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_bucket_size](https://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_bucket_size)
+[https://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size](https://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size)
 
 ## variables-hash-max-size
 
 Sets the maximum size of the variables hash table.
 
 _References:_
-[https://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size](https://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size)
+[https://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_max_size](https://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_max_size)
 
 ## upstream-keepalive-connections
 
@@ -834,7 +835,7 @@ Sets the maximum time during which requests can be processed through one keepali
  _**default:**_ "1h"
 
 _References:_
-[http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_time](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_time)
+[https://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_time](https://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_time)
 
 ## upstream-keepalive-timeout
 
@@ -912,6 +913,10 @@ If false, NGINX ignores incoming `X-Forwarded-*` headers, filling them with the 
 ## forwarded-for-header
 
 Sets the header field for identifying the originating IP address of a client. _**default:**_ X-Forwarded-For
+
+## forwarded-for-proxy-protocol-header
+
+Sets the name of the intermediate header used to determine the client's originating IP when both `use-proxy-protocol` and `use-forwarded-headers` are enabled. This doesn't impact functionality and should not typically be modified. _**default:**_ X-Forwarded-For-Proxy-Protocol
 
 ## compute-full-forwarded-for
 
@@ -1034,10 +1039,11 @@ Specifies the port to use when uploading traces. _**default:**_ 4317
 
 Specifies the service name to use for any traces created. _**default:**_ nginx
 
-##  opentelemetry-trust-incoming-span: "true"
+## opentelemetry-trust-incoming-span
+
 Enables or disables using spans from incoming requests as parent for created ones. _**default:**_ true
 
-##  otel-sampler-parent-based
+## otel-sampler-parent-based
 
 Uses sampler implementation which by default will take a sample if parent Activity is sampled. _**default:**_ false
 
@@ -1363,7 +1369,7 @@ Enables debugging log for selected client connections.
 _**default:**_ ""
 
 _References:_
-[http://nginx.org/en/docs/ngx_core_module.html#debug_connection](http://nginx.org/en/docs/ngx_core_module.html#debug_connection)
+[https://nginx.org/en/docs/ngx_core_module.html#debug_connection](https://nginx.org/en/docs/ngx_core_module.html#debug_connection)
 
 ## strict-validate-path-type
 

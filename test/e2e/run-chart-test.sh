@@ -62,7 +62,7 @@ export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/kind-config-$KIND_CLUSTER_NAME}"
 if [ "${SKIP_CLUSTER_CREATION:-false}" = "false" ]; then
   echo "[dev-env] creating Kubernetes cluster with kind"
 
-  export K8S_VERSION=${K8S_VERSION:-v1.32.3@sha256:b36e76b4ad37b88539ce5e07425f77b29f73a8eaaebf3f1a8bc9c764401d118c}
+  export K8S_VERSION=${K8S_VERSION:-v1.33.2@sha256:c55080dc5be4f2cc242e6966fdf97bb62282e1cd818a28223cf536db8b0fddf4}
 
   kind create cluster \
     --verbosity=${KIND_LOG_LEVEL} \
@@ -114,5 +114,5 @@ docker run \
   --workdir /workdir \
   --entrypoint ct \
   --rm \
-  registry.k8s.io/ingress-nginx/e2e-test-runner:v2.1.0@sha256:6d60ca0556c6da78c45ac9a2f2cdef72a38bc037cef979a65c82b192ef63ef39 \
+  registry.k8s.io/ingress-nginx/e2e-test-runner:v2.2.0@sha256:d0e1c47936200ea40294436dee573451aaae65bef5942cd3a4d56d43c92ad93d \
     install --charts charts/ingress-nginx

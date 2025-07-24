@@ -242,7 +242,7 @@ func (a auth) Parse(ing *networking.Ingress) (interface{}, error) {
 	}, nil
 }
 
-// dumpSecret dumps the content of a secret into a file
+// dumpSecretAuthFile dumps the content of a secret into a file
 // in the expected format for the specified authorization
 func dumpSecretAuthFile(filename string, secret *api.Secret) error {
 	val, ok := secret.Data["auth"]

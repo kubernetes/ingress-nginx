@@ -110,7 +110,7 @@ clean-chroot-image: ## Removes local image
 
 .PHONY: build
 build:  ## Build ingress controller, debug tool and pre-stop hook.
-	E2E_IMAGE=golang:$(GO_VERSION)-alpine3.21 USE_SHELL=/bin/sh build/run-in-docker.sh \
+	E2E_IMAGE=golang:$(GO_VERSION)-alpine3.22 USE_SHELL=/bin/sh build/run-in-docker.sh \
 		MAC_OS=$(MAC_OS) \
 		PKG=$(PKG) \
 		ARCH=$(ARCH) \
@@ -155,6 +155,10 @@ test:  ## Run go unit tests.
 		TAG=$(TAG) \
 		GOFLAGS="-buildvcs=false" \
 		test/test.sh
+
+.PHONY: helm-test
+helm-test: ## Run helm unit tests.
+	helm unittest charts/ingress-nginx --file "tests/**/*_test.yaml"
 
 .PHONY: lua-test
 lua-test: ## Run lua unit tests.
