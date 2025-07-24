@@ -247,10 +247,11 @@ func (e1 *Config) Equal(e2 *Config) bool {
 }
 
 var (
-	methodsRegex    = regexp.MustCompile("(GET|HEAD|POST|PUT|PATCH|DELETE|CONNECT|OPTIONS|TRACE)")
-	headerRegexp    = regexp.MustCompile(`^[a-zA-Z\d\-_]+$`)
-	statusCodeRegex = regexp.MustCompile(`^\d{3}$`)
-	durationRegex   = regexp.MustCompile(`^\d+(ms|s|m|h|d|w|M|y)$`) // see https://nginx.org/en/docs/syntax.html
+	methodsRegex             = regexp.MustCompile("(GET|HEAD|POST|PUT|PATCH|DELETE|CONNECT|OPTIONS|TRACE)")
+	headerRegexp             = regexp.MustCompile(`^[a-zA-Z\d\-_]+$`)
+	statusCodeRegex          = regexp.MustCompile(`^\d{3}$`)
+	durationRegex            = regexp.MustCompile(`^\d+(ms|s|m|h|d|w|M|y)$`) // see https://nginx.org/en/docs/syntax.html
+	authorizationValueRegexp = regexp.MustCompile(`^[^\n\r'{}]+$`)
 )
 
 // ValidMethod checks is the provided string a valid HTTP method
@@ -261,6 +262,11 @@ func ValidMethod(method string) bool {
 // ValidHeader checks is the provided string satisfies the header's name regex
 func ValidHeader(header string) bool {
 	return headerRegexp.MatchString(header)
+}
+
+// ValidAuthorizationValue checks is the provided string satisfies the authorization value regexp
+func ValidAuthorizationValue(header string) bool {
+	return authorizationValueRegexp.MatchString(header)
 }
 
 // ValidCacheDuration checks if the provided string is a valid cache duration
@@ -459,6 +465,10 @@ func (a authReq) Parse(ing *networking.Ingress) (interface{}, error) {
 
 		for header := range proxySetHeadersMapContents.Data {
 			if !ValidHeader(header) {
+				return nil, ing_errors.NewLocationDenied("invalid proxy-set-headers in configmap")
+			}
+
+			if !ValidAuthorizationValue(proxySetHeadersMapContents.Data[header]) {
 				return nil, ing_errors.NewLocationDenied("invalid proxy-set-headers in configmap")
 			}
 		}
