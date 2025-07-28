@@ -177,7 +177,7 @@ func TestValidatePathType(t *testing.T) {
 				aErr("xpto/lala", "Exact"),
 				aErr("/foo/bar/[a-z]{3}", "Prefix"),
 				aErr("/lala/xp\ntest", "Prefix"),
-				aErr("notvalidpathname-panics", "nil"),
+				aErr("notvalidpathname-panics", "<nil>"),
 			),
 		},
 	}
