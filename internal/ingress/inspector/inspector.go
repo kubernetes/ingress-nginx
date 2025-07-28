@@ -55,9 +55,11 @@ func ValidatePathType(ing *networking.Ingress) error {
 				}
 				if path.PathType == nil || *path.PathType != implSpecific {
 					if isValid := validPathType.MatchString(path.Path); !isValid {
-						pathTypeStr := "nil"
+						var pathTypeStr string
 						if path.PathType != nil {
 							pathTypeStr = string(*path.PathType)
+						} else {
+							pathTypeStr = "<nil>"
 						}
 						err = errors.Join(err, fmt.Errorf("path %s cannot be used with pathType %s", path.Path, pathTypeStr))
 					}
