@@ -150,6 +150,9 @@ Requires the update-status parameter.`)
 		enableSSLPassthrough = flags.Bool("enable-ssl-passthrough", false,
 			`Enable SSL Passthrough.`)
 
+		enableQUIC = flags.Bool("enable-quic", false,
+			`Enable QUIC.`)
+
 		disableLeaderElection = flags.Bool("disable-leader-election", false,
 			`Disable Leader Election on NGINX Controller.`)
 
@@ -193,6 +196,7 @@ Requires the update-status parameter.`)
 
 		httpPort  = flags.Int("http-port", 80, `Port to use for servicing HTTP traffic.`)
 		httpsPort = flags.Int("https-port", 443, `Port to use for servicing HTTPS traffic.`)
+		quicPort  = flags.Int("quic-port", 443, `Port to use for servicing QUIC traffic.`)
 
 		sslProxyPort  = flags.Int("ssl-passthrough-proxy-port", 442, `Port to use internally for SSL Passthrough.`)
 		defServerPort = flags.Int("default-server-port", 8181, `Port to use for exposing the default server (catch-all).`)
@@ -299,8 +303,16 @@ https://blog.maxmind.com/2019/12/significant-changes-to-accessing-and-using-geol
 		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --ssl-passthrough-proxy-port", *sslProxyPort)
 	}
 
+	if *enableQUIC && !ing_net.IsUDPPortAvailable(*quicPort) {
+		return false, nil, fmt.Errorf("port %v is already in use. Please check the flag --quic-port", *quicPort)
+	}
+
 	if *publishSvc != "" && *publishStatusAddress != "" {
 		return false, nil, fmt.Errorf("flags --publish-service and --publish-status-address are mutually exclusive")
+	}
+
+	if *enableSSLPassthrough && *enableQUIC {
+		return false, nil, fmt.Errorf("flags --enable-ssl-passthrough and --enable-quic are mutually exclusive")
 	}
 
 	nginx.HealthPath = *defHealthzURL
@@ -356,6 +368,7 @@ https://blog.maxmind.com/2019/12/significant-changes-to-accessing-and-using-geol
 		MonitorMaxBatchSize:         *monitorMaxBatchSize,
 		DisableServiceExternalName:  *disableServiceExternalName,
 		EnableSSLPassthrough:        *enableSSLPassthrough,
+		EnableQUIC:                  *enableQUIC,
 		DisableLeaderElection:       *disableLeaderElection,
 		ResyncPeriod:                *resyncPeriod,
 		DefaultService:              *defaultSvc,
@@ -382,6 +395,7 @@ https://blog.maxmind.com/2019/12/significant-changes-to-accessing-and-using-geol
 			Health:   *healthzPort,
 			HTTP:     *httpPort,
 			HTTPS:    *httpsPort,
+			QUIC:     *quicPort,
 			SSLProxy: *sslProxyPort,
 		},
 		IngressClassConfiguration: &ingressclass.Configuration{

@@ -39,6 +39,7 @@ func TestDefaults(t *testing.T) {
 		"--default-backend-service", "namespace/test",
 		"--http-port", "0",
 		"--https-port", "0",
+		"--quic-port", "0",
 	}
 
 	showVersion, conf, err := ParseFlags()
@@ -64,7 +65,7 @@ func TestFlagConflict(t *testing.T) {
 
 	oldArgs := os.Args
 	defer func() { os.Args = oldArgs }()
-	os.Args = []string{"cmd", "--publish-service", "namespace/test", "--http-port", "0", "--https-port", "0", "--publish-status-address", "1.1.1.1"}
+	os.Args = []string{"cmd", "--publish-service", "namespace/test", "--http-port", "0", "--https-port", "0", "--quic-port", "0", "--publish-status-address", "1.1.1.1"}
 
 	_, _, err := ParseFlags()
 	if err == nil {
@@ -77,7 +78,7 @@ func TestMaxmindEdition(t *testing.T) {
 
 	oldArgs := os.Args
 	defer func() { os.Args = oldArgs }()
-	os.Args = []string{"cmd", "--publish-service", "namespace/test", "--http-port", "0", "--https-port", "0", "--maxmind-license-key", "0000000", "--maxmind-edition-ids", "GeoLite2-City, TestCheck"}
+	os.Args = []string{"cmd", "--publish-service", "namespace/test", "--http-port", "0", "--https-port", "0", "--quic-port", "0", "--maxmind-license-key", "0000000", "--maxmind-edition-ids", "GeoLite2-City, TestCheck"}
 
 	_, _, err := ParseFlags()
 	if err == nil {
@@ -90,7 +91,7 @@ func TestMaxmindMirror(t *testing.T) {
 
 	oldArgs := os.Args
 	defer func() { os.Args = oldArgs }()
-	os.Args = []string{"cmd", "--publish-service", "namespace/test", "--http-port", "0", "--https-port", "0", "--maxmind-mirror", "http://geoip.local", "--maxmind-license-key", "0000000", "--maxmind-edition-ids", "GeoLite2-City, TestCheck"}
+	os.Args = []string{"cmd", "--publish-service", "namespace/test", "--http-port", "0", "--https-port", "0", "--quic-port", "0", "--maxmind-mirror", "http://geoip.local", "--maxmind-license-key", "0000000", "--maxmind-edition-ids", "GeoLite2-City, TestCheck"}
 
 	_, _, err := ParseFlags()
 	if err == nil {
@@ -103,7 +104,7 @@ func TestMaxmindRetryDownload(t *testing.T) {
 
 	oldArgs := os.Args
 	defer func() { os.Args = oldArgs }()
-	os.Args = []string{"cmd", "--publish-service", "namespace/test", "--http-port", "0", "--https-port", "0", "--maxmind-mirror", "http://127.0.0.1", "--maxmind-license-key", "0000000", "--maxmind-edition-ids", "GeoLite2-City", "--maxmind-retries-timeout", "1s", "--maxmind-retries-count", "3"}
+	os.Args = []string{"cmd", "--publish-service", "namespace/test", "--http-port", "0", "--https-port", "0", "--quic-port", "0", "--maxmind-mirror", "http://127.0.0.1", "--maxmind-license-key", "0000000", "--maxmind-edition-ids", "GeoLite2-City", "--maxmind-retries-timeout", "1s", "--maxmind-retries-count", "3"}
 
 	_, _, err := ParseFlags()
 	if err == nil {
@@ -116,7 +117,7 @@ func TestDisableLeaderElectionFlag(t *testing.T) {
 
 	oldArgs := os.Args
 	defer func() { os.Args = oldArgs }()
-	os.Args = []string{"cmd", "--disable-leader-election", "--http-port", "80", "--https-port", "443"}
+	os.Args = []string{"cmd", "--disable-leader-election", "--http-port", "80", "--https-port", "443", "--quic-port", "443"}
 
 	_, conf, err := ParseFlags()
 	if err != nil {
@@ -133,7 +134,7 @@ func TestIfLeaderElectionDisabledFlagIsFalse(t *testing.T) {
 
 	oldArgs := os.Args
 	defer func() { os.Args = oldArgs }()
-	os.Args = []string{"cmd", "--http-port", "80", "--https-port", "443"}
+	os.Args = []string{"cmd", "--http-port", "80", "--https-port", "443", "--quic-port", "443"}
 
 	_, conf, err := ParseFlags()
 	if err != nil {
@@ -150,7 +151,7 @@ func TestLeaderElectionTTLDefaultValue(t *testing.T) {
 
 	oldArgs := os.Args
 	defer func() { os.Args = oldArgs }()
-	os.Args = []string{"cmd", "--http-port", "80", "--https-port", "443"}
+	os.Args = []string{"cmd", "--http-port", "80", "--https-port", "443", "--quic-port", "443"}
 
 	_, conf, err := ParseFlags()
 	if err != nil {
@@ -167,7 +168,7 @@ func TestLeaderElectionTTLParseValueInSeconds(t *testing.T) {
 
 	oldArgs := os.Args
 	defer func() { os.Args = oldArgs }()
-	os.Args = []string{"cmd", "--http-port", "80", "--https-port", "443", "--election-ttl", "10s"}
+	os.Args = []string{"cmd", "--http-port", "80", "--https-port", "443", "--quic-port", "443", "--election-ttl", "10s"}
 
 	_, conf, err := ParseFlags()
 	if err != nil {
@@ -184,7 +185,7 @@ func TestLeaderElectionTTLParseValueInMinutes(t *testing.T) {
 
 	oldArgs := os.Args
 	defer func() { os.Args = oldArgs }()
-	os.Args = []string{"cmd", "--http-port", "80", "--https-port", "443", "--election-ttl", "10m"}
+	os.Args = []string{"cmd", "--http-port", "80", "--https-port", "443", "--quic-port", "443", "--election-ttl", "10m"}
 
 	_, conf, err := ParseFlags()
 	if err != nil {
@@ -201,7 +202,7 @@ func TestLeaderElectionTTLParseValueInHours(t *testing.T) {
 
 	oldArgs := os.Args
 	defer func() { os.Args = oldArgs }()
-	os.Args = []string{"cmd", "--http-port", "80", "--https-port", "443", "--election-ttl", "1h"}
+	os.Args = []string{"cmd", "--http-port", "80", "--https-port", "443", "--quic-port", "443", "--election-ttl", "1h"}
 
 	_, conf, err := ParseFlags()
 	if err != nil {
