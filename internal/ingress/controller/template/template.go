@@ -619,8 +619,13 @@ func buildAuthProxySetHeaders(headers map[string]string) []string {
 	}
 
 	for name, value := range headers {
-		res = append(res, fmt.Sprintf("proxy_set_header '%v' '%v';", name, value))
+		if strings.ContainsAny(name, "\n\r") || strings.ContainsAny(value, "\n\r") {
+			continue
+		}
+
+		res = append(res, fmt.Sprintf("proxy_set_header %v %v;", strconv.Quote(name), strconv.Quote(value)))
 	}
+
 	sort.Strings(res)
 	return res
 }
