@@ -15,8 +15,8 @@ jobs:
     steps:
       - uses: actions/stale@5bef64f19d7facfb25b37b414482c7164d639639 # v9.1.0
         with:
-          stale-issue-message: "This is stale, but we won't close it automatically, just bare in mind the maintainers may be busy with other tasks and will reach your issue ASAP. If you have any question or request to prioritize this, please reach `#ingress-nginx-dev` on Kubernetes Slack."
-          stale-pr-message: "This is stale, but we won't close it automatically, just bare in mind the maintainers may be busy with other tasks and will reach your issue ASAP. If you have any question or request to prioritize this, please reach `#ingress-nginx-dev` on Kubernetes Slack."
+          stale-issue-message: "This is stale, but we won't close it automatically, just bear in mind the maintainers may be busy with other tasks and will reach your issue ASAP. If you have any question or request to prioritize this, please reach `#ingress-nginx-dev` on Kubernetes Slack."
+          stale-pr-message: "This is stale, but we won't close it automatically, just bear in mind the maintainers may be busy with other tasks and will reach your issue ASAP. If you have any question or request to prioritize this, please reach `#ingress-nginx-dev` on Kubernetes Slack."
           stale-issue-label: lifecycle/frozen
           stale-pr-label: lifecycle/frozen
           days-before-issue-stale: 30
