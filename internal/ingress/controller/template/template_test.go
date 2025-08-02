@@ -551,12 +551,25 @@ func TestBuildAuthResponseLua(t *testing.T) {
 
 func TestBuildAuthProxySetHeaders(t *testing.T) {
 	proxySetHeaders := map[string]string{
-		"header1": "value1",
-		"header2": "value2",
+		"Content-Security-Policy": "default-src 'self'; img-src 'self' example.com",
+		"Content-Type":            "application/json; charset=\"utf-8\"",
+		"header1":                 "value1",
+		"header2":                 "value2",
+		"Link":                    "<https://example.com>; rel=\"preload\"; as=\"script\"; crossorigin=\"anonymous\"",
+		"User-Agent":              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+		"new\rline":               "value1",
+		"newline2":                "valu\ne2",
 	}
+
 	expected := []string{
-		"proxy_set_header 'header1' 'value1';",
-		"proxy_set_header 'header2' 'value2';",
+		`proxy_set_header "Content-Security-Policy" "default-src 'self'; img-src 'self' example.com";`,
+		`proxy_set_header "Content-Type" "application/json; charset=\"utf-8\"";`,
+		`proxy_set_header "Link" "<https://example.com>; rel=\"preload\"; as=\"script\"; crossorigin=\"anonymous\"";`,
+		`proxy_set_header "User-Agent" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36";`,
+		`proxy_set_header "header1" "value1";`,
+		`proxy_set_header "header2" "value2";`,
+		`proxy_set_header "new\rline" "value1";`,
+		`proxy_set_header "newline2" "valu\ne2";`,
 	}
 
 	headers := buildAuthProxySetHeaders(proxySetHeaders)
