@@ -19,6 +19,11 @@ function _M.get_nodes(endpoints)
 
   for _, endpoint in pairs(endpoints) do
     local endpoint_string = endpoint.address .. ":" .. endpoint.port
+
+    if endpoint.maxConns and endpoint.maxConns > 0 then
+      endpoint_string = endpoint_string .. " max_conns=" .. endpoint.maxConns
+    end
+
     nodes[endpoint_string] = weight
   end
 

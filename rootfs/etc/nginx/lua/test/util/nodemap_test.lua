@@ -5,7 +5,7 @@ local function get_test_backend_single()
   return {
     name = "access-router-production-web-80",
     endpoints = {
-      { address = "10.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 }
+      { address = "10.184.7.40", port = "8080", maxConns = 0, maxFails = 0, failTimeout = 0 }
     }
   }
 end
@@ -14,8 +14,18 @@ local function get_test_backend_multi()
   return {
     name = "access-router-production-web-80",
     endpoints = {
-      { address = "10.184.7.40", port = "8080", maxFails = 0, failTimeout = 0 },
-      { address = "10.184.7.41", port = "8080", maxFails = 0, failTimeout = 0 }
+      { address = "10.184.7.40", port = "8080", maxConns = 0, maxFails = 0, failTimeout = 0 },
+      { address = "10.184.7.41", port = "8080", maxConns = 0, maxFails = 0, failTimeout = 0 }
+    }
+  }
+end
+
+local function get_test_backend_parameterized()
+  return {
+    name = "access-router-production-web-80",
+    endpoints = {
+      { address = "10.184.7.40", port = "8080", maxConns = 100, maxFails = 0, failTimeout = 0 },
+      { address = "10.184.7.41", port = "8080", maxConns = 100, maxFails = 0, failTimeout = 0 }
     }
   }
 end
@@ -30,12 +40,17 @@ describe("Node Map", function()
 
   local test_backend_single = get_test_backend_single()
   local test_backend_multi = get_test_backend_multi()
+  local test_backend_parameterized = get_test_backend_parameterized()
   local test_salt = test_backend_single.name
   local test_nodes_single = util.get_nodes(test_backend_single.endpoints)
   local test_nodes_multi = util.get_nodes(test_backend_multi.endpoints)
+  local test_nodes_parameterized = util.get_nodes(test_backend_parameterized.endpoints)
   local test_endpoint1 = test_backend_multi.endpoints[1].address .. ":" .. test_backend_multi.endpoints[1].port
   local test_endpoint2 = test_backend_multi.endpoints[2].address .. ":" .. test_backend_multi.endpoints[2].port
+  local test_endpoint_parameterized1 = test_backend_parameterized.endpoints[1].address .. ":" .. test_backend_parameterized.endpoints[1].port .. " max_conns=" .. test_backend_parameterized.endpoints[1].maxConns
+  local test_endpoint_parameterized2 = test_backend_parameterized.endpoints[2].address .. ":" .. test_backend_parameterized.endpoints[2].port .. " max_conns=" .. test_backend_parameterized.endpoints[2].maxConns
   local test_nodes_ignore = get_test_nodes_ignore(test_endpoint1)
+  local test_nodes_ignore_parameterized = get_test_nodes_ignore(test_endpoint_parameterized1)
 
   describe("new()", function()
     context("when no salt has been provided", function()
@@ -158,6 +173,20 @@ describe("Node Map", function()
         local test_hash_key
 
         actual_endpoint, test_hash_key = nodemap_instance:random_except(test_nodes_ignore)
+
+        assert.equal(actual_endpoint, expected_endpoint)
+        assert.not_equal(test_hash_key, nil)
+      end)
+    end)
+
+    context("when an parameterized endpoint has been excluded", function()
+      it("random_except() does not return it", function()
+        local nodemap_instance = nodemap:new(test_nodes_parameterized, test_salt)
+        local expected_endpoint = test_endpoint_parameterized2
+        local actual_endpoint
+        local test_hash_key
+
+        actual_endpoint, test_hash_key = nodemap_instance:random_except(test_nodes_ignore_parameterized)
 
         assert.equal(actual_endpoint, expected_endpoint)
         assert.not_equal(test_hash_key, nil)

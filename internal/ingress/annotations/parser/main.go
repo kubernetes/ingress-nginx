@@ -139,6 +139,18 @@ func (a ingAnnotations) parseInt(name string) (int, error) {
 	return 0, errors.ErrMissingAnnotations
 }
 
+func (a ingAnnotations) parseUint(name string) (uint, error) {
+	val, ok := a[name]
+	if ok {
+		i, err := strconv.ParseUint(val, 10, 64)
+		if err != nil {
+			return 0, errors.NewInvalidAnnotationContent(name, val)
+		}
+		return uint(i), nil
+	}
+	return 0, errors.ErrMissingAnnotations
+}
+
 func (a ingAnnotations) parseFloat32(name string) (float32, error) {
 	val, ok := a[name]
 	if ok {
@@ -177,6 +189,15 @@ func GetIntAnnotation(name string, ing *networking.Ingress, fields AnnotationFie
 		return 0, err
 	}
 	return ingAnnotations(ing.GetAnnotations()).parseInt(v)
+}
+
+// GetUintAnnotation extracts an uint from an Ingress annotation
+func GetUintAnnotation(name string, ing *networking.Ingress, fields AnnotationFields) (uint, error) {
+	v, err := checkAnnotation(name, ing, fields)
+	if err != nil {
+		return 0, err
+	}
+	return ingAnnotations(ing.GetAnnotations()).parseUint(v)
 }
 
 // GetFloatAnnotation extracts a float32 from an Ingress annotation
