@@ -135,6 +135,7 @@
 | UpstreamHashBy | upstream-hash-by | High | location |
 | UpstreamHashBy | upstream-hash-by-subset | Low | location |
 | UpstreamHashBy | upstream-hash-by-subset-size | Low | location |
+| UpstreamServer | upstream-server-max-conns | Low | location |
 | UpstreamVhost | upstream-vhost | Low | location |
 | UsePortInRedirects | use-port-in-redirects | Low | location |
 | XForwardedPrefix | x-forwarded-prefix | Medium | location |
