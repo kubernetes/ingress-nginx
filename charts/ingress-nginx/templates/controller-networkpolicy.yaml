@@ -24,6 +24,10 @@ spec:
         - protocol: TCP
           port: {{ $value }}
       {{- end }}
+      {{- range $key, $value := .Values.controller.containerUdpPort }}
+        - protocol: UDP
+          port: {{ $value }}
+      {{- end }}
       {{- if .Values.controller.metrics.enabled }}
         - protocol: TCP
           port: {{ .Values.controller.metrics.port }}
