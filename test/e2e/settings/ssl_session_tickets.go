@@ -41,7 +41,7 @@ var _ = framework.DescribeSetting("ssl-session-tickets", func() {
 		})
 	})
 
-	ginkgo.It("should set ssl_session_tickets and ssl_session_ticket_key value", func() {
+	ginkgo.It("should set ssl_session_tickets and ssl_session_ticket_key values", func() {
 		f.UpdateNginxConfigMapData("ssl-session-tickets", "true")
 		f.UpdateNginxConfigMapData("ssl-session-ticket-key", "WW9gcPHgfcrw6DNqY5VE2NjM6gtgUhJ4Vn6ZwRGi/7+A9TNFa4Fvfe1cmlPec9bxDoenN70aMBeZBlcrKshnKT4WJxFNLCuTHhfn4loTOEo=")
 
