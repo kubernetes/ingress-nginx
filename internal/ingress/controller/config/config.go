@@ -580,7 +580,7 @@ type Configuration struct {
 	EnableOpentelemetry bool `json:"enable-opentelemetry"`
 
 	// OpentelemetryConfig sets the opentelemetry config file
-	// Default: /etc/nginx/opentelemetry.toml
+	// Default: /etc/ingress-controller/telemetry/opentelemetry.toml
 	OpentelemetryConfig string `json:"opentelemetry-config"`
 
 	// OpentelemetryOperationName specifies a custom name for the server span
