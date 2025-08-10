@@ -140,14 +140,12 @@ Do not move it without providing redirects.
 <span class=go>...</span>
 </code></pre></div> <h3 id=exec>exec<a class=headerlink href=#exec title="Permanent link"> ¶</a></h3> <p><code>kubectl ingress-nginx exec</code> is exactly the same as <code>kubectl exec</code>, with the same command flags. It will automatically choose an <code>ingress-nginx</code> pod to run the command in.</p> <div class=highlight><pre><span></span><code><span class=gp>$ </span>kubectl<span class=w> </span>ingress-nginx<span class=w> </span><span class=nb>exec</span><span class=w> </span>-i<span class=w> </span>-n<span class=w> </span>ingress-nginx<span class=w> </span>--<span class=w> </span>ls<span class=w> </span>/etc/nginx
 <span class=go>fastcgi_params</span>
-<span class=go>geoip</span>
 <span class=go>lua</span>
 <span class=go>mime.types</span>
 <span class=go>modsecurity</span>
 <span class=go>modules</span>
 <span class=go>nginx.conf</span>
 <span class=go>opentracing.json</span>
-<span class=go>opentelemetry.toml</span>
 <span class=go>owasp-modsecurity-crs</span>
 <span class=go>template</span>
 </code></pre></div> <h3 id=info>info<a class=headerlink href=#info title="Permanent link"> ¶</a></h3> <p>Shows the internal and external IP/CNAMES for an <code>ingress-nginx</code> service.</p> <div class=highlight><pre><span></span><code><span class=gp>$ </span>kubectl<span class=w> </span>ingress-nginx<span class=w> </span>info<span class=w> </span>-n<span class=w> </span>ingress-nginx
