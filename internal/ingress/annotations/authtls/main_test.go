@@ -163,14 +163,37 @@ func TestAnnotations(t *testing.T) {
 	if u.ValidationDepth != 2 {
 		t.Errorf("expected %v but got %v", 2, u.ValidationDepth)
 	}
-	if u.ErrorPage != "ok.com/error" {
-		t.Errorf("expected %v but got %v", "ok.com/error", u.ErrorPage)
-	}
 	if u.PassCertToUpstream != true {
 		t.Errorf("expected %v but got %v", true, u.PassCertToUpstream)
 	}
 	if u.MatchCN != "CN=(hello-app|ok|goodbye)" {
 		t.Errorf("expected %v but got %v", "CN=(hello-app|ok|goodbye)", u.MatchCN)
+	}
+
+	// Cleaner: table-driven test for error page values
+	for _, tc := range []struct {
+		name      string
+		errorPage string
+		want      string
+	}{
+		{"named redirect", "@401", "@401"},
+		{"url redirect", "ok.com/error", "ok.com/error"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			data[parser.GetAnnotationWithPrefix(annotationAuthTLSErrorPage)] = tc.errorPage
+			ing.SetAnnotations(data)
+			i, err := NewParser(fakeSecret).Parse(ing)
+			if err != nil {
+				t.Errorf("Unexpected error with ingress: %v", err)
+			}
+			u, ok := i.(*Config)
+			if !ok {
+				t.Errorf("expected *Config but got %v", u)
+			}
+			if u.ErrorPage != tc.want {
+				t.Errorf("expected %v but got %v", tc.want, u.ErrorPage)
+			}
+		})
 	}
 }
 
