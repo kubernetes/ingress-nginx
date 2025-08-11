@@ -100,7 +100,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
     resources as if you had used Helm to install the controller.
 
 !!! attention
-    If you are running an old version of Kubernetes (1.18 or earlier), please read [this paragraph](#running-on-Kubernetes-versions-older-than-1.19) for specific instructions.
+    If you are running an old version of Kubernetes (1.18 or earlier), please read [this paragraph](#running-on-kubernetes-versions-older-than-119) for specific instructions.
     Because of api deprecations, the default manifest may not work on your cluster.
     Specific manifests for supported Kubernetes versions are available within a sub-folder of each provider.
 
