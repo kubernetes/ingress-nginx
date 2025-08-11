@@ -6,7 +6,7 @@ This example demonstrates how to use `Rewrite` annotations.
 
 You will need to make sure your Ingress targets exactly one Ingress
 controller by specifying the [ingress.class annotation](../../user-guide/multiple-ingress.md),
-and that you have an ingress controller [running](../../deploy/) in your cluster.
+and that you have an ingress controller [running](../../deploy/index.md) in your cluster.
 
 ## Deployment
 
