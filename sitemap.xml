@@ -2,317 +2,254 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/e2e-tests/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/faq/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/how-it-works/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/kubectl-plugin/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/lua_tests/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/troubleshooting/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/deploy/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/deploy/baremetal/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/deploy/hardening-guide/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/deploy/rbac/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/deploy/upgrade/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/developer-guide/code-overview/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/developer-guide/getting-started/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/enhancements/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/enhancements/20190724-only-dynamic-ssl/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/enhancements/20190815-zone-aware-routing/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/enhancements/20231001-split-containers/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/enhancements/YYYYMMDD-kep-template/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/examples/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/examples/PREREQUISITES/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/examples/affinity/cookie/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/examples/auth/basic/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/examples/auth/client-certs/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/examples/auth/external-auth/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/examples/auth/oauth-external-auth/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/examples/canary/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/examples/customization/configuration-snippets/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/examples/customization/custom-configuration/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/examples/customization/custom-errors/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/examples/customization/custom-headers/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/examples/customization/external-auth-headers/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/examples/customization/jwt/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/examples/customization/ssl-dh-param/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/examples/customization/sysctl/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/examples/docker-registry/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/examples/grpc/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/examples/multi-tls/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/examples/openpolicyagent/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/examples/rewrite/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/examples/static-ip/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/examples/tls-termination/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/user-guide/basic-usage/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/user-guide/cli-arguments/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/user-guide/custom-errors/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/user-guide/default-backend/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/user-guide/exposing-tcp-udp-services/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/user-guide/external-articles/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/user-guide/fcgi-services/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/user-guide/ingress-path-matching/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/user-guide/k8s-122-migration/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/user-guide/miscellaneous/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/user-guide/monitoring/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/user-guide/multiple-ingress/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/user-guide/tls/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations-risk/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/custom-template/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/log-format/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/user-guide/third-party-addons/modsecurity/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
     <url>
          <loc>https://kubernetes.github.io/ingress-nginx/user-guide/third-party-addons/opentelemetry/</loc>
-         <lastmod>2025-08-10</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-08-11</lastmod>
     </url>
 </urlset>
