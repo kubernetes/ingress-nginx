@@ -189,6 +189,10 @@ type Backend struct {
 
 	// AllowedResponseHeaders allows to define allow response headers for custom header annotation
 	AllowedResponseHeaders []string `json:"global-allowed-response-headers"`
+
+	// Sets the maximum number of simultaneous active connections to the proxied server.
+	// Default value is 0, which means no limit.
+	UpstreamServerMaxConns uint `json:"upstream-server-max-conns"`
 }
 
 type SecurityConfiguration struct {

@@ -63,6 +63,7 @@ import (
 	"k8s.io/ingress-nginx/internal/ingress/annotations/sslpassthrough"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/streamsnippet"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/upstreamhashby"
+	"k8s.io/ingress-nginx/internal/ingress/annotations/upstreamserver"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/upstreamvhost"
 	"k8s.io/ingress-nginx/internal/ingress/annotations/xforwardedprefix"
 	"k8s.io/ingress-nginx/internal/ingress/errors"
@@ -114,6 +115,7 @@ type Ingress struct {
 	Logs                        log.Config
 	ModSecurity                 modsecurity.Config
 	Mirror                      mirror.Config
+	UpstreamServer              upstreamserver.Config
 	StreamSnippet               string
 	Allowlist                   ipallowlist.SourceRange
 }
@@ -164,6 +166,7 @@ func NewAnnotationFactory(cfg resolver.Resolver) map[string]parser.IngressAnnota
 		"BackendProtocol":             backendprotocol.NewParser(cfg),
 		"ModSecurity":                 modsecurity.NewParser(cfg),
 		"Mirror":                      mirror.NewParser(cfg),
+		"UpstreamServer":              upstreamserver.NewParser(cfg),
 		"StreamSnippet":               streamsnippet.NewParser(cfg),
 	}
 }
