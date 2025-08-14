@@ -416,6 +416,10 @@ CORS can be controlled with the following annotations:
 !!! note
     For more information please see [https://enable-cors.org](https://enable-cors.org/server_nginx.html)
 
+#### Handling the `Vary: Origin` Header
+
+When CORS support is enabled and the allowed origins contains either a wildcard host  or more than one entry, the server will automatically add a `Vary: Origin` header to the response if the backend does not explicitly set one. The `Vary` header is used to indicate that the response may vary depending on the value of the `Origin` header in the request. This is important for caching and ensuring that responses are correctly handled based on the origin of the request.
+
 ### HTTP2 Push Preload.
 
 Enables automatic conversion of preload links specified in the “Link” response header fields into push requests.
