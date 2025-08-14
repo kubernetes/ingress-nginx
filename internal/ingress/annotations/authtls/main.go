@@ -42,7 +42,7 @@ const (
 
 var (
 	authVerifyClientRegex = regexp.MustCompile(`^(on|off|optional|optional_no_ca)$`)
-	redirectRegex         = regexp.MustCompile(`^((https?://)?[A-Za-z0-9\-.]+(:\d+)?)?(/[A-Za-z0-9\-_.]+)*/?$`)
+	redirectRegex         = regexp.MustCompile(`^(@\d+|((https?://)?[A-Za-z0-9\-.]+(:\d+)?)?(/[A-Za-z0-9\-_.]+)*/?)$`)
 )
 
 var authTLSAnnotations = parser.Annotation{
@@ -148,12 +148,12 @@ func (a authTLS) Parse(ing *networking.Ingress) (interface{}, error) {
 	var err error
 	config := &Config{}
 
-	tlsauthsecret, err := parser.GetStringAnnotation(annotationAuthTLSSecret, ing, a.annotationConfig.Annotations)
+	authTLSSecret, err := parser.GetStringAnnotation(annotationAuthTLSSecret, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		return &Config{}, err
 	}
 
-	ns, _, err := k8s.ParseNameNS(tlsauthsecret)
+	ns, _, err := k8s.ParseNameNS(authTLSSecret)
 	if err != nil {
 		return &Config{}, ing_errors.NewLocationDenied(err.Error())
 	}
@@ -166,7 +166,7 @@ func (a authTLS) Parse(ing *networking.Ingress) (interface{}, error) {
 		return &Config{}, ing_errors.NewLocationDenied("cross namespace secrets are not supported")
 	}
 
-	authCert, err := a.r.GetAuthCertificate(tlsauthsecret)
+	authCert, err := a.r.GetAuthCertificate(authTLSSecret)
 	if err != nil {
 		e := fmt.Errorf("error obtaining certificate: %w", err)
 		return &Config{}, ing_errors.LocationDeniedError{Reason: e}
