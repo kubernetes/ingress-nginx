@@ -87,7 +87,7 @@ var proxyAnnotations = parser.Annotation{
 			Validator:     parser.ValidateRegex(parser.SizeRegex, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskLow,
-			Documentation: `This annotation limits the total size of buffers that can be busy sending a response to the client while the response is not yet fully read. By default proxy busy buffers size is set as "8k".`,
+			Documentation: `This annotation limits the total size of buffers that can be busy sending a response to the client while the response is not yet fully read.`,
 		},
 		proxyCookiePathAnnotation: {
 			Validator:     parser.ValidateRegex(parser.URLIsValidRegex, true),
@@ -301,11 +301,9 @@ func (a proxy) Parse(ing *networking.Ingress) (interface{}, error) {
 		config.BufferSize = defBackend.ProxyBufferSize
 	}
 
-	// Only set BusyBuffersSize if annotation is present, blank is NGINX default
-	// https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_busy_buffers_size
 	config.BusyBuffersSize, err = parser.GetStringAnnotation(proxyBusyBuffersSizeAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
-		config.BusyBuffersSize = ""
+		config.BusyBuffersSize = defBackend.ProxyBusyBuffersSize
 	}
 
 	config.CookiePath, err = parser.GetStringAnnotation(proxyCookiePathAnnotation, ing, a.annotationConfig.Annotations)
