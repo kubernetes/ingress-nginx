@@ -144,8 +144,7 @@ func (f *Framework) EnsureDeployment(deployment *appsv1.Deployment) *appsv1.Depl
 
 // waitForPodsReady waits for a given amount of time until a group of Pods is running in the given namespace.
 func waitForPodsReady(kubeClientSet kubernetes.Interface, timeout time.Duration, expectedReplicas int, namespace string, opts *metav1.ListOptions) error {
-	//nolint:staticcheck // TODO: will replace it since wait.PollImmediate is deprecated
-	return wait.PollImmediate(1*time.Second, timeout, func() (bool, error) {
+	return wait.PollUntilContextTimeout(context.Background(), 1*time.Second, timeout, true, func(_ context.Context) (bool, error) {
 		pl, err := kubeClientSet.CoreV1().Pods(namespace).List(context.TODO(), *opts)
 		if err != nil {
 			return false, nil
@@ -172,8 +171,7 @@ func waitForPodsReady(kubeClientSet kubernetes.Interface, timeout time.Duration,
 
 // waitForPodsDeleted waits for a given amount of time until a group of Pods are deleted in the given namespace.
 func waitForPodsDeleted(kubeClientSet kubernetes.Interface, timeout time.Duration, namespace string, opts *metav1.ListOptions) error {
-	//nolint:staticcheck // TODO: will replace it since wait.Poll is deprecated
-	return wait.Poll(Poll, timeout, func() (bool, error) {
+	return wait.PollUntilContextTimeout(context.Background(), Poll, timeout, true, func(_ context.Context) (bool, error) {
 		pl, err := kubeClientSet.CoreV1().Pods(namespace).List(context.TODO(), *opts)
 		if err != nil {
 			return false, nil
@@ -192,8 +190,8 @@ func WaitForEndpoints(kubeClientSet kubernetes.Interface, timeout time.Duration,
 	if expectedEndpoints == 0 {
 		return nil
 	}
-	//nolint:staticcheck // TODO: will replace it since wait.PollImmediate is deprecated
-	return wait.PollImmediate(Poll, timeout, func() (bool, error) {
+
+	err := wait.PollUntilContextTimeout(context.Background(), Poll, timeout, true, func(_ context.Context) (bool, error) {
 		endpoint, err := kubeClientSet.CoreV1().Endpoints(ns).Get(context.TODO(), name, metav1.GetOptions{})
 		if k8sErrors.IsNotFound(err) {
 			return false, nil
@@ -207,6 +205,8 @@ func WaitForEndpoints(kubeClientSet kubernetes.Interface, timeout time.Duration,
 
 		return false, nil
 	})
+
+	return err
 }
 
 func countReadyEndpoints(e *core.Endpoints) int {
@@ -254,8 +254,9 @@ func isPodReady(p *core.Pod) bool {
 // getIngressNGINXPod returns the ingress controller running pod
 func getIngressNGINXPod(ns string, kubeClientSet kubernetes.Interface) (*core.Pod, error) {
 	var pod *core.Pod
-	//nolint:staticcheck // TODO: will replace it since wait.Poll is deprecated
-	err := wait.Poll(1*time.Second, DefaultTimeout, func() (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), DefaultTimeout)
+	defer cancel()
+	err := wait.PollUntilContextTimeout(ctx, 1*time.Second, DefaultTimeout, true, func(_ context.Context) (bool, error) {
 		l, err := kubeClientSet.CoreV1().Pods(ns).List(context.TODO(), metav1.ListOptions{
 			LabelSelector: "app.kubernetes.io/name=ingress-nginx",
 		})
@@ -281,8 +282,7 @@ func getIngressNGINXPod(ns string, kubeClientSet kubernetes.Interface) (*core.Po
 		return false, nil
 	})
 	if err != nil {
-		//nolint:staticcheck // TODO: will replace it since wait.ErrWaitTimeout is deprecated
-		if err == wait.ErrWaitTimeout {
+		if ctx.Err() == context.DeadlineExceeded {
 			return nil, fmt.Errorf("timeout waiting at least one ingress-nginx pod running in namespace %v", ns)
 		}
 
