@@ -20,6 +20,9 @@ import (
 	"os"
 	"testing"
 	"time"
+
+	"k8s.io/ingress-nginx/internal/ingress/controller"
+	"k8s.io/ingress-nginx/internal/ingress/controller/config"
 )
 
 func TestNoMandatoryFlag(t *testing.T) {
@@ -55,8 +58,153 @@ func TestDefaults(t *testing.T) {
 	}
 }
 
-func TestSetupSSLProxy(_ *testing.T) {
-	// TODO TestSetupSSLProxy
+func TestSetupSSLProxy(t *testing.T) {
+	tests := []struct {
+		name           string
+		args           []string
+		expectError    bool
+		description    string
+		validateConfig func(t *testing.T, _ bool, cfg *controller.Configuration)
+	}{
+		{
+			name:        "valid SSL proxy configuration with passthrough enabled",
+			args:        []string{"cmd", "--enable-ssl-passthrough", "--ssl-passthrough-proxy-port", "9999"},
+			expectError: false,
+			description: "Should accept valid SSL proxy port with passthrough enabled",
+			validateConfig: func(t *testing.T, _ bool, cfg *controller.Configuration) {
+				if !cfg.EnableSSLPassthrough {
+					t.Error("Expected EnableSSLPassthrough to be true")
+				}
+				if cfg.ListenPorts.SSLProxy != 9999 {
+					t.Errorf("Expected SSLProxy port to be 9999, got %d", cfg.ListenPorts.SSLProxy)
+				}
+			},
+		},
+		{
+			name:        "SSL proxy port without explicit passthrough enabling",
+			args:        []string{"cmd", "--ssl-passthrough-proxy-port", "8443"},
+			expectError: false,
+			description: "Should accept SSL proxy port configuration without explicit passthrough enable",
+			validateConfig: func(t *testing.T, _ bool, cfg *controller.Configuration) {
+				if cfg.ListenPorts.SSLProxy != 8443 {
+					t.Errorf("Expected SSLProxy port to be 8443, got %d", cfg.ListenPorts.SSLProxy)
+				}
+			},
+		},
+		{
+			name:        "SSL proxy with default backend service",
+			args:        []string{"cmd", "--enable-ssl-passthrough", "--default-backend-service", "default/backend", "--ssl-passthrough-proxy-port", "9000"},
+			expectError: false,
+			description: "Should work with default backend service and SSL passthrough",
+			validateConfig: func(t *testing.T, _ bool, cfg *controller.Configuration) {
+				if !cfg.EnableSSLPassthrough {
+					t.Error("Expected EnableSSLPassthrough to be true")
+				}
+				if cfg.DefaultService != "default/backend" {
+					t.Errorf("Expected DefaultService to be 'default/backend', got %s", cfg.DefaultService)
+				}
+				if cfg.ListenPorts.SSLProxy != 9000 {
+					t.Errorf("Expected SSLProxy port to be 9000, got %d", cfg.ListenPorts.SSLProxy)
+				}
+			},
+		},
+		{
+			name:        "SSL proxy with default SSL certificate",
+			args:        []string{"cmd", "--enable-ssl-passthrough", "--default-ssl-certificate", "default/tls-cert", "--ssl-passthrough-proxy-port", "8080"},
+			expectError: false,
+			description: "Should work with default SSL certificate and passthrough",
+			validateConfig: func(t *testing.T, _ bool, cfg *controller.Configuration) {
+				if !cfg.EnableSSLPassthrough {
+					t.Error("Expected EnableSSLPassthrough to be true")
+				}
+				if cfg.DefaultSSLCertificate != "default/tls-cert" {
+					t.Errorf("Expected DefaultSSLCertificate to be 'default/tls-cert', got %s", cfg.DefaultSSLCertificate)
+				}
+				if cfg.ListenPorts.SSLProxy != 8080 {
+					t.Errorf("Expected SSLProxy port to be 8080, got %d", cfg.ListenPorts.SSLProxy)
+				}
+			},
+		},
+		{
+			name:        "SSL proxy with chain completion enabled",
+			args:        []string{"cmd", "--enable-ssl-passthrough", "--enable-ssl-chain-completion", "--ssl-passthrough-proxy-port", "7443"},
+			expectError: false,
+			description: "Should work with SSL chain completion and passthrough",
+			validateConfig: func(t *testing.T, _ bool, cfg *controller.Configuration) {
+				if !cfg.EnableSSLPassthrough {
+					t.Error("Expected EnableSSLPassthrough to be true")
+				}
+				if !config.EnableSSLChainCompletion {
+					t.Error("Expected EnableSSLChainCompletion to be true")
+				}
+				if cfg.ListenPorts.SSLProxy != 7443 {
+					t.Errorf("Expected SSLProxy port to be 7443, got %d", cfg.ListenPorts.SSLProxy)
+				}
+			},
+		},
+		{
+			name:        "SSL proxy with minimal configuration",
+			args:        []string{"cmd", "--enable-ssl-passthrough"},
+			expectError: false,
+			description: "Should work with minimal SSL passthrough configuration using default port",
+			validateConfig: func(t *testing.T, _ bool, cfg *controller.Configuration) {
+				if !cfg.EnableSSLPassthrough {
+					t.Error("Expected EnableSSLPassthrough to be true")
+				}
+				// Default port should be 442
+				if cfg.ListenPorts.SSLProxy != 442 {
+					t.Errorf("Expected default SSLProxy port to be 442, got %d", cfg.ListenPorts.SSLProxy)
+				}
+			},
+		},
+		{
+			name:        "SSL proxy with comprehensive configuration",
+			args:        []string{"cmd", "--enable-ssl-passthrough", "--enable-ssl-chain-completion", "--default-ssl-certificate", "kube-system/default-cert", "--default-backend-service", "kube-system/default-backend", "--ssl-passthrough-proxy-port", "10443"},
+			expectError: false,
+			description: "Should work with comprehensive SSL proxy configuration",
+			validateConfig: func(t *testing.T, _ bool, cfg *controller.Configuration) {
+				if !cfg.EnableSSLPassthrough {
+					t.Error("Expected EnableSSLPassthrough to be true")
+				}
+				if !config.EnableSSLChainCompletion {
+					t.Error("Expected EnableSSLChainCompletion to be true")
+				}
+				if cfg.DefaultSSLCertificate != "kube-system/default-cert" {
+					t.Errorf("Expected DefaultSSLCertificate to be 'kube-system/default-cert', got %s", cfg.DefaultSSLCertificate)
+				}
+				if cfg.DefaultService != "kube-system/default-backend" {
+					t.Errorf("Expected DefaultService to be 'kube-system/default-backend', got %s", cfg.DefaultService)
+				}
+				if cfg.ListenPorts.SSLProxy != 10443 {
+					t.Errorf("Expected SSLProxy port to be 10443, got %d", cfg.ListenPorts.SSLProxy)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ResetForTesting(func() { t.Fatal("Parsing failed") })
+
+			oldArgs := os.Args
+			defer func() { os.Args = oldArgs }()
+
+			os.Args = tt.args
+
+			showVersion, cfg, err := ParseFlags()
+			if tt.expectError && err == nil {
+				t.Fatalf("Expected error for %s, but got none", tt.description)
+			}
+			if !tt.expectError && err != nil {
+				t.Fatalf("Expected no error for %s, got: %v", tt.description, err)
+			}
+
+			// Run additional validation if provided and no error occurred
+			if !tt.expectError && tt.validateConfig != nil {
+				tt.validateConfig(t, showVersion, cfg)
+			}
+		})
+	}
 }
 
 func TestFlagConflict(t *testing.T) {
