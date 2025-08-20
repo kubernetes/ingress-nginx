@@ -48,14 +48,7 @@ func buildIngress() *networking.Ingress {
 			Namespace: api.NamespaceDefault,
 		},
 		Spec: networking.IngressSpec{
-			DefaultBackend: &networking.IngressBackend{
-				Service: &networking.IngressServiceBackend{
-					Name: "default-backend",
-					Port: networking.ServiceBackendPort{
-						Number: 80,
-					},
-				},
-			},
+			DefaultBackend: &defaultBackend,
 			Rules: []networking.IngressRule{
 				{
 					Host: "foo.bar.com",
