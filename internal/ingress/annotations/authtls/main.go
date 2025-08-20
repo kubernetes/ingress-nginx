@@ -42,50 +42,50 @@ const (
 
 var (
 	authVerifyClientRegex = regexp.MustCompile(`^(on|off|optional|optional_no_ca)$`)
-	redirectRegex         = regexp.MustCompile(`^@[A-Za-z0-9_-]+|((https?://)?[A-Za-z0-9\-.]+(:\d+)?)?(/[A-Za-z0-9\-_.]+)*/?$`)
-)
+	redirectRegex         = regexp.MustCompile(`^(@[A-Za-z0-9_-]+|((https?://)?[A-Za-z0-9\-.]+(:\d+)?)?(/[A-Za-z0-9\-_.]+)*/?)$`)
 
-var authTLSAnnotations = parser.Annotation{
-	Group: "authentication",
-	Annotations: parser.AnnotationFields{
-		annotationAuthTLSSecret: {
-			Validator:     parser.ValidateRegex(parser.BasicCharsRegex, true),
-			Scope:         parser.AnnotationScopeLocation,
-			Risk:          parser.AnnotationRiskMedium, // Medium as it allows a subset of chars
-			Documentation: `This annotation defines the secret that contains the certificate chain of allowed certs`,
+	authTLSAnnotations = parser.Annotation{
+		Group: "authentication",
+		Annotations: parser.AnnotationFields{
+			annotationAuthTLSSecret: {
+				Validator:     parser.ValidateRegex(parser.BasicCharsRegex, true),
+				Scope:         parser.AnnotationScopeLocation,
+				Risk:          parser.AnnotationRiskMedium, // Medium as it allows a subset of chars
+				Documentation: `This annotation defines the secret that contains the certificate chain of allowed certs`,
+			},
+			annotationAuthTLSVerifyClient: {
+				Validator:     parser.ValidateRegex(authVerifyClientRegex, true),
+				Scope:         parser.AnnotationScopeLocation,
+				Risk:          parser.AnnotationRiskMedium, // Medium as it allows a subset of chars
+				Documentation: `This annotation enables verification of client certificates. Can be "on", "off", "optional" or "optional_no_ca"`,
+			},
+			annotationAuthTLSVerifyDepth: {
+				Validator:     parser.ValidateInt,
+				Scope:         parser.AnnotationScopeLocation,
+				Risk:          parser.AnnotationRiskLow,
+				Documentation: `This annotation defines validation depth between the provided client certificate and the Certification Authority chain.`,
+			},
+			annotationAuthTLSErrorPage: {
+				Validator:     parser.ValidateRegex(redirectRegex, true),
+				Scope:         parser.AnnotationScopeLocation,
+				Risk:          parser.AnnotationRiskHigh,
+				Documentation: `This annotation defines the URL/Page that user should be redirected in case of a Certificate Authentication Error`,
+			},
+			annotationAuthTLSPassCertToUpstream: {
+				Validator:     parser.ValidateBool,
+				Scope:         parser.AnnotationScopeLocation,
+				Risk:          parser.AnnotationRiskLow,
+				Documentation: `This annotation defines if the received certificates should be passed or not to the upstream server in the header "ssl-client-cert"`,
+			},
+			annotationAuthTLSMatchCN: {
+				Validator:     parser.CommonNameAnnotationValidator,
+				Scope:         parser.AnnotationScopeLocation,
+				Risk:          parser.AnnotationRiskHigh,
+				Documentation: `This annotation adds a sanity check for the CN of the client certificate that is sent over using a string / regex starting with "CN="`,
+			},
 		},
-		annotationAuthTLSVerifyClient: {
-			Validator:     parser.ValidateRegex(authVerifyClientRegex, true),
-			Scope:         parser.AnnotationScopeLocation,
-			Risk:          parser.AnnotationRiskMedium, // Medium as it allows a subset of chars
-			Documentation: `This annotation enables verification of client certificates. Can be "on", "off", "optional" or "optional_no_ca"`,
-		},
-		annotationAuthTLSVerifyDepth: {
-			Validator:     parser.ValidateInt,
-			Scope:         parser.AnnotationScopeLocation,
-			Risk:          parser.AnnotationRiskLow,
-			Documentation: `This annotation defines validation depth between the provided client certificate and the Certification Authority chain.`,
-		},
-		annotationAuthTLSErrorPage: {
-			Validator:     parser.ValidateRegex(redirectRegex, true),
-			Scope:         parser.AnnotationScopeLocation,
-			Risk:          parser.AnnotationRiskHigh,
-			Documentation: `This annotation defines the URL/Page that user should be redirected in case of a Certificate Authentication Error`,
-		},
-		annotationAuthTLSPassCertToUpstream: {
-			Validator:     parser.ValidateBool,
-			Scope:         parser.AnnotationScopeLocation,
-			Risk:          parser.AnnotationRiskLow,
-			Documentation: `This annotation defines if the received certificates should be passed or not to the upstream server in the header "ssl-client-cert"`,
-		},
-		annotationAuthTLSMatchCN: {
-			Validator:     parser.CommonNameAnnotationValidator,
-			Scope:         parser.AnnotationScopeLocation,
-			Risk:          parser.AnnotationRiskHigh,
-			Documentation: `This annotation adds a sanity check for the CN of the client certificate that is sent over using a string / regex starting with "CN="`,
-		},
-	},
-}
+	}
+)
 
 // Config contains the AuthSSLCert used for mutual authentication
 // and the configured ValidationDepth
