@@ -44,7 +44,7 @@ build: builder
 		--build-arg YAML_LINT_VERSION=1.33.0 \
 		--build-arg YAMALE_VERSION=4.0.4 \
 		--build-arg HELM_VERSION=3.14.4 \
-		--build-arg GINKGO_VERSION=2.24.0 \
+		--build-arg GINKGO_VERSION=2.25.0 \
 		--build-arg GOLINT_VERSION=latest \
 		rootfs \
 		--tag $(IMAGE):$(TAG) \
