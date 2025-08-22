@@ -87,7 +87,7 @@ var proxyAnnotations = parser.Annotation{
 			Validator:     parser.ValidateRegex(parser.SizeRegex, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskLow,
-			Documentation: `This annotation limits the total size of buffers that can be busy sending a response to the client while the response is not yet fully read. By default proxy busy buffers size is set as "8k".`,
+			Documentation: `This annotation limits the total size of buffers that can be busy sending a response to the client while the response is not yet fully read.`,
 		},
 		proxyCookiePathAnnotation: {
 			Validator:     parser.ValidateRegex(parser.URLIsValidRegex, true),

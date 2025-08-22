@@ -53,12 +53,12 @@ Let's begin with creating a [Kind](https://kind.sigs.k8s.io/docs/user/quick-star
 ```
 This will create a cluster called `kind`, to view the clusters type
 ```
-# kind get clusters                                                                                                                              
+# kind get clusters                                                                                                                              
 kind
 ```
 Kind ships with `kubectl`, so we can use that to communicate with our clusters.
 ```
-# kubectl get no -o wide                                                                                                                             
+# kubectl get no -o wide                                                                                                                             
 NAME                 STATUS   ROLES           AGE     VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE       KERNEL-VERSION    CONTAINER-RUNTIME
 kind-control-plane   Ready    control-plane   5d23h   v1.24.1   172.18.0.2    <none>        Ubuntu 21.10   5.18.12-arch1-1   containerd://1.6.4
 ```
@@ -85,7 +85,7 @@ Output Relevance: From the above output, we can see that our nginx pod is being 
 
 Command: The pod has an IP as shown below
 ```
-# kubectl get po -o wide                                                                                                                            
+# kubectl get po -o wide                                                                                                                            
 NAME                               READY   STATUS    RESTARTS      AGE     IP            NODE                 NOMINATED NODE   READINESS GATES
 nginx-6c8b449b8f-pdvdk             1/1     Running   1 (32h ago)   4d8h    10.244.0.5    kind-control-plane   <none>           <none>
 ```
@@ -111,9 +111,9 @@ font-family: Tahoma, Verdana, Arial, sans-serif; }
 working. Further configuration is required.</p>
 
 <p>For online documentation and support please refer to
-<a href="http://nginx.org/">nginx.org</a>.<br/>
+<a href="https://nginx.org/">nginx.org</a>.<br/>
 Commercial support is available at
-<a href="http://nginx.com/">nginx.com</a>.</p>
+<a href="https://nginx.com/">nginx.com</a>.</p>
 
 <p><em>Thank you for using nginx.</em></p>
 </body>
@@ -224,7 +224,7 @@ If we do a docker `exec` we can enter the container, we can also see the network
 ```
 When we run `curl  172.18.0.2:32329` on the laptop it first needs to figure out where `172.18.0.2`, to do this it refers to the host routing table.
 ```
-sudo netstat -rn                                                                                                                           main 
+sudo netstat -rn                                                                                                                           main 
 Kernel IP routing table
 Destination     Gateway         Genmask         Flags   MSS Window  irtt Iface
 0.0.0.0         192.168.31.1    0.0.0.0         UG        0 0          0 ethbr0
@@ -325,9 +325,9 @@ minikube start
 🐳  Preparing Kubernetes v1.23.3 on Docker 20.10.12 ...
     ▪ kubelet.housekeeping-interval=5m
 🔎  Verifying Kubernetes components...
-    ▪ Using image k8s.gcr.io/ingress-nginx/kube-webhook-certgen:v1.1.1
-    ▪ Using image k8s.gcr.io/ingress-nginx/kube-webhook-certgen:v1.1.1
-    ▪ Using image k8s.gcr.io/ingress-nginx/controller:v1.2.1
+    ▪ Using image registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.1.1
+    ▪ Using image registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.1.1
+    ▪ Using image registry.k8s.io/ingress-nginx/controller:v1.2.1
     ▪ Using image gcr.io/k8s-minikube/storage-provisioner:v5
 🔎  Verifying ingress addon...
 🌟  Enabled addons: ingress, storage-provisioner, default-storageclass
@@ -337,7 +337,7 @@ minikube start
 
 Next we will get the Node IP.
 ```
-$ kubectl get no -o wide                                                                                                                   
+$ kubectl get no -o wide                                                                                                                   
 NAME       STATUS   ROLES                  AGE   VERSION   INTERNAL-IP     EXTERNAL-IP   OS-IMAGE              KERNEL-VERSION   CONTAINER-RUNTIME
 minikube   Ready    control-plane,master   25d   v1.23.3   192.168.39.57   <none>        Buildroot 2021.02.4   4.19.202         docker://20.10.12
 ```
@@ -370,7 +370,7 @@ service/nginx-new exposed
 ```
 Command: Now we can see that the service has been exposed.
 ```
-# kubectl get svc -o wide                                                                                                                            main 
+# kubectl get svc -o wide                                                                                                                            main 
 NAME             TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)        AGE   SELECTOR
 kubernetes       ClusterIP   10.96.0.1    <none>        443/TCP        25d   <none>
 nginx-minikube   NodePort    10.97.44.4   <none>        80:32007/TCP   45h   app=nginx-minikube
@@ -404,9 +404,9 @@ font-family: Tahoma, Verdana, Arial, sans-serif; }
 working. Further configuration is required.</p>
 
 <p>For online documentation and support please refer to
-<a href="http://nginx.org/">nginx.org</a>.<br/>
+<a href="https://nginx.org/">nginx.org</a>.<br/>
 Commercial support is available at
-<a href="http://nginx.com/">nginx.com</a>.</p>
+<a href="https://nginx.com/">nginx.com</a>.</p>
 
 <p><em>Thank you for using nginx.</em></p>
 </body>
@@ -525,7 +525,7 @@ So, as we can see that kube proxy handles the network rules required to aid the 
 Command:
 
 ```
-# minikube ssh                                                                                                                                      
+# minikube ssh                                                                                                                                      
                          _             _
             _         _ ( )           ( )
   ___ ___  (_)  ___  (_)| |/')  _   _ | |_      __

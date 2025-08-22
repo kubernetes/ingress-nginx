@@ -32,11 +32,11 @@ import (
 var EnableSSLChainCompletion = false
 
 const (
-	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
+	// https://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
 	// Sets the maximum allowed size of the client request body
 	bodySize = "1m"
 
-	// http://nginx.org/en/docs/ngx_core_module.html#error_log
+	// https://nginx.org/en/docs/ngx_core_module.html#error_log
 	// Configures logging level [debug | info | notice | warn | error | crit | alert | emerg]
 	// Log levels above are listed in the order of increasing severity
 	errorLevel = "notice"
@@ -55,34 +55,34 @@ const (
 
 	logFormatStream = `[$remote_addr] [$time_local] $protocol $status $bytes_sent $bytes_received $session_time`
 
-	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size
+	// https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size
 	// Sets the size of the buffer used for sending data.
 	// 4k helps NGINX to improve TLS Time To First Byte (TTTFB)
 	// https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/
 	sslBufferSize = "4k"
 
 	// Enabled ciphers list to enabled. The ciphers are specified in the format understood by the OpenSSL library
-	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers
+	// https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers
 	sslCiphers = "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384"
 
 	// SSL enabled protocols to use
-	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols
+	// https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols
 	sslProtocols = "TLSv1.2 TLSv1.3"
 
 	// Disable TLS 1.3 early data
-	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_early_data
+	// https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_early_data
 	sslEarlyData = false
 
 	// Time during which a client may reuse the session parameters stored in a cache.
-	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_timeout
+	// https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_timeout
 	sslSessionTimeout = "10m"
 
 	// Size of the SSL shared cache between all worker processes.
-	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_cache
+	// https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_cache
 	sslSessionCacheSize = "10m"
 
 	// Parameters for a shared memory zone that will keep states for various keys.
-	// http://nginx.org/en/docs/http/ngx_http_limit_conn_module.html#limit_conn_zone
+	// https://nginx.org/en/docs/http/ngx_http_limit_conn_module.html#limit_conn_zone
 	defaultLimitConnZoneVariable = "$binary_remote_addr"
 )
 
@@ -97,12 +97,10 @@ type Configuration struct {
 	// AllowCrossNamespaceResources enables users to consume cross namespace resource on annotations
 	// Case disabled, attempts to use secrets or configmaps from a namespace different from Ingress will
 	// be denied
-	// This value will default to `false` on future releases
 	AllowCrossNamespaceResources bool `json:"allow-cross-namespace-resources"`
 
 	// AnnotationsRiskLevel represents the risk accepted on an annotation. If the risk is, for instance `Medium`, annotations
 	// with risk High and Critical will not be accepted.
-	// Default Risk is Critical by default, but this may be changed in future releases
 	AnnotationsRiskLevel string `json:"annotations-risk-level"`
 
 	// AnnotationValueWordBlocklist defines words that should not be part of an user annotation value
@@ -115,12 +113,12 @@ type Configuration struct {
 
 	// AllowBackendServerHeader enables the return of the header Server from the backend
 	// instead of the generic nginx string.
-	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_hide_header
+	// https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_hide_header
 	// By default this is disabled
 	AllowBackendServerHeader bool `json:"allow-backend-server-header"`
 
 	// AccessLogParams sets additional params for access_log
-	// http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log
+	// https://nginx.org/en/docs/http/ngx_http_log_module.html#access_log
 	// By default it's empty
 	AccessLogParams string `json:"access-log-params,omitempty"`
 
@@ -133,25 +131,25 @@ type Configuration struct {
 	EnableAuthAccessLog bool `json:"enable-auth-access-log"`
 
 	// AccessLogPath sets the path of the access logs for both http and stream contexts if enabled
-	// http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log
-	// http://nginx.org/en/docs/stream/ngx_stream_log_module.html#access_log
+	// https://nginx.org/en/docs/http/ngx_http_log_module.html#access_log
+	// https://nginx.org/en/docs/stream/ngx_stream_log_module.html#access_log
 	// By default access logs go to /var/log/nginx/access.log
 	AccessLogPath string `json:"access-log-path,omitempty"`
 
 	// HTTPAccessLogPath sets the path of the access logs for http context globally if enabled
-	// http://nginx.org/en/docs/http/ngx_http_log_module.html#access_log
+	// https://nginx.org/en/docs/http/ngx_http_log_module.html#access_log
 	HTTPAccessLogPath string `json:"http-access-log-path,omitempty"`
 
 	// StreamAccessLogPath sets the path of the access logs for stream context globally if enabled
-	// http://nginx.org/en/docs/stream/ngx_stream_log_module.html#access_log
+	// https://nginx.org/en/docs/stream/ngx_stream_log_module.html#access_log
 	StreamAccessLogPath string `json:"stream-access-log-path,omitempty"`
 
 	// WorkerCPUAffinity bind nginx worker processes to CPUs this will improve response latency
-	// http://nginx.org/en/docs/ngx_core_module.html#worker_cpu_affinity
+	// https://nginx.org/en/docs/ngx_core_module.html#worker_cpu_affinity
 	// By default this is disabled
 	WorkerCPUAffinity string `json:"worker-cpu-affinity,omitempty"`
 	// ErrorLogPath sets the path of the error logs
-	// http://nginx.org/en/docs/ngx_core_module.html#error_log
+	// https://nginx.org/en/docs/ngx_core_module.html#error_log
 	// By default error logs go to /var/log/nginx/error.log
 	ErrorLogPath string `json:"error-log-path,omitempty"`
 
@@ -172,32 +170,32 @@ type Configuration struct {
 
 	// ClientHeaderBufferSize allows to configure a custom buffer
 	// size for reading client request header
-	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_buffer_size
+	// https://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_buffer_size
 	ClientHeaderBufferSize string `json:"client-header-buffer-size"`
 
 	// Defines a timeout for reading client request header, in seconds
-	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_timeout
+	// https://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_timeout
 	ClientHeaderTimeout int `json:"client-header-timeout,omitempty"`
 
 	// Sets buffer size for reading client request body
-	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size
+	// https://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size
 	ClientBodyBufferSize string `json:"client-body-buffer-size,omitempty"`
 
 	// Defines a timeout for reading client request body, in seconds
-	// http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_timeout
+	// https://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_timeout
 	ClientBodyTimeout int `json:"client-body-timeout,omitempty"`
 
 	// DisableAccessLog disables the Access Log globally for both HTTP and Stream contexts from NGINX ingress controller
-	// http://nginx.org/en/docs/http/ngx_http_log_module.html
-	// http://nginx.org/en/docs/stream/ngx_stream_log_module.html
+	// https://nginx.org/en/docs/http/ngx_http_log_module.html
+	// https://nginx.org/en/docs/stream/ngx_stream_log_module.html
 	DisableAccessLog bool `json:"disable-access-log,omitempty"`
 
 	// DisableHTTPAccessLog disables the Access Log for http context globally from NGINX ingress controller
-	// http://nginx.org/en/docs/http/ngx_http_log_module.html
+	// https://nginx.org/en/docs/http/ngx_http_log_module.html
 	DisableHTTPAccessLog bool `json:"disable-http-access-log,omitempty"`
 
 	// DisableStreamAccessLog disables the Access Log for stream context globally from NGINX ingress controller
-	// http://nginx.org/en/docs/stream/ngx_stream_log_module.html
+	// https://nginx.org/en/docs/stream/ngx_stream_log_module.html
 	DisableStreamAccessLog bool `json:"disable-stream-access-log,omitempty"`
 
 	// DisableIpv6DNS disables IPv6 for nginx resolver
@@ -207,12 +205,12 @@ type Configuration struct {
 	DisableIpv6 bool `json:"disable-ipv6,omitempty"`
 
 	// EnableUnderscoresInHeaders enables underscores in header names
-	// http://nginx.org/en/docs/http/ngx_http_core_module.html#underscores_in_headers
+	// https://nginx.org/en/docs/http/ngx_http_core_module.html#underscores_in_headers
 	// By default this is disabled
 	EnableUnderscoresInHeaders bool `json:"enable-underscores-in-headers"`
 
 	// IgnoreInvalidHeaders set if header fields with invalid names should be ignored
-	// http://nginx.org/en/docs/http/ngx_http_core_module.html#ignore_invalid_headers
+	// https://nginx.org/en/docs/http/ngx_http_core_module.html#ignore_invalid_headers
 	// By default this is enabled
 	IgnoreInvalidHeaders bool `json:"ignore-invalid-headers"`
 
@@ -220,7 +218,7 @@ type Configuration struct {
 	// in case of an error. The previous behavior can be restored using the value true
 	RetryNonIdempotent bool `json:"retry-non-idempotent"`
 
-	// http://nginx.org/en/docs/ngx_core_module.html#error_log
+	// https://nginx.org/en/docs/ngx_core_module.html#error_log
 	// Configures logging level [debug | info | notice | warn | error | crit | alert | emerg]
 	// Log levels above are listed in the order of increasing severity
 	ErrorLogLevel string `json:"error-log-level,omitempty"`
@@ -235,14 +233,14 @@ type Configuration struct {
 	// Deprecated: HTTP2MaxHeaderSize is deprecated.
 	HTTP2MaxHeaderSize string `json:"http2-max-header-size,omitempty"`
 
-	// http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_requests
+	// https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_requests
 	// HTTP2MaxRequests Sets the maximum number of requests (including push requests) that can be served
 	// through one HTTP/2 connection, after which the next client request will lead to connection closing
 	// and the need of establishing a new connection.
 	// Deprecated: HTTP2MaxRequests is deprecated.
 	HTTP2MaxRequests int `json:"http2-max-requests,omitempty"`
 
-	// http://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_concurrent_streams
+	// https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_concurrent_streams
 	// Sets the maximum number of concurrent HTTP/2 streams in a connection.
 	HTTP2MaxConcurrentStreams int `json:"http2-max-concurrent-streams,omitempty"`
 
@@ -265,52 +263,52 @@ type Configuration struct {
 
 	// Time during which a keep-alive client connection will stay open on the server side.
 	// The zero value disables keep-alive client connections
-	// http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout
+	// https://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout
 	KeepAlive int `json:"keep-alive,omitempty"`
 
 	// Sets the maximum number of requests that can be served through one keep-alive connection.
-	// http://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_requests
+	// https://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_requests
 	KeepAliveRequests int `json:"keep-alive-requests,omitempty"`
 
 	// LargeClientHeaderBuffers Sets the maximum number and size of buffers used for reading
 	// large client request header.
-	// http://nginx.org/en/docs/http/ngx_http_core_module.html#large_client_header_buffers
+	// https://nginx.org/en/docs/http/ngx_http_core_module.html#large_client_header_buffers
 	// Default: 4 8k
 	LargeClientHeaderBuffers string `json:"large-client-header-buffers"`
 
 	// Disable all escaping
-	// http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format
+	// https://nginx.org/en/docs/http/ngx_http_log_module.html#log_format
 	LogFormatEscapeNone bool `json:"log-format-escape-none,omitempty"`
 
 	// Enable json escaping
-	// http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format
+	// https://nginx.org/en/docs/http/ngx_http_log_module.html#log_format
 	LogFormatEscapeJSON bool `json:"log-format-escape-json,omitempty"`
 
 	// Customize upstream log_format
-	// http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format
+	// https://nginx.org/en/docs/http/ngx_http_log_module.html#log_format
 	LogFormatUpstream string `json:"log-format-upstream,omitempty"`
 
 	// Customize stream log_format
-	// http://nginx.org/en/docs/http/ngx_http_log_module.html#log_format
+	// https://nginx.org/en/docs/http/ngx_http_log_module.html#log_format
 	LogFormatStream string `json:"log-format-stream,omitempty"`
 
 	// If disabled, a worker process will accept one new connection at a time.
 	// Otherwise, a worker process will accept all new connections at a time.
-	// http://nginx.org/en/docs/ngx_core_module.html#multi_accept
+	// https://nginx.org/en/docs/ngx_core_module.html#multi_accept
 	// Default: true
 	EnableMultiAccept bool `json:"enable-multi-accept,omitempty"`
 
 	// Maximum number of simultaneous connections that can be opened by each worker process
-	// http://nginx.org/en/docs/ngx_core_module.html#worker_connections
+	// https://nginx.org/en/docs/ngx_core_module.html#worker_connections
 	MaxWorkerConnections int `json:"max-worker-connections,omitempty"`
 
 	// Maximum number of files that can be opened by each worker process.
-	// http://nginx.org/en/docs/ngx_core_module.html#worker_rlimit_nofile
+	// https://nginx.org/en/docs/ngx_core_module.html#worker_rlimit_nofile
 	MaxWorkerOpenFiles int `json:"max-worker-open-files,omitempty"`
 
 	// Sets the bucket size for the map variables hash tables.
 	// Default value depends on the processor’s cache line size.
-	// http://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size
+	// https://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size
 	MapHashBucketSize int `json:"map-hash-bucket-size,omitempty"`
 
 	// NginxStatusIpv4Whitelist has the list of cidr that are allowed to access
@@ -327,76 +325,76 @@ type Configuration struct {
 
 	// Maximum size of the server names hash tables used in server names, map directive’s values,
 	// MIME types, names of request header strings, etcd.
-	// http://nginx.org/en/docs/hash.html
-	// http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_max_size
+	// https://nginx.org/en/docs/hash.html
+	// https://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_max_size
 	ServerNameHashMaxSize int `json:"server-name-hash-max-size,omitempty"`
 
 	// Size of the bucket for the server names hash tables
-	// http://nginx.org/en/docs/hash.html
-	// http://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size
+	// https://nginx.org/en/docs/hash.html
+	// https://nginx.org/en/docs/http/ngx_http_core_module.html#server_names_hash_bucket_size
 	ServerNameHashBucketSize int `json:"server-name-hash-bucket-size,omitempty"`
 
 	// Size of the bucket for the proxy headers hash tables
-	// http://nginx.org/en/docs/hash.html
+	// https://nginx.org/en/docs/hash.html
 	// https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_max_size
 	ProxyHeadersHashMaxSize int `json:"proxy-headers-hash-max-size,omitempty"`
 
 	// Maximum size of the bucket for the proxy headers hash tables
-	// http://nginx.org/en/docs/hash.html
+	// https://nginx.org/en/docs/hash.html
 	// https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_headers_hash_bucket_size
 	ProxyHeadersHashBucketSize int `json:"proxy-headers-hash-bucket-size,omitempty"`
 
 	// Enables or disables emitting nginx version in error messages and in the “Server” response header field.
-	// http://nginx.org/en/docs/http/ngx_http_core_module.html#server_tokens
+	// https://nginx.org/en/docs/http/ngx_http_core_module.html#server_tokens
 	// Default: false
 	ShowServerTokens bool `json:"server-tokens"`
 
 	// Enabled ciphers list to enabled. The ciphers are specified in the format understood by
 	// the OpenSSL library
-	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers
+	// https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ciphers
 	SSLCiphers string `json:"ssl-ciphers,omitempty"`
 
 	// Specifies a curve for ECDHE ciphers.
-	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ecdh_curve
+	// https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_ecdh_curve
 	SSLECDHCurve string `json:"ssl-ecdh-curve,omitempty"`
 
 	// The secret that contains Diffie-Hellman key to help with "Perfect Forward Secrecy"
 	// https://wiki.openssl.org/index.php/Diffie-Hellman_parameters
 	// https://wiki.mozilla.org/Security/Server_Side_TLS#DHE_handshake_and_dhparam
-	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam
+	// https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam
 	SSLDHParam string `json:"ssl-dh-param,omitempty"`
 
 	// SSL enabled protocols to use
-	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols
+	// https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_protocols
 	SSLProtocols string `json:"ssl-protocols,omitempty"`
 
 	// Enables or disable TLS 1.3 early data.
-	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_early_data
+	// https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_early_data
 	SSLEarlyData bool `json:"ssl-early-data,omitempty"`
 
 	// Enables or disables the use of shared SSL cache among worker processes.
-	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_cache
+	// https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_cache
 	SSLSessionCache bool `json:"ssl-session-cache,omitempty"`
 
 	// Size of the SSL shared cache between all worker processes.
-	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_cache
+	// https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_cache
 	SSLSessionCacheSize string `json:"ssl-session-cache-size,omitempty"`
 
 	// Enables or disables session resumption through TLS session tickets.
-	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets
+	// https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets
 	SSLSessionTickets bool `json:"ssl-session-tickets,omitempty"`
 
 	// Sets the secret key used to encrypt and decrypt TLS session tickets.
-	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets
+	// https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets
 	// By default, a randomly generated key is used.
 	// Example: openssl rand 80 | openssl enc -A -base64
 	SSLSessionTicketKey string `json:"ssl-session-ticket-key,omitempty"`
 
 	// Time during which a client may reuse the session parameters stored in a cache.
-	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_timeout
+	// https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_timeout
 	SSLSessionTimeout string `json:"ssl-session-timeout,omitempty"`
 
-	// http://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size
+	// https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_buffer_size
 	// Sets the size of the buffer used for sending data.
 	// 4k helps NGINX to improve TLS Time To First Byte (TTTFB)
 	// https://www.igvita.com/2013/12/16/optimizing-nginx-tls-time-to-first-byte/
@@ -423,7 +421,7 @@ type Configuration struct {
 	EnableAioWrite bool `json:"enable-aio-write,omitempty"`
 
 	// Enables or disables the use of the nginx module that compresses responses using the "gzip" method
-	// http://nginx.org/en/docs/http/ngx_http_gzip_module.html
+	// https://nginx.org/en/docs/http/ngx_http_gzip_module.html
 	UseGzip bool `json:"use-gzip,omitempty"`
 
 	// UseGeoIP2 enables the geoip2 module for NGINX
@@ -448,13 +446,13 @@ type Configuration struct {
 	BrotliTypes string `json:"brotli-types,omitempty"`
 
 	// Enables or disables the HTTP/2 support in secure connections
-	// http://nginx.org/en/docs/http/ngx_http_v2_module.html
+	// https://nginx.org/en/docs/http/ngx_http_v2_module.html
 	// Default: true
 	UseHTTP2 bool `json:"use-http2,omitempty"`
 
 	// Disables gzipping of responses for requests with "User-Agent" header fields matching any of
 	// the specified regular expressions.
-	// http://nginx.org/en/docs/http/ngx_http_gzip_module.html#gzip_disable
+	// https://nginx.org/en/docs/http/ngx_http_gzip_module.html#gzip_disable
 	GzipDisable string `json:"gzip-disable,omitempty"`
 
 	// gzip Compression Level that will be used
@@ -469,33 +467,33 @@ type Configuration struct {
 	GzipTypes string `json:"gzip-types,omitempty"`
 
 	// Defines the number of worker processes. By default auto means number of available CPU cores
-	// http://nginx.org/en/docs/ngx_core_module.html#worker_processes
+	// https://nginx.org/en/docs/ngx_core_module.html#worker_processes
 	WorkerProcesses string `json:"worker-processes,omitempty"`
 
 	// Defines whether multiple concurrent reloads of worker processes should occur.
 	// Set this to false to prevent more than n x 2 workers to exist at any time, to avoid potential OOM situations and high CPU load
 	// With this setting on false, configuration changes in the queue will be re-queued with an exponential backoff, until the number of worker process is the expected value.
 	// By default new worker processes are spawned every time there's a change that cannot be applied dynamically with no upper limit to the number of running workers
-	// http://nginx.org/en/docs/ngx_core_module.html#worker_processes
+	// https://nginx.org/en/docs/ngx_core_module.html#worker_processes
 	WorkerSerialReloads bool `json:"enable-serial-reloads,omitempty"`
 
 	// Defines a timeout for a graceful shutdown of worker processes
-	// http://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout
+	// https://nginx.org/en/docs/ngx_core_module.html#worker_shutdown_timeout
 	WorkerShutdownTimeout string `json:"worker-shutdown-timeout,omitempty"`
 
 	// Sets the bucket size for the variables hash table.
-	// http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_bucket_size
+	// https://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_bucket_size
 	VariablesHashBucketSize int `json:"variables-hash-bucket-size,omitempty"`
 
 	// Sets the maximum size of the variables hash table.
-	// http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size
+	// https://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_max_size
 	VariablesHashMaxSize int `json:"variables-hash-max-size,omitempty"`
 
 	// Activates the cache for connections to upstream servers.
 	// The connections parameter sets the maximum number of idle keepalive connections to
 	// upstream servers that are preserved in the cache of each worker process. When this
 	// number is exceeded, the least recently used connections are closed.
-	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive
+	// https://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive
 	UpstreamKeepaliveConnections int `json:"upstream-keepalive-connections,omitempty"`
 
 	// Sets the maximum time during which requests can be processed through one keepalive connection
@@ -503,46 +501,46 @@ type Configuration struct {
 	UpstreamKeepaliveTime string `json:"upstream-keepalive-time,omitempty"`
 
 	// Sets a timeout during which an idle keepalive connection to an upstream server will stay open.
-	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_timeout
+	// https://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_timeout
 	UpstreamKeepaliveTimeout int `json:"upstream-keepalive-timeout,omitempty"`
 
 	// Sets the maximum number of requests that can be served through one keepalive connection.
 	// After the maximum number of requests is made, the connection is closed.
-	// http://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_requests
+	// https://nginx.org/en/docs/http/ngx_http_upstream_module.html#keepalive_requests
 	UpstreamKeepaliveRequests int `json:"upstream-keepalive-requests,omitempty"`
 
 	// Sets the maximum size of the variables hash table.
-	// http://nginx.org/en/docs/http/ngx_http_map_module.html#variables_hash_max_size
+	// https://nginx.org/en/docs/http/ngx_http_map_module.html#map_hash_max_size
 	LimitConnZoneVariable string `json:"limit-conn-zone-variable,omitempty"`
 
 	// Sets the timeout between two successive read or write operations on client or proxied server connections.
 	// If no data is transmitted within this time, the connection is closed.
-	// http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_timeout
+	// https://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_timeout
 	ProxyStreamTimeout string `json:"proxy-stream-timeout,omitempty"`
 
 	// When a connection to the proxied server cannot be established, determines whether
 	// a client connection will be passed to the next server.
-	// http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream
+	// https://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream
 	ProxyStreamNextUpstream bool `json:"proxy-stream-next-upstream,omitempty"`
 
 	// Limits the time allowed to pass a connection to the next server.
 	// The 0 value turns off this limitation.
-	// http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream_timeout
+	// https://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream_timeout
 	ProxyStreamNextUpstreamTimeout string `json:"proxy-stream-next-upstream-timeout,omitempty"`
 
 	// Limits the number of possible tries a request should be passed to the next server.
 	// The 0 value turns off this limitation.
-	// http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream_tries
+	// https://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_next_upstream_tries
 	ProxyStreamNextUpstreamTries int `json:"proxy-stream-next-upstream-tries,omitempty"`
 
 	// Sets the number of datagrams expected from the proxied server in response
 	// to the client request if the UDP protocol is used.
-	// http://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_responses
+	// https://nginx.org/en/docs/stream/ngx_stream_proxy_module.html#proxy_responses
 	// Default: 1
 	ProxyStreamResponses int `json:"proxy-stream-responses,omitempty"`
 
 	// Modifies the HTTP version the proxy uses to interact with the backend.
-	// http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_http_version
+	// https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_http_version
 	ProxyHTTPVersion string `json:"proxy-http-version"`
 
 	// Disables NGINX proxy-intercept-errors when error_page/custom-http-errors are set
@@ -569,6 +567,16 @@ type Configuration struct {
 	// Default is X-Forwarded-For
 	ForwardedForHeader string `json:"forwarded-for-header,omitempty"`
 
+	// Sets the name of the intermediate header used to determine the client's originating IP
+	// when both use-proxy-protocol and use-forwarded-headers are enabled. This doesn't impact
+	// functionality and should not typically be modified.
+	// Default is X-Forwarded-For-Proxy-Protocol
+	ForwardedForProxyProtocolHeader string `json:"forwarded-for-proxy-protocol-header,omitempty"`
+
+	// Sets the header field for identifying the originating Host header of a client
+	// Default is X-Forwarded-Host
+	ForwardedHostHeader string `json:"forwarded-host-header,omitempty"`
+
 	// Append the remote address to the X-Forwarded-For header instead of replacing it
 	// Default: false
 	ComputeFullForwardedFor bool `json:"compute-full-forwarded-for,omitempty"`
@@ -578,7 +586,7 @@ type Configuration struct {
 	GenerateRequestID bool `json:"generate-request-id,omitempty"`
 
 	// Adds an X-Original-Uri header with the original request URI to the backend request
-	// Default: true
+	// Default: false
 	ProxyAddOriginalURIHeader bool `json:"proxy-add-original-uri-header"`
 
 	// EnableOpentelemetry enables the nginx Opentelemetry extension
@@ -586,7 +594,7 @@ type Configuration struct {
 	EnableOpentelemetry bool `json:"enable-opentelemetry"`
 
 	// OpentelemetryConfig sets the opentelemetry config file
-	// Default: /etc/nginx/opentelemetry.toml
+	// Default: /etc/ingress-controller/telemetry/opentelemetry.toml
 	OpentelemetryConfig string `json:"opentelemetry-config"`
 
 	// OpentelemetryOperationName specifies a custom name for the server span
@@ -664,12 +672,12 @@ type Configuration struct {
 	HideHeaders []string `json:"hide-headers"`
 
 	// LimitReqStatusCode Sets the status code to return in response to rejected requests.
-	// http://nginx.org/en/docs/http/ngx_http_limit_req_module.html#limit_req_status
+	// https://nginx.org/en/docs/http/ngx_http_limit_req_module.html#limit_req_status
 	// Default: 503
 	LimitReqStatusCode int `json:"limit-req-status-code"`
 
 	// LimitConnStatusCode Sets the status code to return in response to rejected connections.
-	// http://nginx.org/en/docs/http/ngx_http_limit_conn_module.html#limit_conn_status
+	// https://nginx.org/en/docs/http/ngx_http_limit_conn_module.html#limit_conn_status
 	// Default: 503
 	LimitConnStatusCode int `json:"limit-conn-status-code"`
 
@@ -718,12 +726,12 @@ type Configuration struct {
 	ProxySSLLocationOnly bool `json:"proxy-ssl-location-only"`
 
 	// DefaultType Sets the default MIME type of a response.
-	// http://nginx.org/en/docs/http/ngx_http_core_module.html#default_type
+	// https://nginx.org/en/docs/http/ngx_http_core_module.html#default_type
 	// Default: text/html
 	DefaultType string `json:"default-type"`
 
 	// DebugConnections Enables debugging log for selected client connections
-	// http://nginx.org/en/docs/ngx_core_module.html#debug_connection
+	// https://nginx.org/en/docs/ngx_core_module.html#debug_connection
 	// Default: ""
 	DebugConnections []string `json:"debug-connections"`
 
@@ -780,6 +788,8 @@ func NewDefault() Configuration {
 		UseForwardedHeaders:              false,
 		EnableRealIP:                     false,
 		ForwardedForHeader:               "X-Forwarded-For",
+		ForwardedForProxyProtocolHeader:  "X-Forwarded-For-Proxy-Protocol",
+		ForwardedHostHeader:              "X-Forwarded-Host",
 		ComputeFullForwardedFor:          false,
 		ProxyAddOriginalURIHeader:        false,
 		GenerateRequestID:                true,
@@ -850,7 +860,7 @@ func NewDefault() Configuration {
 			ProxySendTimeout:            60,
 			ProxyBuffersNumber:          4,
 			ProxyBufferSize:             "4k",
-			ProxyBusyBuffersSize:        "8k",
+			ProxyBusyBuffersSize:        "",
 			ProxyCookieDomain:           "off",
 			ProxyCookiePath:             "off",
 			ProxyNextUpstream:           "error timeout",

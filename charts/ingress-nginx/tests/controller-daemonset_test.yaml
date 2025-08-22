@@ -199,3 +199,12 @@ tests:
       - equal:
           path: spec.template.spec.automountServiceAccountToken
           value: false
+
+  - it: should create a DaemonSet with a custom runtime if `controller.runtimeClassName` is set
+    set:
+      controller.kind: DaemonSet
+      controller.runtimeClassName: myClass
+    asserts:
+      - equal:
+          path: spec.template.spec.runtimeClassName
+          value: myClass

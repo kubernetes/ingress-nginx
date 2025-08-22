@@ -47,7 +47,7 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         id: filter
@@ -81,7 +81,7 @@ jobs:
       (needs.changes.outputs.lua == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       
       - name: Lint Lua
         uses: lunarmodules/luacheck@v1
@@ -95,14 +95,14 @@ jobs:
       (needs.changes.outputs.go == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Get go version
         run: echo "GOLANG_VERSION=$(cat GOLANG_VERSION)" >> $GITHUB_ENV
 
       - name: Set up Go
         id: go
-        uses: actions/setup-go@3041bf56c941b39c61721a86cd11f3bb1338122a # v5.2.0
+        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
         with:
           go-version: ${{ env.GOLANG_VERSION }}
           check-latest: true
@@ -119,12 +119,12 @@ jobs:
       (needs.changes.outputs.go == 'true') || (needs.changes.outputs.docs == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - name: Get go version
         run: echo "GOLANG_VERSION=$(cat GOLANG_VERSION)" >> $GITHUB_ENV
       - name: Set up Go
         id: go
-        uses: actions/setup-go@3041bf56c941b39c61721a86cd11f3bb1338122a # v5.2.0
+        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
         with:
           go-version: ${{ env.GOLANG_VERSION }}
           check-latest: true
@@ -144,7 +144,7 @@ jobs:
         PLATFORMS: linux/amd64
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Get go version
         id: golangversion
@@ -153,17 +153,17 @@ jobs:
 
       - name: Set up Go
         id: go
-        uses: actions/setup-go@3041bf56c941b39c61721a86cd11f3bb1338122a # v5.2.0
+        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
         with:
           go-version: ${{ steps.golangversion.outputs.version }}
           check-latest: true
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf # v3.2.0
+        uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3.6.0
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@6524bf65af31da8d45b59e8c27de4bd072b392f5 # v3.8.0
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
         with:
           version: latest
 
@@ -172,7 +172,7 @@ jobs:
 
       - name: Prepare Host
         run: |
-          curl -LO https://dl.k8s.io/release/v1.27.3/bin/linux/amd64/kubectl
+          curl -LO https://dl.k8s.io/release/v1.33.4/bin/linux/amd64/kubectl
           chmod +x ./kubectl
           sudo mv ./kubectl /usr/local/bin/kubectl
 
@@ -202,7 +202,7 @@ jobs:
             | gzip > docker.tar.gz
 
       - name: cache
-        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: docker.tar.gz
           path: docker.tar.gz
@@ -218,20 +218,20 @@ jobs:
 
     steps:
       - name: Set up Python
-        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: 3.x
 
       - name: Set up Helm
-        uses: azure/setup-helm@fe7b79cd5ee1e45176fcad797de68ecaf3ca4814 # v4.2.0
+        uses: azure/setup-helm@b9e51907a09c216f16ebe8536097933489208112 # v4.3.0
 
       - name: Set up Helm Chart Testing
-        uses: helm/chart-testing-action@e6669bcd63d7cb57cb4380c33043eebe5d111992 # v2.6.1
+        uses: helm/chart-testing-action@0d28d3144d3a25ea2cc349d6e59901c4ff469b3b # v2.7.0
 
       - name: Set up Artifact Hub
         run: |
-          curl --fail --location https://github.com/artifacthub/hub/releases/download/v1.19.0/ah_1.19.0_linux_amd64.tar.gz --output /tmp/ah.tar.gz
-          echo "0e430493521ce387ca04d79b26646a86f92886dbcceb44985bb71082a9530ca5  /tmp/ah.tar.gz" | shasum --check
+          curl --fail --location https://github.com/artifacthub/hub/releases/download/v1.20.0/ah_1.20.0_linux_amd64.tar.gz --output /tmp/ah.tar.gz
+          echo "9027626f19ff9f3ac668f222917130ac885e289e922e1428bfd2e7f066324e31  /tmp/ah.tar.gz" | shasum --check
           sudo tar --extract --file /tmp/ah.tar.gz --directory /usr/local/bin ah
 
       - name: Set up Helm Docs
@@ -241,7 +241,7 @@ jobs:
         run: helm plugin install https://github.com/helm-unittest/helm-unittest
 
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
 
@@ -269,15 +269,16 @@ jobs:
     if: fromJSON(needs.changes.outputs.charts) || fromJSON(needs.changes.outputs.baseimage) || fromJSON(github.event.workflow_dispatch.run_e2e)
 
     strategy:
+      fail-fast: false
       matrix:
-        k8s: [v1.28.15, v1.29.12, v1.30.8, v1.31.4, v1.32.0]
+        k8s: [v1.29.14, v1.30.13, v1.31.9, v1.32.5, v1.33.2]
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Download cache
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           name: docker.tar.gz
 
@@ -300,8 +301,9 @@ jobs:
     if: |
       (needs.changes.outputs.go == 'true') || (needs.changes.outputs.baseimage == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
     strategy:
+      fail-fast: false
       matrix:
-        k8s: [v1.28.15, v1.29.12, v1.30.8, v1.31.4, v1.32.0]
+        k8s: [v1.29.14, v1.30.13, v1.31.9, v1.32.5, v1.33.2]
     uses: ./.github/workflows/zz-tmpl-k8s-e2e.yaml
     with:
       k8s-version: ${{ matrix.k8s }}
@@ -314,8 +316,9 @@ jobs:
     if: |
       (needs.changes.outputs.go == 'true') || (needs.changes.outputs.baseimage == 'true') || ${{ github.event.workflow_dispatch.run_e2e == 'true' }}
     strategy:
+      fail-fast: false
       matrix:
-        k8s: [v1.28.15, v1.29.12, v1.30.8, v1.31.4, v1.32.0]
+        k8s: [v1.29.14, v1.30.13, v1.31.9, v1.32.5, v1.33.2]
     uses: ./.github/workflows/zz-tmpl-k8s-e2e.yaml
     with:
       k8s-version: ${{ matrix.k8s }}

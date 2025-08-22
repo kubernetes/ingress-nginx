@@ -1,6 +1,7 @@
 # Monitoring
 
 Two different methods to install and configure Prometheus and Grafana are described in this doc.
+
 * Prometheus and Grafana installation using Pod Annotations. This installs Prometheus and Grafana in the same namespace as NGINX Ingress
 * Prometheus and Grafana installation using Service Monitors. This installs Prometheus and Grafana in two different namespaces. This is the preferred method, and helm charts supports this by default.
 
@@ -15,7 +16,7 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
 
 - The Ingress-Nginx Controller should already be deployed according to the deployment instructions [here](../deploy/index.md).
 
-- The controller should be configured for exporting metrics. This requires 3 configurations to the controller. These configurations are :
+- The controller should be configured for exporting metrics. This requires 3 configurations to the controller. These configurations are:
   1. controller.metrics.enabled=true
   2. controller.podAnnotations."prometheus.io/scrape"="true"
   3. controller.podAnnotations."prometheus.io/port"="10254"
@@ -72,6 +73,9 @@ This tutorial will show you how to install [Prometheus](https://prometheus.io/) 
              spec:
                containers:
                  - name: controller
+                   args:
+                     ..
+                     - '--enable-metrics=true'
                    ports:
                      - name: prometheus
                        containerPort: 10254

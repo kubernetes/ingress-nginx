@@ -17,9 +17,9 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
-{{- if .Capabilities.APIVersions.Has "batch/v1alpha1" }}
-  # Alpha feature since k8s 1.12
   ttlSecondsAfterFinished: 0
+{{- if gt (int .Values.controller.admissionWebhooks.patchWebhookJob.activeDeadlineSeconds) 0 }}
+  activeDeadlineSeconds: {{ .Values.controller.admissionWebhooks.patchWebhookJob.activeDeadlineSeconds }}
 {{- end }}
   template:
     metadata:
@@ -36,6 +36,9 @@ spec:
     spec:
     {{- if .Values.controller.admissionWebhooks.patch.priorityClassName }}
       priorityClassName: {{ .Values.controller.admissionWebhooks.patch.priorityClassName }}
+    {{- end }}
+    {{- if .Values.controller.admissionWebhooks.patch.runtimeClassName }}
+      runtimeClassName: {{ .Values.controller.admissionWebhooks.patch.runtimeClassName | quote }}
     {{- end }}
     {{- if .Values.imagePullSecrets }}
       imagePullSecrets: {{ toYaml .Values.imagePullSecrets | nindent 8 }}

@@ -45,8 +45,16 @@ var (
 									Path:     "/xpto/ab0/x_ss-9",
 								},
 								{
+									PathType: &prefix,
+									Path:     "/.well-known/acme-challenge/",
+								},
+								{
 									PathType: &exact,
 									Path:     "/bla/",
+								},
+								{
+									PathType: &exact,
+									Path:     "/.well-known/acme-challenge/",
 								},
 							},
 						},
@@ -100,6 +108,17 @@ var (
 								{
 									PathType: &prefix,
 									Path:     "/lala/xp\ntest",
+								},
+								{
+									PathType: &prefix,
+									Path:     "/$lala/test",
+								},
+								{
+									PathType: &prefix,
+									Path:     "#lala/test",
+								},
+								{
+									Path: "notvalidpathname-panics",
 								},
 							},
 						},
@@ -174,6 +193,9 @@ func TestValidatePathType(t *testing.T) {
 				aErr("xpto/lala", "Exact"),
 				aErr("/foo/bar/[a-z]{3}", "Prefix"),
 				aErr("/lala/xp\ntest", "Prefix"),
+				aErr("/$lala/test", "Prefix"),
+				aErr("#lala/test", "Prefix"),
+				aErr("notvalidpathname-panics", "<nil>"),
 			),
 		},
 	}

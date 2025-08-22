@@ -156,6 +156,13 @@ func getIngressPodZone(svc *apiv1.Service) string {
 			}
 		}
 	}
+	if svc.Spec.TrafficDistribution != nil && *svc.Spec.TrafficDistribution == apiv1.ServiceTrafficDistributionPreferClose {
+		if foundZone, ok := k8s.IngressNodeDetails.GetLabels()[apiv1.LabelTopologyZone]; ok {
+			klog.V(3).Infof("Svc has traffic distribution enabled, try to use zone %q where controller pod is running for Service %q ", foundZone, svcKey)
+			return foundZone
+		}
+	}
+
 	return emptyZone
 }
 
@@ -420,11 +427,15 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 		return err
 	}
 
+	/* Deactivated to mitigate CVE-2025-1974
+	// TODO: Implement sandboxing so this test can be done safely
 	err = n.testTemplate(content)
 	if err != nil {
 		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
 		return err
 	}
+	*/
+
 	n.metricCollector.IncCheckCount(ing.ObjectMeta.Namespace, ing.Name)
 	endCheck := time.Now().UnixNano() / 1000000
 	n.metricCollector.SetAdmissionMetrics(

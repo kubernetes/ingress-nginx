@@ -13,7 +13,7 @@ installations besides docker
 
 ## Where are the Lua Tests?
 
-Lua Tests can be found in the [rootfs/etc/nginx/lua/test](../rootfs/etc/nginx/lua/test) directory
+Lua Tests can be found in the [rootfs/etc/nginx/lua/test](https://github.com/kubernetes/ingress-nginx/tree/main/rootfs/etc/nginx/lua/test) directory
 
 
 [1]: https://openresty.org/en/installation.html

@@ -314,6 +314,7 @@ var funcMap = text_template.FuncMap{
 	},
 	"isValidByteSize":                    isValidByteSize,
 	"buildForwardedFor":                  buildForwardedFor,
+	"buildForwardedHost":                 buildForwardedHost,
 	"buildAuthSignURL":                   buildAuthSignURL,
 	"buildAuthSignURLLocation":           buildAuthSignURLLocation,
 	"buildOpentelemetry":                 buildOpentelemetry,
@@ -618,8 +619,9 @@ func buildAuthProxySetHeaders(headers map[string]string) []string {
 	}
 
 	for name, value := range headers {
-		res = append(res, fmt.Sprintf("proxy_set_header '%v' '%v';", name, value))
+		res = append(res, fmt.Sprintf("proxy_set_header %q %q;", name, value))
 	}
+
 	sort.Strings(res)
 	return res
 }
@@ -992,7 +994,7 @@ func buildNextUpstream(i, r interface{}) string {
 	return strings.Join(nextUpstreamCodes, " ")
 }
 
-// refer to http://nginx.org/en/docs/syntax.html
+// refer to https://nginx.org/en/docs/syntax.html
 // Nginx differentiates between size and offset
 // offset directives support gigabytes in addition
 var (
@@ -1001,7 +1003,7 @@ var (
 )
 
 // isValidByteSize validates size units valid in nginx
-// http://nginx.org/en/docs/syntax.html
+// https://nginx.org/en/docs/syntax.html
 func isValidByteSize(input interface{}, isOffset bool) bool {
 	s, ok := input.(string)
 	if !ok {
@@ -1151,6 +1153,18 @@ func buildForwardedFor(input interface{}) string {
 	ffh := strings.ReplaceAll(s, "-", "_")
 	ffh = strings.ToLower(ffh)
 	return fmt.Sprintf("$http_%v", ffh)
+}
+
+func buildForwardedHost(input interface{}) string {
+	s, ok := input.(string)
+	if !ok {
+		klog.Errorf("expected a 'string' type but %T was returned", input)
+		return ""
+	}
+
+	fhh := strings.ReplaceAll(s, "-", "_")
+	fhh = strings.ToLower(fhh)
+	return fmt.Sprintf("$http_%v", fhh)
 }
 
 func buildAuthSignURL(authSignURL, authRedirectParam string) string {
@@ -1622,11 +1636,11 @@ func buildMirrorLocations(locs []*ingress.Location) string {
 		mapped.Insert(loc.Mirror.Source)
 		buffer.WriteString(fmt.Sprintf(`location = %v {
 internal;
-proxy_set_header Host "%v";
-proxy_pass "%v";
+proxy_set_header Host %v;
+proxy_pass %v;
 }
 
-`, loc.Mirror.Source, loc.Mirror.Host, loc.Mirror.Target))
+`, strconv.Quote(loc.Mirror.Source), strconv.Quote(loc.Mirror.Host), strconv.Quote(loc.Mirror.Target)))
 	}
 
 	return buffer.String()

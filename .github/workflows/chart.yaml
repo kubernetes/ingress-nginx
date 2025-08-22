@@ -23,20 +23,20 @@ jobs:
 
     steps:
       - name: Set up Python
-        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: 3.x
 
       - name: Set up Helm
-        uses: azure/setup-helm@fe7b79cd5ee1e45176fcad797de68ecaf3ca4814 # v4.2.0
+        uses: azure/setup-helm@b9e51907a09c216f16ebe8536097933489208112 # v4.3.0
 
       - name: Set up Helm Chart Testing
-        uses: helm/chart-testing-action@e6669bcd63d7cb57cb4380c33043eebe5d111992 # v2.6.1
+        uses: helm/chart-testing-action@0d28d3144d3a25ea2cc349d6e59901c4ff469b3b # v2.7.0
 
       - name: Set up Artifact Hub
         run: |
-          curl --fail --location https://github.com/artifacthub/hub/releases/download/v1.19.0/ah_1.19.0_linux_amd64.tar.gz --output /tmp/ah.tar.gz
-          echo "0e430493521ce387ca04d79b26646a86f92886dbcceb44985bb71082a9530ca5  /tmp/ah.tar.gz" | shasum --check
+          curl --fail --location https://github.com/artifacthub/hub/releases/download/v1.20.0/ah_1.20.0_linux_amd64.tar.gz --output /tmp/ah.tar.gz
+          echo "9027626f19ff9f3ac668f222917130ac885e289e922e1428bfd2e7f066324e31  /tmp/ah.tar.gz" | shasum --check
           sudo tar --extract --file /tmp/ah.tar.gz --directory /usr/local/bin ah
 
       - name: Set up Git
@@ -45,7 +45,7 @@ jobs:
           git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
 
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
 
@@ -55,7 +55,7 @@ jobs:
           ah lint --path charts/ingress-nginx
 
       - name: Release chart
-        uses: helm/chart-releaser-action@a917fd15b20e8b64b94d9158ad54cd6345335584 # v1.6.0
+        uses: helm/chart-releaser-action@cae68fefc6b5f367a0275617c9f83181ba54714f # v1.7.0
         env:
           CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CR_RELEASE_NAME_TEMPLATE: helm-chart-{{ .Version }}

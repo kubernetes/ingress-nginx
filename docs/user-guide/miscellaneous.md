@@ -4,11 +4,25 @@
 
 By default NGINX uses the content of the header `X-Forwarded-For` as the source of truth to get information about the client IP address. This works without issues in L7 **if we configure the setting `proxy-real-ip-cidr`** with the correct information of the IP/network address of trusted external load balancer.
 
+This setting can be enabled/disabled by setting [`use-forwarded-headers`](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#use-forwarded-headers).
+
 If the ingress controller is running in AWS we need to use the VPC IPv4 CIDR.
 
-Another option is to enable proxy protocol using `use-proxy-protocol: "true"`.
+Another option is to enable the **PROXY protocol** using [`use-proxy-protocol: "true"`](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#use-proxy-protocol).
 
-In this mode NGINX does not use the content of the header to get the source IP address of the connection.
+In this mode, NGINX uses the PROXY protocol TCP header to retrieve the source IP address of the connection.
+
+This works in most cases, but if you have a Layer 7 proxy (e.g., Cloudflare) in front of a TCP load balancer, it may not work correctly. The HTTP proxy IP address might appear as the client IP address. In this case, you should also enable the `use-forwarded-headers` setting in addition to enabling `use-proxy-protocol`, and properly configure `proxy-real-ip-cidr` to trust all intermediate proxies (both within the private network and any external proxies).
+
+Example configmap for setups with multiple proxies:
+
+```yaml
+use-proxy-protocol: "true"
+use-forwarded-headers: "true"
+proxy-real-ip-cidr: "10.0.0.0/8,131.0.72.0/22,172.64.0.0/13,104.24.0.0/14,104.16.0.0/13,162.158.0.0/15,198.41.128.0/17"
+```
+
+**Note:** Be sure to use real CIDRs that match your exact environment.
 
 ## Path types
 

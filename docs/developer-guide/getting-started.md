@@ -15,13 +15,19 @@ http request, termination of connection, reverseproxy etc. etc., you can skip th
 Install [Go 1.14](https://golang.org/dl/) or later.
 
 !!! note
-    The project uses [Go Modules](https://github.com/golang/go/wiki/Modules)
+    The project uses [Go Modules](https://go.dev/wiki/Modules#modules)
 
 Install [Docker](https://docs.docker.com/engine/install/) (v19.03.0 or later with experimental feature on)
 
 Install [kubectl](https://kubernetes.io/docs/tasks/tools/) (1.24.0 or higher)
 
 Install [Kind](https://kind.sigs.k8s.io/)
+
+Install [Helm](https://helm.sh/)
+
+Install jq
+
+Install make
 
 !!! important
     The majority of make tasks run as docker containers
@@ -81,6 +87,12 @@ FOCUS="no-auth-locations" make kind-e2e-test
 Valid values are defined in the describe definition of the e2e tests like [Default Backend](https://github.com/kubernetes/ingress-nginx/blob/main/test/e2e/defaultbackend/default_backend.go#L29)
 
 The complete list of tests can be found [here](../e2e-tests.md)
+
+**Run Helm unit tests**
+
+```console
+make helm-test
+```
 
 ### Custom docker image
 

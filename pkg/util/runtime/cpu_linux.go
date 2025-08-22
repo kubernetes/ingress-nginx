@@ -27,7 +27,7 @@ import (
 	"strconv"
 	"strings"
 
-	libcontainercgroups "github.com/opencontainers/runc/libcontainer/cgroups"
+	libcontainercgroups "github.com/opencontainers/cgroups"
 )
 
 // NumCPU returns the number of logical CPUs usable by the current process.

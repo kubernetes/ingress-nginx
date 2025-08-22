@@ -116,6 +116,12 @@ var validHTTPMethods = []string{
 // the ingress watch namespace and class used by the controller
 func NewSocketCollector(pod, namespace, class string, metricsPerHost, metricsPerUndefinedHost, reportStatusClasses bool, buckets HistogramBuckets, bucketFactor float64, maxBuckets uint32, excludeMetrics []string) (*SocketCollector, error) {
 	socket := "/tmp/nginx/prometheus-nginx.socket"
+
+	// Ensure the directory exists
+	if err := os.MkdirAll("/tmp/nginx", 0o755); err != nil {
+		return nil, fmt.Errorf("failed to create socket directory: %w", err)
+	}
+
 	// unix sockets must be unlink()ed before being used
 	//nolint:errcheck // Ignore unlink error
 	_ = syscall.Unlink(socket)
@@ -125,7 +131,7 @@ func NewSocketCollector(pod, namespace, class string, metricsPerHost, metricsPer
 		return nil, err
 	}
 
-	err = os.Chmod(socket, 0o777) // #nosec
+	err = os.Chmod(socket, 0o660) // Read/write for owner and group only - more secure than 0o777
 	if err != nil {
 		return nil, err
 	}

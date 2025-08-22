@@ -18,91 +18,94 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.25.5
+export NGINX_VERSION=1.27.1
 
 # Check for recent changes: https://github.com/vision5/ngx_devel_kit/compare/v0.3.3...master
 export NDK_VERSION=v0.3.3
 
 # Check for recent changes: https://github.com/openresty/set-misc-nginx-module/compare/v0.33...master
-export SETMISC_VERSION=796f5a3e518748eb29a93bd450324e0ad45b704e
+export SETMISC_VERSION=v0.33
 
 # Check for recent changes: https://github.com/openresty/headers-more-nginx-module/compare/v0.37...master
 export MORE_HEADERS_VERSION=v0.37
 
-# Check for recent changes: https://github.com/atomx/nginx-http-auth-digest/compare/v1.0.0...atomx:master
+# Check for recent changes: https://github.com/atomx/nginx-http-auth-digest/compare/v1.0.0...master
 export NGINX_DIGEST_AUTH=v1.0.0
 
-# Check for recent changes: https://github.com/SpiderLabs/ModSecurity-nginx/compare/v1.0.3...master
-export MODSECURITY_VERSION=v1.0.3
+# Check for recent changes: https://github.com/SpiderLabs/ModSecurity-nginx/compare/v1.0.4...master
+export MODSECURITY_VERSION=v1.0.4
 
-# Check for recent changes: https://github.com/SpiderLabs/ModSecurity/compare/v3.0.8...v3/master
-export MODSECURITY_LIB_VERSION=v3.0.12
+# Check for recent changes: https://github.com/SpiderLabs/ModSecurity/compare/v3.0.14...v3/master
+export MODSECURITY_LIB_VERSION=v3.0.14
 
-# Check for recent changes: https://github.com/coreruleset/coreruleset/compare/v3.3.5...v4.0/main
-export OWASP_MODSECURITY_CRS_VERSION=v4.4.0
+# Check for recent changes: https://github.com/coreruleset/coreruleset/compare/v4.15.0...main
+export OWASP_MODSECURITY_CRS_VERSION=v4.15.0
 
-# Check for recent changes: https://github.com/openresty/lua-nginx-module/compare/v0.10.26``...master
-export LUA_NGX_VERSION=v0.10.26
+# Check for recent changes: https://github.com/openresty/lua-nginx-module/compare/v0.10.28...master
+export LUA_NGX_VERSION=v0.10.28
 
-# Check for recent changes: https://github.com/openresty/stream-lua-nginx-module/compare/bea8a0c0de94cede71554f53818ac0267d675d63...master
-export LUA_STREAM_NGX_VERSION=bea8a0c0de94cede71554f53818ac0267d675d63
+# Check for recent changes: https://github.com/openresty/stream-lua-nginx-module/compare/v0.0.16...master
+export LUA_STREAM_NGX_VERSION=v0.0.16
 
-# Check for recent changes: https://github.com/openresty/lua-upstream-nginx-module/compare/8aa93ead98ba2060d4efd594ae33a35d153589bf...master
-export LUA_UPSTREAM_VERSION=542be0893543a4e42d89f6dd85372972f5ff2a36
+# Check for recent changes: https://github.com/openresty/lua-upstream-nginx-module/compare/v0.07...master
+export LUA_UPSTREAM_VERSION=v0.07
 
-# Check for recent changes: https://github.com/openresty/lua-cjson/compare/2.1.0.13...openresty:master
-export LUA_CJSON_VERSION=2.1.0.13
+# Check for recent changes: https://github.com/openresty/lua-cjson/compare/2.1.0.14...master
+export LUA_CJSON_VERSION=2.1.0.14
 
-# Check for recent changes: https://github.com/leev/ngx_http_geoip2_module/compare/a607a41a8115fecfc05b5c283c81532a3d605425...master
-export GEOIP2_VERSION=a607a41a8115fecfc05b5c283c81532a3d605425
+# Check for recent changes: https://github.com/leev/ngx_http_geoip2_module/compare/445df24ef3781e488cee3dfe8a1e111997fc1dfe...master
+export GEOIP2_VERSION=445df24ef3781e488cee3dfe8a1e111997fc1dfe
 
-# Check for recent changes: https://github.com/openresty/luajit2/compare/v2.1-20240314...v2.1-agentzh
-export LUAJIT_VERSION=v2.1-20240314
+# Check for recent changes: https://github.com/openresty/luajit2/compare/v2.1-20250117...v2.1-agentzh
+export LUAJIT_VERSION=v2.1-20250117
 
-# Check for recent changes: https://github.com/openresty/lua-resty-balancer/compare/1cd4363c0a239afe4765ec607dcfbbb4e5900eea...master
-export LUA_RESTY_BALANCER=1cd4363c0a239afe4765ec607dcfbbb4e5900eea
+# Check for recent changes: https://github.com/openresty/lua-resty-balancer/compare/v0.05...master
+export LUA_RESTY_BALANCER=v0.05
 
-# Check for recent changes: https://github.com/openresty/lua-resty-lrucache/compare/99e7578465b40f36f596d099b82eab404f2b42ed...master
-export LUA_RESTY_CACHE=99e7578465b40f36f596d099b82eab404f2b42ed
+# Check for recent changes: https://github.com/openresty/lua-resty-lrucache/compare/v0.15...master
+export LUA_RESTY_CACHE=v0.15
 
-# Check for recent changes: https://github.com/openresty/lua-resty-core/compare/v0.1.27...master
-export LUA_RESTY_CORE=v0.1.28
+# Check for recent changes: https://github.com/openresty/lua-resty-core/compare/v0.1.31...master
+export LUA_RESTY_CORE=v0.1.31
 
 # Check for recent changes: https://github.com/cloudflare/lua-resty-cookie/compare/f418d77082eaef48331302e84330488fdc810ef4...master
 export LUA_RESTY_COOKIE_VERSION=f418d77082eaef48331302e84330488fdc810ef4
 
-# Check for recent changes: https://github.com/openresty/lua-resty-dns/compare/8bb53516e2933e61c317db740a9b7c2048847c2f...master
-export LUA_RESTY_DNS=8bb53516e2933e61c317db740a9b7c2048847c2f
+# Check for recent changes: https://github.com/openresty/lua-resty-dns/compare/v0.23...master
+export LUA_RESTY_DNS=v0.23
 
-# Check for recent changes: https://github.com/ledgetech/lua-resty-http/compare/v0.17.1...master
-export LUA_RESTY_HTTP=v0.17.1
+# Check for recent changes: https://github.com/ledgetech/lua-resty-http/compare/v0.17.2...master
+export LUA_RESTY_HTTP=v0.17.2
 
 # Check for recent changes: https://github.com/openresty/lua-resty-lock/compare/v0.09...master
-export LUA_RESTY_LOCK=405d0bf4cbfa74d742c6ed3158d442221e6212a9
+export LUA_RESTY_LOCK=v0.09
 
 # Check for recent changes: https://github.com/openresty/lua-resty-upload/compare/v0.11...master
-export LUA_RESTY_UPLOAD_VERSION=979372cce011f3176af3c9aff53fd0e992c4bfd3
+export LUA_RESTY_UPLOAD_VERSION=v0.11
 
-# Check for recent changes: https://github.com/openresty/lua-resty-string/compare/v0.15...master
-export LUA_RESTY_STRING_VERSION=6f1bc21d86daef804df3cc34d6427ef68da26844
+# Check for recent changes: https://github.com/openresty/lua-resty-string/compare/v0.16...master
+export LUA_RESTY_STRING_VERSION=v0.16
 
 # Check for recent changes: https://github.com/openresty/lua-resty-memcached/compare/v0.17...master
-export LUA_RESTY_MEMCACHED_VERSION=2f02b68bf65fa2332cce070674a93a69a6c7239b
+export LUA_RESTY_MEMCACHED_VERSION=v0.17
 
-# Check for recent changes: https://github.com/openresty/lua-resty-redis/compare/v0.30...master
-export LUA_RESTY_REDIS_VERSION=8641b9f1b6f75cca50c90cf8ca5c502ad8950aa8
+# Check for recent changes: https://github.com/openresty/lua-resty-redis/compare/v0.31...master
+export LUA_RESTY_REDIS_VERSION=v0.31
 
-# Check for recent changes: https://github.com/api7/lua-resty-ipmatcher/compare/v0.6.1...master
+# Check for recent changes: https://github.com/api7/lua-resty-ipmatcher/compare/3e93c53eb8c9884efe939ef070486a0e507cc5be...master
 export LUA_RESTY_IPMATCHER_VERSION=3e93c53eb8c9884efe939ef070486a0e507cc5be
 
-# Check for recent changes: https://github.com/microsoft/mimalloc/compare/v2.1.7...master
-export MIMALOC_VERSION=v2.1.7
+# Check for recent changes: https://github.com/microsoft/mimalloc/compare/v2.2.4...main
+export MIMALOC_VERSION=v2.2.4
 
 # Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp/compare/v1.18.0...main
-export OPENTELEMETRY_CPP_VERSION="v1.18.0"
+export OPENTELEMETRY_CPP_VERSION=v1.18.0
 
 # Check for recent changes: https://github.com/open-telemetry/opentelemetry-proto/compare/v1.5.0...main
-export OPENTELEMETRY_PROTO_VERSION="v1.5.0"
+export OPENTELEMETRY_PROTO_VERSION=v1.5.0
+
+# Check for recent changes: https://github.com/nginx/njs/compare/0.9.0...master
+export NJS_VERSION=0.9.0
 
 export BUILD_PATH=/tmp/build
 
@@ -179,10 +182,6 @@ apk add \
   protobuf-dev
 
 # apk add -X http://dl-cdn.alpinelinux.org/alpine/edge/testing opentelemetry-cpp-dev
-
-# There is some bug with some platforms and git, so force HTTP/1.1
-git config --global http.version HTTP/1.1
-git config --global http.postBuffer 157286400
 
 mkdir -p /etc/nginx
 
@@ -271,6 +270,9 @@ get_src efb767487ea3f6031577b9b224467ddbda2ad51a41c5867a47582d4ad85d609e \
 get_src d74f86ada2329016068bc5a243268f1f555edd620b6a7d6ce89295e7d6cf18da \
         "https://github.com/microsoft/mimalloc/archive/${MIMALOC_VERSION}.tar.gz" "mimalloc"
 
+get_src abc123 \
+        "https://github.com/nginx/njs/archive/${NJS_VERSION}.tar.gz" "njs"
+
 # improve compilation times
 CORES=$(($(grep -c ^processor /proc/cpuinfo) - 1))
 
@@ -318,8 +320,7 @@ git config --global --add core.compression -1
 cd "$BUILD_PATH"
 git clone --depth=100 https://github.com/google/ngx_brotli.git
 cd ngx_brotli
-# https://github.com/google/ngx_brotli/issues/156
-git reset --hard 63ca02abdcf79c9e788d2eedcc388d2335902e52
+git reset --hard a71f9312c2deb28875acc7bacfdd5695a111aa53
 git submodule init
 git submodule update
 
@@ -409,21 +410,6 @@ Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-980-CORRELATION.conf
 Include /etc/nginx/owasp-modsecurity-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
 " > /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
 
-# NGINX compiles a small test program to check if an added module works as expected.
-#
-# ModSecurity-nginx provides 'printf("hello");' as a test, but newer versions of GCC,
-# as included in Alpine 3.21, do not allow implicit declaration of function 'printf':
-#
-#   objs/autotest.c:7:5: error: implicit declaration of function 'printf' [-Wimplicit-function-declaration]
-#
-# For this reason we replace 'printf("hello");' by 'msc_init();', which is always available.
-#
-# This fix is taken from a PR, that has been proposed to the ModSecurity-nginx project:
-#
-#   https://github.com/owasp-modsecurity/ModSecurity-nginx/pull/275
-#
-sed -i "s/ngx_feature_test='printf(\"hello\");'/ngx_feature_test='msc_init();'/" $BUILD_PATH/ModSecurity-nginx/config
-
 # build nginx
 cd "$BUILD_PATH/nginx-$NGINX_VERSION"
 
@@ -490,7 +476,8 @@ WITH_MODULES=" \
   --add-dynamic-module=$BUILD_PATH/nginx-http-auth-digest \
   --add-dynamic-module=$BUILD_PATH/ModSecurity-nginx \
   --add-dynamic-module=$BUILD_PATH/ngx_http_geoip2_module \
-  --add-dynamic-module=$BUILD_PATH/ngx_brotli"
+  --add-dynamic-module=$BUILD_PATH/ngx_brotli \
+  --add-dynamic-module=$BUILD_PATH/njs/nginx"
 
 ./configure \
   --prefix=/usr/local/nginx \
@@ -599,7 +586,8 @@ cd "$BUILD_PATH/mimalloc"
 mkdir -p out/release
 cd out/release
 
-cmake ../..
+# See this issue for why we disable architecture specific optimizations: https://github.com/kubernetes/ingress-nginx/issues/13608.
+cmake -DMI_NO_OPT_ARCH=ON ../..
 
 make
 make install
