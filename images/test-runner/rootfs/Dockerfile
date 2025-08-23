@@ -30,8 +30,8 @@ ARG CHART_TESTING_VERSION
 ARG HELM_VERSION
 ARG YAMALE_VERSION
 ARG YAML_LINT_VERSION
-ARG GINKGO_VERSION
 ARG GOLINT_VERSION
+ARG GINKGO_VERSION
 
 
 RUN set -eux; \
@@ -69,8 +69,9 @@ RUN apk update && apk upgrade && apk add --no-cache \
   libc6-compat \
   sqlite-dev
 
-RUN go install -v github.com/onsi/ginkgo/v2/ginkgo@v${GINKGO_VERSION} \
-    && go install golang.org/x/lint/golint@${GOLINT_VERSION}
+RUN go install golang.org/x/lint/golint@${GOLINT_VERSION}
+
+RUN go install github.com/onsi/ginkgo/v2/ginkgo@v${GINKGO_VERSION}
 
 RUN wget -qO /tmp/resty_cli.tgz \
   https://github.com/openresty/resty-cli/archive/v${RESTY_CLI_VERSION}.tar.gz \

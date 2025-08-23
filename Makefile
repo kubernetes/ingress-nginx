@@ -144,6 +144,10 @@ golint-check:
 # Tests for ingress-nginx
 ###############################
 
+.PHONY: install-ginkgo
+install-ginkgo: ## Install ginkgo binary from go.mod version.
+	@go install -modfile=go.mod github.com/onsi/ginkgo/v2/ginkgo
+
 .PHONY: test
 test:  ## Run go unit tests.
 	@build/run-in-docker.sh \
@@ -182,7 +186,7 @@ kind-e2e-chart-tests: ## Run helm chart e2e tests
 e2e-test-binary:  ## Build binary for e2e tests.
 	@build/run-in-docker.sh \
 		MAC_OS=$(MAC_OS) \
-		ginkgo build ./test/e2e
+		GOBIN=/tmp/bin go generate tools/ginkgo.go && ls /tmp/bin/ginkgo && /tmp/bin/ginkgo build ./test/e2e
 
 .PHONY: print-e2e-suite
 print-e2e-suite: e2e-test-binary ## Prints information about the suite of e2e tests.
