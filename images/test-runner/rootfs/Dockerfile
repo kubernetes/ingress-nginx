@@ -69,9 +69,8 @@ RUN apk update && apk upgrade && apk add --no-cache \
   libc6-compat \
   sqlite-dev
 
-RUN go install golang.org/x/lint/golint@${GOLINT_VERSION}
-
-RUN go install github.com/onsi/ginkgo/v2/ginkgo@v${GINKGO_VERSION}
+RUN go install golang.org/x/lint/golint@${GOLINT_VERSION} && \
+    go install github.com/onsi/ginkgo/v2/ginkgo@v${GINKGO_VERSION}
 
 RUN wget -qO /tmp/resty_cli.tgz \
   https://github.com/openresty/resty-cli/archive/v${RESTY_CLI_VERSION}.tar.gz \

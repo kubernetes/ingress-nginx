@@ -97,9 +97,7 @@ if [ "${SKIP_E2E_IMAGE_CREATION}" = "false" ]; then
   # Install ginkgo from the project's go.mod if not already available
   if ! command -v ginkgo &> /dev/null; then
     echo "Installing ginkgo from go.mod..."
-    cd "${DIR}"/../../
-    go install -modfile=go.mod github.com/onsi/ginkgo/v2/ginkgo
-    cd - > /dev/null
+    (cd "${DIR}/../../" && go install -modfile=go.mod github.com/onsi/ginkgo/v2/ginkgo)
   fi
   echo "[dev-env] .. done building controller images"
   echo "[dev-env] now building e2e-image.."

@@ -24,10 +24,11 @@ set -o pipefail
 SCRIPT_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
 
 # Extract ginkgo version from go.mod
-GINKGO_VERSION=$(grep 'github.com/onsi/ginkgo/v2' "${SCRIPT_ROOT}/go.mod" | awk '{print $2}' | sed 's/^v//')
+GINKGO_VERSION=$(grep -E '^\s*github\.com/onsi/ginkgo/v2\s+' "${SCRIPT_ROOT}/go.mod" | awk '{print $2}' | sed 's/^v//')
 
 if [[ -z "${GINKGO_VERSION}" ]]; then
     echo "Error: Could not find ginkgo version in go.mod" >&2
+    echo "Expected format: github.com/onsi/ginkgo/v2 vX.Y.Z" >&2
     exit 1
 fi
 

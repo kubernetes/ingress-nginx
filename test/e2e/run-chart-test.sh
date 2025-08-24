@@ -80,9 +80,7 @@ if [ "${SKIP_IMAGE_CREATION:-false}" = "false" ]; then
   # Install ginkgo from the project's go.mod if not already available
   if ! command -v ginkgo &> /dev/null; then
     echo "Installing ginkgo from go.mod..."
-    cd ${DIR}/../../
-    go install -modfile=go.mod github.com/onsi/ginkgo/v2/ginkgo
-    cd - > /dev/null
+    (cd "${DIR}/../../" && go install -modfile=go.mod github.com/onsi/ginkgo/v2/ginkgo)
   fi
   echo "[dev-env] building image"
   make -C ${DIR}/../../ clean-image build image
