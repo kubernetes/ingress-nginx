@@ -78,10 +78,11 @@ USE_SHELL=${USE_SHELL:-"/bin/bash"}
 if [[ "$DOCKER_IN_DOCKER_ENABLED" == "true" ]]; then
   echo "..reached DIND check TRUE block, inside run-in-docker.sh"
   echo "FLAGS=$FLAGS"
-  #go env
-  go install -mod=mod github.com/onsi/ginkgo/v2/ginkgo@v2.25.1
-  find / -type f -name ginkgo 2>/dev/null
-  which ginkgo
+  # Install ginkgo from the project's go.mod if not already available
+  if ! command -v ginkgo &> /dev/null; then
+    echo "Installing ginkgo from go.mod..."
+    go install -modfile=go.mod github.com/onsi/ginkgo/v2/ginkgo
+  fi
   /bin/bash -c "${FLAGS}"
 else
   echo "Reached DIND check ELSE block, inside run-in-docker.sh"

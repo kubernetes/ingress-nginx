@@ -1,5 +1,39 @@
 # GINKGO UPGRADE
 
+## Automated Approach (Recommended)
+
+As of 2025, ginkgo version management has been automated. The project now uses a single source of truth for ginkgo version management through `go.mod`.
+
+### How it works:
+
+1. **Dependabot automatically updates** `github.com/onsi/ginkgo/v2` in `go.mod`
+2. **All scripts and Docker images** automatically use the version from `go.mod`
+3. **No manual version updates** are needed in multiple files
+
+### Key files involved:
+
+- `tools/ginkgo.go` - Declares ginkgo as a tool dependency
+- `hack/get-ginkgo-version.sh` - Extracts version from go.mod
+- `images/test-runner/Makefile` - Uses dynamic version for Docker builds
+- Test scripts automatically install ginkgo from go.mod when needed
+
+### To install ginkgo locally:
+
+```bash
+make install-ginkgo
+```
+
+Or manually:
+```bash
+go install -modfile=go.mod github.com/onsi/ginkgo/v2/ginkgo
+```
+
+---
+
+## Legacy Manual Approach (Deprecated)
+
+**Note: This approach is no longer needed but documented for historical reference.**
+
 #### Bumping ginkgo in the project requires four PRs.
 
 ## 1. Dependabot PR
