@@ -795,6 +795,18 @@ controller:
       # requests:
       #   cpu: 10m
       #   memory: 20Mi
+      # -- VolumeMounts to set for the AdmissionWebhook createSecret Job.
+      # Example:
+      #   - name: certs
+      #     mountPath: /etc/webhook/certs
+      #     readOnly: true
+      volumeMounts: []
+      # -- Volumes to set for the AdmissionWebhook createSecret Job.
+      # Example:
+      #   - name: certs
+      #     secret:
+      #       secretName: my-webhook-secret
+      volumes: []
     patchWebhookJob:
       name: patch
       # -- Deadline in seconds for the job to complete. Must be greater than 0 to enforce. If unset or 0, no deadline is enforced.
@@ -812,6 +824,18 @@ controller:
             - ALL
         readOnlyRootFilesystem: true
       resources: {}
+      # -- VolumeMounts to set for the AdmissionWebhook patchWebhook Job.
+      # Example:
+      #   - name: certs
+      #     mountPath: /etc/webhook/certs
+      #     readOnly: true
+      volumeMounts: []
+      # -- Volumes to set for the AdmissionWebhook patchWebhook Job.
+      # Example:
+      #   - name: certs
+      #     secret:
+      #       secretName: my-webhook-secret
+      volumes: []
     patch:
       enabled: true
       image:
