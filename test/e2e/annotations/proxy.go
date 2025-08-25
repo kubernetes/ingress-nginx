@@ -84,6 +84,23 @@ var _ = framework.DescribeAnnotation("proxy-*", func() {
 			})
 	})
 
+	ginkgo.It("should set proxy_redirect with PCRE", func() {
+		proxyRedirectFrom := "~^(http|https)://hello.com/v1/(.*)$"
+		proxyRedirectTo := "$1://$host/$2"
+
+		annotations := make(map[string]string)
+		annotations["nginx.ingress.kubernetes.io/proxy-redirect-from"] = proxyRedirectFrom
+		annotations["nginx.ingress.kubernetes.io/proxy-redirect-to"] = proxyRedirectTo
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("proxy_redirect %s %s;", proxyRedirectFrom, proxyRedirectTo))
+			})
+	})
+
 	ginkgo.It("should set proxy client-max-body-size to 8m", func() {
 		proxyBodySize := "8m"
 
