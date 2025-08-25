@@ -168,6 +168,12 @@ func ValidateInt(value string) error {
 	return err
 }
 
+// ValidateUint validates if the specified value is an unsigned integer
+func ValidateUint(value string) error {
+	_, err := strconv.ParseUint(value, 10, 64)
+	return err
+}
+
 // ValidateCIDRs validates if the specified value is an array of IPs and CIDRs
 func ValidateCIDRs(value string) error {
 	_, err := net.ParseCIDRs(value)
