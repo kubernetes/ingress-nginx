@@ -13,12 +13,16 @@ local re_gmatch     = ngx.re.gmatch
 
 local _M = {}
 
+function _M.get_endpoint_string(endpoint)
+	return endpoint.address .. ":" .. endpoint.port
+end
+
 function _M.get_nodes(endpoints)
   local nodes = {}
   local weight = 1
 
   for _, endpoint in pairs(endpoints) do
-    local endpoint_string = endpoint.address .. ":" .. endpoint.port
+    local endpoint_string = _M.get_endpoint_string(endpoint)
     nodes[endpoint_string] = weight
   end
 
