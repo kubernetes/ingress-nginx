@@ -264,6 +264,8 @@ type NGINXController struct {
 	validationWebhookServer *http.Server
 
 	command NginxExecTester
+
+	lastConfigSuccess bool
 }
 
 // Start starts a new NGINX master process running in the foreground.
