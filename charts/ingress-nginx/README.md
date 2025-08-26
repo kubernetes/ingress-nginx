@@ -264,6 +264,8 @@ metadata:
 | controller.admissionWebhooks.createSecretJob.name | string | `"create"` |  |
 | controller.admissionWebhooks.createSecretJob.resources | object | `{}` |  |
 | controller.admissionWebhooks.createSecretJob.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsGroup":65532,"runAsNonRoot":true,"runAsUser":65532,"seccompProfile":{"type":"RuntimeDefault"}}` | Security context for secret creation containers |
+| controller.admissionWebhooks.createSecretJob.volumeMounts | list | `[]` | Volume mounts for secret creation containers |
+| controller.admissionWebhooks.createSecretJob.volumes | list | `[]` | Volumes for secret creation pod |
 | controller.admissionWebhooks.enabled | bool | `true` |  |
 | controller.admissionWebhooks.extraEnvs | list | `[]` | Additional environment variables to set |
 | controller.admissionWebhooks.failurePolicy | string | `"Fail"` | Admission Webhook failure policy to use |
@@ -295,6 +297,8 @@ metadata:
 | controller.admissionWebhooks.patchWebhookJob.name | string | `"patch"` |  |
 | controller.admissionWebhooks.patchWebhookJob.resources | object | `{}` |  |
 | controller.admissionWebhooks.patchWebhookJob.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsGroup":65532,"runAsNonRoot":true,"runAsUser":65532,"seccompProfile":{"type":"RuntimeDefault"}}` | Security context for webhook patch containers |
+| controller.admissionWebhooks.patchWebhookJob.volumeMounts | list | `[]` | Volume mounts for webhook patch containers |
+| controller.admissionWebhooks.patchWebhookJob.volumes | list | `[]` | Volumes for webhook patch pod |
 | controller.admissionWebhooks.port | int | `8443` |  |
 | controller.admissionWebhooks.service.annotations | object | `{}` |  |
 | controller.admissionWebhooks.service.externalIPs | list | `[]` |  |
