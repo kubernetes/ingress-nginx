@@ -114,5 +114,5 @@ docker run \
   --workdir /workdir \
   --entrypoint ct \
   --rm \
-  registry.k8s.io/ingress-nginx/e2e-test-runner:v2.2.1@sha256:8407e6ccec478e9791267657995ee7a021385c52d8f79ea0e6aa4461742ecd21 \
+  registry.k8s.io/ingress-nginx/e2e-test-runner:v2.2.2@sha256:adc146da02b1c75ddb2d3bd2e20a05aceabc4c15f1a1d67192737b8a1fc47398 \
     install --charts charts/ingress-nginx
