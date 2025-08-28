@@ -46,6 +46,7 @@ import (
 	"k8s.io/ingress-nginx/internal/k8s"
 	"k8s.io/ingress-nginx/internal/nginx"
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
+	"k8s.io/ingress-nginx/pkg/tcpproxy"
 	utilingress "k8s.io/ingress-nginx/pkg/util/ingress"
 	"k8s.io/klog/v2"
 )
@@ -191,6 +192,44 @@ func (n *NGINXController) syncIngress(interface{}) error {
 
 	n.metricCollector.SetSSLExpireTime(servers)
 	n.metricCollector.SetSSLInfo(servers)
+
+	if n.cfg.EnableSSLPassthrough {
+		servers := []*tcpproxy.TCPServer{}
+		for _, pb := range pcfg.PassthroughBackends {
+			svc := pb.Service
+			if svc == nil {
+				klog.Warningf("Missing Service for SSL Passthrough backend %q", pb.Backend)
+				continue
+			}
+			port, err := strconv.Atoi(pb.Port.String()) // #nosec
+			if err != nil {
+				for _, sp := range svc.Spec.Ports {
+					if sp.Name == pb.Port.String() {
+						port = int(sp.Port)
+						break
+					}
+				}
+			} else {
+				for _, sp := range svc.Spec.Ports {
+					//nolint:gosec // Ignore G109 error
+					if sp.Port == int32(port) {
+						port = int(sp.Port)
+						break
+					}
+				}
+			}
+
+			// TODO: Allow PassthroughBackends to specify they support proxy-protocol
+			servers = append(servers, &tcpproxy.TCPServer{
+				Hostname:      pb.Hostname,
+				IP:            svc.Spec.ClusterIP,
+				Port:          port,
+				ProxyProtocol: false,
+			})
+		}
+
+		n.Proxy.ServerList = servers
+	}
 
 	if n.runningConfig.Equal(pcfg) {
 		klog.V(3).Infof("No configuration change detected, skipping backend reload")
