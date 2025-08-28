@@ -49,7 +49,7 @@ If you do not already have an instance of the Ingress-Nginx Controller running, 
     The `ingress-nginx` Service is of type `ClusterIP` in this example. This may vary depending on your environment.
     Make sure you can use the Service to reach NGINX before proceeding with the rest of this example.
 
-[deploy]: ../../../deploy/
+[deploy]: ../../../deploy/index.md
 
 ## Testing error pages
 

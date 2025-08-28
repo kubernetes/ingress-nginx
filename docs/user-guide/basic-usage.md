@@ -1,4 +1,4 @@
-#  Basic usage - host based routing
+# Basic usage - host based routing
 
 ingress-nginx can be used for many use cases, inside various cloud providers and supports a lot of configurations. In this section you can find a common usage scenario where a single load balancer powered by ingress-nginx will route traffic to 2 different HTTP backend services based on the host name.
 

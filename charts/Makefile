@@ -1,6 +1,4 @@
-#!/bin/bash
-
-# Copyright 2014 The Kubernetes Authors.
+# Copyright 2025 The Kubernetes Authors. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,21 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -o errexit
-set -o nounset
-set -o pipefail
+NAME ?=
 
-KUBE_ROOT=$(dirname "${BASH_SOURCE}")/..
+REGISTRY ?= us-central1-docker.pkg.dev/k8s-staging-images/ingress-nginx
+REPOSITORY ?= $(REGISTRY)/charts
 
-cd "${KUBE_ROOT}"
+.PHONY: helm
+helm:
+	command -v helm || go install helm.sh/helm/v3/cmd/helm@latest
 
-LINT=${LINT:-golangci-lint}
+.PHONY: package
+package: helm
+	helm package $(NAME)
 
-if [[ -z "$(command -v ${LINT})" ]]; then
-  echo "${LINT} is missing. Installing it now."
-  # See: https://golangci-lint.run/welcome/install/#local-installation
-  curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.3.0
-  LINT=$(go env GOPATH)/bin/golangci-lint
-fi
-
-${LINT} run
+.PHONY: push
+push: package
+	helm push $(NAME)-*.tgz oci://$(REPOSITORY)

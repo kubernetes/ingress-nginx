@@ -55,7 +55,7 @@ var HealthPath = "/healthz"
 var HealthCheckTimeout = 10 * time.Second
 
 // StatusPath defines the path used to expose the NGINX status page
-// http://nginx.org/en/docs/http/ngx_http_stub_status_module.html
+// https://nginx.org/en/docs/http/ngx_http_stub_status_module.html
 var StatusPath = "/nginx_status"
 
 // StreamPort defines the port used by NGINX for the NGINX stream configuration socket

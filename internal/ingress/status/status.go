@@ -95,11 +95,16 @@ func (s *statusSync) Run(stopCh chan struct{}) {
 
 	// when this instance is the leader we need to enqueue
 	// an item to trigger the update of the Ingress status.
-	//nolint:staticcheck // TODO: will replace it since wait.PollUntil is deprecated
-	err := wait.PollUntil(time.Duration(UpdateInterval)*time.Second, func() (bool, error) {
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		<-stopCh
+		cancel()
+	}()
+
+	err := wait.PollUntilContextCancel(ctx, time.Duration(UpdateInterval)*time.Second, true, func(context.Context) (bool, error) {
 		s.syncQueue.EnqueueTask(task.GetDummyObject("sync status"))
 		return false, nil
-	}, stopCh)
+	})
 	if err != nil {
 		klog.ErrorS(err, "error running poll")
 	}

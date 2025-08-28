@@ -109,9 +109,8 @@ This guide refers to chapters in the CIS Benchmark. For full explanation you sho
 | __5.3 Browser Security__||| |
 | 5.3.1 Ensure X-Frame-Options header is configured and enabled (Scored)| ACTION NEEDED| Header not set by default| Several ways to implement this - with the helm charts it works via controller.add-headers |
 | 5.3.2 Ensure X-Content-Type-Options header is configured and enabled (Scored) | ACTION NEEDED| See previous answer| See previous answer |
-| 5.3.3 Ensure the X-XSS-Protection Header is enabled and configured properly (Scored)| ACTION NEEDED| See previous answer| See previous answer |
-| 5.3.4 Ensure that Content Security Policy (CSP) is enabled and configured properly (Not Scored) | ACTION NEEDED| See previous answer| See previous answer |
-| 5.3.5 Ensure the Referrer Policy is enabled and configured properly (Not Scored)| ACTION NEEDED | Depends on application. It should be handled in the applications webserver itself, not in the load balancing ingress | check backend webserver |
+| 5.3.3 Ensure that Content Security Policy (CSP) is enabled and configured properly (Not Scored) | ACTION NEEDED| See previous answer| See previous answer |
+| 5.3.4 Ensure the Referrer Policy is enabled and configured properly (Not Scored)| ACTION NEEDED | Depends on application. It should be handled in the applications webserver itself, not in the load balancing ingress | check backend webserver |
 | ||| |
 | __6 Mandatory Access Control__| n/a| too high level, depends on backends | |
 

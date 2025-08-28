@@ -88,7 +88,7 @@ func (m mockBackend) GetDefaultBackend() defaults.Backend {
 		ProxyReadTimeout:         20,
 		ProxyBuffersNumber:       4,
 		ProxyBufferSize:          "10k",
-		ProxyBusyBuffersSize:     "15k",
+		ProxyBusyBuffersSize:     "",
 		ProxyBodySize:            "3k",
 		ProxyNextUpstream:        "error",
 		ProxyNextUpstreamTimeout: 0,
@@ -299,7 +299,6 @@ func TestProxyWithNoAnnotation(t *testing.T) {
 	}
 }
 
-// Add a test for when annotation is set
 func TestProxyWithBusyBuffersSizeAnnotation(t *testing.T) {
 	ing := buildIngress()
 	data := map[string]string{}

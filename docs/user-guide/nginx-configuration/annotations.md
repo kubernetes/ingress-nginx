@@ -123,7 +123,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/connection-proxy-header](#connection-proxy-header)|string|
 |[nginx.ingress.kubernetes.io/enable-access-log](#enable-access-log)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/enable-opentelemetry](#enable-opentelemetry)|"true" or "false"|
-|[nginx.ingress.kubernetes.io/opentelemetry-trust-incoming-span](#opentelemetry-trust-incoming-spans)|"true" or "false"|
+|[nginx.ingress.kubernetes.io/opentelemetry-trust-incoming-span](#opentelemetry-trust-incoming-span)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/use-regex](#use-regex)|bool|
 |[nginx.ingress.kubernetes.io/enable-modsecurity](#modsecurity)|bool|
 |[nginx.ingress.kubernetes.io/enable-owasp-core-rules](#modsecurity)|bool|
@@ -446,15 +446,15 @@ kind: Ingress
 metadata:
   annotations:
     nginx.ingress.kubernetes.io/server-snippet: |
-        set $agentflag 0;
+      set $agentflag 0;
 
-        if ($http_user_agent ~* "(Mobile)" ){
-          set $agentflag 1;
-        }
+      if ($http_user_agent ~* "(Mobile)" ){
+        set $agentflag 1;
+      }
 
-        if ( $agentflag = 1 ) {
-          return 301 https://m.example.com;
-        }
+      if ( $agentflag = 1 ) {
+        return 301 https://m.example.com;
+      }
 ```
 
 !!! attention
@@ -530,7 +530,7 @@ Additionally it is possible to set:
 ```yaml
 nginx.ingress.kubernetes.io/auth-url: http://foo.com/external-auth
 nginx.ingress.kubernetes.io/auth-snippet: |
-    proxy_set_header Foo-Header 42;
+  proxy_set_header Foo-Header 42;
 ```
 > Note: `nginx.ingress.kubernetes.io/auth-snippet` is an optional annotation. However, it may only be used in conjunction with `nginx.ingress.kubernetes.io/auth-url` and will be ignored if `nginx.ingress.kubernetes.io/auth-url` is not set
 
@@ -729,7 +729,7 @@ To use custom values in an Ingress rule define these annotation:
 nginx.ingress.kubernetes.io/proxy-buffering: "on"
 ```
 
-### Proxy buffers Number
+### Proxy buffers number
 
 Sets the number of the buffers in [`proxy_buffers`](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffers) used for reading the first part of the response received from the proxied server.
 By default proxy buffers number is set as 4
@@ -752,11 +752,9 @@ nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
 ### Proxy busy buffers size
 
 [Limits the total size of buffers that can be busy](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_busy_buffers_size) sending a response to the client while the response is not yet fully read.
-
-By default proxy busy buffers size is set as "8k".
+By default, size is limited by the size of two buffers set by the `proxy_buffer_size` and `proxy_buffers` directives.
 
 To configure this setting globally, set `proxy-busy-buffers-size` in the [ConfigMap](./configmap.md#proxy-busy-buffers-size). To use custom values in an Ingress rule, define this annotation:
-
 ```yaml
 nginx.ingress.kubernetes.io/proxy-busy-buffers-size: "16k"
 ```
@@ -879,8 +877,8 @@ nginx.ingress.kubernetes.io/modsecurity-transaction-id: "$request_id"
 You can also add your own set of modsecurity rules via a snippet:
 ```yaml
 nginx.ingress.kubernetes.io/modsecurity-snippet: |
-SecRuleEngine On
-SecDebugLog /tmp/modsec_debug.log
+  SecRuleEngine On
+  SecDebugLog /tmp/modsec_debug.log
 ```
 
 Note: If you use both `enable-owasp-core-rules` and `modsecurity-snippet` annotations together, only the
@@ -891,13 +889,13 @@ statement:
 nginx 0.24.1 and below
 ```yaml
 nginx.ingress.kubernetes.io/modsecurity-snippet: |
-Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
-Include /etc/nginx/modsecurity/modsecurity.conf
+  Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
+  Include /etc/nginx/modsecurity/modsecurity.conf
 ```
 nginx 0.25.0 and above
 ```yaml
 nginx.ingress.kubernetes.io/modsecurity-snippet: |
-Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
+  Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
 ```
 
 ### Backend Protocol

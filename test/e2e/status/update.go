@@ -108,8 +108,7 @@ var _ = framework.IngressNginxDescribe("[Status] status update", func() {
 			}
 		}()
 
-		//nolint:staticcheck // TODO: will replace it since wait.Poll is deprecated
-		err = wait.Poll(5*time.Second, 4*time.Minute, func() (done bool, err error) {
+		err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 4*time.Minute, true, func(_ context.Context) (done bool, err error) {
 			ing, err = f.KubeClientSet.NetworkingV1().Ingresses(f.Namespace).Get(context.TODO(), host, metav1.GetOptions{})
 			if err != nil {
 				return false, nil

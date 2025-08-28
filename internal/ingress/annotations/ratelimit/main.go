@@ -99,7 +99,7 @@ func (rt1 *Config) Equal(rt2 *Config) bool {
 }
 
 // Zone returns information about the NGINX rate limit (limit_req_zone)
-// http://nginx.org/en/docs/http/ngx_http_limit_req_module.html#limit_req_zone
+// https://nginx.org/en/docs/http/ngx_http_limit_req_module.html#limit_req_zone
 type Zone struct {
 	Name  string `json:"name"`
 	Limit int    `json:"limit"`

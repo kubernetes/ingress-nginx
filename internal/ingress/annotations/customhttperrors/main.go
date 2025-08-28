@@ -17,6 +17,7 @@ limitations under the License.
 package customhttperrors
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -72,10 +73,17 @@ func (e customhttperrors) Parse(ing *networking.Ingress) (interface{}, error) {
 	cSplit := strings.Split(c, ",")
 	codes := make([]int, 0, len(cSplit))
 	for _, i := range cSplit {
-		num, err := strconv.Atoi(i)
-		if err != nil {
-			return nil, err
+		// Trim whitespace to handle "404, 500" format
+		trimmed := strings.TrimSpace(i)
+		if trimmed == "" {
+			continue
 		}
+
+		num, err := strconv.Atoi(trimmed)
+		if err != nil {
+			return nil, fmt.Errorf("invalid HTTP status code %q: %w", trimmed, err)
+		}
+
 		codes = append(codes, num)
 	}
 

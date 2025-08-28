@@ -261,7 +261,7 @@ for generating redirect URLs that take into account the URL used by external cli
     Location: https://myapp.example.com/  #-> missing NodePort in HTTPS redirect
     ```
 
-[install-baremetal]: ./index.md#bare-metal
+[install-baremetal]: ./index.md#bare-metal-clusters
 [install-quickstart]: ./index.md#quick-start
 [nodeport-def]: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
 [nodeport-nat]: https://kubernetes.io/docs/tutorials/services/source-ip/#source-ip-for-services-with-type-nodeport

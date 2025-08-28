@@ -45,4 +45,4 @@ data:
 ```
 
 References:
- * [Custom Configuration](../custom-configuration/)
+ * [Custom Configuration](../custom-configuration/README.md)

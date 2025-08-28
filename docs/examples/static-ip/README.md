@@ -7,7 +7,7 @@ This example demonstrates how to assign a static-ip to an Ingress on through the
 You need a [TLS cert](../PREREQUISITES.md#tls-certificates) and a [test HTTP service](../PREREQUISITES.md#test-http-service) for this example.
 You will also need to make sure your Ingress targets exactly one Ingress
 controller by specifying the [ingress.class annotation](../../user-guide/multiple-ingress.md),
-and that you have an ingress controller [running](../../deploy/) in your cluster.
+and that you have an ingress controller [running](../../deploy/index.md) in your cluster.
 
 ## Acquiring an IP
 

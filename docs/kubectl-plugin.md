@@ -201,14 +201,12 @@ kubectl ingress-nginx conf -n ingress-nginx --host testaddr.local
 ```console
 $ kubectl ingress-nginx exec -i -n ingress-nginx -- ls /etc/nginx
 fastcgi_params
-geoip
 lua
 mime.types
 modsecurity
 modules
 nginx.conf
 opentracing.json
-opentelemetry.toml
 owasp-modsecurity-crs
 template
 ```
