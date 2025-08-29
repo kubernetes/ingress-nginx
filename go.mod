@@ -4,7 +4,6 @@ go 1.25.1
 
 require (
 	dario.cat/mergo v1.0.2
-	github.com/armon/go-proxyproto v0.1.0
 	github.com/eapache/channels v1.1.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/google/go-github/v48 v48.2.0
@@ -18,6 +17,7 @@ require (
 	github.com/ncabatoff/process-exporter v0.8.7
 	github.com/onsi/ginkgo/v2 v2.25.3
 	github.com/opencontainers/cgroups v0.0.4
+	github.com/pires/go-proxyproto v0.8.1
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
 	github.com/prometheus/client_golang v1.23.1
 	github.com/prometheus/client_model v0.6.2
