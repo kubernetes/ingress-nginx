@@ -37,8 +37,8 @@ import (
 	"time"
 	"unicode"
 
-	proxyproto "github.com/armon/go-proxyproto"
 	"github.com/eapache/channels"
+	proxyproto "github.com/pires/go-proxyproto"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -832,7 +832,7 @@ func (n *NGINXController) setupSSLProxy() {
 		klog.Fatalf("%v", err)
 	}
 
-	proxyList := &proxyproto.Listener{Listener: listener, ProxyHeaderTimeout: cfg.ProxyProtocolHeaderTimeout}
+	proxyList := &proxyproto.Listener{Listener: listener, ReadHeaderTimeout: cfg.ProxyProtocolHeaderTimeout}
 
 	// accept TCP connections on the configured HTTPS port
 	go func() {
