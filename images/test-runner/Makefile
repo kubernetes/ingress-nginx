@@ -21,6 +21,7 @@ TAG ?= $(shell cat TAG)
 DIR = $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 BASE_IMAGE ?= $(shell cat $(DIR)/../../NGINX_BASE)
 GOLANG_VERSION ?= $(shell cat $(DIR)/../../GOLANG_VERSION)
+GINKGO_VERSION ?= $(shell $(DIR)/../../hack/get-ginkgo-version.sh)
 
 .PHONY: builder
 builder:
@@ -44,7 +45,7 @@ build: builder
 		--build-arg YAML_LINT_VERSION=1.33.0 \
 		--build-arg YAMALE_VERSION=4.0.4 \
 		--build-arg HELM_VERSION=3.14.4 \
-		--build-arg GINKGO_VERSION=2.25.1 \
+		--build-arg GINKGO_VERSION=$(GINKGO_VERSION) \
 		--build-arg GOLINT_VERSION=latest \
 		rootfs \
 		--tag $(IMAGE):$(TAG) \
