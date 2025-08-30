@@ -40,6 +40,11 @@ import (
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
 )
 
+const (
+	// ElectionIDLabelKey is the label key used to identify controller pods by election ID
+	ElectionIDLabelKey = "nginx.ingress.kubernetes.io/electionID"
+)
+
 // UpdateInterval defines the time interval, in seconds, in
 // which the status should check if an update is required.
 var UpdateInterval = 60
@@ -67,6 +72,10 @@ type Config struct {
 	UpdateStatusOnShutdown bool
 
 	UseNodeInternalIP bool
+
+	UseElectionIDSelectorOnShutdown bool
+
+	ElectionID string
 
 	IngressLister ingressLister
 }
@@ -180,6 +189,35 @@ func nameOrIPToLoadBalancerIngress(nameOrIP string) v1.IngressLoadBalancerIngres
 
 // runningAddresses returns a list of IP addresses and/or FQDN where the
 // ingress controller is currently running
+// listControllerPods returns a list of running pods with controller labels
+func (s *statusSync) listControllerPods(useElectionID bool) (*apiv1.PodList, error) {
+	podLabel := make(map[string]string)
+
+	if useElectionID {
+		// When using electionID, only look for pods with the electionID label
+		// This is more specific and will correctly identify pods belonging to the same controller group
+		// Note: This requires the electionID label to be set on the pods (done by helm chart)
+		podLabel[ElectionIDLabelKey] = s.ElectionID
+	} else {
+		// As a standard, app.kubernetes.io are "reserved well-known" labels.
+		// In our case, we add those labels as identifiers of the Ingress
+		// deployment in this namespace, so we can select it as a set of Ingress instances.
+		// As those labels are also generated as part of a HELM deployment, we can be "safe" they
+		// cover 95% of the cases
+		for k, v := range k8s.IngressPodDetails.Labels {
+			// Skip labels that are frequently modified by deployment controllers
+			if k != "pod-template-hash" && k != "controller-revision-hash" && k != "pod-template-generation" {
+				podLabel[k] = v
+			}
+		}
+	}
+	return s.Client.CoreV1().Pods(k8s.IngressPodDetails.Namespace).List(
+		context.TODO(),
+		metav1.ListOptions{
+			LabelSelector: labels.SelectorFromSet(podLabel).String(),
+		})
+}
+
 func (s *statusSync) runningAddresses() ([]v1.IngressLoadBalancerIngress, error) {
 	if s.PublishStatusAddress != "" {
 		re := regexp.MustCompile(`,\s*`)
@@ -196,9 +234,7 @@ func (s *statusSync) runningAddresses() ([]v1.IngressLoadBalancerIngress, error)
 	}
 
 	// get information about all the pods running the ingress controller
-	pods, err := s.Client.CoreV1().Pods(k8s.IngressPodDetails.Namespace).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: labels.SelectorFromSet(k8s.IngressPodDetails.Labels).String(),
-	})
+	pods, err := s.listControllerPods(s.UseElectionIDSelectorOnShutdown)
 	if err != nil {
 		return nil, err
 	}
@@ -235,21 +271,7 @@ func (s *statusSync) runningAddresses() ([]v1.IngressLoadBalancerIngress, error)
 }
 
 func (s *statusSync) isRunningMultiplePods() bool {
-	// As a standard, app.kubernetes.io are "reserved well-known" labels.
-	// In our case, we add those labels as identifiers of the Ingress
-	// deployment in this namespace, so we can select it as a set of Ingress instances.
-	// As those labels are also generated as part of a HELM deployment, we can be "safe" they
-	// cover 95% of the cases
-	podLabel := make(map[string]string)
-	for k, v := range k8s.IngressPodDetails.Labels {
-		if k != "pod-template-hash" && k != "controller-revision-hash" && k != "pod-template-generation" {
-			podLabel[k] = v
-		}
-	}
-
-	pods, err := s.Client.CoreV1().Pods(k8s.IngressPodDetails.Namespace).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: labels.SelectorFromSet(podLabel).String(),
-	})
+	pods, err := s.listControllerPods(s.UseElectionIDSelectorOnShutdown) // Use election ID-compatible labels if configured
 	if err != nil {
 		return false
 	}
