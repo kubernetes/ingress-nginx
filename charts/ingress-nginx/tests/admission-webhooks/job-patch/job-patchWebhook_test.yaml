@@ -76,3 +76,11 @@ tests:
                           fieldRef:
                             apiVersion: v1
                             fieldPath: metadata.namespace
+
+  - it: should create a Job with `ttlSecondsAfterFinished` set to value from `controller.admissionWebhooks.patchWebhookJob.ttlSecondsAfterFinished`
+    set:
+      controller.admissionWebhooks.patchWebhookJob.ttlSecondsAfterFinished: 30
+    asserts:
+      - equal:
+          path: spec.ttlSecondsAfterFinished
+          value: 30

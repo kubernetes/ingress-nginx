@@ -17,7 +17,7 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
-  ttlSecondsAfterFinished: 0
+  ttlSecondsAfterFinished: {{ .Values.controller.admissionWebhooks.patchWebhookJob.ttlSecondsAfterFinished }}
 {{- if gt (int .Values.controller.admissionWebhooks.patchWebhookJob.activeDeadlineSeconds) 0 }}
   activeDeadlineSeconds: {{ .Values.controller.admissionWebhooks.patchWebhookJob.activeDeadlineSeconds }}
 {{- end }}

@@ -774,6 +774,8 @@ controller:
       type: ClusterIP
     createSecretJob:
       name: create
+      # -- Duration in seconds before job removal. Must be greater to 0 to ensure argocd has time to detect job completion.
+      ttlSecondsAfterFinished: 0
       # -- Deadline in seconds for the job to complete. Must be greater than 0 to enforce. If unset or 0, no deadline is enforced.
       activeDeadlineSeconds: 0
       # -- Security context for secret creation containers
@@ -807,6 +809,8 @@ controller:
       #     secretName: my-webhook-secret
     patchWebhookJob:
       name: patch
+      # -- Duration in seconds before job removal. Must be greater to 0 to ensure argocd has time to detect job completion.
+      ttlSecondsAfterFinished: 0
       # -- Deadline in seconds for the job to complete. Must be greater than 0 to enforce. If unset or 0, no deadline is enforced.
       activeDeadlineSeconds: 0
       # -- Security context for webhook patch containers
