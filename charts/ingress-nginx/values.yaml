@@ -989,18 +989,7 @@ controller:
       #   annotations:
       #     description: Too many 4XXs
       #     summary: More than 5% of all requests returned 4XX, this requires your attention
-  # -- Improve connection draining when ingress controller pod is deleted using a lifecycle hook:
-  # With this new hook, we increased the default terminationGracePeriodSeconds from 30 seconds
-  # to 300, allowing the draining of connections up to five minutes.
-  # If the active connections end before that, the pod will terminate gracefully at that time.
-  # To effectively take advantage of this feature, the Configmap feature
-  # worker-shutdown-timeout new value is 240s instead of 10s.
-  ##
-  lifecycle:
-    preStop:
-      exec:
-        command:
-          - /wait-shutdown
+  lifecycle: {}
   priorityClassName: ""
 # -- Rollback limit
 ##

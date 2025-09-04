@@ -222,9 +222,11 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 
 		statusUpdateInterval = flags.Int("status-update-interval", status.UpdateInterval, "Time interval in seconds in which the status should check if an update is required. Default is 60 seconds")
 
-		shutdownGracePeriod = flags.Int("shutdown-grace-period", 0, "Seconds to wait after receiving the shutdown signal, before stopping the nginx process.")
+		shutdownGracePeriod = flags.Int("shutdown-grace-period", 10, "Seconds to wait after receiving the shutdown signal, before stopping the nginx process.")
 
-		postShutdownGracePeriod = flags.Int("post-shutdown-grace-period", 10, "Seconds to wait after the nginx process has stopped before controller exits.")
+		postShutdownGracePeriod = flags.Int("post-shutdown-grace-period", 0, `[IN DEPRECATION] Seconds to wait after the nginx process has stopped before controller exits.
+Note that increasing this value doesn't seem to contribute to graceful shutdown of the ingress controller.
+If you would like to configure period for accepting requests before shutting down, use 'shutdown-grace-period' instead.'`)
 
 		deepInspector = flags.Bool("deep-inspect", true, "Enables ingress object security deep inspector")
 

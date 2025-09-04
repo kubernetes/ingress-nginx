@@ -17,7 +17,7 @@ limitations under the License.
 package collectors
 
 import (
-	"log"
+	"fmt"
 	"regexp"
 	"strconv"
 
@@ -35,7 +35,10 @@ var (
 )
 
 type (
+	NginxStatusScraper struct{}
+
 	nginxStatusCollector struct {
+		scraper    NginxStatusScraper
 		scrapeChan chan scrapeRequest
 
 		data *nginxStatusData
@@ -47,7 +50,7 @@ type (
 		connections      *prometheus.Desc
 	}
 
-	basicStatus struct {
+	NginxStubStatus struct {
 		// Active total number of active connections
 		Active int
 		// Accepted total number of accepted client connections
@@ -64,6 +67,49 @@ type (
 		Waiting int
 	}
 )
+
+func toInt(data []string, pos int) int {
+	if len(data) == 0 {
+		return 0
+	}
+	if pos > len(data) {
+		return 0
+	}
+	if v, err := strconv.Atoi(data[pos]); err == nil {
+		return v
+	}
+	return 0
+}
+
+func parse(data string) *NginxStubStatus {
+	acr := ac.FindStringSubmatch(data)
+	sahrr := sahr.FindStringSubmatch(data)
+	readingr := reading.FindStringSubmatch(data)
+	writingr := writing.FindStringSubmatch(data)
+	waitingr := waiting.FindStringSubmatch(data)
+
+	return &NginxStubStatus{
+		toInt(acr, 1),
+		toInt(sahrr, 1),
+		toInt(sahrr, 2),
+		toInt(sahrr, 3),
+		toInt(readingr, 1),
+		toInt(writingr, 1),
+		toInt(waitingr, 1),
+	}
+}
+
+func (s *NginxStatusScraper) Scrape() (*NginxStubStatus, error) {
+	klog.V(3).InfoS("starting scraping socket", "path", nginx.StatusPath)
+	status, data, err := nginx.NewGetStatusRequest(nginx.StatusPath)
+	if err != nil {
+		return nil, fmt.Errorf("obtaining nginx status info: %w", err)
+	}
+	if status < 200 || status >= 400 {
+		return nil, fmt.Errorf("obtaining nginx status info (status %v)", status)
+	}
+	return parse(string(data)), nil
+}
 
 // NGINXStatusCollector defines a status collector interface
 type NGINXStatusCollector interface {
@@ -131,53 +177,13 @@ func (p nginxStatusCollector) Stop() {
 	close(p.scrapeChan)
 }
 
-func toInt(data []string, pos int) int {
-	if len(data) == 0 {
-		return 0
-	}
-	if pos > len(data) {
-		return 0
-	}
-	if v, err := strconv.Atoi(data[pos]); err == nil {
-		return v
-	}
-	return 0
-}
-
-func parse(data string) *basicStatus {
-	acr := ac.FindStringSubmatch(data)
-	sahrr := sahr.FindStringSubmatch(data)
-	readingr := reading.FindStringSubmatch(data)
-	writingr := writing.FindStringSubmatch(data)
-	waitingr := waiting.FindStringSubmatch(data)
-
-	return &basicStatus{
-		toInt(acr, 1),
-		toInt(sahrr, 1),
-		toInt(sahrr, 2),
-		toInt(sahrr, 3),
-		toInt(readingr, 1),
-		toInt(writingr, 1),
-		toInt(waitingr, 1),
-	}
-}
-
 // nginxStatusCollector scrape the nginx status
 func (p nginxStatusCollector) scrape(ch chan<- prometheus.Metric) {
-	klog.V(3).InfoS("starting scraping socket", "path", nginx.StatusPath)
-	status, data, err := nginx.NewGetStatusRequest(nginx.StatusPath)
+	s, err := p.scraper.Scrape()
 	if err != nil {
-		log.Printf("%v", err)
-		klog.Warningf("unexpected error obtaining nginx status info: %v", err)
+		klog.Warningf("failed to scrape nginx status: %v", err)
 		return
 	}
-
-	if status < 200 || status >= 400 {
-		klog.Warningf("unexpected error obtaining nginx status info (status %v)", status)
-		return
-	}
-
-	s := parse(string(data))
 
 	ch <- prometheus.MustNewConstMetric(p.data.connectionsTotal,
 		prometheus.CounterValue, float64(s.Accepted), "accepted")

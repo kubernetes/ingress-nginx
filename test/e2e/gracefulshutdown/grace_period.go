@@ -41,16 +41,14 @@ var _ = framework.IngressNginxDescribe("[Shutdown] Grace period shutdown", func(
 				if strings.Contains(v, "--shutdown-grace-period") {
 					continue
 				}
-
 				args = append(args, v)
 			}
-
 			args = append(args, "--shutdown-grace-period=90")
 			deployment.Spec.Template.Spec.Containers[0].Args = args
-			cmds := []string{"/wait-shutdown"}
-			deployment.Spec.Template.Spec.Containers[0].Lifecycle.PreStop.Exec.Command = cmds
+
 			grace := int64(3600)
 			deployment.Spec.Template.Spec.TerminationGracePeriodSeconds = &grace
+
 			_, err := f.KubeClientSet.AppsV1().Deployments(f.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
 			return err
 		})
