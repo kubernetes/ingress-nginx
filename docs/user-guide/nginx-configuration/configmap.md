@@ -59,6 +59,13 @@ The following table shows a configuration option's name, type, and the default v
 | [http2-max-header-size](#http2-max-header-size)                                 | string       | ""                                                                                                                                                                                                                                                                                                                                                           | DEPRECATED in favour of [large_client_header_buffers](#large-client-header-buffers) |
 | [http2-max-requests](#http2-max-requests)                                       | int          | 0                                                                                                                                                                                                                                                                                                                                                            | DEPRECATED in favour of [keepalive_requests](#keep-alive-requests)                  |
 | [http2-max-concurrent-streams](#http2-max-concurrent-streams)                   | int          | 128                                                                                                                                                                                                                                                                                                                                                          |                                                                                     |
+| [http3-hq](#http3-hq)                                                           | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
+| [http3-max-concurrent-streams](#http3-max-concurrent-streams)                   | int          | 128                                                                                                                                                                                                                                                                                                                                                          |                                                                                     |
+| [http3-stream-buffer-size](#http3-stream-buffer-size)                           | string       | "64k"                                                                                                                                                                                                                                                                                                                                                        |                                                                                     |
+| [quic-active-connection-id-limit](#quic-active-connection-id-limit)             | int          | 2                                                                                                                                                                                                                                                                                                                                                            |                                                                                     |
+| [quic-bpf](#quic-bpf)                                                           | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
+| [quic-gso](#quic-gso)                                                           | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
+| [quic-retry](#quic-retry)                                                       | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
 | [hsts](#hsts)                                                                   | bool         | "true"                                                                                                                                                                                                                                                                                                                                                       |                                                                                     |
 | [hsts-include-subdomains](#hsts-include-subdomains)                             | bool         | "true"                                                                                                                                                                                                                                                                                                                                                       |                                                                                     |
 | [hsts-max-age](#hsts-max-age)                                                   | string       | "31536000"                                                                                                                                                                                                                                                                                                                                                   |                                                                                     |
@@ -433,6 +440,55 @@ Sets the maximum number of concurrent HTTP/2 streams in a connection.
 
 _References:_
 [https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_concurrent_streams](https://nginx.org/en/docs/http/ngx_http_v2_module.html#http2_max_concurrent_streams)
+
+## http3-hq
+
+Enables HTTP/0.9 protocol negotiation used in [QUIC interoperability tests](https://github.com/marten-seemann/quic-interop-runner).
+
+_References:_
+[https://nginx.org/en/docs/http/ngx_http_v3_module.html#http3_hq](https://nginx.org/en/docs/http/ngx_http_v3_module.html#http3_hq)
+
+## http3-max-concurrent-streams
+
+Sets the maximum number of concurrent HTTP/3 request streams in a connection.
+
+_References:_
+[https://nginx.org/en/docs/http/ngx_http_v3_module.html#http3_max_concurrent_streams](https://nginx.org/en/docs/http/ngx_http_v3_module.html#http3_max_concurrent_streams)
+
+## http3-stream-buffer-size
+
+Sets the size of the buffer used for reading and writing of the QUIC streams.
+
+_References:_
+[https://nginx.org/en/docs/http/ngx_http_v3_module.html#http3_stream_buffer_size](https://nginx.org/en/docs/http/ngx_http_v3_module.html#http3_stream_buffer_size)
+
+## quic-active-connection-id-limit
+
+Sets the QUIC `active_connection_id_limit` transport parameter value. This is the maximum number of client connection IDs which can be stored on the server.
+
+_References:_
+[https://nginx.org/en/docs/http/ngx_http_v3_module.html#quic_active_connection_id_limit](https://nginx.org/en/docs/http/ngx_http_v3_module.html#quic_active_connection_id_limit)
+
+## quic-bpf
+
+Enables routing of QUIC packets using [eBPF](https://ebpf.io/). When enabled, this allows supporting QUIC connection migration.
+
+_References:_
+[https://nginx.org/en/docs/http/ngx_http_v3_module.html#quic_bpf](https://nginx.org/en/docs/http/ngx_http_v3_module.html#quic_bpf)
+
+## quic-gso
+
+Enables sending in optimized batch mode using segmentation offloading.
+
+_References:_
+[https://nginx.org/en/docs/http/ngx_http_v3_module.html#quic_gso](https://nginx.org/en/docs/http/ngx_http_v3_module.html#quic_gso)
+
+## quic-retry
+
+Enables the [QUIC Address Validation](https://datatracker.ietf.org/doc/html/rfc9000#name-address-validation) feature. This includes sending a new token in a `Retry` packet or a `NEW_TOKEN` frame and validating a token received in the `Initial` packet.
+
+_References:_
+[https://nginx.org/en/docs/http/ngx_http_v3_module.html#quic_retry](https://nginx.org/en/docs/http/ngx_http_v3_module.html#quic_retry)
 
 ## hsts
 
