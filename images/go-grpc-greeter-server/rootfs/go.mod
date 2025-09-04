@@ -4,7 +4,7 @@ go 1.25.1
 
 require (
 	google.golang.org/grpc v1.75.0
-	google.golang.org/grpc/examples v0.0.0-20250830142414-29ba00196bb8
+	google.golang.org/grpc/examples v0.0.0-20250904160630-6524c7bdc998
 )
 
 require (
