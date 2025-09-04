@@ -26,6 +26,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
+	"github.com/prometheus/common/model"
 )
 
 // GatherAndCompare retrieves all metrics exposed by a collector and compares it
@@ -41,7 +42,7 @@ func GatherAndCompare(_ prometheus.Collector, expected string, metricNames []str
 	if metricNames != nil {
 		metrics = filterMetrics(metrics, metricNames)
 	}
-	var tp expfmt.TextParser
+	tp := expfmt.NewTextParser(model.UTF8Validation)
 	expectedMetrics, err := tp.TextToMetricFamilies(bytes.NewReader([]byte(expected)))
 	if err != nil {
 		return fmt.Errorf("parsing expected metrics failed: %s", err)
