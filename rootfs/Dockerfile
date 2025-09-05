@@ -28,6 +28,7 @@ LABEL org.opencontainers.image.vendor="The Kubernetes Authors"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
 LABEL org.opencontainers.image.version="${VERSION}"
 LABEL org.opencontainers.image.revision="${COMMIT_SHA}"
+LABEL org.opencontainers.image.description="Arxignis custom build of the NGINX Ingress Controller for Kubernetes"
 
 LABEL build_id="${BUILD_ID}"
 
@@ -66,17 +67,16 @@ RUN bash -xeu -c ' \
   # Put libs of newer modules under `/modules_mount/<other>/lib` and add that path below
   # Could get complicated arch specific paths become a need
   && echo "/lib:/usr/lib:/usr/local/lib:/modules_mount/etc/nginx/modules/otel" > /etc/ld-musl-x86_64.path
-  
 
 RUN apk add --no-cache libcap \
   && setcap    cap_net_bind_service=+ep /nginx-ingress-controller \
   && setcap -v cap_net_bind_service=+ep /nginx-ingress-controller \
-  && setcap    cap_net_bind_service=+ep /usr/local/nginx/sbin/nginx \
-  && setcap -v cap_net_bind_service=+ep /usr/local/nginx/sbin/nginx \
+  && setcap    cap_net_bind_service=+ep /usr/local/openresty/nginx/sbin/nginx \
+  && setcap -v cap_net_bind_service=+ep /usr/local/openresty/nginx/sbin/nginx \
   && setcap    cap_net_bind_service=+ep /usr/bin/dumb-init \
   && setcap -v cap_net_bind_service=+ep /usr/bin/dumb-init \
   && apk del libcap \
-  && ln -sf /usr/local/nginx/sbin/nginx /usr/bin/nginx
+  && ln -sf /usr/local/openresty/nginx/sbin/nginx /usr/bin/nginx
 
 USER www-data
 

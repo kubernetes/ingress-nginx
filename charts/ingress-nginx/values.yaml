@@ -5,7 +5,7 @@
 global:
   image:
     # -- Registry host to pull images from.
-    registry: registry.k8s.io
+    registry: ghcr.io
 ## Overrides for generated resource names
 # See templates/_helpers.tpl
 # nameOverride:
@@ -26,14 +26,14 @@ controller:
     ## Keep false as default for now!
     chroot: false
     # registry: registry.k8s.io
-    image: ingress-nginx/controller
+    image: arxignis/ingress-nginx/controller
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
-    tag: "v1.13.0"
-    digest: sha256:dc75a7baec7a3b827a5d7ab0acd10ab507904c7dad692365b3e3b596eca1afd2
-    digestChroot: sha256:af6264394cfa61d21f644d87372823064804e64de737b0747e86c86348b29c9f
-    pullPolicy: IfNotPresent
+    tag: "v1.13.0-1"
+    # digest: sha256:dc75a7baec7a3b827a5d7ab0acd10ab507904c7dad692365b3e3b596eca1afd2
+    # digestChroot: sha256:af6264394cfa61d21f644d87372823064804e64de737b0747e86c86348b29c9f
+    pullPolicy: Always
     runAsNonRoot: true
     # -- This value must not be changed using the official image.
     # uid=101(www-data) gid=82(www-data) groups=82(www-data)
