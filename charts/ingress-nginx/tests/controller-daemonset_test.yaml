@@ -208,3 +208,33 @@ tests:
       - equal:
           path: spec.template.spec.runtimeClassName
           value: myClass
+
+  - it: should create a DaemonSet with resizePolicy if `controller.resizePolicy` is set
+    set:
+      controller.kind: DaemonSet
+      controller.resizePolicy:
+        - resourceName: cpu
+          restartPolicy: NotRequired
+        - resourceName: memory
+          restartPolicy: RestartContainer
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resizePolicy[0].resourceName
+          value: cpu
+      - equal:
+          path: spec.template.spec.containers[0].resizePolicy[0].restartPolicy
+          value: NotRequired
+      - equal:
+          path: spec.template.spec.containers[0].resizePolicy[1].resourceName
+          value: memory
+      - equal:
+          path: spec.template.spec.containers[0].resizePolicy[1].restartPolicy
+          value: RestartContainer
+
+  - it: should not include resizePolicy if `controller.resizePolicy` is empty
+    set:
+      controller.kind: DaemonSet
+      controller.resizePolicy: []
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].resizePolicy

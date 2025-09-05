@@ -70,6 +70,9 @@ spec:
           {{- if .Values.controller.admissionWebhooks.patchWebhookJob.resources }}
           resources: {{ toYaml .Values.controller.admissionWebhooks.patchWebhookJob.resources | nindent 12 }}
           {{- end }}
+          {{- if .Values.controller.admissionWebhooks.patchWebhookJob.resizePolicy }}
+          resizePolicy: {{ toYaml .Values.controller.admissionWebhooks.patchWebhookJob.resizePolicy | nindent 12 }}
+          {{- end }}
           {{- if .Values.controller.admissionWebhooks.patchWebhookJob.volumeMounts }}
           volumeMounts: {{- toYaml .Values.controller.admissionWebhooks.patchWebhookJob.volumeMounts | nindent 12 }}
           {{- end }}
