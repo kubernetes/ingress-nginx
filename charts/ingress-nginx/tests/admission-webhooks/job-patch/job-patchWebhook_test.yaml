@@ -18,3 +18,61 @@ tests:
       - equal:
           path: spec.activeDeadlineSeconds
           value: 1
+
+  - it: should create a Job with custom volumes and volume mounts if `controller.admissionWebhooks.patchWebhookJob.volumes` and `controller.admissionWebhooks.patchWebhookJob.volumeMounts` are set
+    set:
+      controller.admissionWebhooks.patch.serviceAccount.automountServiceAccountToken: false
+      controller.admissionWebhooks.patchWebhookJob.volumeMounts:
+        - name: kube-api-access
+          mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+          readOnly: true
+      controller.admissionWebhooks.patchWebhookJob.volumes:
+        - name: kube-api-access
+          projected:
+            defaultMode: 0444
+            sources:
+              - serviceAccountToken:
+                  path: token
+                  expirationSeconds: 3600
+              - configMap:
+                  name: kube-root-ca.crt
+                  items:
+                    - key: ca.crt
+                      path: ca.crt
+              - downwardAPI:
+                  items:
+                    - path: namespace
+                      fieldRef:
+                        apiVersion: v1
+                        fieldPath: metadata.namespace
+    asserts:
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: false
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts
+          value:
+            - name: kube-api-access
+              mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+              readOnly: true
+      - equal:
+          path: spec.template.spec.volumes
+          value:
+            - name: kube-api-access
+              projected:
+                defaultMode: 0444
+                sources:
+                  - serviceAccountToken:
+                      path: token
+                      expirationSeconds: 3600
+                  - configMap:
+                      name: kube-root-ca.crt
+                      items:
+                        - key: ca.crt
+                          path: ca.crt
+                  - downwardAPI:
+                      items:
+                        - path: namespace
+                          fieldRef:
+                            apiVersion: v1
+                            fieldPath: metadata.namespace

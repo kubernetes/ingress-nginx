@@ -8,5 +8,5 @@ You can learn more about using [Ingress](https://kubernetes.io/docs/concepts/ser
 
 # Getting Started
 
-See [Deployment](./deploy/) for a whirlwind tour that will get you started.
+See [Deployment](./deploy/index.md) for a whirlwind tour that will get you started.
 
