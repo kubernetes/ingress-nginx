@@ -401,6 +401,13 @@ controller:
     requests:
       cpu: 100m
       memory: 90Mi
+  # -- Container resizePolicy for CPU and memory
+  # ref: https://kubernetes.io/docs/concepts/workloads/pods/user-namespaces/
+  resizePolicy: []
+    # - resourceName: cpu
+    #   restartPolicy: NotRequired
+    # - resourceName: memory
+    #   restartPolicy: RestartContainer
   # Mutually exclusive with keda autoscaling
   autoscaling:
     enabled: false
@@ -795,6 +802,12 @@ controller:
       # requests:
       #   cpu: 10m
       #   memory: 20Mi
+      # -- Container resizePolicy for createSecret job
+      resizePolicy: []
+        # - resourceName: cpu
+        #   restartPolicy: NotRequired
+        # - resourceName: memory
+        #   restartPolicy: RestartContainer
       # -- Volume mounts for secret creation containers
       volumeMounts: []
       # - name: certs
@@ -822,6 +835,12 @@ controller:
             - ALL
         readOnlyRootFilesystem: true
       resources: {}
+      # -- Container resizePolicy for patchWebhook job
+      resizePolicy: []
+        # - resourceName: cpu
+        #   restartPolicy: NotRequired
+        # - resourceName: memory
+        #   restartPolicy: RestartContainer
       # -- Volume mounts for webhook patch containers
       volumeMounts: []
       # - name: certs
