@@ -16,12 +16,12 @@ require (
 	github.com/moul/pb v0.0.0-20220425114252-bca18df4138c
 	github.com/ncabatoff/process-exporter v0.8.7
 	github.com/onsi/ginkgo/v2 v2.25.3
-	github.com/opencontainers/cgroups v0.0.4
+	github.com/opencontainers/cgroups v0.0.5
 	github.com/pires/go-proxyproto v0.8.1
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
-	github.com/prometheus/client_golang v1.23.1
+	github.com/prometheus/client_golang v1.23.2
 	github.com/prometheus/client_model v0.6.2
-	github.com/prometheus/common v0.66.0
+	github.com/prometheus/common v0.66.1
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.11.1
@@ -64,7 +64,6 @@ require (
 	github.com/go-openapi/swag/typeutils v0.24.0 // indirect
 	github.com/go-openapi/swag/yamlutils v0.24.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
-	github.com/grafana/regexp v0.0.0-20240518133315-a468a5bfb3bc // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/moby/sys/userns v0.1.0 // indirect
@@ -77,7 +76,6 @@ require (
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.13.0 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/release-utils v0.8.3 // indirect
 	sigs.k8s.io/structured-merge-diff/v6 v6.3.0 // indirect
@@ -135,12 +133,12 @@ require (
 	github.com/yudai/pp v2.0.1+incompatible // indirect
 	golang.org/x/mod v0.27.0 // indirect
 	golang.org/x/net v0.43.0 // indirect
-	golang.org/x/oauth2 v0.30.0
-	golang.org/x/sync v0.16.0 // indirect
-	golang.org/x/sys v0.35.0 // indirect
+	golang.org/x/oauth2 v0.31.0
+	golang.org/x/sync v0.17.0 // indirect
+	golang.org/x/sys v0.36.0 // indirect
 	golang.org/x/term v0.34.0 // indirect
 	golang.org/x/text v0.28.0 // indirect
-	golang.org/x/time v0.12.0 // indirect
+	golang.org/x/time v0.13.0 // indirect
 	golang.org/x/tools v0.36.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250826171959-ef028d996bc1 // indirect
 	google.golang.org/protobuf v1.36.8 // indirect
@@ -148,7 +146,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/gengo/v2 v2.0.0-20250604051438-85fd79dbfd9f // indirect
-	k8s.io/kube-openapi v0.0.0-20250902184714-7fc278399c7f // indirect
+	k8s.io/kube-openapi v0.0.0-20250905212525-66792eed8611 // indirect
 	k8s.io/utils v0.0.0-20250820121507-0af2bda4dd1d
 	sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 // indirect
 	sigs.k8s.io/kustomize/api v0.20.1 // indirect
