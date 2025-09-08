@@ -68,6 +68,7 @@ They are set in the container spec of the `ingress-nginx-controller` Deployment 
 | `--udp-services-configmap`         | Name of the ConfigMap containing the definition of the UDP services to expose. The key in the map indicates the external port to be used. The value is a reference to a Service in the form "namespace/name:port", where "port" can either be a port name or number. |
 | `--update-status`                  | Update the load-balancer status of Ingress objects this controller satisfies. Requires setting the publish-service parameter to a valid Service reference. (default true) |
 | `--update-status-on-shutdown`      | Update the load-balancer status of Ingress objects when the controller shuts down. Requires the update-status parameter. (default true) |
+| `--use-election-id-selector-on-shutdown` | Determine if other pods are running based on the electionID label, rather than all pod labels. When true, the controller looks for pods with the specific nginx.ingress.kubernetes.io/electionID label matching the controller's election ID. When false, it uses all standard Kubernetes app labels to identify other controller pods. (default true) |
 | `--shutdown-grace-period`          | Seconds to wait after receiving the shutdown signal, before stopping the nginx process. (default 0) |
 | `--size-buckets`          | Set of buckets which will be used for prometheus histogram metrics such as BytesSent. (default `[10, 100, 1000, 10000, 100000, 1e+06, 1e+07]`) |
 | `-v, --v Level`                    | number for the log level verbosity |

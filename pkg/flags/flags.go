@@ -232,6 +232,8 @@ Takes the form "<host>:port". If not provided, no admission controller is starte
 
 		disableSyncEvents = flags.Bool("disable-sync-events", false, "Disables the creation of 'Sync' event resources")
 
+		useElectionIDSelectorOnShutdown = flags.Bool("use-election-id-selector-on-shutdown", true, "Determine if other pods are running based on the electionID label, rather than all pod labels.")
+
 		enableTopologyAwareRouting = flags.Bool("enable-topology-aware-routing", false, "Enable topology aware routing feature, needs service object annotation service.kubernetes.io/topology-mode sets to auto or trafficDistribution.")
 	)
 
@@ -377,6 +379,7 @@ https://blog.maxmind.com/2019/12/significant-changes-to-accessing-and-using-geol
 		HealthCheckHost:             *healthzHost,
 		DynamicConfigurationRetries: *dynamicConfigurationRetries,
 		EnableTopologyAwareRouting:  *enableTopologyAwareRouting,
+		UseElectionIDSelectorOnShutdown: *useElectionIDSelectorOnShutdown,
 		ListenPorts: &ngx_config.ListenPorts{
 			Default:  *defServerPort,
 			Health:   *healthzPort,
