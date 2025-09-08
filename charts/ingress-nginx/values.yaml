@@ -401,6 +401,13 @@ controller:
     requests:
       cpu: 100m
       memory: 90Mi
+  # -- Resize policy for controller containers.
+  # Ref: https://kubernetes.io/docs/tasks/configure-pod-container/resize-container-resources
+  resizePolicy: []
+  # - resourceName: cpu
+  #   restartPolicy: NotRequired
+  # - resourceName: memory
+  #   restartPolicy: RestartContainer
   # Mutually exclusive with keda autoscaling
   autoscaling:
     enabled: false

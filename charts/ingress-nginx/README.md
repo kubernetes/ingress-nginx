@@ -443,6 +443,7 @@ metadata:
 | controller.readinessProbe.timeoutSeconds | int | `1` |  |
 | controller.replicaCount | int | `1` |  |
 | controller.reportNodeInternalIp | bool | `false` | Bare-metal considerations via the host network https://kubernetes.github.io/ingress-nginx/deploy/baremetal/#via-the-host-network Ingress status was blank because there is no Service exposing the Ingress-Nginx Controller in a configuration using the host network, the default --publish-service flag used in standard cloud setups does not apply |
+| controller.resizePolicy | list | `[]` | Resize policy for controller containers. Ref: https://kubernetes.io/docs/tasks/configure-pod-container/resize-container-resources |
 | controller.resources.requests.cpu | string | `"100m"` |  |
 | controller.resources.requests.memory | string | `"90Mi"` |  |
 | controller.runtimeClassName | string | `""` | Instruct the kubelet to use the named RuntimeClass to run the pod |
