@@ -102,6 +102,20 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+          {{- if .Values.controller.arxignis.enabled }}
+            - name: ARXIGNIS_CAPTCHA_SITE_KEY
+              value: {{ .Values.controller.arxignis.captchaSiteKey | quote }}
+            - name: ARXIGNIS_CAPTCHA_SECRET_KEY
+              value: {{ .Values.controller.arxignis.captchaSecretKey | quote }}
+            - name: ARXIGNIS_API_KEY
+              value: {{ .Values.controller.arxignis.apiKey | quote }}
+            - name: ARXIGNIS_API_URL
+              value: {{ .Values.controller.arxignis.apiUrl | quote }}
+            - name: ARXIGNIS_MODE
+              value: {{ .Values.controller.arxignis.mode | quote }}
+            - name: ARXIGNIS_CAPTCHA_PROVIDER
+              value: {{ .Values.controller.arxignis.captchaProvider | quote }}
+          {{- end }}
           {{- if .Values.controller.enableMimalloc }}
             - name: LD_PRELOAD
               value: /usr/local/lib/libmimalloc.so
