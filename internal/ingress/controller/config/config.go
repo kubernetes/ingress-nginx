@@ -593,6 +593,10 @@ type Configuration struct {
 	// By default this is disabled
 	EnableOpentelemetry bool `json:"enable-opentelemetry"`
 
+	// EnableArxignis enables the Arxignis integrations in NGINX/Lua
+	// By default this is disabled
+	EnableArxignis bool `json:"enable-arxignis"`
+
 	// OpentelemetryConfig sets the opentelemetry config file
 	// Default: /etc/nginx/opentelemetry.toml
 	OpentelemetryConfig string `json:"opentelemetry-config"`
@@ -894,6 +898,7 @@ func NewDefault() Configuration {
 		BindAddressIpv6:                defBindAddress,
 		OpentelemetryTrustIncomingSpan: true,
 		OpentelemetryConfig:            "/etc/ingress-controller/telemetry/opentelemetry.toml",
+		EnableArxignis:                 false,
 		OtlpCollectorPort:              "4317",
 		OtelServiceName:                "nginx",
 		OtelSampler:                    "AlwaysOn",
