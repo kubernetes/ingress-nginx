@@ -51,3 +51,17 @@ else
     certificate.is_ocsp_stapling_enabled = configfile.enable_ocsp
   end
 end
+
+if configfile.enable_arxignis then
+  local mlcache = require "resty.mlcache"
+  local arxignis_cache, err = mlcache.new("arxignis_cache", "arxignis_cache", {
+    lru_size = 50000,
+    ttl = 800,
+    neg_ttl = 10,
+    ipc_shm = "arxignis_cache"
+    })
+    if err then
+      error("Failed to create arxignis cache: " .. tostring(err))
+    end
+    _G.arxignis_cache = arxignis_cache
+end

@@ -5,7 +5,7 @@
 global:
   image:
     # -- Registry host to pull images from.
-    registry: registry.k8s.io
+    registry: ghcr.io
 ## Overrides for generated resource names
 # See templates/_helpers.tpl
 # nameOverride:
@@ -26,14 +26,15 @@ controller:
     ## Keep false as default for now!
     chroot: false
     # registry: registry.k8s.io
-    image: ingress-nginx/controller
+    image: arxignis/ingress-nginx/controller
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
-    tag: "v1.13.2"
-    digest: sha256:1f7eaeb01933e719c8a9f4acd8181e555e582330c7d50f24484fb64d2ba9b2ef
-    digestChroot: sha256:2beb2139c53d6bcb9c8b11d68b412a6a1aa1de3a7e6040695848b0ce997b2be8
-    pullPolicy: IfNotPresent
+
+    tag: "v1.13.0-1"
+    # digest: sha256:dc75a7baec7a3b827a5d7ab0acd10ab507904c7dad692365b3e3b596eca1afd2
+    # digestChroot: sha256:af6264394cfa61d21f644d87372823064804e64de737b0747e86c86348b29c9f
+    pullPolicy: Always
     runAsNonRoot: true
     # -- This value must not be changed using the official image.
     # uid=101(www-data) gid=82(www-data) groups=82(www-data)
@@ -54,6 +55,16 @@ controller:
   # -- Global configuration passed to the ConfigMap consumed by the controller. Values may contain Helm templates.
   # Ref.: https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/
   config: {}
+  # Arxignis feature toggle and configuration
+  arxignis:
+    enabled: false
+    # Optional environment variables when enabled
+    captchaSiteKey: ""
+    captchaSecretKey: ""
+    apiKey: ""
+    apiUrl: ""
+    mode: ""
+    captchaProvider: ""
   # -- Annotations to be added to the controller config configuration configmap.
   configAnnotations: {}
   # -- Will add custom headers before sending traffic to backends according to https://github.com/kubernetes/ingress-nginx/tree/main/docs/examples/customization/custom-headers

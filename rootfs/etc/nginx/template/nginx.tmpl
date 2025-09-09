@@ -50,6 +50,15 @@ worker_shutdown_timeout {{ $cfg.WorkerShutdownTimeout }} ;
 {{ $cfg.MainSnippet }}
 {{ end }}
 
+{{ if $cfg.EnableArxignis }}
+env ARXIGNIS_CAPTCHA_SITE_KEY;
+env ARXIGNIS_CAPTCHA_SECRET_KEY;
+env ARXIGNIS_API_KEY;
+env ARXIGNIS_API_URL;
+env ARXIGNIS_MODE;
+env ARXIGNIS_CAPTCHA_PROVIDER;
+{{ end }}
+
 events {
     multi_accept        {{ if $cfg.EnableMultiAccept }}on{{ else }}off{{ end }};
     worker_connections  {{ $cfg.MaxWorkerConnections }};
@@ -69,6 +78,11 @@ http {
     {{ buildLuaSharedDictionaries $cfg $servers }}
 
     lua_shared_dict luaconfig 5m;
+
+    {{ if $cfg.EnableArxignis }}
+    lua_shared_dict arxignis_cache 200m;
+    lua_shared_dict arxignis_queue 50m;
+    {{ end }}
 
     init_by_lua_file /etc/nginx/lua/ngx_conf_init.lua;
 
@@ -607,7 +621,7 @@ http {
         }
         {{ end }}
 
-        set_by_lua_file $redirect_to /etc/nginx/lua/nginx/ngx_srv_redirect.lua {{ $redirect.To }}; 
+        set_by_lua_file $redirect_to /etc/nginx/lua/nginx/ngx_srv_redirect.lua {{ $redirect.To }};
 
         return {{ $all.Cfg.HTTPRedirectCode }} $redirect_to;
     }
@@ -727,7 +741,7 @@ stream {
     lua_package_path "/etc/nginx/lua/?.lua;/etc/nginx/lua/vendor/?.lua;;";
 
     lua_shared_dict tcp_udp_configuration_data 5M;
-    
+
     {{ buildResolvers $cfg.Resolver $cfg.DisableIpv6DNS }}
 
     init_by_lua_file /etc/nginx/lua/ngx_conf_init_stream.lua;

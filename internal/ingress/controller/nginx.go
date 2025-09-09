@@ -1098,6 +1098,7 @@ func (n *NGINXController) createLuaConfig(cfg *ngx_config.Configuration) error {
 		HTTPRedirectCode:        cfg.HTTPRedirectCode,
 		EnableOCSP:              cfg.EnableOCSP,
 		MonitorBatchMaxSize:     n.cfg.MonitorMaxBatchSize,
+		EnableArxignis:          cfg.EnableArxignis,
 		HSTS:                    cfg.HSTS,
 		HSTSMaxAge:              cfg.HSTSMaxAge,
 		HSTSIncludeSubdomains:   cfg.HSTSIncludeSubdomains,

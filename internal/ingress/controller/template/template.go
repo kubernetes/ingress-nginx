@@ -217,6 +217,7 @@ type LuaConfig struct {
 	HTTPRedirectCode        int            `json:"http_redirect_code"`
 	EnableOCSP              bool           `json:"enable_ocsp"`
 	MonitorBatchMaxSize     int            `json:"monitor_batch_max_size"`
+	EnableArxignis          bool           `json:"enable_arxignis"`
 	HSTS                    bool           `json:"hsts"`
 	HSTSMaxAge              string         `json:"hsts_max_age"`
 	HSTSIncludeSubdomains   bool           `json:"hsts_include_subdomains"`
