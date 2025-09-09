@@ -586,7 +586,7 @@ type Configuration struct {
 	GenerateRequestID bool `json:"generate-request-id,omitempty"`
 
 	// Adds an X-Original-Uri header with the original request URI to the backend request
-	// Default: true
+	// Default: false
 	ProxyAddOriginalURIHeader bool `json:"proxy-add-original-uri-header"`
 
 	// EnableOpentelemetry enables the nginx Opentelemetry extension
@@ -598,7 +598,7 @@ type Configuration struct {
 	EnableArxignis bool `json:"enable-arxignis"`
 
 	// OpentelemetryConfig sets the opentelemetry config file
-	// Default: /etc/nginx/opentelemetry.toml
+	// Default: /etc/ingress-controller/telemetry/opentelemetry.toml
 	OpentelemetryConfig string `json:"opentelemetry-config"`
 
 	// OpentelemetryOperationName specifies a custom name for the server span
@@ -864,7 +864,7 @@ func NewDefault() Configuration {
 			ProxySendTimeout:            60,
 			ProxyBuffersNumber:          4,
 			ProxyBufferSize:             "4k",
-			ProxyBusyBuffersSize:        "8k",
+			ProxyBusyBuffersSize:        "",
 			ProxyCookieDomain:           "off",
 			ProxyCookiePath:             "off",
 			ProxyNextUpstream:           "error timeout",

@@ -30,6 +30,7 @@ controller:
     ## for backwards compatibility consider setting the full image url via the repository value below
     ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
     ## repository:
+
     tag: "v1.13.0-1"
     # digest: sha256:dc75a7baec7a3b827a5d7ab0acd10ab507904c7dad692365b3e3b596eca1afd2
     # digestChroot: sha256:af6264394cfa61d21f644d87372823064804e64de737b0747e86c86348b29c9f
@@ -805,6 +806,16 @@ controller:
       # requests:
       #   cpu: 10m
       #   memory: 20Mi
+      # -- Volume mounts for secret creation containers
+      volumeMounts: []
+      # - name: certs
+      #   mountPath: /etc/webhook/certs
+      #   readOnly: true
+      # -- Volumes for secret creation pod
+      volumes: []
+      # - name: certs
+      #   secret:
+      #     secretName: my-webhook-secret
     patchWebhookJob:
       name: patch
       # -- Deadline in seconds for the job to complete. Must be greater than 0 to enforce. If unset or 0, no deadline is enforced.
@@ -822,6 +833,16 @@ controller:
             - ALL
         readOnlyRootFilesystem: true
       resources: {}
+      # -- Volume mounts for webhook patch containers
+      volumeMounts: []
+      # - name: certs
+      #   mountPath: /etc/webhook/certs
+      #   readOnly: true
+      # -- Volumes for webhook patch pod
+      volumes: []
+      # - name: certs
+      #   secret:
+      #     secretName: my-webhook-secret
     patch:
       enabled: true
       image:
@@ -830,8 +851,8 @@ controller:
         ## for backwards compatibility consider setting the full image url via the repository value below
         ## use *either* current default registry/image or repository format or installing chart by providing the values.yaml will fail
         ## repository:
-        tag: v1.6.0
-        digest: sha256:c9f76a75fd00e975416ea1b73300efd413116de0de8570346ed90766c5b5cefb
+        tag: v1.6.2
+        digest: sha256:050a34002d5bb4966849c880c56c91f5320372564245733b33d4b3461b4dbd24
         pullPolicy: IfNotPresent
       # -- Provide a priority class name to the webhook patching job
       ##
