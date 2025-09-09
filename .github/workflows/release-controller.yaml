@@ -13,12 +13,6 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
-    env:
-      BUILDX_PLATFORMS: linux/amd64,linux/arm64
-      # Override registry if needed; Makefile defaults to ghcr.io/arxignis/ingress-nginx
-      REGISTRY: ghcr.io/arxignis/ingress-nginx
-      # Ensure Makefile uses the Git tag as image tag
-      TAG: ${{ github.ref_name }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -38,7 +32,40 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push multi-arch controller images
+      - name: Determine base image and tag
+        id: vars
+        shell: bash
         run: |
-          make release
+          echo "BASE_IMAGE=$(cat NGINX_BASE)" >> $GITHUB_ENV
+          echo "TAG=${GITHUB_REF_NAME}" >> $GITHUB_ENV
+          echo "COMMIT_SHA=${GITHUB_SHA}" >> $GITHUB_ENV
+
+      - name: Build binaries for amd64 and arm64
+        run: |
+          make clean
+          for arch in amd64 arm64; do ARCH=$arch make build; done
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=raw,value=${{ github.ref_name }}
+
+      - name: Build and push multi-arch image
+        uses: docker/build-push-action@v6
+        with:
+          context: rootfs
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            BASE_IMAGE=${{ env.BASE_IMAGE }}
+            VERSION=${{ env.TAG }}
+            COMMIT_SHA=${{ env.COMMIT_SHA }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
 
