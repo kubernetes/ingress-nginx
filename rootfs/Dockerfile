@@ -69,12 +69,16 @@ RUN bash -xeu -c ' \
   && echo "/lib:/usr/lib:/usr/local/lib:/modules_mount/etc/nginx/modules/otel" > /etc/ld-musl-x86_64.path
 
 RUN apk add --no-cache libcap \
-  && setcap    cap_net_bind_service=+ep /nginx-ingress-controller \
-  && setcap -v cap_net_bind_service=+ep /nginx-ingress-controller \
-  && setcap    cap_net_bind_service=+ep /usr/local/openresty/nginx/sbin/nginx \
-  && setcap -v cap_net_bind_service=+ep /usr/local/openresty/nginx/sbin/nginx \
-  && setcap    cap_net_bind_service=+ep /usr/bin/dumb-init \
-  && setcap -v cap_net_bind_service=+ep /usr/bin/dumb-init \
+  && setcap cap_net_bind_service=+ep /nginx-ingress-controller \
+  && getcap /nginx-ingress-controller | grep -q 'cap_net_bind_service=ep' \
+  && if [ -f /usr/local/openresty/nginx/sbin/nginx ]; then \
+       setcap cap_net_bind_service=+ep /usr/local/openresty/nginx/sbin/nginx && \
+       getcap /usr/local/openresty/nginx/sbin/nginx | grep -q 'cap_net_bind_service=ep'; \
+     fi \
+  && if [ -f /usr/bin/dumb-init ]; then \
+       setcap cap_net_bind_service=+ep /usr/bin/dumb-init && \
+       getcap /usr/bin/dumb-init | grep -q 'cap_net_bind_service=ep'; \
+     fi \
   && apk del libcap \
   && ln -sf /usr/local/openresty/nginx/sbin/nginx /usr/bin/nginx
 
