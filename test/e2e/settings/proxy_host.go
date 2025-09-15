@@ -37,7 +37,7 @@ var _ = framework.IngressNginxDescribe("Dynamic $proxy_host", func() {
 		disableSnippet := f.AllowSnippetConfiguration()
 		defer disableSnippet()
 
-		upstreamName := fmt.Sprintf("%v-%v-80", f.Namespace, framework.EchoService)
+		upstreamName := fmt.Sprintf("%v_%v_80", f.Namespace, framework.EchoService)
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/configuration-snippet": `more_set_headers "Custom-Header: $proxy_host"`,
 		}
@@ -61,7 +61,7 @@ var _ = framework.IngressNginxDescribe("Dynamic $proxy_host", func() {
 		disableSnippet := f.AllowSnippetConfiguration()
 		defer disableSnippet()
 
-		upstreamName := fmt.Sprintf("%v-%v-80", f.Namespace, framework.EchoService)
+		upstreamName := fmt.Sprintf("%v_%v_80", f.Namespace, framework.EchoService)
 		upstreamVHost := "different.host"
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/upstream-vhost":        upstreamVHost,
