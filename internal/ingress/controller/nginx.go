@@ -622,6 +622,7 @@ func (n *NGINXController) generateTemplate(cfg ngx_config.Configuration, ingress
 		NginxStatusIpv6Whitelist: cfg.NginxStatusIpv6Whitelist,
 		RedirectServers:          utilingress.BuildRedirects(ingressCfg.Servers),
 		IsSSLPassthroughEnabled:  n.cfg.EnableSSLPassthrough,
+		IsQUICEnabled:            n.cfg.EnableQUIC,
 		ListenPorts:              n.cfg.ListenPorts,
 		EnableMetrics:            n.cfg.EnableMetrics,
 		MaxmindEditionFiles:      n.cfg.MaxmindEditionFiles,
