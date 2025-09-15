@@ -9,6 +9,9 @@ metadata:
 {{- end }}
   name: {{ include "ingress-nginx.controller.fullname" . }}
 data:
+{{- if .Values.controller.annotationsRiskLevel }}
+  annotations-risk-level: "Critical"
+{{- end }}
 {{- if .Values.controller.addHeaders }}
   add-headers: {{ .Release.Namespace }}/{{ include "ingress-nginx.fullname" . }}-custom-add-headers
 {{- end }}
