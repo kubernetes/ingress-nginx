@@ -145,7 +145,7 @@ func (a rewrite) Parse(ing *networking.Ingress) (interface{}, error) {
 	config.Target, err = parser.GetStringAnnotation(rewriteTargetAnnotation, ing, a.annotationConfig.Annotations)
 	if err != nil {
 		if errors.IsValidationError(err) {
-			klog.Warningf("%sis invalid, defaulting to empty", rewriteTargetAnnotation)
+			klog.Warningf("%s is invalid, defaulting to empty", rewriteTargetAnnotation)
 		}
 		config.Target = ""
 	}
