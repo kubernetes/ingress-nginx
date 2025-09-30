@@ -3,6 +3,33 @@ entries:
   ingress-nginx:
   - annotations:
       artifacthub.io/changes: |
+        - Update Ingress-Nginx version controller-v1.13.3
+      artifacthub.io/prerelease: "false"
+    apiVersion: v2
+    appVersion: 1.13.3
+    created: "2025-09-30T14:47:04.27775948Z"
+    description: Ingress controller for Kubernetes using NGINX as a reverse proxy
+      and load balancer
+    digest: 616437d8121bd8b558bd3651c00ded094649235f714f0a6980fbb76bf5ba59b0
+    home: https://github.com/kubernetes/ingress-nginx
+    icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+    keywords:
+    - ingress
+    - nginx
+    kubeVersion: '>=1.21.0-0'
+    maintainers:
+    - name: cpanato
+    - name: Gacko
+    - name: strongjz
+    - name: tao12345666333
+    name: ingress-nginx
+    sources:
+    - https://github.com/kubernetes/ingress-nginx
+    urls:
+    - https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-4.13.3/ingress-nginx-4.13.3.tgz
+    version: 4.13.3
+  - annotations:
+      artifacthub.io/changes: |
         - Update Ingress-Nginx version controller-v1.13.2
       artifacthub.io/prerelease: "false"
     apiVersion: v2
@@ -4260,4 +4287,4 @@ entries:
     urls:
     - https://github.com/kubernetes/ingress-nginx/releases/download/ingress-nginx-2.0.0/ingress-nginx-2.0.0.tgz
     version: 2.0.0
-generated: "2025-09-30T14:08:59.12298136Z"
+generated: "2025-09-30T14:47:04.278188899Z"
