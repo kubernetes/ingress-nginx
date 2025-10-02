@@ -44,7 +44,7 @@ var (
 	alphaNumericChars    = `\-\.\_\~a-zA-Z0-9\/:`
 	extendedAlphaNumeric = alphaNumericChars + ", "
 	regexEnabledChars    = regexp.QuoteMeta(`^$[](){}*+?|&=\`)
-	urlEnabledChars      = regexp.QuoteMeta(`,:?&=`)
+	urlEnabledChars      = regexp.QuoteMeta(`@,:?&=`)
 )
 
 // IsValidRegex checks if the tested string can be used as a regex, but without any weird character.
