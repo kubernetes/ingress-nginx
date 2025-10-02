@@ -853,7 +853,7 @@ func buildRateLimitZones(input interface{}) []string {
 		}
 	}
 
-	return zones.UnsortedList()
+	return sets.List(zones)
 }
 
 // buildRateLimit produces an array of limit_req to be used inside the Path of
