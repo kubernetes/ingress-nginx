@@ -181,6 +181,8 @@ type Endpoint struct {
 	Port string `json:"port"`
 	// Target returns a reference to the object providing the endpoint
 	Target *apiv1.ObjectReference `json:"target,omitempty"`
+	// True if this endpoint is not considered Ready and should not accept new persistent sessions
+	IsDraining bool `json:"isDraining,omitempty"`
 }
 
 // Server describes a website
