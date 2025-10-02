@@ -320,8 +320,9 @@ metadata:
 | controller.configAnnotations | object | `{}` | Annotations to be added to the controller config configuration configmap. |
 | controller.configMapNamespace | string | `""` | Allows customization of the configmap / nginx-configmap namespace; defaults to $(POD_NAMESPACE) |
 | controller.containerName | string | `"controller"` | Configures the controller container name |
-| controller.containerPort | object | `{"http":80,"https":443}` | Configures the ports that the nginx-controller listens on |
+| controller.containerPort | object | `{"http":80,"https":443}` | Configures the TCP ports that the nginx-controller listens on |
 | controller.containerSecurityContext | object | `{}` | Security context for controller containers |
+| controller.containerUdpPort | object | `{}` | Configures the UDP ports that the nginx-controller listens on |
 | controller.customTemplate.configMapKey | string | `""` |  |
 | controller.customTemplate.configMapName | string | `""` |  |
 | controller.disableLeaderElection | bool | `false` | This configuration disable Nginx Controller Leader Election |
@@ -346,6 +347,7 @@ metadata:
 | controller.hostPort.enabled | bool | `false` | Enable 'hostPort' or not |
 | controller.hostPort.ports.http | int | `80` | 'hostPort' http port |
 | controller.hostPort.ports.https | int | `443` | 'hostPort' https port |
+| controller.hostPort.ports.quic | int | `443` | 'hostPort' quic port |
 | controller.hostname | object | `{}` | Optionally customize the pod hostname. |
 | controller.image.allowPrivilegeEscalation | bool | `false` |  |
 | controller.image.chroot | bool | `false` |  |
@@ -456,6 +458,7 @@ metadata:
 | controller.service.clusterIPs | list | `[]` | Pre-defined cluster internal IP addresses of the external controller service. Take care of collisions with existing services. This value is immutable. Set once, it can not be changed without deleting and re-creating the service. Ref: https://kubernetes.io/docs/concepts/services-networking/service/#choosing-your-own-ip-address |
 | controller.service.enableHttp | bool | `true` | Enable the HTTP listener on both controller services or not. |
 | controller.service.enableHttps | bool | `true` | Enable the HTTPS listener on both controller services or not. |
+| controller.service.enableQuic | bool | `false` | Enable the QUIC listener on both controller services or not. |
 | controller.service.enabled | bool | `true` | Enable controller services or not. This does not influence the creation of either the admission webhook or the metrics service. |
 | controller.service.external.enabled | bool | `true` | Enable the external controller service or not. Useful for internal-only deployments. |
 | controller.service.external.labels | object | `{}` | Labels to be added to the external controller service. |
@@ -476,6 +479,7 @@ metadata:
 | controller.service.internal.loadBalancerSourceRanges | list | `[]` | Restrict access to the internal controller service. Values must be CIDRs. Allows any source address by default. |
 | controller.service.internal.nodePorts.http | string | `""` | Node port allocated for the internal HTTP listener. If left empty, the service controller allocates one from the configured node port range. |
 | controller.service.internal.nodePorts.https | string | `""` | Node port allocated for the internal HTTPS listener. If left empty, the service controller allocates one from the configured node port range. |
+| controller.service.internal.nodePorts.quic | string | `""` | Node port allocated for the internal QUIC listener. If left empty, the service controller allocates one from the configured node port range. |
 | controller.service.internal.nodePorts.tcp | object | `{}` | Node port mapping for internal TCP listeners. If left empty, the service controller allocates them from the configured node port range. Example: tcp:   8080: 30080 |
 | controller.service.internal.nodePorts.udp | object | `{}` | Node port mapping for internal UDP listeners. If left empty, the service controller allocates them from the configured node port range. Example: udp:   53: 30053 |
 | controller.service.internal.ports | object | `{}` |  |
@@ -491,13 +495,16 @@ metadata:
 | controller.service.loadBalancerSourceRanges | list | `[]` | Restrict access to the external controller service. Values must be CIDRs. Allows any source address by default. |
 | controller.service.nodePorts.http | string | `""` | Node port allocated for the external HTTP listener. If left empty, the service controller allocates one from the configured node port range. |
 | controller.service.nodePorts.https | string | `""` | Node port allocated for the external HTTPS listener. If left empty, the service controller allocates one from the configured node port range. |
+| controller.service.nodePorts.quic | string | `""` | Node port allocated for the external QUIC listener. If left empty, the service controller allocates one from the configured node port range. |
 | controller.service.nodePorts.tcp | object | `{}` | Node port mapping for external TCP listeners. If left empty, the service controller allocates them from the configured node port range. Example: tcp:   8080: 30080 |
 | controller.service.nodePorts.udp | object | `{}` | Node port mapping for external UDP listeners. If left empty, the service controller allocates them from the configured node port range. Example: udp:   53: 30053 |
 | controller.service.ports.http | int | `80` | Port the external HTTP listener is published with. |
 | controller.service.ports.https | int | `443` | Port the external HTTPS listener is published with. |
+| controller.service.ports.quic | int | `443` | Port the external QUIC listener is published with. |
 | controller.service.sessionAffinity | string | `""` | Session affinity of the external controller service. Must be either "None" or "ClientIP" if set. Defaults to "None". Ref: https://kubernetes.io/docs/reference/networking/virtual-ips/#session-affinity |
 | controller.service.targetPorts.http | string | `"http"` | Port of the ingress controller the external HTTP listener is mapped to. |
 | controller.service.targetPorts.https | string | `"https"` | Port of the ingress controller the external HTTPS listener is mapped to. |
+| controller.service.targetPorts.quic | string | `"quic"` | Port of the ingress controller the external QUIC listener is mapped to. |
 | controller.service.trafficDistribution | string | `""` | Traffic distribution policy of the external controller service. Set to "PreferClose" to route traffic to endpoints that are topologically closer to the client. Ref: https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution |
 | controller.service.type | string | `"LoadBalancer"` | Type of the external controller service. Ref: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types |
 | controller.shareProcessNamespace | bool | `false` |  |

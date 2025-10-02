@@ -244,6 +244,34 @@ type Configuration struct {
 	// Sets the maximum number of concurrent HTTP/2 streams in a connection.
 	HTTP2MaxConcurrentStreams int `json:"http2-max-concurrent-streams,omitempty"`
 
+	// https://nginx.org/en/docs/http/ngx_http_v3_module.html#http3_hq
+	// Enables HTTP/0.9 protocol negotiation used in QUIC interoperability tests.
+	HTTP3HQ bool `json:"http3-hq,omitempty"`
+
+	// https://nginx.org/en/docs/http/ngx_http_v3_module.html#http3_max_concurrent_streams
+	// Sets the maximum number of concurrent HTTP/3 request streams in a connection.
+	HTTP3MaxConcurrentStreams int `json:"http3-max-concurrent-streams,omitempty"`
+
+	// https://nginx.org/en/docs/http/ngx_http_v3_module.html#http3_stream_buffer_size
+	// Sets the size of the buffer used for reading and writing of the QUIC streams.
+	HTTP3StreamBufferSize string `json:"http3-stream-buffer-size,omitempty"`
+
+	// https://nginx.org/en/docs/http/ngx_http_v3_module.html#quic_active_connection_id_limit
+	// Sets the QUIC active_connection_id_limit transport parameter value. This is the maximum number of client connection IDs which can be stored on the server.
+	QUICActiveConnectionIDLimit int `json:"quic-active-connection-id-limit,omitempty"`
+
+	// https://nginx.org/en/docs/http/ngx_http_v3_module.html#quic_bpf
+	// Enables routing of QUIC packets using eBPF. When enabled, this allows supporting QUIC connection migration.
+	QUICBPF bool `json:"quic-bpf,omitempty"`
+
+	// https://nginx.org/en/docs/http/ngx_http_v3_module.html#quic_gso
+	// Enables sending in optimized batch mode using segmentation offloading.
+	QUICGSO bool `json:"quic-gso,omitempty"`
+
+	// https://nginx.org/en/docs/http/ngx_http_v3_module.html#quic_retry
+	// Enables the QUIC Address Validation feature. This includes sending a new token in a Retry packet or a NEW_TOKEN frame and validating a token received in the Initial packet.
+	QUICRetry bool `json:"quic-retry,omitempty"`
+
 	// Enables or disables the header HSTS in servers running SSL
 	HSTS bool `json:"hsts,omitempty"`
 
@@ -797,6 +825,13 @@ func NewDefault() Configuration {
 		HTTP2MaxHeaderSize:               "",
 		HTTP2MaxRequests:                 0,
 		HTTP2MaxConcurrentStreams:        128,
+		HTTP3HQ:                          false,
+		HTTP3MaxConcurrentStreams:        128,
+		HTTP3StreamBufferSize:            "64k",
+		QUICActiveConnectionIDLimit:      2,
+		QUICBPF:                          false,
+		QUICGSO:                          false,
+		QUICRetry:                        false,
 		HTTPRedirectCode:                 308,
 		HSTS:                             true,
 		HSTSIncludeSubdomains:            true,
@@ -936,6 +971,7 @@ type TemplateConfig struct {
 	Cfg                      Configuration                    `json:"Cfg"`
 	IsIPV6Enabled            bool                             `json:"IsIPV6Enabled"`
 	IsSSLPassthroughEnabled  bool                             `json:"IsSSLPassthroughEnabled"`
+	IsQUICEnabled            bool                             `json:"IsQUICEnabled"`
 	NginxStatusIpv4Whitelist []string                         `json:"NginxStatusIpv4Whitelist"`
 	NginxStatusIpv6Whitelist []string                         `json:"NginxStatusIpv6Whitelist"`
 	RedirectServers          interface{}                      `json:"RedirectServers"`
@@ -956,6 +992,7 @@ type TemplateConfig struct {
 type ListenPorts struct {
 	HTTP     int `json:"HTTP"`
 	HTTPS    int `json:"HTTPS"`
+	QUIC     int `json:"QUIC"`
 	Health   int `json:"Health"`
 	Default  int `json:"Default"`
 	SSLProxy int `json:"SSLProxy"`

@@ -47,10 +47,13 @@ controller:
     readOnlyRootFilesystem: false
   # -- Configures the controller container name
   containerName: controller
-  # -- Configures the ports that the nginx-controller listens on
+  # -- Configures the TCP ports that the nginx-controller listens on
   containerPort:
     http: 80
     https: 443
+  # -- Configures the UDP ports that the nginx-controller listens on
+  containerUdpPort: {}
+  # quic: 443
   # -- Global configuration passed to the ConfigMap consumed by the controller. Values may contain Helm templates.
   # Ref.: https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/
   config: {}
@@ -115,6 +118,8 @@ controller:
       http: 80
       # -- 'hostPort' https port
       https: 443
+      # -- 'hostPort' quic port
+      quic: 443
   # NetworkPolicy for controller component.
   networkPolicy:
     # -- Enable 'networkPolicy' or not
@@ -553,16 +558,22 @@ controller:
     enableHttp: true
     # -- Enable the HTTPS listener on both controller services or not.
     enableHttps: true
+    # -- Enable the QUIC listener on both controller services or not.
+    enableQuic: false
     ports:
       # -- Port the external HTTP listener is published with.
       http: 80
       # -- Port the external HTTPS listener is published with.
       https: 443
+      # -- Port the external QUIC listener is published with.
+      quic: 443
     targetPorts:
       # -- Port of the ingress controller the external HTTP listener is mapped to.
       http: http
       # -- Port of the ingress controller the external HTTPS listener is mapped to.
       https: https
+      # -- Port of the ingress controller the external QUIC listener is mapped to.
+      quic: quic
     # -- Declare the app protocol of the external HTTP and HTTPS listeners or not. Supersedes provider-specific annotations for declaring the backend protocol.
     # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#application-protocol
     appProtocol: true
@@ -571,6 +582,8 @@ controller:
       http: ""
       # -- Node port allocated for the external HTTPS listener. If left empty, the service controller allocates one from the configured node port range.
       https: ""
+      # -- Node port allocated for the external QUIC listener. If left empty, the service controller allocates one from the configured node port range.
+      quic: ""
       # -- Node port mapping for external TCP listeners. If left empty, the service controller allocates them from the configured node port range.
       # Example:
       # tcp:
@@ -645,6 +658,9 @@ controller:
       # -- Port the internal HTTPS listener is published with.
       # Defaults to the value of `controller.service.ports.https`.
       # https: 443
+      # -- Port the internal QUIC listener is published with.
+      # Defaults to the value of `controller.service.ports.quic`.
+      # quic: 443
 
       targetPorts: {}
       # -- Port of the ingress controller the internal HTTP listener is mapped to.
@@ -653,6 +669,9 @@ controller:
       # -- Port of the ingress controller the internal HTTPS listener is mapped to.
       # Defaults to the value of `controller.service.targetPorts.https`.
       # https: https
+      # -- Port of the ingress controller the internal QUIC listener is mapped to.
+      # Defaults to the value of `controller.service.targetPorts.quic`.
+      # quic: quic
 
       # -- Declare the app protocol of the internal HTTP and HTTPS listeners or not. Supersedes provider-specific annotations for declaring the backend protocol.
       # Ref: https://kubernetes.io/docs/concepts/services-networking/service/#application-protocol
@@ -662,6 +681,8 @@ controller:
         http: ""
         # -- Node port allocated for the internal HTTPS listener. If left empty, the service controller allocates one from the configured node port range.
         https: ""
+        # -- Node port allocated for the internal QUIC listener. If left empty, the service controller allocates one from the configured node port range.
+        quic: ""
         # -- Node port mapping for internal TCP listeners. If left empty, the service controller allocates them from the configured node port range.
         # Example:
         # tcp:
