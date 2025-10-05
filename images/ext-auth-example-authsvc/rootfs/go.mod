@@ -1,7 +1,7 @@
 module k8s.io/ingress-nginx/ext-auth-example-authsvc
 
-go 1.24.6
+go 1.25.1
 
-require k8s.io/apimachinery v0.33.4
+require k8s.io/apimachinery v0.34.1
 
 require github.com/google/uuid v1.6.0 // indirect

@@ -112,7 +112,7 @@ func (o *objectRefMap) Reference(ref string) []string {
 	if !ok {
 		return make([]string, 0)
 	}
-	return consumers.UnsortedList()
+	return sets.List(consumers)
 }
 
 // ReferencedBy returns all objects referenced by the given object.

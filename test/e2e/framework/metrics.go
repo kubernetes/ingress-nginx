@@ -22,6 +22,7 @@ import (
 
 	dto "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
+	"github.com/prometheus/common/model"
 )
 
 // GetMetric returns the current prometheus metric exposed by NGINX
@@ -42,7 +43,7 @@ func (f *Framework) GetMetric(metricName, ip string) (*dto.MetricFamily, error) 
 		return nil, fmt.Errorf("GET request for URL %q returned HTTP status %s", url, resp.Status)
 	}
 
-	var parser expfmt.TextParser
+	parser := expfmt.NewTextParser(model.UTF8Validation)
 	metrics, err := parser.TextToMetricFamilies(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("reading text format failed: %v", err)

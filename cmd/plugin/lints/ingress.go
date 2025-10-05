@@ -18,6 +18,7 @@ package lints
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	networking "k8s.io/api/networking/v1"
@@ -126,7 +127,7 @@ func annotationPrefixIsNginxOrg(ing *networking.Ingress) bool {
 
 func rewriteTargetWithoutCaptureGroup(ing *networking.Ingress) bool {
 	for name, val := range ing.Annotations {
-		if strings.HasSuffix(name, "/rewrite-target") && !strings.Contains(val, "$1") {
+		if strings.HasSuffix(name, "/rewrite-target") && !regexp.MustCompile(`\$\d+`).MatchString(val) {
 			return true
 		}
 	}

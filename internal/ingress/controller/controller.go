@@ -192,7 +192,18 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	n.metricCollector.SetSSLExpireTime(servers)
 	n.metricCollector.SetSSLInfo(servers)
 
+	hash, err := hashstructure.Hash(pcfg, hashstructure.FormatV1, &hashstructure.HashOptions{
+		TagName: "json",
+	})
+	if err != nil {
+		klog.Errorf("unexpected error hashing configuration: %v", err)
+	}
+
 	if n.runningConfig.Equal(pcfg) {
+		if !n.lastConfigSuccess {
+			n.metricCollector.ConfigSuccess(hash, true)
+			n.lastConfigSuccess = true
+		}
 		klog.V(3).Infof("No configuration change detected, skipping backend reload")
 		return nil
 	}
@@ -202,19 +213,13 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	if !utilingress.IsDynamicConfigurationEnough(pcfg, n.runningConfig) {
 		klog.InfoS("Configuration changes detected, backend reload required")
 
-		hash, err := hashstructure.Hash(pcfg, hashstructure.FormatV1, &hashstructure.HashOptions{
-			TagName: "json",
-		})
-		if err != nil {
-			klog.Errorf("unexpected error hashing configuration: %v", err)
-		}
-
 		pcfg.ConfigurationChecksum = fmt.Sprintf("%v", hash)
 
 		err = n.OnUpdate(*pcfg)
 		if err != nil {
 			n.metricCollector.IncReloadErrorCount()
 			n.metricCollector.ConfigSuccess(hash, false)
+			n.lastConfigSuccess = false
 			klog.Errorf("Unexpected failure reloading the backend:\n%v", err)
 			n.recorder.Eventf(k8s.IngressPodDetails, apiv1.EventTypeWarning, "RELOAD", fmt.Sprintf("Error reloading NGINX: %v", err))
 			return err
@@ -223,6 +228,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 		klog.InfoS("Backend successfully reloaded")
 		n.metricCollector.ConfigSuccess(hash, true)
 		n.metricCollector.IncReloadCount()
+		n.lastConfigSuccess = true
 
 		n.recorder.Eventf(k8s.IngressPodDetails, apiv1.EventTypeNormal, "RELOAD", "NGINX reload triggered due to a change in configuration")
 	}
@@ -243,7 +249,7 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	}
 
 	retriesRemaining := retry.Steps
-	err := wait.ExponentialBackoff(retry, func() (bool, error) {
+	err = wait.ExponentialBackoff(retry, func() (bool, error) {
 		err := n.configureDynamically(pcfg)
 		if err == nil {
 			klog.V(2).Infof("Dynamic reconfiguration succeeded.")
