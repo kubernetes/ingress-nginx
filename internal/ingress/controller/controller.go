@@ -144,6 +144,8 @@ type Configuration struct {
 	DisableSyncEvents bool
 
 	EnableTopologyAwareRouting bool
+
+	InsecureEnableConfigValidation bool
 }
 
 func getIngressPodZone(svc *apiv1.Service) string {
@@ -433,14 +435,15 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 		return err
 	}
 
-	/* Deactivated to mitigate CVE-2025-1974
-	// TODO: Implement sandboxing so this test can be done safely
-	err = n.testTemplate(content)
-	if err != nil {
-		n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
-		return err
+	if n.cfg.InsecureEnableConfigValidation {
+		// Makes NGINX controller vulnerable to CVE-2025-1974
+		// TODO: Implement sandboxing so this test can always be done safely
+		err = n.testTemplate(content)
+		if err != nil {
+			n.metricCollector.IncCheckErrorCount(ing.ObjectMeta.Namespace, ing.Name)
+			return err
+		}
 	}
-	*/
 
 	n.metricCollector.IncCheckCount(ing.ObjectMeta.Namespace, ing.Name)
 	endCheck := time.Now().UnixNano() / 1000000
