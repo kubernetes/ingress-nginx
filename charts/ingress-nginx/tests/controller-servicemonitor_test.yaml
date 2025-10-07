@@ -77,3 +77,22 @@ tests:
       - equal:
           path: spec.targetLimit
           value: 100
+
+  - it: should create a ServiceMonitor with `scrapeTimeout` if `controller.metrics.serviceMonitor.scrapeTimeout` is set
+    set:
+      controller.metrics.enabled: true
+      controller.metrics.serviceMonitor.enabled: true
+      controller.metrics.serviceMonitor.scrapeTimeout: 60s
+    asserts:
+      - equal:
+          path: spec.endpoints[0].scrapeTimeout
+          value: 60s
+
+  - it: should create a ServiceMonitor without `scrapeTimeout` if `controller.metrics.serviceMonitor.scrapeTimeout` is set to empty string
+    set:
+      controller.metrics.enabled: true
+      controller.metrics.serviceMonitor.enabled: true
+      controller.metrics.serviceMonitor.scrapeTimeout: ""
+    asserts:
+      - notExists:
+          path: spec.endpoints[0].scrapeTimeout
