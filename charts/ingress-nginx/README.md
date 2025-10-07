@@ -417,6 +417,7 @@ metadata:
 | controller.metrics.serviceMonitor.relabelings | list | `[]` |  |
 | controller.metrics.serviceMonitor.sampleLimit | int | `0` | Defines a per-scrape limit on the number of scraped samples that will be accepted. |
 | controller.metrics.serviceMonitor.scrapeInterval | string | `"30s"` |  |
+| controller.metrics.serviceMonitor.scrapeTimeout | string | `""` |  |
 | controller.metrics.serviceMonitor.targetLabels | list | `[]` |  |
 | controller.metrics.serviceMonitor.targetLimit | int | `0` | Defines a limit on the number of scraped targets that will be accepted. |
 | controller.minAvailable | int | `1` | Minimum available pods set in PodDisruptionBudget. Define either 'minAvailable' or 'maxUnavailable', never both. |

@@ -937,6 +937,7 @@ controller:
       ## namespaceSelector:
       ##   any: true
       scrapeInterval: 30s
+      # scrapeTimeout: 10s
       # honorLabels: true
       targetLabels: []
       relabelings: []

@@ -32,6 +32,9 @@ spec:
   endpoints:
   - port: {{ .Values.controller.metrics.portName }}
     interval: {{ .Values.controller.metrics.serviceMonitor.scrapeInterval }}
+    {{- if .Values.controller.metrics.serviceMonitor.scrapeTimeout }}
+    scrapeTimeout: {{ .Values.controller.metrics.serviceMonitor.scrapeTimeout }}
+    {{- end }}
     {{- if .Values.controller.metrics.serviceMonitor.honorLabels }}
     honorLabels: true
     {{- end }}
