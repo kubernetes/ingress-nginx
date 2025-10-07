@@ -937,6 +937,8 @@ controller:
       ## namespaceSelector:
       ##   any: true
       scrapeInterval: 30s
+      # -- Timeout after which the scrape is ended. Not being set if empty and therefore defaults to the global Prometheus scrape timeout.
+      scrapeTimeout: ""
       # honorLabels: true
       targetLabels: []
       relabelings: []
