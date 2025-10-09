@@ -25,6 +25,7 @@ local INFO = ngx.INFO
 local DECAY_TIME = 10 -- this value is in seconds
 local LOCK_KEY = ":ewma_key"
 local PICK_SET_SIZE = 2
+local MIN_SUCCESS_RATE = 0.1
 
 local ewma_lock, ewma_lock_err = resty_lock:new("balancer_ewma_locks", {timeout = 0, exptime = 0.1})
 if not ewma_lock then
@@ -62,7 +63,7 @@ local function decay_ewma(ewma, last_touched_at, rtt, now)
   return ewma
 end
 
-local function store_stats(upstream, ewma, now)
+local function store_stats(upstream, ewma, total_ewma, failed_ewma, now)
   local success, err, forcible = ngx.shared.balancer_ewma_last_touched_at:set(upstream, now)
   if not success then
     ngx.log(ngx.WARN, "balancer_ewma_last_touched_at:set failed " .. err)
@@ -78,31 +79,64 @@ local function store_stats(upstream, ewma, now)
   if forcible then
     ngx.log(ngx.WARN, "balancer_ewma:set valid items forcibly overwritten")
   end
+
+  success, err, forcible = ngx.shared.balancer_ewma_total:set(upstream, total_ewma)
+  if not success then
+    ngx.log(ngx.WARN, "balancer_ewma_total:set failed " .. err)
+  end
+  if forcible then
+    ngx.log(ngx.WARN, "balancer_ewma_total:set valid items forcibly overwritten")
+  end
+
+  success, err, forcible = ngx.shared.balancer_ewma_failed:set(upstream, failed_ewma)
+  if not success then
+    ngx.log(ngx.WARN, "balancer_ewma_failed:set failed " .. err)
+  end
+  if forcible then
+    ngx.log(ngx.WARN, "balancer_ewma_failed:set valid items forcibly overwritten")
+  end
 end
 
-local function get_or_update_ewma(upstream, rtt, update)
+local function get_or_update_ewma(upstream, rtt, failed, update)
   local lock_err = nil
   if update then
     lock_err = lock(upstream)
   end
+
   local ewma = ngx.shared.balancer_ewma:get(upstream) or 0
+  local total_ewma = ngx.shared.balancer_ewma_total:get(upstream) or 0
+  local failed_ewma = ngx.shared.balancer_ewma_failed:get(upstream) or 0
+
   if lock_err ~= nil then
     return ewma, lock_err
   end
 
   local now = ngx.now()
   local last_touched_at = ngx.shared.balancer_ewma_last_touched_at:get(upstream) or 0
-  ewma = decay_ewma(ewma, last_touched_at, rtt, now)
 
-  if not update then
-    return ewma, nil
+  local failed_delta = 0
+  if failed then
+    failed_delta = 1
   end
 
-  store_stats(upstream, ewma, now)
+  ewma = decay_ewma(ewma, last_touched_at, rtt, now)
+  -- make sure failed rate is always decayed
+  total_ewma = decay_ewma(total_ewma, last_touched_at, 1, now)
+  failed_ewma = decay_ewma(failed_ewma, last_touched_at, failed_delta, now)
+
+  if update then
+    store_stats(upstream, ewma, total_ewma, failed_ewma, now)
+  end
 
   unlock()
 
-  return ewma, nil
+  local success_rate = 1 - failed_ewma / total_ewma
+
+  if success_rate < MIN_SUCCESS_RATE then
+    success_rate = MIN_SUCCESS_RATE
+  end
+
+  return ewma / success_rate, nil
 end
 
 
@@ -115,7 +149,7 @@ local function score(upstream)
   -- Original implementation used names
   -- Endpoints don't have names, so passing in IP:Port as key instead
   local upstream_name = get_upstream_name(upstream)
-  return get_or_update_ewma(upstream_name, 0, false)
+  return get_or_update_ewma(upstream_name, 0, false, false)
 end
 
 -- implementation similar to https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
@@ -222,14 +256,17 @@ end
 function _M.after_balance(_)
   local response_time = tonumber(split.get_last_value(ngx.var.upstream_response_time)) or 0
   local connect_time = tonumber(split.get_last_value(ngx.var.upstream_connect_time)) or 0
+  local status = tonumber(split.get_last_value(ngx.var.status)) or 0
+
   local rtt = connect_time + response_time
   local upstream = split.get_last_value(ngx.var.upstream_addr)
+  local failed = status >= 400
 
   if util.is_blank(upstream) then
     return
   end
 
-  get_or_update_ewma(upstream, rtt, true)
+  return get_or_update_ewma(upstream, rtt, failed, true)
 end
 
 function _M.sync(self, backend)
@@ -250,6 +287,8 @@ function _M.sync(self, backend)
 
   for _, endpoint_string in ipairs(normalized_endpoints_removed) do
     ngx.shared.balancer_ewma:delete(endpoint_string)
+    ngx.shared.balancer_ewma_total:delete(endpoint_string)
+    ngx.shared.balancer_ewma_failed:delete(endpoint_string)
     ngx.shared.balancer_ewma_last_touched_at:delete(endpoint_string)
   end
 
@@ -257,9 +296,13 @@ function _M.sync(self, backend)
   if slow_start_ewma ~= nil then
     local now = ngx.now()
     for _, endpoint_string in ipairs(normalized_endpoints_added) do
-      store_stats(endpoint_string, slow_start_ewma, now)
+      store_stats(endpoint_string, slow_start_ewma, 0, 0, now)
     end
   end
+end
+
+function _M.score(upstream)
+  return score(upstream)
 end
 
 function _M.new(self, backend)
