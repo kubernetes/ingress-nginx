@@ -1267,3 +1267,21 @@ portNamePrefix: ""
 # This can be generated with: `openssl dhparam 4096 2> /dev/null | base64`
 ## Ref: https://github.com/kubernetes/ingress-nginx/tree/main/docs/examples/customization/ssl-dh-param
 dhParam: ""
+
+# extraObjects allows you to add any extra Kubernetes manifests to this chart
+extraObjects: []
+# Examples:
+# Defining as a Structured YAML Object Example:
+#   extraObjects:
+#   - apiVersion: v1
+#     kind: ConfigMap
+#     metadata:
+#       name: cert-manager-configmap-{{ .Release.Name }}
+#
+# Using a String for Advanced Templating Example:
+#   extraObjects:
+#   - |
+#     apiVersion: v1
+#     kind: ConfigMap
+#     metadata:
+#       name: cert-manager-configmap-{{ include "some-other-template" }}
