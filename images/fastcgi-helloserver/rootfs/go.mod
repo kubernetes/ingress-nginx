@@ -1,3 +1,3 @@
 module k8s.io/ingress-nginx/fastcgi-helloserver
 
-go 1.25.2
+go 1.25.3
