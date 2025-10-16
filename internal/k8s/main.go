@@ -42,37 +42,35 @@ func ParseNameNS(input string) (ns, name string, err error) {
 	return nsName[0], nsName[1], nil
 }
 
-// GetNodeIPOrName returns the IP address or the name of a node in the cluster
-func GetNodeIPOrName(kubeClient clientset.Interface, name string, useInternalIP bool) string {
+// GetNodeIPs returns the IP addresses of a node in the cluster
+func GetNodeIPs(kubeClient clientset.Interface, name string, useInternalIP bool) []string {
 	node, err := kubeClient.CoreV1().Nodes().Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		klog.ErrorS(err, "Error getting node", "name", name)
-		return ""
+		return []string{}
 	}
 
-	defaultOrInternalIP := ""
+	externalIPs := []string{}
+	internalIPs := []string{}
+
 	for _, address := range node.Status.Addresses {
-		if address.Type == apiv1.NodeInternalIP {
-			if address.Address != "" {
-				defaultOrInternalIP = address.Address
-				break
-			}
+		if address.Type == apiv1.NodeInternalIP && address.Address != "" {
+			internalIPs = append(internalIPs, address.Address)
+		}
+		if address.Type == apiv1.NodeExternalIP && address.Address != "" {
+			externalIPs = append(externalIPs, address.Address)
 		}
 	}
 
 	if useInternalIP {
-		return defaultOrInternalIP
+		return internalIPs
 	}
 
-	for _, address := range node.Status.Addresses {
-		if address.Type == apiv1.NodeExternalIP {
-			if address.Address != "" {
-				return address.Address
-			}
-		}
+	if len(externalIPs) == 0 {
+		return internalIPs
 	}
 
-	return defaultOrInternalIP
+	return externalIPs
 }
 
 var (
