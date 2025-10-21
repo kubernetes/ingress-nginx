@@ -817,7 +817,17 @@ func New(
 		DeleteFunc: func(obj interface{}) {
 			svc, ok := obj.(*corev1.Service)
 			if !ok {
-				klog.Errorf("unexpected type: %T", obj)
+				// If we reached here it means the service was deleted but its final state is unrecorded.
+				tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
+				if !ok {
+					klog.ErrorS(nil, "Error obtaining object from tombstone", "key", obj)
+					return
+				}
+				svc, ok = tombstone.Obj.(*corev1.Service)
+				if !ok {
+					klog.Errorf("Tombstone contained object that is not a Service: %#v", obj)
+					return
+				}
 			}
 			if svc.Spec.Type == corev1.ServiceTypeExternalName {
 				updateCh.In() <- Event{
