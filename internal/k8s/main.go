@@ -62,11 +62,7 @@ func GetNodeIPs(kubeClient clientset.Interface, name string, useInternalIP bool)
 		}
 	}
 
-	if useInternalIP {
-		return internalIPs
-	}
-
-	if len(externalIPs) == 0 {
+	if useInternalIP || len(externalIPs) == 0 {
 		return internalIPs
 	}
 
