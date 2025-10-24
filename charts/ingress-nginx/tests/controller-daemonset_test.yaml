@@ -96,7 +96,7 @@ tests:
               maxSkew: 1
               whenUnsatisfiable: ScheduleAnyway
 
-  - it: should create a DaemonSet with templated extraInitContainers if `controller.extraInitContainers` contains Helm templates
+  - it: should create a DaemonSet with templated init containers if `controller.extraInitContainers` contains Helm templates
     set:
       controller.kind: DaemonSet
       controller.extraInitContainers:
