@@ -191,7 +191,7 @@ spec:
     {{- if (or .Values.controller.extraInitContainers .Values.controller.extraModules) }}
       initContainers:
       {{- if .Values.controller.extraInitContainers }}
-        {{- toYaml .Values.controller.extraInitContainers | nindent 8 }}
+        {{- tpl (toYaml .Values.controller.extraInitContainers) $ | nindent 8 }}
       {{- end }}
       {{- if .Values.controller.extraModules }}
         {{- range .Values.controller.extraModules }}

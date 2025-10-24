@@ -709,11 +709,17 @@ controller:
   #  - name: copy-portal-skins
   #    emptyDir: {}
 
-  # -- Containers, which are run before the app containers are started.
+  # -- Containers, which are run before the app containers are started. Values may contain Helm templates.
   extraInitContainers: []
   # - name: init-myservice
   #   image: busybox
   #   command: ['sh', '-c', 'until nslookup myservice; do echo waiting for myservice; sleep 2; done;']
+  # - name: init-dynamic
+  #   image: busybox
+  #   command:
+  #     - sh
+  #     - -c
+  #     - echo "Release={{ .Release.Name }} Namespace={{ .Release.Namespace }}"
 
   # -- Modules, which are mounted into the core nginx image.
   extraModules: []

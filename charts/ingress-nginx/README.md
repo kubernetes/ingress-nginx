@@ -335,7 +335,7 @@ metadata:
 | controller.extraArgs | object | `{}` | Additional command line arguments to pass to Ingress-Nginx Controller E.g. to specify the default SSL certificate you can use |
 | controller.extraContainers | list | `[]` | Additional containers to be added to the controller pod. See https://github.com/lemonldap-ng-controller/lemonldap-ng-controller as example. |
 | controller.extraEnvs | list | `[]` | Additional environment variables to set |
-| controller.extraInitContainers | list | `[]` | Containers, which are run before the app containers are started. |
+| controller.extraInitContainers | list | `[]` | Containers, which are run before the app containers are started. Values may contain Helm templates. |
 | controller.extraModules | list | `[]` | Modules, which are mounted into the core nginx image. |
 | controller.extraVolumeMounts | list | `[]` | Additional volumeMounts to the controller main container. |
 | controller.extraVolumes | list | `[]` | Additional volumes to the controller pod. |

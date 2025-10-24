@@ -96,6 +96,24 @@ tests:
               maxSkew: 1
               whenUnsatisfiable: ScheduleAnyway
 
+  - it: should create a DaemonSet with templated init containers if `controller.extraInitContainers` contains Helm templates
+    set:
+      controller.kind: DaemonSet
+      controller.extraInitContainers:
+        - name: '{{ .Release.Name }}-init'
+          image: busybox
+          command:
+            - sh
+            - -c
+            - echo '{{ .Release.Namespace }}';
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: RELEASE-NAME-init
+      - contains:
+          path: spec.template.spec.initContainers[0].command
+          content: echo 'NAMESPACE';
+
   - it: should create a DaemonSet with affinity if `controller.affinity` is set
     set:
       controller.kind: DaemonSet
