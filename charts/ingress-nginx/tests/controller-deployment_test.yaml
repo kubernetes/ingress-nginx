@@ -119,7 +119,7 @@ tests:
               maxSkew: 1
               whenUnsatisfiable: ScheduleAnyway
 
-  - it: should create a Deployment with templated extraInitContainers if `controller.extraInitContainers` contains Helm templates
+  - it: should create a Deployment with templated init containers if `controller.extraInitContainers` contains Helm templates
     set:
       controller.extraInitContainers:
         - name: '{{ .Release.Name }}-init'
