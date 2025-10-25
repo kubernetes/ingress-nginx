@@ -73,3 +73,57 @@ tests:
       - equal:
           path: metadata.labels["external-dns.alpha.kubernetes.io/hostname"]
           value: internal.example.com
+
+  - it: should create a Service with a default UDP port if `controller.service.enableQuic` is set
+    set:
+      controller.service.internal.enabled: true
+      controller.service.internal.annotations:
+        test.annotation: "true"
+      controller.service.enableQuic: true
+    asserts:
+      - contains:
+          path: spec.ports
+          content:
+            name: quic
+            port: 443
+            protocol: UDP
+            targetPort: quic
+            appProtocol: https
+
+  - it: should create a Service with a custom internal UDP port if `controller.service.enableQuic` is set
+    set:
+      controller.service.internal.enabled: true
+      controller.service.internal.annotations:
+        test.annotation: "true"
+      controller.service.enableQuic: true
+      controller.service.ports.quic: 1234
+      controller.service.targetPorts.quic: 5678
+      controller.service.internal.ports.quic: 4321
+      controller.service.internal.targetPorts.quic: 8765
+    asserts:
+      - contains:
+          path: spec.ports
+          content:
+            name: quic
+            port: 4321
+            protocol: UDP
+            targetPort: 8765
+            appProtocol: https
+
+  - it: should create a Service with a custom service UDP port if `controller.service.enableQuic` is set
+    set:
+      controller.service.internal.enabled: true
+      controller.service.internal.annotations:
+        test.annotation: "true"
+      controller.service.enableQuic: true
+      controller.service.ports.quic: 1234
+      controller.service.targetPorts.quic: 5678
+    asserts:
+      - contains:
+          path: spec.ports
+          content:
+            name: quic
+            port: 1234
+            protocol: UDP
+            targetPort: 5678
+            appProtocol: https
