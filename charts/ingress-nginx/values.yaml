@@ -415,7 +415,7 @@ controller:
     minReplicas: 1
     maxReplicas: 11
     targetCPUUtilizationPercentage: 50
-    targetMemoryUtilizationPercentage: 50
+    targetMemoryUtilizationPercentage: 70
     behavior: {}
     # scaleDown:
     #   stabilizationWindowSeconds: 300
