@@ -913,6 +913,35 @@ func checkBadAnnotationValue(annotationMap map[string]string, badwords string) e
 	return nil
 }
 
+// setCompressionPriority sets the compression priority from the backend config
+func (s *k8sStore) setCompressionPriority() {
+	if strings.TrimSpace(s.backendConfig.CompressionPriority) == "" {
+		return
+	}
+
+	compPri := strings.Split(s.backendConfig.CompressionPriority, ",")
+
+	// we expect user to use lower cases but be safe and normalize the input
+	pri := strings.ToLower(strings.TrimSpace(compPri[0]))
+
+	switch pri {
+	case "brotli":
+		// prefer brotli: enable brotli and (optionally) disable gzip so
+		// the template only renders brotli directives. This enforces the
+		// priority at config-render time.
+		s.backendConfig.EnableBrotli = true
+		s.backendConfig.UseGzip = false
+	case "gzip":
+		// prefer gzip: enable gzip and disable brotli
+		s.backendConfig.UseGzip = true
+		s.backendConfig.EnableBrotli = false
+	default:
+		klog.Warningf("unknown compression priority %q, defaulting to gzip", s.backendConfig.CompressionPriority)
+		s.backendConfig.UseGzip = true
+		s.backendConfig.EnableBrotli = false
+	}
+}
+
 // syncIngress parses ingress annotations converting the value of the
 // annotation to a go struct
 func (s *k8sStore) syncIngress(ing *networkingv1.Ingress) {
@@ -1230,6 +1259,10 @@ func (s *k8sStore) setConfig(cmap *corev1.ConfigMap) {
 		klog.Warning("The GeoIP2 feature is enabled but the databases are missing. Disabling")
 		s.backendConfig.UseGeoIP2 = false
 	}
+
+	// Apply compression priority settings (if any) so that the running
+	// backendConfig reflects the desired preference between brotli and gzip.
+	s.setCompressionPriority()
 
 	s.writeSSLSessionTicketKey(cmap, "/etc/ingress-controller/tickets.key")
 }

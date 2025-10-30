@@ -445,6 +445,9 @@ type Configuration struct {
 	// MIME Types that will be compressed on-the-fly using Brotli module
 	BrotliTypes string `json:"brotli-types,omitempty"`
 
+	// Compression priority between gzip and brotli when both are enabled
+	CompressionPriority string `json:"compression-priority,omitempty"`
+
 	// Enables or disables the HTTP/2 support in secure connections
 	// https://nginx.org/en/docs/http/ngx_http_v2_module.html
 	// Default: true
