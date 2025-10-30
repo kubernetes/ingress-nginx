@@ -31,7 +31,7 @@ spec:
     spec:
       containers:
       - name: production
-        image: registry.k8s.io/ingress-nginx/e2e-test-echo:v1.2.3@sha256:d85d82c957d4f01d9851f1d9cf37248b377b4a954fa17b58beb089e11cdebb30
+        image: registry.k8s.io/ingress-nginx/e2e-test-echo:v1.2.4@sha256:93631b65adad68950d03499d2a3697d54800fcdeaef5400c3da4b96902247123
         ports:
         - containerPort: 80
         env:
@@ -97,7 +97,7 @@ spec:
     spec:
       containers:
       - name: canary
-        image: registry.k8s.io/ingress-nginx/e2e-test-echo:v1.2.3@sha256:d85d82c957d4f01d9851f1d9cf37248b377b4a954fa17b58beb089e11cdebb30
+        image: registry.k8s.io/ingress-nginx/e2e-test-echo:v1.2.4@sha256:93631b65adad68950d03499d2a3697d54800fcdeaef5400c3da4b96902247123
         ports:
         - containerPort: 80
         env:
