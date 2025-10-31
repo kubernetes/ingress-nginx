@@ -18,6 +18,7 @@ package authreq
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
 	"strings"
 
