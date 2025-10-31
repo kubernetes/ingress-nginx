@@ -242,6 +242,10 @@ func (e1 *Config) Equal(e2 *Config) bool {
 	if e1.AlwaysSetCookie != e2.AlwaysSetCookie {
 		return false
 	}
+	
+	if !reflect.DeepEqual(e1.ProxySetHeaders, e2.ProxySetHeaders) {
+		return false
+	}
 
 	return sets.StringElementsMatch(e1.AuthCacheDuration, e2.AuthCacheDuration)
 }
