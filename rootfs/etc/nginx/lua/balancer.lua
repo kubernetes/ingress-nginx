@@ -191,18 +191,8 @@ local function sync_backends()
   backends_last_synced_at = raw_backends_last_synced_at
 end
 
-local function route_to_alternative_balancer(balancer)
-  if balancer.is_affinitized(balancer) then
-    -- If request is already affinitized to a primary balancer, keep the primary balancer.
-    return false
-  end
-
-  if not balancer.alternative_backends then
-    return false
-  end
-
-  -- TODO: support traffic shaping for n > 1 alternative backends
-  local backend_name = balancer.alternative_backends[1]
+local function is_alternative_backend_suitable(backend_name)
+  -- check whether an alternative backend is suitable for the request context
   if not backend_name then
     ngx.log(ngx.ERR, "empty alternative backend")
     return false
@@ -234,7 +224,7 @@ local function route_to_alternative_balancer(balancer)
   local header = ngx.var["http_" .. target_header]
   if header then
     if traffic_shaping_policy.headerValue
-	   and #traffic_shaping_policy.headerValue > 0 then
+           and #traffic_shaping_policy.headerValue > 0 then
       if traffic_shaping_policy.headerValue == header then
         return true
       end
@@ -276,6 +266,29 @@ local function route_to_alternative_balancer(balancer)
   return false
 end
 
+local function get_alternative_or_original_balancer(balancer)
+  -- checks whether an alternative backend should be used
+  -- the first backend matching the request context is returned
+  -- if no suitable alterntative backends are found, the original is returned
+  if balancer.is_affinitized(balancer) then
+    -- If request is already affinitized to a primary balancer, keep the primary balancer.
+    return balancer
+  end
+
+  if not balancer.alternative_backends then
+    return balancer
+  end
+
+  local backend_name
+  for _, backend_name in ipairs(balancer.alternative_backends) do
+    if is_alternative_backend_suitable(backend_name) then
+      return balancers[backend_name]
+    end
+  end
+
+  return balancer
+end
+
 local function get_balancer_by_upstream_name(upstream_name)
   return balancers[upstream_name]
 end
@@ -292,16 +305,9 @@ local function get_balancer()
     return nil
   end
 
-  if route_to_alternative_balancer(balancer) then
-    local alternative_backend_name = balancer.alternative_backends[1]
-    ngx.var.proxy_alternative_upstream_name = alternative_backend_name
+  ngx.ctx.balancer = get_alternative_or_original_balancer(balancer)
 
-    balancer = balancers[alternative_backend_name]
-  end
-
-  ngx.ctx.balancer = balancer
-
-  return balancer
+  return ngx.ctx.balancer
 end
 
 function _M.init_worker()
@@ -376,7 +382,7 @@ end
 setmetatable(_M, {__index = {
   get_implementation = get_implementation,
   sync_backend = sync_backend,
-  route_to_alternative_balancer = route_to_alternative_balancer,
+  get_alternative_or_original_balancer = get_alternative_or_original_balancer,
   get_balancer = get_balancer,
   get_balancer_by_upstream_name = get_balancer_by_upstream_name,
 }})
