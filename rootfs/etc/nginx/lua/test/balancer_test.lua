@@ -151,7 +151,7 @@ describe("Balancer", function()
   end)
 
   describe("get_alternative_or_original_balancer()", function()
-    local backend, _primaryBalancer
+    local backend1, backend2, _primaryBalancer
 
     before_each(function()
       backend1 = backends[1]
@@ -376,39 +376,64 @@ describe("Balancer", function()
         balancer.sync_backend(backend2)
       end)
 
-      it("returns false if request is affinitized to primary backend", function()
+      it("returns _primaryBalancer if request is affinitized to primary backend", function()
         _primaryBalancer.is_affinitized = function (_)
           return true
         end
 
-        local alternativeBalancer = balancer.get_balancer_by_upstream_name(backend.name)
+        local alternativeBalancer1 = balancer.get_balancer_by_upstream_name(backend1.name)
+        local alternativeBalancer2 = balancer.get_balancer_by_upstream_name(backend2.name)
 
         local primarySpy = spy.on(_primaryBalancer, "is_affinitized")
-        local alternativeSpy = spy.on(alternativeBalancer, "is_affinitized")
+        local alternativeSpy1 = spy.on(alternativeBalancer1, "is_affinitized")
+        local alternativeSpy2 = spy.on(alternativeBalancer2, "is_affinitized")
 
-        -- FIXME: переписать этот тест
-        assert.is_false(balancer.route_to_alternative_balancer(_primaryBalancer))
+        assert.equal(_primaryBalancer , balancer.get_alternative_or_original_balancer(_primaryBalancer))
         assert.spy(_primaryBalancer.is_affinitized).was_called()
-        assert.spy(alternativeBalancer.is_affinitized).was_not_called()
+        assert.spy(alternativeBalancer1.is_affinitized).was_not_called()
+        assert.spy(alternativeBalancer2.is_affinitized).was_not_called()
       end)
 
-      it("returns true if request is affinitized to alternative backend", function()
+      it("returns first alternative balancer if request is affinitized to alternative backend", function()
         _primaryBalancer.is_affinitized = function (_)
           return false
         end
 
-        local alternativeBalancer = balancer.get_balancer_by_upstream_name(backend.name)
-        alternativeBalancer.is_affinitized = function (_)
+        local alternativeBalancer1 = balancer.get_balancer_by_upstream_name(backend1.name)
+        local alternativeBalancer2 = balancer.get_balancer_by_upstream_name(backend2.name)
+        alternativeBalancer1.is_affinitized = function (_)
           return true
         end
 
         local primarySpy = spy.on(_primaryBalancer, "is_affinitized")
-        local alternativeSpy = spy.on(alternativeBalancer, "is_affinitized")
+        local alternativeSpy1 = spy.on(alternativeBalancer1, "is_affinitized")
+        local alternativeSpy2 = spy.on(alternativeBalancer2, "is_affinitized")
 
-        -- FIXME: переписать этот тест
-        assert.is_true(balancer.route_to_alternative_balancer(_primaryBalancer))
+        assert.equal(alternativeBalancer1 , balancer.get_alternative_or_original_balancer(_primaryBalancer))
         assert.spy(_primaryBalancer.is_affinitized).was_called()
-        assert.spy(alternativeBalancer.is_affinitized).was_called()
+        assert.spy(alternativeBalancer1.is_affinitized).was_called()
+        assert.spy(alternativeBalancer2.is_affinitized).was_not_called()
+      end)
+
+      it("returns second alternative balancer if request is affinitized to alternative backend", function()
+        _primaryBalancer.is_affinitized = function (_)
+          return false
+        end
+
+        local alternativeBalancer1 = balancer.get_balancer_by_upstream_name(backend1.name)
+        local alternativeBalancer2 = balancer.get_balancer_by_upstream_name(backend2.name)
+        alternativeBalancer2.is_affinitized = function (_)
+          return true
+        end
+
+        local primarySpy = spy.on(_primaryBalancer, "is_affinitized")
+        local alternativeSpy1 = spy.on(alternativeBalancer1, "is_affinitized")
+        local alternativeSpy2 = spy.on(alternativeBalancer2, "is_affinitized")
+
+        assert.equal(alternativeBalancer2 , balancer.get_alternative_or_original_balancer(_primaryBalancer))
+        assert.spy(_primaryBalancer.is_affinitized).was_called()
+        assert.spy(alternativeBalancer1.is_affinitized).was_called()
+        assert.spy(alternativeBalancer2.is_affinitized).was_called()
       end)
 
     end)
