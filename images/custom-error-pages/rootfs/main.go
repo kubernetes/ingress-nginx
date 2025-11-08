@@ -94,7 +94,7 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	http.ListenAndServe(fmt.Sprintf(":8080"), nil)
+	http.ListenAndServe(":8080", nil)
 }
 
 func errorHandler(path, defaultFormat string) func(http.ResponseWriter, *http.Request) {
