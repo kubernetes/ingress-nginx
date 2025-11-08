@@ -279,7 +279,6 @@ local function get_alternative_or_original_balancer(balancer)
     return balancer
   end
 
-  local backend_name
   for _, backend_name in ipairs(balancer.alternative_backends) do
     if is_alternative_backend_suitable(backend_name) then
       return balancers[backend_name]
