@@ -149,7 +149,6 @@ func errorHandler(path, defaultFormat string) func(http.ResponseWriter, *http.Re
 			code = 404
 			log.Printf("unexpected error reading return code: %v. Using %v", err, code)
 		}
-		w.WriteHeader(code)
 
 		if !strings.HasPrefix(ext, ".") {
 			ext = "." + ext
@@ -172,11 +171,13 @@ func errorHandler(path, defaultFormat string) func(http.ResponseWriter, *http.Re
 			}
 			defer f.Close()
 			log.Printf("serving custom error response for code %v and format %v from file %v", code, format, file)
+			w.WriteHeader(code)
 			io.Copy(w, f)
 			return
 		}
 		defer f.Close()
 		log.Printf("serving custom error response for code %v and format %v from file %v", code, format, file)
+		w.WriteHeader(code)
 		io.Copy(w, f)
 
 		duration := time.Now().Sub(start).Seconds()
