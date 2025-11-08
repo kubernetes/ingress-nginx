@@ -150,14 +150,17 @@ describe("Balancer", function()
     end)
   end)
 
-  describe("route_to_alternative_balancer()", function()
+  describe("get_alternative_or_original_balancer()", function()
     local backend, _primaryBalancer
 
     before_each(function()
-      backend = backends[1]
+      backend1 = backends[1]
+      backend2 = backends[1]
+      backend2.name = "second-router-production-web-80"
       _primaryBalancer = {
         alternative_backends = {
-          backend.name,
+          backend1.name,
+          backend2.name,
         }
       }
       mock_ngx({ var = { request_uri = "/" } })
@@ -172,50 +175,73 @@ describe("Balancer", function()
         end
       end)
 
-      it("returns false when no trafficShapingPolicy is set", function()
-        balancer.sync_backend(backend)
-        assert.equal(false, balancer.route_to_alternative_balancer(_primaryBalancer))
+      it("returns _primaryBalancer when no trafficShapingPolicy is set", function()
+        balancer.sync_backend(backend1)
+        assert.equal(_primaryBalancer, balancer.get_alternative_or_original_balancer(_primaryBalancer))
       end)
 
-      it("returns false when no alternative backends is set", function()
-        backend.trafficShapingPolicy.weight = 100
-        balancer.sync_backend(backend)
+      it("returns _primaryBalancer when no alternative backends is set", function()
+        backend1.trafficShapingPolicy.weight = 100
+        backend2.trafficShapingPolicy.weight = 100
+        balancer.sync_backend(backend1)
+        balancer.sync_backend(backend2)
         _primaryBalancer.alternative_backends = nil
-        assert.equal(false, balancer.route_to_alternative_balancer(_primaryBalancer))
+        assert.equal(_primaryBalancer, balancer.get_alternative_or_original_balancer(_primaryBalancer))
       end)
 
-      it("returns false when alternative backends name does not match", function()
-        backend.trafficShapingPolicy.weight = 100
-        balancer.sync_backend(backend)
-        _primaryBalancer.alternative_backends[1] = "nonExistingBackend"
-        assert.equal(false, balancer.route_to_alternative_balancer(_primaryBalancer))
+      it("returns _primaryBalancer when alternative backends name does not match", function()
+        backend1.trafficShapingPolicy.weight = 100
+        backend2.trafficShapingPolicy.weight = 100
+        balancer.sync_backend(backend1)
+        balancer.sync_backend(backend2)
+        _primaryBalancer.alternative_backends = {"nonExistingBackend", "secondNonExistingBackend"}
+        assert.equal(_primaryBalancer, balancer.get_alternative_or_original_balancer(_primaryBalancer))
       end)
 
       describe("canary by weight", function()
-        it("returns true when weight is 100", function()
-          backend.trafficShapingPolicy.weight = 100
-          balancer.sync_backend(backend)
-          assert.equal(true, balancer.route_to_alternative_balancer(_primaryBalancer))
+        it("returns first backend when weight is 100", function()
+          backend1.trafficShapingPolicy.weight = 100
+          balancer.sync_backend(backend1)
+          assert.equal(backend1, balancer.get_alternative_or_original_balancer(_primaryBalancer))
         end)
 
-        it("returns false when weight is 0", function()
-          backend.trafficShapingPolicy.weight = 0
-          balancer.sync_backend(backend)
-          assert.equal(false, balancer.route_to_alternative_balancer(_primaryBalancer))
+        it("returns second backend when weight is 100", function()
+          backend2.trafficShapingPolicy.weight = 100
+          balancer.sync_backend(backend2)
+          assert.equal(backend2, balancer.get_alternative_or_original_balancer(_primaryBalancer))
         end)
 
-        it("returns true when weight is 1000 and weight total is 1000", function()
-          backend.trafficShapingPolicy.weight = 1000
-          backend.trafficShapingPolicy.weightTotal = 1000
-          balancer.sync_backend(backend)
-          assert.equal(true, balancer.route_to_alternative_balancer(_primaryBalancer))
+        it("returns _primaryBalancer when weight is 0", function()
+          backend1.trafficShapingPolicy.weight = 0
+          backend2.trafficShapingPolicy.weight = 0
+          balancer.sync_backend(backend1)
+          balancer.sync_backend(backend2)
+          assert.equal(_primaryBalancer, balancer.get_alternative_or_original_balancer(_primaryBalancer))
         end)
 
-        it("returns false when weight is 0 and weight total is 1000", function()
-          backend.trafficShapingPolicy.weight = 1000
-          backend.trafficShapingPolicy.weightTotal = 1000
-          balancer.sync_backend(backend)
-          assert.equal(true, balancer.route_to_alternative_balancer(_primaryBalancer))
+        it("returns first backend when weight is 1000 and weight total is 1000", function()
+          backend1.trafficShapingPolicy.weight = 1000
+          backend1.trafficShapingPolicy.weightTotal = 1000
+          balancer.sync_backend(backend1)
+          assert.equal(backend1, balancer.get_alternative_or_original_balancer(_primaryBalancer))
+        end)
+
+        it("returns second backend when weight is 1000 and weight total is 1000", function()
+          backend2.trafficShapingPolicy.weight = 1000
+          backend2.trafficShapingPolicy.weightTotal = 1000
+          balancer.sync_backend(backend2)
+          assert.equal(backend2, balancer.get_alternative_or_original_balancer(_primaryBalancer))
+        end)
+
+        it("returns _primaryBalancer when weight is 0 and weight total is 1000", function()
+          backend1.trafficShapingPolicy.weight = 0
+          backend1.trafficShapingPolicy.weightTotal = 1000
+          backend2.trafficShapingPolicy.weight = 0
+          backend2.trafficShapingPolicy.weightTotal = 1000
+          balancer.sync_backend(backend1)
+          balancer.sync_backend(backend2)
+          -- FIXME: переписать этот тест
+          assert.equal(_primaryBalancer, balancer.route_to_alternative_balancer(_primaryBalancer))
         end)
       end)
 
@@ -254,6 +280,7 @@ describe("Balancer", function()
             }})
             backend.trafficShapingPolicy.cookie = "canaryCookie"
             balancer.sync_backend(backend)
+            -- FIXME: переписать этот тест
             assert.message("\nTest data pattern: " .. test_pattern.case_title)
               .equal(test_pattern.expected_result, balancer.route_to_alternative_balancer(_primaryBalancer))
             reset_ngx()
@@ -332,6 +359,7 @@ describe("Balancer", function()
             backend.trafficShapingPolicy.header = test_pattern.header_name
             backend.trafficShapingPolicy.headerValue = test_pattern.header_value
             balancer.sync_backend(backend)
+            -- FIXME: переписать этот тест
             assert.message("\nTest data pattern: " .. test_pattern.case_title)
               .equal(test_pattern.expected_result, balancer.route_to_alternative_balancer(_primaryBalancer))
             reset_ngx()
@@ -359,6 +387,7 @@ describe("Balancer", function()
         local primarySpy = spy.on(_primaryBalancer, "is_affinitized")
         local alternativeSpy = spy.on(alternativeBalancer, "is_affinitized")
 
+        -- FIXME: переписать этот тест
         assert.is_false(balancer.route_to_alternative_balancer(_primaryBalancer))
         assert.spy(_primaryBalancer.is_affinitized).was_called()
         assert.spy(alternativeBalancer.is_affinitized).was_not_called()
@@ -377,6 +406,7 @@ describe("Balancer", function()
         local primarySpy = spy.on(_primaryBalancer, "is_affinitized")
         local alternativeSpy = spy.on(alternativeBalancer, "is_affinitized")
 
+        -- FIXME: переписать этот тест
         assert.is_true(balancer.route_to_alternative_balancer(_primaryBalancer))
         assert.spy(_primaryBalancer.is_affinitized).was_called()
         assert.spy(alternativeBalancer.is_affinitized).was_called()
