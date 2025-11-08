@@ -243,7 +243,7 @@ local function route_to_alternative_balancer(balancer)
       local m, err = ngx.re.match(header, traffic_shaping_policy.headerPattern)
       if m then
         return true
-      elseif  err then
+      elseif err then
           ngx.log(ngx.ERR, "error when matching canary-by-header-pattern: '",
                   traffic_shaping_policy.headerPattern, "', error: ", err)
           return false
@@ -258,7 +258,22 @@ local function route_to_alternative_balancer(balancer)
   local target_cookie = traffic_shaping_policy.cookie
   local cookie = ngx.var["cookie_" .. target_cookie]
   if cookie then
-    if cookie == "always" then
+    if traffic_shaping_policy.cookieValue
+           and #traffic_shaping_policy.cookieValue > 0 then
+      if traffic_shaping_policy.cookieValue == cookie then
+        return true
+      end
+    elseif traffic_shaping_policy.cookiePattern
+       and #traffic_shaping_policy.cookiePattern > 0 then
+      local m, err = ngx.re.match(cookie, traffic_shaping_policy.cookiePattern)
+      if m then
+        return true
+      elseif err then
+          ngx.log(ngx.ERR, "error when matching canary-by-cookie-pattern: '",
+                  traffic_shaping_policy.cookiePattern, "', error: ", err)
+          return false
+      end
+    elseif cookie == "always" then
       return true
     elseif cookie == "never" then
       return false

@@ -158,6 +158,8 @@ describe("Balancer ewma", function()
       new_backend.alternativeBackends = {"my-canary-namespace-my-canary-service-my-port"}
       new_backend.trafficShapingPolicy = {
         cookie = "",
+        cookiePattern = "",
+        cookieValue = "",
         header = "",
         headerPattern = "",
         headerValue = "",

@@ -1904,5 +1904,7 @@ func newTrafficShapingPolicy(cfg *canary.Config) ingress.TrafficShapingPolicy {
 		HeaderValue:   cfg.HeaderValue,
 		HeaderPattern: cfg.HeaderPattern,
 		Cookie:        cfg.Cookie,
+		CookieValue:   cfg.CookieValue,
+		CookiePattern: cfg.CookiePattern,
 	}
 }

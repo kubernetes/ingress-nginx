@@ -57,6 +57,8 @@ local function reset_backends()
         header = "",
         headerValue = "",
         cookie = ""
+        cookieValue = ""
+        -- FIXME - запилить тесты для cookieValue
       },
     },
     {
@@ -122,7 +124,9 @@ describe("Balancer", function()
           weight = 0,
           header = "",
           headerValue = "",
-          cookie = ""
+          cookie = "",
+          cookieValue = ""
+          -- FIXME - запилить тесты для cookieValue
         },
       }
       local canary_backend = {
@@ -133,7 +137,9 @@ describe("Balancer", function()
           weight = 5,
           header = "",
           headerValue = "",
-          cookie = ""
+          cookie = "",
+          cookieValue = ""
+        -- FIXME - запилить тесты для cookieValue
         },
       }
 
@@ -219,6 +225,7 @@ describe("Balancer", function()
         end)
       end)
 
+        -- FIXME - запилить тесты для cookieValue по аналогии с тестами для headerValue
       describe("canary by cookie", function()
         it("returns correct result for given cookies", function()
           local test_patterns = {

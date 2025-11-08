@@ -93,7 +93,8 @@ describe("Balancer chash subset", function()
         weight = 0,
         header = "",
         headerValue = "",
-        cookie = ""
+        cookie = "",
+        cookieValue = ""
       }
       backend.alternativeBackends = {
         "my-dummy-canary-backend"

@@ -27,6 +27,8 @@ import (
 	"k8s.io/ingress-nginx/test/e2e/framework"
 )
 
+// FIXME: разобраться где тут тестируется роутинг по куке, и расширить тесты с использованием нового функционала
+
 var _ = framework.DescribeSetting("add-headers", func() {
 	f := framework.NewDefaultFramework("custom-header")
 	host := "custom-header"

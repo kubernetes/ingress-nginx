@@ -33,6 +33,8 @@ const (
 	canaryByHeaderValueAnnotation   = "canary-by-header-value"
 	canaryByHeaderPatternAnnotation = "canary-by-header-pattern"
 	canaryByCookieAnnotation        = "canary-by-cookie"
+	canaryByCookieValueAnnotation   = "canary-by-cookie-value"
+	canaryByCookiePatternAnnotation = "canary-by-cookie-pattern"
 )
 
 var CanaryAnnotations = parser.Annotation{
@@ -88,6 +90,23 @@ var CanaryAnnotations = parser.Annotation{
 			Documentation: `This annotation defines the cookie that should be used for notifying the Ingress to route the request to the service specified in the Canary Ingress.
 			When the cookie is set to 'always', it will be routed to the canary. When the cookie is set to 'never', it will never be routed to the canary`,
 		},
+		canaryByCookieValueAnnotation: {
+			Validator: parser.ValidateRegex(parser.BasicCharsRegex, true),
+			Scope:     parser.AnnotationScopeIngress,
+			Risk:      parser.AnnotationRiskMedium,
+			Documentation: `This annotation defines the cookie value to match for notifying the Ingress to route the request to the service specified in the Canary Ingress. 
+			When the request cookie is set to this value, it will be routed to the canary. For any other cookie value, the cookie will be ignored and the request compared against the other canary rules by precedence. 
+			This annotation has to be used together with 'canary-by-cookie'. The annotation is an extension of the 'canary-by-cookie' to allow customizing the cookie value instead of using hardcoded values. 
+			It doesn't have any effect if the 'canary-by-cookie' annotation is not defined`,
+		},
+		canaryByCookiePatternAnnotation: {
+			Validator: parser.ValidateRegex(parser.IsValidRegex, false),
+			Scope:     parser.AnnotationScopeIngress,
+			Risk:      parser.AnnotationRiskMedium,
+			Documentation: `This annotation works the same way as canary-by-cookie-value except it does PCRE Regex matching. 
+			Note that when 'canary-by-cookie-value' is set this annotation will be ignored. 
+			When the given Regex causes error during request processing, the request will be considered as not matching.`,
+		},
 	},
 }
 
@@ -105,6 +124,8 @@ type Config struct {
 	HeaderValue   string
 	HeaderPattern string
 	Cookie        string
+	CookieValue   string
+	CookiePattern string
 }
 
 // NewParser parses the ingress for canary related annotations
@@ -177,8 +198,25 @@ func (c canary) Parse(ing *networking.Ingress) (interface{}, error) {
 		config.Cookie = ""
 	}
 
-	if !config.Enabled && (config.Weight > 0 || config.Header != "" || config.HeaderValue != "" || config.Cookie != "" ||
-		config.HeaderPattern != "") {
+	config.CookieValue, err = parser.GetStringAnnotation(canaryByCookieValueAnnotation, ing, c.annotationConfig.Annotations)
+	if err != nil {
+		if errors.IsValidationError(err) {
+			klog.Warningf("%s is invalid, defaulting to ''", canaryByCookieValueAnnotation)
+		}
+		config.CookieValue = ""
+	}
+
+	config.CookiePattern, err = parser.GetStringAnnotation(canaryByCookiePatternAnnotation, ing, c.annotationConfig.Annotations)
+	if err != nil {
+		if errors.IsValidationError(err) {
+			klog.Warningf("%s is invalid, defaulting to ''", canaryByCookiePatternAnnotation)
+		}
+		config.CookiePattern = ""
+	}
+
+	if !config.Enabled && (config.Weight > 0 ||
+		config.Header != "" || config.HeaderValue != "" || config.HeaderPattern != "" ||
+		config.Cookie != "" || config.CookieValue != "" || config.CookiePattern != "") {
 		return nil, errors.NewInvalidAnnotationConfiguration(canaryAnnotation, "configured but not enabled")
 	}
 

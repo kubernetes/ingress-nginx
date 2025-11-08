@@ -11,6 +11,8 @@
 | BasicDigestAuth | auth-type | Low | location |
 | Canary | canary | Low | ingress |
 | Canary | canary-by-cookie | Medium | ingress |
+| Canary | canary-by-cookie-pattern | Medium | ingress |
+| Canary | canary-by-cookie-value | Medium | ingress |
 | Canary | canary-by-header | Medium | ingress |
 | Canary | canary-by-header-pattern | Medium | ingress |
 | Canary | canary-by-header-value | Medium | ingress |
