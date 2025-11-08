@@ -240,8 +240,7 @@ describe("Balancer", function()
           backend2.trafficShapingPolicy.weightTotal = 1000
           balancer.sync_backend(backend1)
           balancer.sync_backend(backend2)
-          -- FIXME: переписать этот тест
-          assert.equal(_primaryBalancer, balancer.route_to_alternative_balancer(_primaryBalancer))
+          assert.equal(_primaryBalancer, balancer.get_alternative_or_original_balancer(_primaryBalancer))
         end)
       end)
 
@@ -278,11 +277,11 @@ describe("Balancer", function()
               ["cookie_" .. test_pattern.request_cookie_name] = test_pattern.request_cookie_value,
               request_uri = "/"
             }})
-            backend.trafficShapingPolicy.cookie = "canaryCookie"
-            balancer.sync_backend(backend)
-            -- FIXME: переписать этот тест
+            backend2.trafficShapingPolicy.cookie = "canaryCookie"
+            balancer.sync_backend(backend2)
+            local _expected_result = test_pattern.expected_result and backend2 or _primaryBalancer
             assert.message("\nTest data pattern: " .. test_pattern.case_title)
-              .equal(test_pattern.expected_result, balancer.route_to_alternative_balancer(_primaryBalancer))
+              .equal(_expected_result, balancer.get_alternative_or_original_balancer(_primaryBalancer))
             reset_ngx()
           end
         end)
@@ -356,12 +355,12 @@ describe("Balancer", function()
               ["http_" .. test_pattern.request_header_name] = test_pattern.request_header_value,
               request_uri = "/"
             }})
-            backend.trafficShapingPolicy.header = test_pattern.header_name
-            backend.trafficShapingPolicy.headerValue = test_pattern.header_value
-            balancer.sync_backend(backend)
-            -- FIXME: переписать этот тест
+            backend2.trafficShapingPolicy.header = test_pattern.header_name
+            backend2.trafficShapingPolicy.headerValue = test_pattern.header_value
+            balancer.sync_backend(backend2)
+            local _expected_result = test_pattern.expected_result and backend2 or _primaryBalancer
             assert.message("\nTest data pattern: " .. test_pattern.case_title)
-              .equal(test_pattern.expected_result, balancer.route_to_alternative_balancer(_primaryBalancer))
+              .equal(_expected_result, balancer.get_alternative_or_original_balancer(_primaryBalancer))
             reset_ngx()
           end
         end)
@@ -373,8 +372,8 @@ describe("Balancer", function()
     describe("affinitized", function()
 
       before_each(function()
-        mock_ngx({ var = { request_uri = "/", proxy_upstream_name = backend.name } })
-        balancer.sync_backend(backend)
+        mock_ngx({ var = { request_uri = "/", proxy_upstream_name = backend2.name } })
+        balancer.sync_backend(backend2)
       end)
 
       it("returns false if request is affinitized to primary backend", function()
