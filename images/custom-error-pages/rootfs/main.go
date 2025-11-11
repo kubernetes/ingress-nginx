@@ -180,7 +180,7 @@ func errorHandler(path, defaultFormat string) func(http.ResponseWriter, *http.Re
 		w.WriteHeader(code)
 		io.Copy(w, f)
 
-		duration := time.Now().Sub(start).Seconds()
+		duration := time.Since(start).Seconds()
 
 		proto := strconv.Itoa(r.ProtoMajor)
 		proto = fmt.Sprintf("%s.%s", proto, strconv.Itoa(r.ProtoMinor))
