@@ -57,3 +57,20 @@ func (f *Framework) GetMetric(metricName, ip string) (*dto.MetricFamily, error) 
 
 	return nil, fmt.Errorf("there is no metric with name %v", metricName)
 }
+
+func (f *Framework) GetLabelValue(metric *dto.Metric, labelName string) (string, bool) {
+	// Use the proto descriptor of the metric
+	// metricProto := &dto.Metric{}
+	// if err := metric.Write(metricProto); err != nil {
+	// 	fmt.Println("Error writing metric:", err)
+	// 	return "", false
+	// }
+
+	// Iterate through the label pairs
+	for _, label := range metric.Label {
+		if label.GetName() == labelName {
+			return label.GetValue(), true
+		}
+	}
+	return "", false
+}
