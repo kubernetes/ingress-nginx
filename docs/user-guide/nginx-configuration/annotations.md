@@ -49,6 +49,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/canary-weight-total](#canary)|number|
 |[nginx.ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
 |[nginx.ingress.kubernetes.io/configuration-snippet](#configuration-snippet)|string|
+|[nginx.ingress.kubernetes.io/enable-custom-http-errors](#custom-http-errors)|"true" or "false"|
 |[nginx.ingress.kubernetes.io/custom-http-errors](#custom-http-errors)|[]int|
 |[nginx.ingress.kubernetes.io/custom-headers](#custom-headers)|string|
 |[nginx.ingress.kubernetes.io/default-backend](#default-backend)|string|
@@ -329,6 +330,10 @@ Be aware this can be dangerous in multi-tenant clusters, as it can lead to peopl
 Like the [`custom-http-errors`](./configmap.md#custom-http-errors) value in the ConfigMap, this annotation will set NGINX `proxy-intercept-errors`, but only for the NGINX location associated with this ingress. If a [default backend annotation](#default-backend) is specified on the ingress, the errors will be routed to that annotation's default backend service (instead of the global default backend).
 Different ingresses can specify different sets of error codes. Even if multiple ingress objects share the same hostname, this annotation can be used to intercept different error codes for each ingress (for example, different error codes to be intercepted for different paths on the same hostname, if each path is on a different ingress).
 If `custom-http-errors` is also specified globally, the error values specified in this annotation will override the global value for the given ingress' hostname and path.
+
+If you want to disable this behavior for a specific ingress, you can use the annotation `nginx.ingress.kubernetes.io/enable-custom-http-errors: "false"`.
+`nginx.ingress.kubernetes.io/enable-custom-http-errors`:
+   indicates if the custom http errors feature should be enabled or not to this Ingress rule. The default value is `"true"`.
 
 Example usage:
 ```
