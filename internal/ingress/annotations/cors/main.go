@@ -49,9 +49,9 @@ var (
 	// Method must contain valid methods list (PUT, GET, POST, BLA)
 	// May contain or not spaces between each verb
 	corsMethodsRegex = regexp.MustCompile(`^([A-Za-z]+,?\s?)+$`)
-	// Expose Headers must contain valid values only (*, X-HEADER12, X-ABC)
+	// CORS Headers must contain valid values only (*, X-HEADER12, X-ABC)
 	// May contain or not spaces between each Header
-	corsExposeHeadersRegex = regexp.MustCompile(`^(([A-Za-z0-9\-\_]+|\*),?\s?)+$`)
+	corsHeadersRegex = regexp.MustCompile(`^(([A-Za-z0-9\-\_]+|\*),?\s?)+$`)
 )
 
 const (
@@ -83,11 +83,11 @@ var corsAnnotation = parser.Annotation{
 			Protocol can be any lowercase string, like http, https, or mycustomprotocol.`,
 		},
 		corsAllowHeadersAnnotation: {
-			Validator: parser.ValidateRegex(parser.HeadersVariable, true),
+			Validator: parser.ValidateRegex(corsHeadersRegex, true),
 			Scope:     parser.AnnotationScopeIngress,
 			Risk:      parser.AnnotationRiskMedium,
 			Documentation: `This annotation controls which headers are accepted.
-			This is a multi-valued field, separated by ',' and accepts letters, numbers, _ and -`,
+			This is a multi-valued field, separated by ',' and accepts letters, numbers, _, - and *.`,
 		},
 		corsAllowMethodsAnnotation: {
 			Validator: parser.ValidateRegex(corsMethodsRegex, true),
@@ -103,7 +103,7 @@ var corsAnnotation = parser.Annotation{
 			Documentation: `This annotation controls if credentials can be passed during CORS operations.`,
 		},
 		corsExposeHeadersAnnotation: {
-			Validator: parser.ValidateRegex(corsExposeHeadersRegex, true),
+			Validator: parser.ValidateRegex(corsHeadersRegex, true),
 			Scope:     parser.AnnotationScopeIngress,
 			Risk:      parser.AnnotationRiskMedium,
 			Documentation: `This annotation controls which headers are exposed to response.
@@ -226,7 +226,7 @@ func (c cors) Parse(ing *networking.Ingress) (interface{}, error) {
 	}
 
 	config.CorsAllowHeaders, err = parser.GetStringAnnotation(corsAllowHeadersAnnotation, ing, c.annotationConfig.Annotations)
-	if err != nil || !parser.HeadersVariable.MatchString(config.CorsAllowHeaders) {
+	if err != nil || !corsHeadersRegex.MatchString(config.CorsAllowHeaders) {
 		config.CorsAllowHeaders = defaultCorsHeaders
 	}
 
@@ -246,7 +246,7 @@ func (c cors) Parse(ing *networking.Ingress) (interface{}, error) {
 	}
 
 	config.CorsExposeHeaders, err = parser.GetStringAnnotation(corsExposeHeadersAnnotation, ing, c.annotationConfig.Annotations)
-	if err != nil || !corsExposeHeadersRegex.MatchString(config.CorsExposeHeaders) {
+	if err != nil || !corsHeadersRegex.MatchString(config.CorsExposeHeaders) {
 		config.CorsExposeHeaders = ""
 	}
 
