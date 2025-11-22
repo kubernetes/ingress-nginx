@@ -17,6 +17,7 @@ local tostring = tostring
 local pairs = pairs
 local math = math
 local ngx = ngx
+local unpack = unpack
 
 -- measured in seconds
 -- for an Nginx worker to pick up the new list of upstream peers
@@ -191,89 +192,118 @@ local function sync_backends()
   backends_last_synced_at = raw_backends_last_synced_at
 end
 
-local function route_to_alternative_balancer(balancer)
+local function get_alternative_or_original_balancer(balancer)
+  -- checks whether an alternative backend should be used
+  -- the first backend matching the request context is returned
+  -- if no suitable alterntative backends are found, the original is returned
   if balancer.is_affinitized(balancer) then
     -- If request is already affinitized to a primary balancer, keep the primary balancer.
-    return false
+    return balancer
   end
 
   if not balancer.alternative_backends then
-    return false
+    return balancer
   end
 
-  -- TODO: support traffic shaping for n > 1 alternative backends
-  local backend_name = balancer.alternative_backends[1]
-  if not backend_name then
-    ngx.log(ngx.ERR, "empty alternative backend")
-    return false
-  end
-
-  local alternative_balancer = balancers[backend_name]
-  if not alternative_balancer then
-    ngx.log(ngx.ERR, "no alternative balancer for backend: ",
-            tostring(backend_name))
-    return false
-  end
-
-  if alternative_balancer.is_affinitized(alternative_balancer) then
-    -- If request is affinitized to an alternative balancer, instruct caller to
-    -- switch to alternative.
-    return true
-  end
-
-  -- Use traffic shaping policy, if request didn't have affinity set.
-  local traffic_shaping_policy =  alternative_balancer.traffic_shaping_policy
-  if not traffic_shaping_policy then
-    ngx.log(ngx.ERR, "traffic shaping policy is not set for balancer ",
-            "of backend: ", tostring(backend_name))
-    return false
-  end
-
-  local target_header = util.replace_special_char(traffic_shaping_policy.header,
-                                                  "-", "_")
-  local header = ngx.var["http_" .. target_header]
-  if header then
-    if traffic_shaping_policy.headerValue
-	   and #traffic_shaping_policy.headerValue > 0 then
-      if traffic_shaping_policy.headerValue == header then
-        return true
+  local available_now_balancers = {}
+  for _, backend_name in ipairs(balancer.alternative_backends) do
+    if not backend_name then
+      ngx.log(ngx.ERR, "empty alternative backend")
+    else
+      local alternative_balancer = balancers[backend_name]
+      if not alternative_balancer then
+        ngx.log(ngx.ERR, "no alternative balancer for backend: ",
+                tostring(backend_name))
+      else
+        if alternative_balancer.is_affinitized(alternative_balancer) then
+          -- If request is affinitized to an alternative balancer, instruct caller to
+          -- switch to alternative.
+          return alternative_balancer
+        elseif not alternative_balancer.traffic_shaping_policy then
+          -- If alternative_balancer has no traffic_shaping_policy, do not save it and log error
+          ngx.log(ngx.ERR, "traffic shaping policy is not set for balancer ",
+                  "of backend: ", tostring(backend_name))
+        else
+          -- Save alternative_balancers with traffic shaping policy, if request didn't have affinity set.
+          table.insert(available_now_balancers, alternative_balancer)
+        end
       end
-    elseif traffic_shaping_policy.headerPattern
-       and #traffic_shaping_policy.headerPattern > 0 then
-      local m, err = ngx.re.match(header, traffic_shaping_policy.headerPattern)
-      if m then
-        return true
-      elseif  err then
-          ngx.log(ngx.ERR, "error when matching canary-by-header-pattern: '",
-                  traffic_shaping_policy.headerPattern, "', error: ", err)
-          return false
-      end
-    elseif header == "always" then
-      return true
-    elseif header == "never" then
-      return false
     end
   end
 
-  local target_cookie = traffic_shaping_policy.cookie
-  local cookie = ngx.var["cookie_" .. target_cookie]
-  if cookie then
-    if cookie == "always" then
-      return true
-    elseif cookie == "never" then
-      return false
+  local never_id_list = {}
+  -- Using by-header traffic_shaping_policy to find a suitable alternative_balancer
+  for i, alternative_balancer in ipairs(available_now_balancers) do
+    local traffic_shaping_policy =  alternative_balancer.traffic_shaping_policy
+    local target_header = util.replace_special_char(traffic_shaping_policy.header,
+                                                    "-", "_")
+    local header = ngx.var["http_" .. target_header]
+    if header then
+      if traffic_shaping_policy.headerValue
+             and #traffic_shaping_policy.headerValue > 0 then
+        if traffic_shaping_policy.headerValue == header then
+          return alternative_balancer
+        end
+      elseif traffic_shaping_policy.headerPattern
+         and #traffic_shaping_policy.headerPattern > 0 then
+        -- Check headerPattern if it was specified
+        local m, err = ngx.re.match(header, traffic_shaping_policy.headerPattern)
+        if m then
+          return alternative_balancer
+        elseif err then
+            ngx.log(ngx.ERR, "error when matching canary-by-header-pattern: '",
+                    traffic_shaping_policy.headerPattern, "', error: ", err)
+        end
+      -- If header was specified, but headerValue or headerPattern was not, check the value of header by "always"/"never"
+      elseif header == "always" then
+        return alternative_balancer
+      elseif header == "never" then
+        -- This alternative_balancer will not be used for further checks
+        -- Saving the alternative_balancer's ID wich we will not use for further checks
+        table.insert(never_id_list, i)
+      end
     end
   end
 
-  local weightTotal = 100
-  if traffic_shaping_policy.weightTotal ~= nil and traffic_shaping_policy.weightTotal > 100 then
-    weightTotal = traffic_shaping_policy.weightTotal
+  if #never_id_list > 0 then
+    table.remove(available_now_balancers, unpack(never_id_list))
   end
-  if math.random(weightTotal) <= traffic_shaping_policy.weight then
-    return true
+  never_id_list = {}
+
+  -- Using by-header traffic_shaping_policy to find a suitable alternative_balancer
+  for i, alternative_balancer in ipairs(available_now_balancers) do
+    local traffic_shaping_policy =  alternative_balancer.traffic_shaping_policy
+    local target_cookie = traffic_shaping_policy.cookie
+    local cookie = ngx.var["cookie_" .. target_cookie]
+
+    if cookie then
+      if cookie == "always" then
+        return alternative_balancer
+      elseif cookie == "never" then
+        table.insert(never_id_list, i)
+      end
+    end
   end
 
-  return false
+  if #never_id_list > 0 then
+    table.remove(available_now_balancers, unpack(never_id_list))
+  end
+
+  for _, alternative_balancer in ipairs(available_now_balancers) do
+    local traffic_shaping_policy =  alternative_balancer.traffic_shaping_policy
+
+    if traffic_shaping_policy.weight ~= nil and traffic_shaping_policy.weight > 0 then
+      local weightTotal = 100
+      if traffic_shaping_policy.weightTotal ~= nil and traffic_shaping_policy.weightTotal > 100 then
+        weightTotal = traffic_shaping_policy.weightTotal
+      end
+      if math.random(weightTotal) <= traffic_shaping_policy.weight then
+        return alternative_balancer
+      end
+    end
+  end
+
+  return balancer
 end
 
 local function get_balancer_by_upstream_name(upstream_name)
@@ -292,16 +322,9 @@ local function get_balancer()
     return nil
   end
 
-  if route_to_alternative_balancer(balancer) then
-    local alternative_backend_name = balancer.alternative_backends[1]
-    ngx.var.proxy_alternative_upstream_name = alternative_backend_name
+  ngx.ctx.balancer = get_alternative_or_original_balancer(balancer)
 
-    balancer = balancers[alternative_backend_name]
-  end
-
-  ngx.ctx.balancer = balancer
-
-  return balancer
+  return ngx.ctx.balancer
 end
 
 function _M.init_worker()
@@ -376,7 +399,7 @@ end
 setmetatable(_M, {__index = {
   get_implementation = get_implementation,
   sync_backend = sync_backend,
-  route_to_alternative_balancer = route_to_alternative_balancer,
+  get_alternative_or_original_balancer = get_alternative_or_original_balancer,
   get_balancer = get_balancer,
   get_balancer_by_upstream_name = get_balancer_by_upstream_name,
 }})
