@@ -17,6 +17,7 @@ local tostring = tostring
 local pairs = pairs
 local math = math
 local ngx = ngx
+local unpack = unpack
 
 -- measured in seconds
 -- for an Nginx worker to pick up the new list of upstream peers
@@ -265,7 +266,7 @@ local function get_alternative_or_original_balancer(balancer)
   end
 
   if #never_id_list > 0 then
-    table.remove(available_now_balancers, table.unpack(never_id_list))
+    table.remove(available_now_balancers, unpack(never_id_list))
   end
   never_id_list = {}
 
@@ -285,7 +286,7 @@ local function get_alternative_or_original_balancer(balancer)
   end
 
   if #never_id_list > 0 then
-    table.remove(available_now_balancers, table.unpack(never_id_list))
+    table.remove(available_now_balancers, unpack(never_id_list))
   end
 
   for _, alternative_balancer in ipairs(available_now_balancers) do
