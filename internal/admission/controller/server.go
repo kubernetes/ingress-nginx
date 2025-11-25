@@ -28,6 +28,12 @@ import (
 
 var scheme = runtime.NewScheme()
 
+// The Kubernetes default is 3 MB.
+// Multiply by 3 to be safe
+//
+// https://github.com/kubernetes/kubernetes/blob/3025b0a7b4b9fba6110759e905346ead5c9c0720/staging/src/k8s.io/apimachinery/pkg/runtime/serializer/cbor/internal/modes/buffers.go#L47
+const maxBodySizeBytes = 9 * 1024 * 1024 //  9 MB
+
 func init() {
 	if err := admissionv1.AddToScheme(scheme); err != nil {
 		klog.ErrorS(err, "Failed to add scheme")
@@ -59,12 +65,20 @@ func NewAdmissionControllerServer(ac AdmissionController) *AdmissionControllerSe
 func (acs *AdmissionControllerServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 
-	data, err := io.ReadAll(req.Body)
+	lr := io.LimitReader(req.Body, maxBodySizeBytes)
+	data, err := io.ReadAll(lr)
 	if err != nil {
 		klog.ErrorS(err, "Failed to read request body")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	if len(data) == maxBodySizeBytes {
+		// buffer full, request is too large
+		klog.Errorf("Request body too large. Max is %d bytes", maxBodySizeBytes-1)
+		w.WriteHeader(http.StatusRequestEntityTooLarge)
+		return
+	}
+	klog.ErrorS(nil, "Admission review request received", "body", len(data))
 
 	codec := json.NewSerializerWithOptions(json.DefaultMetaFactory, scheme, scheme, json.SerializerOptions{
 		Pretty: true,
