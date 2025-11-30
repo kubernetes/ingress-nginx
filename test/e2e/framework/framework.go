@@ -310,14 +310,14 @@ func (f *Framework) NginxLogs() (string, error) {
 }
 
 func (f *Framework) matchNginxConditions(name string, matcher func(cfg string) bool) wait.ConditionFunc {
-	return func() (bool, error) {
-		var cmd string
-		if name == "" {
-			cmd = "cat /etc/nginx/nginx.conf"
-		} else {
-			cmd = fmt.Sprintf("cat /etc/nginx/nginx.conf | awk '/## start server %v/,/## end server %v/'", name, name)
-		}
+	var cmd string
+	if name == "" {
+		cmd = "cat /etc/nginx/nginx.conf"
+	} else {
+		cmd = fmt.Sprintf("cat /etc/nginx/nginx.conf | awk '/## start server %v/,/## end server %v/'", name, name)
+	}
 
+	return func() (bool, error) {
 		o, err := f.ExecCommand(f.pod, cmd)
 		if err != nil {
 			return false, nil
