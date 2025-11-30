@@ -57,7 +57,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name foo")
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
 			canaryAnnotations := map[string]string{
@@ -105,6 +105,11 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 				80,
 				canaryAnnotations))
 
+			f.WaitForNginxServer(host,
+				func(server string) bool {
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
+				})
+
 			f.HTTPTestClient().
 				GET("/info").
 				WithHeader("Host", host).
@@ -126,7 +131,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 				f.WaitForNginxServer(host,
 					func(server string) bool {
-						return strings.Contains(server,"server_name foo")
+						return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 					})
 
 				canaryAnnotations := map[string]string{
@@ -186,7 +191,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name foo")
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
 			canaryAnnotations := map[string]string{
@@ -261,7 +266,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name foo")
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
 			ginkgo.By("routing requests destined for the mainline ingress to the mainelin upstream")
@@ -301,7 +306,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name foo")
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
 			canaryAnnotations := map[string]string{
@@ -335,7 +340,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name foo")
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
 			ginkgo.By("routing requests destined fro the mainline ingress to the mainline upstream")
@@ -375,7 +380,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name foo")
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
 			canaryAnnotations := map[string]string{
@@ -396,7 +401,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name foo")
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
 			newAnnotations := map[string]string{
@@ -415,7 +420,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name foo")
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
 			ginkgo.By("routing requests destined for the mainline ingress to the mainline upstream")
@@ -456,7 +461,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name foo")
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
 			canaryAnnotations := map[string]string{
@@ -525,7 +530,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name foo")
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
 			canaryAnnotations := map[string]string{
@@ -606,7 +611,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name foo")
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
 			canaryAnnotations := map[string]string{
@@ -659,7 +664,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name foo")
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
 			canaryAnnotations := map[string]string{
@@ -704,7 +709,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name foo")
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
 			canaryAnnotations := map[string]string{
@@ -753,7 +758,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name foo")
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
 			canaryAnnotations := map[string]string{
@@ -802,7 +807,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name foo")
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
 			canaryAnnotations := map[string]string{
@@ -874,7 +879,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name foo")
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
@@ -894,7 +899,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name foo")
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
 			f.HTTPTestClient().
@@ -922,7 +927,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name foo")
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
@@ -964,7 +969,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name foo")
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
@@ -1007,7 +1012,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name foo")
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
@@ -1043,7 +1048,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name foo")
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
@@ -1163,7 +1168,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "server_name foo")
+				return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 			})
 	})
 
@@ -1189,7 +1194,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name foo")
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
 			// Canary weight is 1% to ensure affinity cookie does its job.
@@ -1256,7 +1261,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name foo")
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
 			// Canary weight is 1% to ensure affinity cookie does its job.
@@ -1324,7 +1329,7 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name foo")
+					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
 			// Canary weight is 50% to ensure requests are going there.
