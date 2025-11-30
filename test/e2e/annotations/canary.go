@@ -88,10 +88,18 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 
 		ginkgo.It("should return 404 status for requests to the canary if no matching ingress is found", func() {
 			host := fooHost
+			filterHeader := "CanaryByHeaderFoo"
+			wrongHeaders := []string{
+				"WrongHeader",
+				"CanaryByHeader",
+				"CanaryByHeaderBar",
+				"CanaryByHeaderFooBar",
+				"BarCanaryByHeaderFoo",
+			}
 
 			canaryAnnotations := map[string]string{
 				"nginx.ingress.kubernetes.io/canary":           "true",
-				"nginx.ingress.kubernetes.io/canary-by-header": "CanaryByHeader",
+				"nginx.ingress.kubernetes.io/canary-by-header": filterHeader,
 			}
 
 			canaryIngName := fmt.Sprintf("%v-canary", host)
@@ -110,12 +118,14 @@ var _ = framework.DescribeAnnotation("canary-*", func() {
 					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
 				})
 
-			f.HTTPTestClient().
-				GET("/info").
-				WithHeader("Host", host).
-				WithHeader("CanaryByHeader", "always").
-				Expect().
-				Status(http.StatusNotFound)
+			for _, wh := range wrongHeaders {
+				f.HTTPTestClient().
+					GET("/info").
+					WithHeader("Host", host).
+					WithHeader(wh, "always").
+					Expect().
+					Status(http.StatusNotFound)
+			}
 		})
 
 		/*
