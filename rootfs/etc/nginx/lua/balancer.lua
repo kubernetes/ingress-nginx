@@ -253,6 +253,8 @@ local function get_alternative_or_original_balancer(balancer)
         elseif err then
             ngx.log(ngx.ERR, "error when matching canary-by-header-pattern: '",
                     traffic_shaping_policy.headerPattern, "', error: ", err)
+        -- if headerPattern is broken, we remove this alternative_backend from further processing
+        table.insert(never_id_list, i)
         end
       -- If header was specified, but headerValue or headerPattern was not, check the value of header by "always"/"never"
       elseif header == "always" then
