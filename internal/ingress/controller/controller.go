@@ -17,6 +17,7 @@ limitations under the License.
 package controller
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"strconv"
@@ -27,6 +28,8 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
+	"k8s.io/apimachinery/pkg/api/operation"
+	"k8s.io/apimachinery/pkg/api/validate"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -361,6 +364,12 @@ func (n *NGINXController) CheckIngress(ing *networking.Ingress) error {
 	startRender := time.Now().UnixNano() / 1000000
 	cfg := n.store.GetBackendConfiguration()
 	cfg.Resolver = n.resolver
+
+	// Validate UID
+	// The only argument that matters is ing.UID.
+	if err := validate.UUID(context.TODO(), operation.Operation{}, nil, &ing.UID, nil); err != nil {
+		return fmt.Errorf("ingress has invalid UID: %v", err)
+	}
 
 	// Adds the pathType Validation
 	if cfg.StrictValidatePathType {
