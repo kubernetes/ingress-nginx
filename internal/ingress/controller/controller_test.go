@@ -38,6 +38,7 @@ import (
 	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/fake"
 
 	"k8s.io/ingress-nginx/pkg/apis/ingress"
@@ -63,6 +64,7 @@ import (
 const (
 	exampleBackend = "example-http-svc-1-80"
 	TRUE           = "true"
+	goodUID        = "467a2005-a207-40f8-a15d-fd30b8ecfe94"
 )
 
 type fakeIngressStore struct {
@@ -219,8 +221,42 @@ func TestCheckIngress(t *testing.T) {
 			},
 		},
 	}
+
+	t.Run("when uids are invalid", func(t *testing.T) {
+		invalidUIDs := []string{
+			"invalid_uid!@#$%",
+			"invalid_uid!",
+			"12345-67890-xyz", // xyz are not valid hex characters
+			"12345 67890",     // spaces not allowed
+			"",
+			"urn:uuid:12345-67890-xyz", // xyz are not valid hex characters
+			"urn:uud:12345-67890-xyz",
+			"urn:uuid:12345 ",
+		}
+		for _, uid := range invalidUIDs {
+			ing.UID = types.UID(uid)
+			if nginx.CheckIngress(ing) == nil {
+				t.Errorf("with an invalid uid %s, an error should be returned", uid)
+			}
+		}
+	})
+
+	t.Run("when uids are valid", func(t *testing.T) {
+		validUIDs := []string{
+			"467a2005-a207-40f8-a15d-fd30b8ecfe94",
+			"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+		}
+		for _, uid := range validUIDs {
+			ing.UID = types.UID(uid)
+			if nginx.CheckIngress(ing) != nil {
+				t.Errorf("with a valid uid %s, no error should be returned", uid)
+			}
+		}
+	})
+
 	t.Run("when the class is the nginx one", func(t *testing.T) {
 		ing.ObjectMeta.Annotations["kubernetes.io/ingress.class"] = "nginx"
+		ing.UID = goodUID
 		nginx.command = testNginxTestCommand{
 			t:        t,
 			err:      nil,
@@ -240,6 +276,7 @@ func TestCheckIngress(t *testing.T) {
 				},
 			}
 			ing.Spec.Rules[0].Host = "test.example.com"
+			ing.UID = goodUID
 			nginx.command = testNginxTestCommand{
 				t:        t,
 				err:      nil,
@@ -309,6 +346,7 @@ func TestCheckIngress(t *testing.T) {
 				err: nil,
 			}
 			ing.ObjectMeta.Annotations["nginx.ingress.kubernetes.io/custom-headers"] = "invalid_directive"
+			ing.UID = goodUID
 			if err := nginx.CheckIngress(ing); err == nil {
 				t.Errorf("with an invalid value in annotation the ingress should be rejected")
 			}
