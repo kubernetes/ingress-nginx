@@ -1,7 +1,7 @@
 ARG E2E_BASE_IMAGE
 FROM ${E2E_BASE_IMAGE} AS BASE
 
-FROM alpine:3.22.2
+FROM alpine:3.23.0
 
 RUN apk update \
 	&& apk upgrade && apk add -U --no-cache \

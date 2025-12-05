@@ -32,10 +32,10 @@ export MORE_HEADERS_VERSION=v0.37
 # Check for recent changes: https://github.com/atomx/nginx-http-auth-digest/compare/v1.0.0...master
 export NGINX_DIGEST_AUTH=v1.0.0
 
-# Check for recent changes: https://github.com/SpiderLabs/ModSecurity-nginx/compare/v1.0.4...master
+# Check for recent changes: https://github.com/owasp-modsecurity/ModSecurity-nginx/compare/v1.0.4...master
 export MODSECURITY_VERSION=v1.0.4
 
-# Check for recent changes: https://github.com/SpiderLabs/ModSecurity/compare/v3.0.14...v3/master
+# Check for recent changes: https://github.com/owasp-modsecurity/ModSecurity/compare/v3.0.14...v3/master
 export MODSECURITY_LIB_VERSION=v3.0.14
 
 # Check for recent changes: https://github.com/coreruleset/coreruleset/compare/v4.15.0...main
@@ -98,8 +98,8 @@ export LUA_RESTY_IPMATCHER_VERSION=3e93c53eb8c9884efe939ef070486a0e507cc5be
 # Check for recent changes: https://github.com/microsoft/mimalloc/compare/v2.2.4...main
 export MIMALOC_VERSION=v2.2.4
 
-# Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp/compare/v1.18.0...main
-export OPENTELEMETRY_CPP_VERSION=v1.18.0
+# Check for recent changes: https://github.com/open-telemetry/opentelemetry-cpp/compare/v1.19.0...main
+export OPENTELEMETRY_CPP_VERSION=v1.19.0
 
 # Check for recent changes: https://github.com/open-telemetry/opentelemetry-proto/compare/v1.5.0...main
 export OPENTELEMETRY_PROTO_VERSION=v1.5.0
@@ -211,7 +211,7 @@ get_src f09851e6309560a8ff3e901548405066c83f1f6ff88aa7171e0763bd9514762b \
         "https://github.com/atomx/nginx-http-auth-digest/archive/$NGINX_DIGEST_AUTH.tar.gz" "nginx-http-auth-digest"
 
 get_src 32a42256616cc674dca24c8654397390adff15b888b77eb74e0687f023c8751b \
-        "https://github.com/SpiderLabs/ModSecurity-nginx/archive/$MODSECURITY_VERSION.tar.gz" "ModSecurity-nginx"
+        "https://github.com/owasp-modsecurity/ModSecurity-nginx/archive/$MODSECURITY_VERSION.tar.gz" "ModSecurity-nginx"
 
 get_src bc764db42830aeaf74755754b900253c233ad57498debe7a441cee2c6f4b07c2 \
         "https://github.com/openresty/lua-nginx-module/archive/$LUA_NGX_VERSION.tar.gz" "lua-nginx-module"
@@ -336,7 +336,7 @@ make install
 
 # build modsecurity library
 cd "$BUILD_PATH"
-git clone -n https://github.com/SpiderLabs/ModSecurity
+git clone -n https://github.com/owasp-modsecurity/ModSecurity
 cd ModSecurity/
 git checkout $MODSECURITY_LIB_VERSION
 git submodule init
@@ -344,9 +344,19 @@ git submodule update
 
 sh build.sh
 
-# https://github.com/SpiderLabs/ModSecurity/issues/1909#issuecomment-465926762
+# https://github.com/owasp-modsecurity/ModSecurity/issues/1909#issuecomment-465926762
 sed -i '115i LUA_CFLAGS="${LUA_CFLAGS} -DWITH_LUA_JIT_2_1"' build/lua.m4
 sed -i '117i AC_SUBST(LUA_CFLAGS)' build/lua.m4
+
+#
+# As of Alpine v3.23.0, building ModSecurity fails with:
+#
+# headers/modsecurity/collection/collection.h:x:x: error: 'int32_t' has not been declared
+# headers/modsecurity/collection/collection.h:x:x: note: 'int32_t' is defined in header '<cstdint>'; this is probably fixable by adding '#include <cstdint>'
+#
+# Sadly this has not been fixed upstream, yet, so we manually patch it here.
+#
+sed -i '24i #include <cstdint>' headers/modsecurity/collection/collection.h
 
 ./configure \
   --disable-doxygen-doc \
