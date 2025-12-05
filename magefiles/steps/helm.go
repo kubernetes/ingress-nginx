@@ -25,7 +25,7 @@ import (
 	"github.com/magefile/mage/sh"
 	yamlpath "github.com/vmware-labs/yaml-jsonpath/pkg/yamlpath"
 	"gopkg.in/yaml.v3"
-	"helm.sh/helm/v3/pkg/chartutil"
+	chartutil "helm.sh/helm/v4/pkg/chart/v2/util"
 
 	utils "k8s.io/ingress-nginx/magefiles/utils"
 )
