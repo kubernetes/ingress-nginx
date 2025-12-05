@@ -861,7 +861,7 @@ It can be enabled using the following annotation:
 ```yaml
 nginx.ingress.kubernetes.io/enable-modsecurity: "true"
 ```
-ModSecurity will run in "Detection-Only" mode using the [recommended configuration](https://github.com/SpiderLabs/ModSecurity/blob/v3/master/modsecurity.conf-recommended).
+ModSecurity will run in "Detection-Only" mode using the [recommended configuration](https://github.com/owasp-modsecurity/ModSecurity/blob/v3/master/modsecurity.conf-recommended).
 
 You can enable the [OWASP Core Rule Set](https://www.modsecurity.org/CRS/Documentation/) by
 setting the following annotation:
@@ -883,7 +883,7 @@ nginx.ingress.kubernetes.io/modsecurity-snippet: |
 
 Note: If you use both `enable-owasp-core-rules` and `modsecurity-snippet` annotations together, only the
 `modsecurity-snippet` will take effect. If you wish to include the [OWASP Core Rule Set](https://www.modsecurity.org/CRS/Documentation/) or
-[recommended configuration](https://github.com/SpiderLabs/ModSecurity/blob/v3/master/modsecurity.conf-recommended) simply use the include
+[recommended configuration](https://github.com/owasp-modsecurity/ModSecurity/blob/v3/master/modsecurity.conf-recommended) simply use the include
 statement:
 
 nginx 0.24.1 and below
