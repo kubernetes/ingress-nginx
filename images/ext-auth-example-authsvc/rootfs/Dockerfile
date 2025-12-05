@@ -1,6 +1,6 @@
 ARG GOLANG_VERSION
 
-FROM golang:${GOLANG_VERSION}-alpine3.22 AS builder
+FROM golang:${GOLANG_VERSION}-alpine3.23 AS builder
 RUN mkdir /authsvc
 WORKDIR /authsvc
 COPY . ./
