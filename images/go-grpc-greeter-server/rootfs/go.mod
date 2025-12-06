@@ -1,6 +1,6 @@
 module k8s.io/ingress-nginx/go-grpc-greeter-server
 
-go 1.25.4
+go 1.25.5
 
 require (
 	google.golang.org/grpc v1.77.0
