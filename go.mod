@@ -32,7 +32,7 @@ require (
 	google.golang.org/grpc v1.77.0
 	gopkg.in/go-playground/pool.v3 v3.1.1
 	gopkg.in/mcuadros/go-syslog.v2 v2.3.0
-	helm.sh/helm/v4 v4.0.1
+	helm.sh/helm/v4 v4.0.2
 	k8s.io/api v0.34.3
 	k8s.io/apiextensions-apiserver v0.34.3
 	k8s.io/apimachinery v0.34.3
