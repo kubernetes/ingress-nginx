@@ -77,12 +77,13 @@ var sessionAffinityAnnotations = parser.Annotation{
 			Documentation: `This annotation enables and sets the affinity type in all Upstreams of an Ingress. This way, a request will always be directed to the same upstream server. The only affinity type available for NGINX is cookie`,
 		},
 		annotationAffinityMode: {
-			Validator: parser.ValidateOptions([]string{"balanced", "persistent"}, true, true),
+			Validator: parser.ValidateOptions([]string{"balanced", "persistent", "persistent-drainable"}, true, true),
 			Scope:     parser.AnnotationScopeIngress,
 			Risk:      parser.AnnotationRiskMedium,
 			Documentation: `This annotation defines the stickiness of a session. 
 			Setting this to balanced (default) will redistribute some sessions if a deployment gets scaled up, therefore rebalancing the load on the servers. 
-			Setting this to persistent will not rebalance sessions to new servers, therefore providing maximum stickiness.`,
+			Setting this to persistent will not rebalance sessions to new servers, therefore providing greater stickiness. Sticky sessions will continue to be routed to the same server as long as its Endpoint's condition remains Ready. If the Endpoint stops being Ready, such when a server pod receives a deletion timestamp, sessions will be rebalanced to another server.
+			Setting this to persistent-drainable behaves like persistent, but sticky sessions will continue to be routed to the same server as long as its Endpoint's condition remains Serving, even after the server pod receives a deletion timestamp. This allows graceful session draining during the preStop lifecycle hook. New sessions will *not* be directed to these draining servers and will only be routed to a server whose Endpoint is Ready, except potentially when all servers are draining.`,
 		},
 		annotationAffinityCanaryBehavior: {
 			Validator: parser.ValidateOptions([]string{"sticky", "legacy"}, true, true),
