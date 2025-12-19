@@ -35,7 +35,7 @@ build: builder
 		--build-arg BASE_IMAGE=$(BASE_IMAGE) \
 		--build-arg GOLANG_VERSION=$(GOLANG_VERSION) \
 		--build-arg ETCD_VERSION=3.5.13-0 \
-		--build-arg K8S_RELEASE=v1.34.3 \
+		--build-arg K8S_RELEASE=v1.35.0 \
 		--build-arg RESTY_CLI_VERSION=0.27 \
 		--build-arg RESTY_CLI_SHA=e5f4f3128af49ba5c4d039d0554e5ae91bbe05866f60eccfa96d3653274bff90 \
 		--build-arg LUAROCKS_VERSION=v3.12.2 \
