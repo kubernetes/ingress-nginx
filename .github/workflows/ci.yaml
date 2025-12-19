@@ -172,7 +172,7 @@ jobs:
 
       - name: Prepare Host
         run: |
-          curl -LO https://dl.k8s.io/release/v1.34.3/bin/linux/amd64/kubectl
+          curl -LO https://dl.k8s.io/release/v1.35.0/bin/linux/amd64/kubectl
           chmod +x ./kubectl
           sudo mv ./kubectl /usr/local/bin/kubectl
 
@@ -273,7 +273,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        k8s: [v1.30.13, v1.31.14, v1.32.11, v1.33.7, v1.34.3]
+        k8s: [v1.31.14, v1.32.11, v1.33.7, v1.34.3, v1.35.0]
 
     steps:
       - name: Checkout code
@@ -305,7 +305,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        k8s: [v1.30.13, v1.31.14, v1.32.11, v1.33.7, v1.34.3]
+        k8s: [v1.31.14, v1.32.11, v1.33.7, v1.34.3, v1.35.0]
     uses: ./.github/workflows/zz-tmpl-k8s-e2e.yaml
     with:
       k8s-version: ${{ matrix.k8s }}
@@ -320,7 +320,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        k8s: [v1.30.13, v1.31.14, v1.32.11, v1.33.7, v1.34.3]
+        k8s: [v1.31.14, v1.32.11, v1.33.7, v1.34.3, v1.35.0]
     uses: ./.github/workflows/zz-tmpl-k8s-e2e.yaml
     with:
       k8s-version: ${{ matrix.k8s }}
