@@ -2,7 +2,7 @@ options:
   # Ignore Prow provided substitutions.
   substitution_option: ALLOW_LOOSE
 steps:
-- name: gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:v20251211-4c812d4cd8
+- name: gcr.io/k8s-staging-test-infra/gcb-docker-gcloud:v20251222-9ed298b43e
   dir: charts
   env:
   - NAME=ingress-nginx
