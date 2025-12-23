@@ -11,10 +11,6 @@
 The ingress controller supports **case insensitive** regular expressions in the `spec.rules.http.paths.path` field.
 This can be enabled by setting the `nginx.ingress.kubernetes.io/use-regex` annotation to `true` (the default is false).
 
-!!! hint
-    Kubernetes only accept expressions that comply with the RE2 engine syntax. It is possible that valid expressions accepted by NGINX cannot be used with ingress-nginx, because the PCRE library (used in NGINX) supports a wider syntax than RE2.
-    See the [RE2 Syntax](https://github.com/google/re2/wiki/Syntax) documentation for differences.
-
 See the [description](./nginx-configuration/annotations.md#use-regex) of the `use-regex` annotation for more details.
 
 ```yaml
