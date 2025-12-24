@@ -78,20 +78,30 @@ HSTS is enabled by default.
 
 To disable this behavior use `hsts: "false"` in the configuration [ConfigMap][ConfigMap].
 
-## Server-side HTTPS enforcement through redirect
+## Server-side HTTPS enforcement
 
 By default the controller redirects HTTP clients to the HTTPS port
 443 using a 308 Permanent Redirect response if TLS is enabled for that Ingress.
 
-This can be disabled globally using `ssl-redirect: "false"` in the NGINX [config map][ConfigMap],
+This can be disabled globally using `ssl-redirect: "false"` in the [config map][ConfigMap],
 or per-Ingress with the `nginx.ingress.kubernetes.io/ssl-redirect: "false"`
 annotation in the particular resource.
+
+In certain scenarios, you might prefer to return a 403 Forbidden error response instead of redirecting traffic to the HTTPS port.
+This approach helps prevent misconfigured clients from inadvertently leaking sensitive data over unencrypted connections.
+
+This can be enabled globally using `ssl-forbid-http: "true"` in the [config map][ConfigMap],
+or per-Ingress with the `nginx.ingress.kubernetes.io/ssl-forbid-http: "true"` annotation in the particular resource.
 
 !!! tip
     When using SSL offloading outside of cluster (e.g. AWS ELB) it may be useful to enforce a
     redirect to HTTPS even when there is no TLS certificate available.
     This can be achieved by using the `nginx.ingress.kubernetes.io/force-ssl-redirect: "true"`
     annotation in the particular resource.
+
+    Similarly, you can enforce 403 Forbidden errors to HTTP requests using the
+    `nginx.ingress.kubernetes.io/force-ssl-forbid-http: "true"` annotation in the particular
+    resource.
 
 ## Automated Certificate Management with cert-manager
 
