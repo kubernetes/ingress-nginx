@@ -80,22 +80,41 @@ func (h *HTTPRequest) ForceResolve(ip string, port uint16) *HTTPRequest {
 		h.chain.fail(fmt.Sprintf("invalid ip address: %s", ip))
 		return h
 	}
-	dialer := &net.Dialer{
-		Timeout:   h.client.Timeout,
-		KeepAlive: h.client.Timeout,
-		DualStack: true,
-	}
 	resolveAddr := fmt.Sprintf("%s:%d", ip, int(port))
 
+	return h.WithDialContextMiddleware(func(next DialContextFunc) DialContextFunc {
+		return func(ctx context.Context, network, _ string) (net.Conn, error) {
+			return next(ctx, network, resolveAddr)
+		}
+	})
+}
+
+// DialContextFunc is the function signature for `DialContext`
+type DialContextFunc func(ctx context.Context, network, addr string) (net.Conn, error)
+
+// WithDialContextMiddleware sets the `DialContext` function of the client
+// transport with a new function returns from `fn`. An existing `DialContext`
+// is passed into `fn` so the new function can act as a middleware by calling
+// the old one.
+func (h *HTTPRequest) WithDialContextMiddleware(fn func(next DialContextFunc) DialContextFunc) *HTTPRequest {
 	oldTransport, ok := h.client.Transport.(*http.Transport)
 	if !ok {
 		h.chain.fail("invalid old transport address")
 		return h
 	}
-	newTransport := oldTransport.Clone()
-	newTransport.DialContext = func(ctx context.Context, network, _ string) (net.Conn, error) {
-		return dialer.DialContext(ctx, network, resolveAddr)
+	var nextDialContext DialContextFunc
+	if oldTransport.DialContext != nil {
+		nextDialContext = oldTransport.DialContext
+	} else {
+		dialer := &net.Dialer{
+			Timeout:   h.client.Timeout,
+			KeepAlive: h.client.Timeout,
+			DualStack: true,
+		}
+		nextDialContext = dialer.DialContext
 	}
+	newTransport := oldTransport.Clone()
+	newTransport.DialContext = fn(nextDialContext)
 	h.client.Transport = newTransport
 	return h
 }
