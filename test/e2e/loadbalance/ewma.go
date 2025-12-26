@@ -46,7 +46,7 @@ var _ = framework.DescribeSetting("[Load Balancer] EWMA", func() {
 		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "server_name load-balance.com")
+				return strings.Contains(server, `server_name "load-balance.com"`)
 			})
 
 		algorithm, err := f.GetLbAlgorithm(framework.EchoService, 80)

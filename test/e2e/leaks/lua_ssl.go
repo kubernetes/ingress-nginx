@@ -79,7 +79,7 @@ func provisionIngress(hostname string, f *framework.Framework) {
 
 	f.WaitForNginxServer(hostname,
 		func(server string) bool {
-			return strings.Contains(server, fmt.Sprintf("server_name %v", hostname)) &&
+			return strings.Contains(server, fmt.Sprintf(`server_name "%v"`, hostname)) &&
 				strings.Contains(server, "listen 443")
 		})
 }

@@ -43,7 +43,7 @@ var _ = framework.DescribeAnnotation("custom-headers-*", func() {
 
 		f.WaitForNginxServer(customHeaderHost,
 			func(server string) bool {
-				return strings.Contains(server, "server_name custom-headers")
+				return strings.Contains(server, `server_name "custom-headers"`)
 			})
 
 		f.HTTPTestClient().
@@ -64,7 +64,7 @@ var _ = framework.DescribeAnnotation("custom-headers-*", func() {
 
 		f.WaitForNginxServer(customHeaderHost,
 			func(server string) bool {
-				return strings.Contains(server, "server_name custom-headers")
+				return strings.Contains(server, `server_name "custom-headers"`)
 			})
 
 		f.HTTPTestClient().
