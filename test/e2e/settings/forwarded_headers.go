@@ -48,7 +48,7 @@ var _ = framework.DescribeSetting("use-forwarded-headers", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "server_name forwarded-headers") &&
+				return strings.Contains(server, `server_name "forwarded-headers"`) &&
 					strings.Contains(server, "proxy_set_header X-Forwarded-Proto $pass_access_scheme;")
 			})
 
@@ -101,7 +101,7 @@ var _ = framework.DescribeSetting("use-forwarded-headers", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "server_name forwarded-headers") &&
+				return strings.Contains(server, `server_name "forwarded-headers"`) &&
 					strings.Contains(server, "proxy_set_header X-Forwarded-Proto $pass_access_scheme;")
 			})
 

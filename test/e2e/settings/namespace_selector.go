@@ -61,8 +61,8 @@ var _ = framework.IngressNginxDescribeSerial("[Flag] watch namespace selector", 
 	ginkgo.Context("With specific watch-namespace-selector flags", func() {
 		ginkgo.It("should ignore Ingress of namespace without label foo=bar and accept those of namespace with label foo=bar", func() {
 			f.WaitForNginxConfiguration(func(cfg string) bool {
-				return !strings.Contains(cfg, "server_name bar") &&
-					strings.Contains(cfg, "server_name foo")
+				return !strings.Contains(cfg, `server_name "bar"`) &&
+					strings.Contains(cfg, `server_name "foo"`)
 			})
 
 			f.HTTPTestClient().
@@ -101,7 +101,7 @@ var _ = framework.IngressNginxDescribeSerial("[Flag] watch namespace selector", 
 			assert.Nil(ginkgo.GinkgoT(), err, "updating ingress")
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
-				return strings.Contains(cfg, "server_name bar")
+				return strings.Contains(cfg, `server_name "bar"`)
 			})
 
 			f.HTTPTestClient().

@@ -51,7 +51,7 @@ var _ = framework.DescribeAnnotation("relative-redirects", func() {
 		var serverConfig string
 		f.WaitForNginxServer(relativeRedirectsHostname, func(srvCfg string) bool {
 			serverConfig = srvCfg
-			return strings.Contains(serverConfig, fmt.Sprintf("server_name %s", relativeRedirectsHostname))
+			return strings.Contains(serverConfig, fmt.Sprintf(`server_name "%s"`, relativeRedirectsHostname))
 		})
 
 		ginkgo.By("turning off absolute_redirect directive")
@@ -70,7 +70,7 @@ var _ = framework.DescribeAnnotation("relative-redirects", func() {
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(relativeRedirectsHostname, func(srvCfg string) bool {
-			return strings.Contains(srvCfg, fmt.Sprintf("server_name %s", relativeRedirectsHostname))
+			return strings.Contains(srvCfg, fmt.Sprintf(`server_name "%s"`, relativeRedirectsHostname))
 		})
 
 		ginkgo.By("sending request to redirected URL path")
@@ -93,7 +93,7 @@ var _ = framework.DescribeAnnotation("relative-redirects", func() {
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(relativeRedirectsHostname, func(srvCfg string) bool {
-			return strings.Contains(srvCfg, fmt.Sprintf("server_name %s", relativeRedirectsHostname))
+			return strings.Contains(srvCfg, fmt.Sprintf(`server_name "%s"`, relativeRedirectsHostname))
 		})
 
 		ginkgo.By("sending request to redirected URL path")

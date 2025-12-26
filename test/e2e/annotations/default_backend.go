@@ -45,7 +45,7 @@ var _ = framework.DescribeAnnotation("default-backend", func() {
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, fmt.Sprintf("server_name %v", host))
+					return strings.Contains(server, fmt.Sprintf(`server_name "%v"`, host))
 				})
 
 			requestID := "something-unique"

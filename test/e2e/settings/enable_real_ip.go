@@ -48,7 +48,7 @@ var _ = framework.DescribeSetting("enable-real-ip", func() {
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				//nolint:goconst //already a const
-				return strings.Contains(server, "server_name "+host) &&
+				return strings.Contains(server, fmt.Sprintf(`server_name "%v"`, host)) &&
 					!strings.Contains(server, "proxy_set_header X-Forwarded-Proto $full_x_forwarded_proto;")
 			})
 
@@ -86,7 +86,7 @@ var _ = framework.DescribeSetting("enable-real-ip", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "server_name "+host) &&
+				return strings.Contains(server, fmt.Sprintf(`server_name "%v"`, host)) &&
 					strings.Contains(server, "proxy_set_header X-Forwarded-Proto $pass_access_scheme;")
 			})
 

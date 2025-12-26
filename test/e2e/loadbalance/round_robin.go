@@ -42,7 +42,7 @@ var _ = framework.DescribeSetting("[Load Balancer] round-robin", func() {
 		f.EnsureIngress(framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, nil))
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "server_name load-balance.com")
+				return strings.Contains(server, `server_name "load-balance.com"`)
 			})
 
 		re, err := regexp.Compile(fmt.Sprintf(`%v.*`, framework.EchoService))

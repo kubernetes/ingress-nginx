@@ -103,7 +103,7 @@ var _ = framework.DescribeAnnotation("satisfy", func() {
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host, func(server string) bool {
-			return strings.Contains(server, "server_name auth")
+			return strings.Contains(server, `server_name "auth"`)
 		})
 
 		// with basic auth cred
