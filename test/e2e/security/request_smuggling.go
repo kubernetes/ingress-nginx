@@ -61,7 +61,7 @@ server {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %v", host))
+				return strings.Contains(server, fmt.Sprintf(`server_name "%v"`, host))
 			})
 
 		out, err := smugglingRequest(host, f.GetNginxIP(), 80)

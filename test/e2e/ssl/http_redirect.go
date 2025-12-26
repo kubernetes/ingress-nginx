@@ -40,7 +40,7 @@ var _ = framework.IngressNginxDescribe("[SSL] redirect to HTTPS", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "server_name redirect.com") &&
+				return strings.Contains(server, `server_name "redirect.com"`) &&
 					strings.Contains(server, "listen 443") &&
 					strings.Contains(server, "listen 80")
 			})

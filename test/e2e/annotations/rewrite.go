@@ -119,7 +119,7 @@ var _ = framework.DescribeAnnotation("rewrite-target use-regex enable-rewrite-lo
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "location /foo/ {")
+				return strings.Contains(server, `location "/foo/" {`)
 			})
 
 		ginkgo.By(`creating an ingress definition with the use-regex amd rewrite-target annotation`)

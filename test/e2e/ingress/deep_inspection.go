@@ -42,8 +42,8 @@ var _ = framework.IngressNginxDescribe("[Ingress] DeepInspection", func() {
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, host) &&
-					strings.Contains(server, "location /xpto") &&
-					!strings.Contains(server, "location /bla")
+					strings.Contains(server, `location "/xpto/"`) &&
+					!strings.Contains(server, `location "/bla/"`)
 			})
 
 		f.HTTPTestClient().

@@ -49,8 +49,8 @@ var _ = framework.IngressNginxDescribe("[Service] Nil Service Backend", func() {
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxConfiguration(func(cfg string) bool {
-			return strings.Contains(cfg, "server_name nilbackend.svc.com") &&
-				strings.Contains(cfg, "server_name valid.svc.com")
+			return strings.Contains(cfg, `server_name "nilbackend.svc.com"`) &&
+				strings.Contains(cfg, `server_name "valid.svc.com"`)
 		})
 
 		f.HTTPTestClient().

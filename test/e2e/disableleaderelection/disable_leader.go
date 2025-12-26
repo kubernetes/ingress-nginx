@@ -45,13 +45,13 @@ var _ = framework.IngressNginxDescribe("[Disable Leader] Routing works when lead
 		f.WaitForNginxServer(host1,
 			func(server string) bool {
 				return strings.Contains(server, host1) &&
-					strings.Contains(server, "location /foo")
+					strings.Contains(server, `location "/foo/"`)
 			})
 
 		f.WaitForNginxServer(host2,
 			func(server string) bool {
 				return strings.Contains(server, host2) &&
-					strings.Contains(server, "location /ping")
+					strings.Contains(server, `location "/ping/"`)
 			})
 
 		f.HTTPTestClient().

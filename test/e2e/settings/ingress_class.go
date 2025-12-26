@@ -86,8 +86,8 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
-				return !strings.Contains(cfg, "server_name foo") &&
-					strings.Contains(cfg, "server_name bar")
+				return !strings.Contains(cfg, `server_name "foo"`) &&
+					strings.Contains(cfg, `server_name "bar"`)
 			})
 
 			f.HTTPTestClient().
@@ -114,8 +114,8 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
-				return !strings.Contains(cfg, "server_name foo-1") &&
-					strings.Contains(cfg, "server_name bar-1")
+				return !strings.Contains(cfg, `server_name "foo-1"`) &&
+					strings.Contains(cfg, `server_name "bar-1"`)
 			})
 
 			f.HTTPTestClient().
@@ -146,8 +146,8 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
-				return strings.Contains(cfg, "server_name foo-ok") &&
-					strings.Contains(cfg, "server_name bar-ok")
+				return strings.Contains(cfg, `server_name "foo-ok"`) &&
+					strings.Contains(cfg, `server_name "bar-ok"`)
 			})
 
 			f.HTTPTestClient().
@@ -174,8 +174,8 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
-				return !strings.Contains(cfg, "server_name foo-invalid") &&
-					strings.Contains(cfg, "server_name bar-valid")
+				return !strings.Contains(cfg, `server_name "foo-invalid"`) &&
+					strings.Contains(cfg, `server_name "bar-valid"`)
 			})
 
 			f.HTTPTestClient().
@@ -206,8 +206,8 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
-				return strings.Contains(cfg, "server_name foo-annotation") &&
-					strings.Contains(cfg, "server_name foo-class")
+				return strings.Contains(cfg, `server_name "foo-annotation"`) &&
+					strings.Contains(cfg, `server_name "foo-class"`)
 			})
 
 			f.HTTPTestClient().
@@ -239,8 +239,8 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 			framework.Sleep()
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
-				return !strings.Contains(cfg, "server_name foo-annotation") &&
-					!strings.Contains(cfg, "server_name foo-class")
+				return !strings.Contains(cfg, `server_name "foo-annotation"`) &&
+					!strings.Contains(cfg, `server_name "foo-class"`)
 			})
 
 			f.HTTPTestClient().
@@ -269,8 +269,8 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
-				return !strings.Contains(cfg, "server_name foo-no-nnotation") &&
-					!strings.Contains(cfg, "server_name foo-no-class")
+				return !strings.Contains(cfg, `server_name "foo-no-nnotation"`) &&
+					!strings.Contains(cfg, `server_name "foo-no-class"`)
 			})
 
 			f.HTTPTestClient().
@@ -305,8 +305,8 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 			framework.Sleep()
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
-				return strings.Contains(cfg, "server_name foo-no-annotation") &&
-					strings.Contains(cfg, "server_name foo-no-class")
+				return strings.Contains(cfg, `server_name "foo-no-annotation"`) &&
+					strings.Contains(cfg, `server_name "foo-no-class"`)
 			})
 
 			f.HTTPTestClient().
@@ -336,8 +336,8 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
-				return strings.Contains(cfg, "server_name foo-annotation2class") &&
-					strings.Contains(cfg, "server_name foo-class2annotation")
+				return strings.Contains(cfg, `server_name "foo-annotation2class"`) &&
+					strings.Contains(cfg, `server_name "foo-class2annotation"`)
 			})
 
 			f.HTTPTestClient().
@@ -371,8 +371,8 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 			framework.Sleep()
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
-				return strings.Contains(cfg, "server_name foo-annotation2class") &&
-					strings.Contains(cfg, "server_name foo-class2annotation")
+				return strings.Contains(cfg, `server_name "foo-annotation2class"`) &&
+					strings.Contains(cfg, `server_name "foo-class2annotation"`)
 			})
 
 			f.HTTPTestClient().
@@ -433,9 +433,9 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
-				return !strings.Contains(cfg, "server_name bar") &&
-					strings.Contains(cfg, "server_name foo") &&
-					strings.Contains(cfg, "server_name foobar123")
+				return !strings.Contains(cfg, `server_name "bar"`) &&
+					strings.Contains(cfg, `server_name "foo"`) &&
+					strings.Contains(cfg, `server_name "foobar123"`)
 			})
 
 			f.HTTPTestClient().
@@ -495,8 +495,8 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
-				return strings.Contains(cfg, "server_name bar") &&
-					!strings.Contains(cfg, "server_name foo")
+				return strings.Contains(cfg, `server_name "bar"`) &&
+					!strings.Contains(cfg, `server_name "foo"`)
 			})
 
 			f.HTTPTestClient().
@@ -555,9 +555,9 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
-				return strings.Contains(cfg, "server_name validhostclassname") &&
-					strings.Contains(cfg, "server_name validhostclassspec") &&
-					!strings.Contains(cfg, "server_name invalidannotation")
+				return strings.Contains(cfg, `server_name "validhostclassname"`) &&
+					strings.Contains(cfg, `server_name "validhostclassspec"`) &&
+					!strings.Contains(cfg, `server_name "invalidannotation"`)
 			})
 
 			f.HTTPTestClient().
@@ -635,7 +635,7 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
-				return strings.Contains(cfg, "server_name foo")
+				return strings.Contains(cfg, `server_name "foo"`)
 			})
 
 			f.HTTPTestClient().
@@ -652,7 +652,7 @@ var _ = framework.IngressNginxDescribe("[Flag] ingress-class", func() {
 			f.EnsureIngress(ing)
 
 			f.WaitForNginxConfiguration(func(cfg string) bool {
-				return !strings.Contains(cfg, "server_name noclassforyou")
+				return !strings.Contains(cfg, `server_name "noclassforyou"`)
 			})
 
 			f.HTTPTestClient().

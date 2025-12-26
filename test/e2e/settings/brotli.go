@@ -46,7 +46,7 @@ var _ = framework.IngressNginxDescribe("brotli", func() {
 
 		f.WaitForNginxConfiguration(
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %v", host)) &&
+				return strings.Contains(server, fmt.Sprintf(`server_name "%v"`, host)) &&
 					strings.Contains(server, "brotli on") &&
 					strings.Contains(server, fmt.Sprintf("brotli_types %v", contentEncoding)) &&
 					strings.Contains(server, fmt.Sprintf("brotli_min_length %d", brotliMinLength))

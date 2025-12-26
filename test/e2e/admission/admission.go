@@ -52,7 +52,7 @@ var _ = framework.IngressNginxDescribeSerial("[Admission] admission controller",
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %v", host))
+				return strings.Contains(server, fmt.Sprintf(`server_name "%v"`, host))
 			})
 
 		secondIngress := framework.NewSingleIngress("second-ingress", "/", host, f.Namespace, framework.EchoService, 80, nil)
@@ -76,7 +76,7 @@ var _ = framework.IngressNginxDescribeSerial("[Admission] admission controller",
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %v", host))
+				return strings.Contains(server, fmt.Sprintf(`server_name "%v"`, host))
 			})
 
 		secondIngress := framework.NewSingleIngressWithMultiplePaths(
@@ -100,7 +100,7 @@ var _ = framework.IngressNginxDescribeSerial("[Admission] admission controller",
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %v", host))
+				return strings.Contains(server, fmt.Sprintf(`server_name "%v"`, host))
 			})
 
 		canaryAnnotations := map[string]string{
@@ -121,7 +121,7 @@ var _ = framework.IngressNginxDescribeSerial("[Admission] admission controller",
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %v", host))
+				return strings.Contains(server, fmt.Sprintf(`server_name "%v"`, host))
 			})
 
 		secondIngress := framework.NewSingleIngress("second-ingress", "/etc/nginx", host, f.Namespace, framework.EchoService, 80, nil)

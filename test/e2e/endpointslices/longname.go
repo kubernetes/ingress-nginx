@@ -41,7 +41,7 @@ var _ = framework.IngressNginxDescribe("[Endpointslices] long service name", fun
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(host, func(server string) bool {
-			return strings.Contains(server, fmt.Sprintf("server_name %s", host))
+			return strings.Contains(server, fmt.Sprintf(`server_name "%s"`, host))
 		})
 
 		ginkgo.By("checking if the service is reached")
