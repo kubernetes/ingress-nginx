@@ -315,6 +315,7 @@ var funcMap = text_template.FuncMap{
 	"isValidByteSize":                    isValidByteSize,
 	"buildForwardedFor":                  buildForwardedFor,
 	"buildForwardedHost":                 buildForwardedHost,
+	"buildForwardedHeaderValue":          buildForwardedHeaderValue,
 	"buildAuthSignURL":                   buildAuthSignURL,
 	"buildAuthSignURLLocation":           buildAuthSignURLLocation,
 	"buildOpentelemetry":                 buildOpentelemetry,
@@ -1165,6 +1166,20 @@ func buildForwardedHost(input interface{}) string {
 	fhh := strings.ReplaceAll(s, "-", "_")
 	fhh = strings.ToLower(fhh)
 	return fmt.Sprintf("$http_%v", fhh)
+}
+
+// buildForwardedHeaderValue builds the value for the RFC 7239 Forwarded header.
+// Format: for=<client>;proto=<scheme>;host=<host>[;by=<proxy>]
+// IPv6 addresses must be quoted and enclosed in brackets per RFC 7239.
+func buildForwardedHeaderValue(includeBy bool) string {
+	// Build the Forwarded header value using nginx variables
+	// We use $forwarded_for_value which handles IPv6 formatting
+	// The nginx template will set this variable appropriately
+	value := "for=$forwarded_for_value;proto=$pass_access_scheme;host=$best_http_host"
+	if includeBy {
+		value += ";by=$server_addr"
+	}
+	return value
 }
 
 func buildAuthSignURL(authSignURL, authRedirectParam string) string {

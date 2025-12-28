@@ -450,6 +450,19 @@ http {
         default "$";
     }
 
+    {{ if $cfg.EnableForwardedHeader }}
+    # RFC 7239 Forwarded header support
+    # Format the client IP for the "for" parameter according to RFC 7239
+    # IPv6 addresses must be quoted and enclosed in brackets: for="[::1]"
+    # IPv4 addresses are used as-is: for=192.0.2.1
+    map $remote_addr $forwarded_for_value {
+        ~^[0-9.]+$          $remote_addr;
+        ~^::               "\"[$remote_addr]\"";
+        ~:                 "\"[$remote_addr]\"";
+        default             $remote_addr;
+    }
+    {{ end }}
+
     server_name_in_redirect off;
     port_in_redirect        off;
 
@@ -1310,6 +1323,10 @@ stream {
             {{ $proxySetHeader }} X-Forwarded-Port       $pass_port;
             {{ $proxySetHeader }} X-Forwarded-Proto      $pass_access_scheme;
             {{ $proxySetHeader }} X-Forwarded-Scheme     $pass_access_scheme;
+            {{ if $all.Cfg.EnableForwardedHeader }}
+            # RFC 7239 Forwarded header
+            {{ $proxySetHeader }} Forwarded              "{{ buildForwardedHeaderValue $all.Cfg.ForwardedHeaderIncludeBy }}";
+            {{ end }}
             {{ if $all.Cfg.ProxyAddOriginalURIHeader }}
             {{ $proxySetHeader }} X-Original-URI         $request_uri;
             {{ end }}

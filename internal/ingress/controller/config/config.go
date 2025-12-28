@@ -581,6 +581,16 @@ type Configuration struct {
 	// Default: false
 	ComputeFullForwardedFor bool `json:"compute-full-forwarded-for,omitempty"`
 
+	// EnableForwardedHeader enables the generation of the RFC 7239 Forwarded header
+	// https://tools.ietf.org/html/rfc7239
+	// Default: false
+	EnableForwardedHeader bool `json:"enable-forwarded-header,omitempty"`
+
+	// ForwardedHeaderIncludeBy includes the "by" parameter in the Forwarded header.
+	// The value will be the server's IP address (or obfuscated identifier if specified).
+	// Default: false
+	ForwardedHeaderIncludeBy bool `json:"forwarded-header-include-by,omitempty"`
+
 	// If the request does not have a request-id, should we generate a random value?
 	// Default: true
 	GenerateRequestID bool `json:"generate-request-id,omitempty"`

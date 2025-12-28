@@ -888,6 +888,24 @@ func TestBuildForwardedHost(t *testing.T) {
 	}
 }
 
+func TestBuildForwardedHeaderValue(t *testing.T) {
+	// Test without "by" parameter
+	expected := "for=$forwarded_for_value;proto=$pass_access_scheme;host=$best_http_host"
+	actual := buildForwardedHeaderValue(false)
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+
+	// Test with "by" parameter
+	expected = "for=$forwarded_for_value;proto=$pass_access_scheme;host=$best_http_host;by=$server_addr"
+	actual = buildForwardedHeaderValue(true)
+
+	if expected != actual {
+		t.Errorf("Expected '%v' but returned '%v'", expected, actual)
+	}
+}
+
 func TestBuildResolvers(t *testing.T) {
 	ipOne := net.ParseIP("192.0.0.1")
 	ipTwo := net.ParseIP("2001:db8:1234:0000:0000:0000:0000:0000")
