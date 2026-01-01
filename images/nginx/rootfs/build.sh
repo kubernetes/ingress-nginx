@@ -253,7 +253,7 @@ get_src 573184006b98ccee2594b0d134fa4d05e5d2afd5141cbad315051ccf7e9b6403 \
         "https://github.com/openresty/lua-resty-lrucache/archive/$LUA_RESTY_CACHE.tar.gz" "lua-resty-lrucache"
 
 get_src 3917d506e2d692088f7b4035c589cc32634de4ea66e40fc51259fbae43c9258d \
-        "https://github.com/hamishforbes/lua-resty-iputils/archive/$LUA_RESTY_IPTUTILS.tar.gz" "lua-resty-iputils"
+        "https://github.com/hamishforbes/lua-resty-iputils/archive/$LUA_RESTY_IPUTILS.tar.gz" "lua-resty-iputils"
 
 get_src b4ddcd47db347e9adf5c1e1491a6279a6ae2a3aff3155ef77ea0a65c998a69c1 \
         "https://github.com/openresty/lua-resty-lock/archive/$LUA_RESTY_LOCK.tar.gz" "lua-resty-lock"

@@ -104,7 +104,7 @@ end
 
 function _M.set_config(new_config)
   if new_config.use_forwarded_headers then
-    iputils = require("resty.iputils")
+    local iputils = require("resty.iputils")
     iputils.enable_lrucache()
     new_config.real_ip_from = iputils.parse_cidrs(new_config.proxy_real_ip_cidr)
   end
@@ -128,19 +128,21 @@ function _M.rewrite()
 
   ngx.var.best_http_host = ngx.var.http_host or ngx.var.host
 
-  if config.use_forwarded_headers and iputils.ip_in_cidrs(ngx.var.remote_addr, config.real_ip_from) then
+  if config.use_forwarded_headers then
     -- trust http_x_forwarded_proto headers correctly indicate ssl offloading
-    if ngx.var.http_x_forwarded_proto then
-      ngx.var.pass_access_scheme = ngx.var.http_x_forwarded_proto
-    end
+    if iputils.ip_in_cidrs(ngx.var.remote_addr, config.real_ip_from) then
+      if ngx.var.http_x_forwarded_proto then
+        ngx.var.pass_access_scheme = ngx.var.http_x_forwarded_proto
+      end
 
-    if ngx.var.http_x_forwarded_port then
-      ngx.var.pass_server_port = ngx.var.http_x_forwarded_port
-    end
+      if ngx.var.http_x_forwarded_port then
+        ngx.var.pass_server_port = ngx.var.http_x_forwarded_port
+      end
 
-    -- Obtain best http host
-    if ngx.var.http_x_forwarded_host then
-      ngx.var.best_http_host = parse_x_forwarded_host()
+      -- Obtain best http host
+      if ngx.var.http_x_forwarded_host then
+        ngx.var.best_http_host = parse_x_forwarded_host()
+      end
     end
   end
 
