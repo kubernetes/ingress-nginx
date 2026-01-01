@@ -1,5 +1,6 @@
 local ngx_re_split = require("ngx.re").split
 local string_to_bool = require("util").string_to_bool
+local iputils = require("resty.iputils")
 
 local certificate_configured_for_current_request =
   require("certificate").configured_for_current_request
@@ -104,7 +105,6 @@ end
 
 function _M.set_config(new_config)
   if new_config.use_forwarded_headers then
-    local iputils = require("resty.iputils")
     iputils.enable_lrucache()
     new_config.real_ip_from = iputils.parse_cidrs(new_config.proxy_real_ip_cidr)
   end
