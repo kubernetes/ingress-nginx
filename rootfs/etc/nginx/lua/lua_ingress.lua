@@ -130,7 +130,7 @@ function _M.rewrite()
 
   if config.use_forwarded_headers then
     -- trust http_x_forwarded_proto headers correctly indicate ssl offloading
-    if iputils.ip_in_cidrs(ngx.var.remote_addr, config.real_ip_from) then
+    if iputils.ip_in_cidrs(ngx.var.realip_remote_addr, config.real_ip_from) then
       if ngx.var.http_x_forwarded_proto then
         ngx.var.pass_access_scheme = ngx.var.http_x_forwarded_proto
       end
