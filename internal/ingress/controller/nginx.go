@@ -1102,6 +1102,7 @@ func (n *NGINXController) createLuaConfig(cfg *ngx_config.Configuration) error {
 		HSTSMaxAge:              cfg.HSTSMaxAge,
 		HSTSIncludeSubdomains:   cfg.HSTSIncludeSubdomains,
 		HSTSPreload:             cfg.HSTSPreload,
+		ProxyRealIPCIDR:         cfg.ProxyRealIPCIDR,
 	}
 	jsonCfg, err := json.Marshal(luaconfigs)
 	if err != nil {

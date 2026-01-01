@@ -221,6 +221,7 @@ type LuaConfig struct {
 	HSTSMaxAge              string         `json:"hsts_max_age"`
 	HSTSIncludeSubdomains   bool           `json:"hsts_include_subdomains"`
 	HSTSPreload             bool           `json:"hsts_preload"`
+	ProxyRealIPCIDR         []string       `json:"proxy_real_ip_cidr"`
 }
 
 type LuaListenPorts struct {

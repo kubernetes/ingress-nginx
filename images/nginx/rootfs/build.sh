@@ -65,6 +65,9 @@ export LUA_RESTY_BALANCER=v0.05
 # Check for recent changes: https://github.com/openresty/lua-resty-lrucache/compare/v0.15...master
 export LUA_RESTY_CACHE=v0.15
 
+# Check for recent changes: https://github.com/hamishforbes/lua-resty-iputils/compare/v0.3.0...master
+export LUA_RESTY_IPUTILS=v0.3.0
+
 # Check for recent changes: https://github.com/openresty/lua-resty-core/compare/v0.1.31...master
 export LUA_RESTY_CORE=v0.1.31
 
@@ -248,6 +251,9 @@ get_src 5ed48c36231e2622b001308622d46a0077525ac2f751e8cc0c9905914254baa4 \
 
 get_src 573184006b98ccee2594b0d134fa4d05e5d2afd5141cbad315051ccf7e9b6403 \
         "https://github.com/openresty/lua-resty-lrucache/archive/$LUA_RESTY_CACHE.tar.gz" "lua-resty-lrucache"
+
+get_src 3917d506e2d692088f7b4035c589cc32634de4ea66e40fc51259fbae43c9258d \
+        "https://github.com/hamishforbes/lua-resty-iputils/archive/$LUA_RESTY_IPTUTILS.tar.gz" "lua-resty-iputils"
 
 get_src b4ddcd47db347e9adf5c1e1491a6279a6ae2a3aff3155ef77ea0a65c998a69c1 \
         "https://github.com/openresty/lua-resty-lock/archive/$LUA_RESTY_LOCK.tar.gz" "lua-resty-lock"
@@ -565,6 +571,9 @@ make all
 make install
 
 cd "$BUILD_PATH/lua-resty-lrucache"
+make install
+
+cd "$BUILD_PATH/lua-resty-iputils"
 make install
 
 cd "$BUILD_PATH/lua-resty-dns"
