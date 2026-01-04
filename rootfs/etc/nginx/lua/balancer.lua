@@ -142,7 +142,8 @@ end
 local function sync_backend(backend)
   -- Resolve hostname endpoints before checking if the endpoints are empty.
   -- For unresolved DNS names we return an empty list to avoid invalid peers.
-  if is_backend_with_external_name(backend) or backend_has_hostname_endpoints(backend) then
+  if is_backend_with_external_name(backend) or
+     backend_has_hostname_endpoints(backend) then
     backend = resolve_hostname_endpoints(backend)
   end
 
@@ -201,7 +202,8 @@ local function sync_backends()
 
   local balancers_to_keep = {}
   for _, new_backend in ipairs(new_backends) do
-    if is_backend_with_external_name(new_backend) or backend_has_hostname_endpoints(new_backend) then
+    if is_backend_with_external_name(new_backend) or
+       backend_has_hostname_endpoints(new_backend) then
       local backend_with_external_name = util.deepcopy(new_backend)
       backends_with_external_name[backend_with_external_name.name] = backend_with_external_name
     else
