@@ -439,6 +439,39 @@ describe("Balancer", function()
       assert.stub(mock_instance.sync).was_called_with(mock_instance, expected_backend)
     end)
 
+    it("resolves hostname endpoints for non-ExternalName services", function()
+      backend = {
+        name = "example-fqdn", service = { spec = { ["type"] = "ClusterIP" } },
+        endpoints = {
+          { address = "others.org", port = "443", maxFails = 0, failTimeout = 0 }
+        }
+      }
+
+      helpers.mock_resty_dns_query(nil, {
+        {
+          name = "others.org",
+          address = "203.0.113.10",
+          ttl = 60,
+        },
+      })
+      expected_backend = {
+        name = "example-fqdn", service = { spec = { ["type"] = "ClusterIP" } },
+        endpoints = {
+          { address = "203.0.113.10", port = "443" },
+        }
+      }
+
+      local mock_instance = { sync = function(backend) end }
+      setmetatable(mock_instance, implementation)
+      implementation.new = function(self, backend) return mock_instance end
+      local s = spy.on(implementation, "new")
+      assert.has_no.errors(function() balancer.sync_backend(backend) end)
+      assert.spy(s).was_called_with(implementation, expected_backend)
+      stub(mock_instance, "sync")
+      assert.has_no.errors(function() balancer.sync_backend(backend) end)
+      assert.stub(mock_instance.sync).was_called_with(mock_instance, expected_backend)
+    end)
+
     it("sets balancer to nil when service is of type External name and DNS could not resolve", function()
       backend = {
         name = "example2-com", service = { spec = { ["type"] = "ExternalName" } },

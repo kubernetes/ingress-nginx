@@ -46,13 +46,49 @@ local function get_implementation(backend)
   return implementation
 end
 
-local function resolve_external_names(original_backend)
+local function is_ipv4_address(address)
+  return address and address:match("^%d+%.%d+%.%d+%.%d+$") ~= nil
+end
+
+local function is_ipv6_address(address)
+  return address and address:find(":", 1, true) ~= nil
+end
+
+local function is_ip_address(address)
+  return is_ipv4_address(address) or is_ipv6_address(address)
+end
+
+local function backend_has_hostname_endpoints(backend)
+  if not backend or not backend.endpoints then
+    return false
+  end
+
+  for _, endpoint in ipairs(backend.endpoints) do
+    if endpoint.address and not is_ip_address(endpoint.address) then
+      return true
+    end
+  end
+
+  return false
+end
+
+local function resolve_hostname_endpoints(original_backend)
+  if not original_backend.endpoints or
+     #original_backend.endpoints == 0 then
+    return original_backend
+  end
   local backend = util.deepcopy(original_backend)
   local endpoints = {}
   for _, endpoint in ipairs(backend.endpoints) do
-    local ips = dns_lookup(endpoint.address)
-    for _, ip in ipairs(ips) do
-      table.insert(endpoints, {address = ip, port = endpoint.port})
+    if is_ip_address(endpoint.address) then
+      table.insert(endpoints, endpoint)
+    else
+      local ips = dns_lookup(endpoint.address)
+      if #ips ~= 1 or ips[1] ~= endpoint.address then
+        for _, ip in ipairs(ips) do
+          table.insert(endpoints, {address = ip, port = endpoint.port})
+        end
+      end
     end
   end
   backend.endpoints = endpoints
@@ -63,7 +99,7 @@ local function format_ipv6_endpoints(endpoints)
   local formatted_endpoints = {}
   for _, endpoint in ipairs(endpoints) do
     local formatted_endpoint = endpoint
-    if not endpoint.address:match("^%d+.%d+.%d+.%d+$") then
+    if is_ipv6_address(endpoint.address) then
       formatted_endpoint.address = string.format("[%s]", endpoint.address)
     end
     table.insert(formatted_endpoints, formatted_endpoint)
@@ -101,8 +137,13 @@ local function sync_backend(backend)
     return
   end
 
-  if is_backend_with_external_name(backend) then
-    backend = resolve_external_names(backend)
+  if is_backend_with_external_name(backend) or backend_has_hostname_endpoints(backend) then
+    backend = resolve_hostname_endpoints(backend)
+  end
+
+  if not backend.endpoints or #backend.endpoints == 0 then
+    balancers[backend.name] = nil
+    return
   end
 
   backend.endpoints = format_ipv6_endpoints(backend.endpoints)
@@ -138,7 +179,7 @@ local function sync_backends()
   for _, new_backend in ipairs(new_backends) do
     sync_backend(new_backend)
     balancers_to_keep[new_backend.name] = balancers[new_backend.name]
-    if is_backend_with_external_name(new_backend) then
+    if is_backend_with_external_name(new_backend) or backend_has_hostname_endpoints(new_backend) then
       local backend_with_external_name = util.deepcopy(new_backend)
       backends_with_external_name[backend_with_external_name.name] = backend_with_external_name
     end
