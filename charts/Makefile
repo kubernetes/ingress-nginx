@@ -19,7 +19,7 @@ REPOSITORY ?= $(REGISTRY)/charts
 
 .PHONY: helm
 helm:
-	command -v helm || go install helm.sh/helm/v3/cmd/helm@latest
+	command -v helm || go install helm.sh/helm/v4/cmd/helm@v4.0.4
 
 .PHONY: package
 package: helm

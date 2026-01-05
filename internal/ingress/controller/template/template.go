@@ -68,7 +68,7 @@ const (
 // Writer is the interface to render a template
 type Writer interface {
 	// Write renders the template.
-	// NOTE: Implementors must ensure that the content of the returned slice is not modified by the implementation
+	// NOTE: Implementers must ensure that the content of the returned slice is not modified by the implementation
 	// after the return of this function.
 	Write(conf *config.TemplateConfig) ([]byte, error)
 }
