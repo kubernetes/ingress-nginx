@@ -1,4 +1,13 @@
-# [Ingress NGINX Retirement: What You Need to Know](https://kubernetes.io/blog/2025/11/11/ingress-nginx-retirement/)
+# Ingress NGINX Retirement
+
+## Retiring
+
+[What You Need to Know about Ingress NGINX Retirement](https://www.kubernetes.io/blog/2025/11/11/ingress-nginx-retirement/):
+
+* Best-effort maintenance will continue until March 2026.
+* Afterward, there will be no further releases, no bugfixes, and no updates to resolve any security vulnerabilities that may be discovered.
+* Existing deployments of Ingress NGINX will not be broken.
+  * Existing project artifacts such as Helm charts and container images will remain available.
 
 # Ingress NGINX Controller
 
@@ -9,7 +18,7 @@
 
 ## Overview
 
-ingress-nginx is an Ingress controller for Kubernetes using [NGINX](https://www.nginx.org/) as a reverse proxy and load
+ingress-nginx was an Ingress controller for Kubernetes using [NGINX](https://www.nginx.org/) as a reverse proxy and load
 balancer.
 
 [Learn more about Ingress on the Kubernetes documentation site](https://kubernetes.io/docs/concepts/services-networking/ingress/).
