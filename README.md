@@ -24,7 +24,7 @@ Do not use in multi-tenant Kubernetes production installations. This project ass
 
 If you encounter issues, review the [troubleshooting docs](docs/troubleshooting.md),
 [search for an issue](https://github.com/kubernetes/ingress-nginx/issues), or talk to us on the
-[#ingress-nginx channel](https://kubernetes.slack.com/messages/ingress-nginx) on the Kubernetes Slack server.
+[#ingress-nginx-users channel](https://kubernetes.slack.com/messages/ingress-nginx-users) on the Kubernetes Slack server.
 
 ## Changelog
 
