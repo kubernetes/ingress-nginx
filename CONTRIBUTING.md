@@ -17,12 +17,6 @@ Follow either of the two links above to access the appropriate CLA and instructi
 
 ***NOTE***: Only original source code from you and other people that have signed the CLA can be accepted into the main repository.
 
-## Finding Issues That Need Help
-
-If you're new to the project and want to help, but don't know where to start, we have a semi-curated list of issues that should not need deep knowledge of the system. [Have a look and see if anything sounds interesting](https://github.com/kubernetes/ingress-nginx/issues?utf8=%E2%9C%93&q=is%3Aopen%20is%3Aissue%20label%3A%22help+wanted%22).
-
-Alternatively, search for the label [`triage-accepted`](https://github.com/kubernetes/ingress-nginx/issues?q=is%3Aopen+is%3Aissue+label%3Atriage%2Faccepted+) if you have some experience with ingress-nginx. Note, that it could make sense to grab issues with higher priority first.
-
 ## Contributing a Patch
 
 1. If you haven't already done so, sign a Contributor License Agreement (see details above).
