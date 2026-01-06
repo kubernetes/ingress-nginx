@@ -86,8 +86,8 @@ the versions listed. Ingress-Nginx versions **may** work on older versions, but 
 |           | v1.4.0                | 1.25, 1.24, 1.23, 1.22        | 3.16.2         | 1.19.10†      | 4.3.0              |
 |           | v1.3.1                | 1.24, 1.23, 1.22, 1.21, 1.20  | 3.16.2         | 1.19.10†      | 4.2.5              |
 
-See [this article](https://kubernetes.io/blog/2021/07/26/update-with-ingress-nginx/) if you want upgrade to the stable
-Ingress API.
+See [Updating NGINX-Ingress to use the stable Ingress API (July 26, 2021)](https://kubernetes.io/blog/2021/07/26/update-with-ingress-nginx/)
+to upgrade to the stable Ingress API before upgrading to Kubernetes 1.22.
 
 ## Get Involved
 
