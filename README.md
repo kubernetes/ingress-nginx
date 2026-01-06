@@ -104,7 +104,7 @@ Thanks for taking the time to join our community and start contributing!
   - Join our Kubernetes Slack channel for developer discussion : [#ingress-nginx-dev](https://kubernetes.slack.com/archives/C021E147ZA4).
   - Submit GitHub issues for documentation problems.
     - Please make sure to read the [Issue Reporting Checklist](https://github.com/kubernetes/ingress-nginx/blob/main/CONTRIBUTING.md#issue-reporting-guidelines) before opening an issue. Issues not conforming to the guidelines **may be closed immediately**.
-  - Join our [ingress-nginx-dev mailing list](https://groups.google.com/a/kubernetes.io/g/ingress-nginx-dev/c/ebbBMo-zX-w)
+
 - **Support**:
 
   - Join the [#ingress-nginx-users](https://kubernetes.slack.com/messages/CANQGM8BA/) channel inside the [Kubernetes Slack](http://slack.kubernetes.io/) to ask questions or get support from the maintainers and other users.
