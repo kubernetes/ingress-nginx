@@ -96,10 +96,10 @@ Thanks for taking the time to join our community and start contributing!
 
 - This project adheres to the [Kubernetes Community Code of Conduct](https://git.k8s.io/community/code-of-conduct.md).
   By participating in this project, you agree to abide by its terms.
-- **Contributing**: Contributions of all kinds are welcome!
+- **Contributing**: Documentation contributions are welcome.
 
-  - Read [`CONTRIBUTING.md`](CONTRIBUTING.md) for information about setting up your environment, the workflow that we
-    expect, and instructions on the developer certificate of origin that we require.
+  - Read [`CONTRIBUTING.md`](CONTRIBUTING.md) for information about the workflow that we
+    expect and instructions on the developer certificate of origin that we require.
   - Join our Kubernetes Slack channel for developer discussion : [#ingress-nginx-dev](https://kubernetes.slack.com/archives/C021E147ZA4).
   - Submit GitHub issues for documentation problems.
     - Please make sure to read the [Issue Reporting Checklist](https://github.com/kubernetes/ingress-nginx/blob/main/CONTRIBUTING.md#issue-reporting-guidelines) before opening an issue. Issues not conforming to the guidelines **may be closed immediately**.
