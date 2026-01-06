@@ -17,14 +17,14 @@ balancer.
 
 ## Get started
 
-See the [Getting Started](https://kubernetes.github.io/ingress-nginx/deploy/) document.
+If you are not already using ingress-nginx, you should not be deploying it as it is [not being developed](#retiring). Instead you should identify a [Gateway API](https://gateway-api.sigs.k8s.io/guides/) implementation and use it.
 
 Do not use in multi-tenant Kubernetes production installations. This project assumes that users that can create Ingress objects are administrators of the cluster. See the [FAQ](https://kubernetes.github.io/ingress-nginx/faq/#faq) for more.
 
 ## Troubleshooting
 
 If you encounter issues, review the [troubleshooting docs](docs/troubleshooting.md),
-[file an issue](https://github.com/kubernetes/ingress-nginx/issues), or talk to us on the
+[search for an issue](https://github.com/kubernetes/ingress-nginx/issues), or talk to us on the
 [#ingress-nginx channel](https://kubernetes.slack.com/messages/ingress-nginx) on the Kubernetes Slack server.
 
 ## Changelog
