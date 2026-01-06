@@ -109,7 +109,6 @@ Thanks for taking the time to join our community and start contributing!
 
   - Join the [#ingress-nginx-users](https://kubernetes.slack.com/messages/CANQGM8BA/) channel inside the [Kubernetes Slack](http://slack.kubernetes.io/) to ask questions or get support from the maintainers and other users.
   - The [GitHub issues](https://github.com/kubernetes/ingress-nginx/issues) in the repository are **exclusively** for bug reports and feature requests.
-  - **Discuss**: Tweet using the `#IngressNginx` hashtag or sharing with us [@IngressNginx](https://twitter.com/IngressNGINX).
 
 ## License
 
