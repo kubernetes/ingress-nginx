@@ -6,7 +6,7 @@ Note that this guide refers to contributing to actual sources of the repository.
 
 ## Contributor License Agreements
 
-We'd love to accept your patches! Before we can take them, we have to jump a couple of legal hurdles.
+This project is [being retired](https://www.kubernetes.io/blog/2025/11/11/ingress-nginx-retirement/), so only a [very limited set of patches will be accepted](https://www.kubernetes.io/blog/2025/11/11/ingress-nginx-retirement/#current-state-and-next-steps). Before we can take them, we have to jump a couple of legal hurdles.
 
 Please fill out either the individual or corporate Contributor License Agreement (CLA).
 
@@ -25,6 +25,8 @@ Follow either of the two links above to access the appropriate CLA and instructi
 1. Submit a pull request.
 
 All changes must be code reviewed. Coding conventions and standards are explained in the official [developer docs](https://github.com/kubernetes/community/tree/master/contributors/devel). Expect reviewers to request that you avoid common [go style mistakes](https://github.com/golang/go/wiki/CodeReviewComments) in your PRs.
+
+Note that new feature work will not be accepted.
 
 ### Merge Approval
 
