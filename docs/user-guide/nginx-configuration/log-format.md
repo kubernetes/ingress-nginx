@@ -4,7 +4,7 @@ The default configuration uses a custom logging format to add additional informa
 
 ```
 log_format upstreaminfo
-    '$remote_addr - $remote_user [$time_local] "$request" '
+    '$remote_addr - $remote_user [$time_local] "$request_method $uri $server_protocol" '
     '$status $body_bytes_sent "$http_referer" "$http_user_agent" '
     '$request_length $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name] $upstream_addr '
     '$upstream_response_length $upstream_response_time $upstream_status $req_id';
