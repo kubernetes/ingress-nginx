@@ -1,13 +1,19 @@
-# Ingress NGINX Retirement
+# Ingress NGINX Controller (Facets.cloud Fork)
 
-## Retiring
+## About This Fork
 
-[What You Need to Know about Ingress NGINX Retirement](https://www.kubernetes.io/blog/2025/11/11/ingress-nginx-retirement/):
+This is a community-maintained fork of [kubernetes/ingress-nginx](https://github.com/kubernetes/ingress-nginx), created to provide continued security maintenance beyond the upstream project's retirement in March 2026.
 
-* Best-effort maintenance will continue until March 2026.
-* Afterward, there will be no further releases, no bugfixes, and no updates to resolve any security vulnerabilities that may be discovered.
-* Existing deployments of Ingress NGINX will not be broken.
-  * Existing project artifacts such as Helm charts and container images will remain available.
+### Why This Fork?
+
+The upstream Kubernetes ingress-nginx project announced [retirement](https://www.kubernetes.io/blog/2025/11/11/ingress-nginx-retirement/) with best-effort maintenance ending in March 2026. Several organizations using ingress-nginx will need a longer window to complete their migration to alternatives like Gateway API.
+
+This fork aims to:
+- **Extend the maintenance window** until January 1st, 2027
+- **Provide security fixes** for critical and high-severity CVEs
+- **Maintain compatibility** with supported Kubernetes versions
+
+---
 
 # Ingress NGINX Controller
 
