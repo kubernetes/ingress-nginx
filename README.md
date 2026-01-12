@@ -1,4 +1,13 @@
-# [Ingress NGINX Retirement: What You Need to Know](https://kubernetes.io/blog/2025/11/11/ingress-nginx-retirement/)
+# Ingress NGINX Retirement
+
+## Retiring
+
+[What You Need to Know about Ingress NGINX Retirement](https://www.kubernetes.io/blog/2025/11/11/ingress-nginx-retirement/):
+
+* Best-effort maintenance will continue until March 2026.
+* Afterward, there will be no further releases, no bugfixes, and no updates to resolve any security vulnerabilities that may be discovered.
+* Existing deployments of Ingress NGINX will not be broken.
+  * Existing project artifacts such as Helm charts and container images will remain available.
 
 # Ingress NGINX Controller
 
@@ -6,26 +15,25 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes/ingress-nginx)](https://goreportcard.com/report/github.com/kubernetes/ingress-nginx)
 [![GitHub license](https://img.shields.io/github/license/kubernetes/ingress-nginx.svg)](https://github.com/kubernetes/ingress-nginx/blob/main/LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/kubernetes/ingress-nginx.svg)](https://github.com/kubernetes/ingress-nginx/stargazers)
-[![GitHub stars](https://img.shields.io/badge/contributions-welcome-orange.svg)](https://github.com/kubernetes/ingress-nginx/blob/main/CONTRIBUTING.md)
 
 ## Overview
 
-ingress-nginx is an Ingress controller for Kubernetes using [NGINX](https://www.nginx.org/) as a reverse proxy and load
+ingress-nginx was an Ingress controller for Kubernetes using [NGINX](https://www.nginx.org/) as a reverse proxy and load
 balancer.
 
 [Learn more about Ingress on the Kubernetes documentation site](https://kubernetes.io/docs/concepts/services-networking/ingress/).
 
-## Get started
+## Usage warnings
 
-See the [Getting Started](https://kubernetes.github.io/ingress-nginx/deploy/) document.
+If you are not already using ingress-nginx, you should not be deploying it as it is [not being developed](#retiring). Instead you should identify a [Gateway API](https://gateway-api.sigs.k8s.io/guides/) implementation and use it.
 
 Do not use in multi-tenant Kubernetes production installations. This project assumes that users that can create Ingress objects are administrators of the cluster. See the [FAQ](https://kubernetes.github.io/ingress-nginx/faq/#faq) for more.
 
 ## Troubleshooting
 
 If you encounter issues, review the [troubleshooting docs](docs/troubleshooting.md),
-[file an issue](https://github.com/kubernetes/ingress-nginx/issues), or talk to us on the
-[#ingress-nginx channel](https://kubernetes.slack.com/messages/ingress-nginx) on the Kubernetes Slack server.
+[search for an issue](https://github.com/kubernetes/ingress-nginx/issues), or talk to us on the
+[#ingress-nginx-users channel](https://kubernetes.slack.com/messages/ingress-nginx-users) on the Kubernetes Slack server.
 
 ## Changelog
 
@@ -87,8 +95,8 @@ the versions listed. Ingress-Nginx versions **may** work on older versions, but 
 |           | v1.4.0                | 1.25, 1.24, 1.23, 1.22        | 3.16.2         | 1.19.10†      | 4.3.0              |
 |           | v1.3.1                | 1.24, 1.23, 1.22, 1.21, 1.20  | 3.16.2         | 1.19.10†      | 4.2.5              |
 
-See [this article](https://kubernetes.io/blog/2021/07/26/update-with-ingress-nginx/) if you want upgrade to the stable
-Ingress API.
+See [Updating NGINX-Ingress to use the stable Ingress API (July 26, 2021)](https://kubernetes.io/blog/2021/07/26/update-with-ingress-nginx/)
+to upgrade to the stable Ingress API before upgrading to Kubernetes 1.22.
 
 ## Get Involved
 
@@ -96,19 +104,18 @@ Thanks for taking the time to join our community and start contributing!
 
 - This project adheres to the [Kubernetes Community Code of Conduct](https://git.k8s.io/community/code-of-conduct.md).
   By participating in this project, you agree to abide by its terms.
-- **Contributing**: Contributions of all kinds are welcome!
+- **Contributing**: Documentation contributions are welcome.
 
-  - Read [`CONTRIBUTING.md`](CONTRIBUTING.md) for information about setting up your environment, the workflow that we
-    expect, and instructions on the developer certificate of origin that we require.
+  - Read [`CONTRIBUTING.md`](CONTRIBUTING.md) for information about the workflow that we
+    expect and instructions on the developer certificate of origin that we require.
   - Join our Kubernetes Slack channel for developer discussion : [#ingress-nginx-dev](https://kubernetes.slack.com/archives/C021E147ZA4).
-  - Submit GitHub issues for any feature enhancements, bugs, or documentation problems.
+  - Submit GitHub issues for documentation problems.
     - Please make sure to read the [Issue Reporting Checklist](https://github.com/kubernetes/ingress-nginx/blob/main/CONTRIBUTING.md#issue-reporting-guidelines) before opening an issue. Issues not conforming to the guidelines **may be closed immediately**.
-  - Join our [ingress-nginx-dev mailing list](https://groups.google.com/a/kubernetes.io/g/ingress-nginx-dev/c/ebbBMo-zX-w)
+
 - **Support**:
 
   - Join the [#ingress-nginx-users](https://kubernetes.slack.com/messages/CANQGM8BA/) channel inside the [Kubernetes Slack](http://slack.kubernetes.io/) to ask questions or get support from the maintainers and other users.
   - The [GitHub issues](https://github.com/kubernetes/ingress-nginx/issues) in the repository are **exclusively** for bug reports and feature requests.
-  - **Discuss**: Tweet using the `#IngressNginx` hashtag or sharing with us [@IngressNginx](https://twitter.com/IngressNGINX).
 
 ## License
 
