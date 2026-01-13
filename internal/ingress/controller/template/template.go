@@ -1522,6 +1522,14 @@ func buildOpentelemetryForLocation(isOTEnabled, isOTTrustSet bool, location *ing
 		if isOTSetInLoc && !isOTEnabledInLoc {
 			return "opentelemetry off;"
 		}
+		// When OTel is globally enabled, explicitly enable it per location
+		if !isOTSetInLoc || isOTEnabledInLoc {
+			// Build OTel config with "opentelemetry on;" to override global "off"
+			opc := "opentelemetry on;"
+			opc += "\n" + opentelemetryPropagateContext(location)
+			return buildOpentelemetryLocationConfig(opc, isOTTrustSet, location)
+		}
+		return "opentelemetry off;"
 	} else if !isOTSetInLoc || !isOTEnabledInLoc {
 		return ""
 	}
@@ -1531,6 +1539,10 @@ func buildOpentelemetryForLocation(isOTEnabled, isOTTrustSet bool, location *ing
 		opc = fmt.Sprintf("opentelemetry on;\n%v", opc)
 	}
 
+	return buildOpentelemetryLocationConfig(opc, isOTTrustSet, location)
+}
+
+func buildOpentelemetryLocationConfig(opc string, isOTTrustSet bool, location *ingress.Location) string {
 	if location.Opentelemetry.OperationName != "" {
 		opc += "\nopentelemetry_operation_name " + location.Opentelemetry.OperationName + ";"
 	}

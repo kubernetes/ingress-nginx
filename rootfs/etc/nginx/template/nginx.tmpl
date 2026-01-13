@@ -62,6 +62,7 @@ events {
 http {
     {{ if (shouldLoadOpentelemetryModule $cfg $servers) }}
     opentelemetry_config {{ $cfg.OpentelemetryConfig }};
+    opentelemetry off;
     {{ end }}
 
     lua_package_path "/etc/nginx/lua/?.lua;;";
