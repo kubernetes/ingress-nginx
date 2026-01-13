@@ -242,6 +242,11 @@ type k8sStore struct {
 	defaultSSLCertificate string
 
 	recorder record.EventRecorder
+
+	// initialSyncComplete indicates whether the initial sync of all ingresses is complete
+	// This is used to prevent the readiness probe from passing before all ingresses are loaded
+	initialSyncComplete bool
+	initialSyncMu       sync.RWMutex
 }
 
 // New creates a new object store to be used in the ingress controller.
@@ -1239,6 +1244,30 @@ func (s *k8sStore) setConfig(cmap *corev1.ConfigMap) {
 func (s *k8sStore) Run(stopCh chan struct{}) {
 	// start informers
 	s.informers.Run(stopCh)
+
+	// Mark initial sync as complete after a short delay to ensure all initial events are processed
+	go func() {
+		// Wait for all informers to have synced initially
+		time.Sleep(3 * time.Second)
+		s.markInitialSyncComplete()
+	}()
+}
+
+// markInitialSyncComplete marks the initial synchronization as complete.
+// This should only be called after all informers have synced and initial events have been processed.
+func (s *k8sStore) markInitialSyncComplete() {
+	s.initialSyncMu.Lock()
+	defer s.initialSyncMu.Unlock()
+	s.initialSyncComplete = true
+	klog.InfoS("Initial synchronization of ingress controller complete")
+}
+
+// IsInitialSyncComplete returns true if the initial sync of all resources is complete.
+// This is used by the readiness check to ensure the pod is not marked ready prematurely.
+func (s *k8sStore) IsInitialSyncComplete() bool {
+	s.initialSyncMu.RLock()
+	defer s.initialSyncMu.RUnlock()
+	return s.initialSyncComplete
 }
 
 var runtimeScheme = k8sruntime.NewScheme()

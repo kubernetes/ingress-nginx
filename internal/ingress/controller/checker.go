@@ -60,6 +60,13 @@ func (n *NGINXController) Check(_ *http.Request) error {
 		return fmt.Errorf("checking for NGINX process with PID %v: %w", pid, err)
 	}
 
+	// Ensure initial sync is complete before marking pod as ready
+	// This prevents the pod from being marked ready before all ingresses are loaded
+	// See: https://github.com/kubernetes/ingress-nginx/issues/12206
+	if !n.store.IsInitialSyncComplete() {
+		return fmt.Errorf("initial synchronization of ingress resources not yet complete")
+	}
+
 	statusCode, _, err := nginx.NewGetStatusRequest("/is-dynamic-lb-initialized")
 	if err != nil {
 		return fmt.Errorf("checking if the dynamic load balancer started: %w", err)
