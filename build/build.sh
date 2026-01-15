@@ -41,7 +41,7 @@ echo "Building targets for ${ARCH}, generated targets in ${TARGETS_DIR} director
 echo "Building ${PKG}/cmd/nginx"
 
 ${GO_BUILD_CMD} \
-  -trimpath -ldflags="-buildid= -w -s \
+  -modcacherw -trimpath -ldflags="-buildid= -w -s \
   -X ${PKG}/version.RELEASE=${TAG} \
   -X ${PKG}/version.COMMIT=${COMMIT_SHA} \
   -X ${PKG}/version.REPO=${REPO_INFO}" \
@@ -51,7 +51,7 @@ ${GO_BUILD_CMD} \
 echo "Building ${PKG}/cmd/dbg"
 
 ${GO_BUILD_CMD} \
-  -trimpath -ldflags="-buildid= -w -s \
+  -modcacherw -trimpath -ldflags="-buildid= -w -s \
   -X ${PKG}/version.RELEASE=${TAG} \
   -X ${PKG}/version.COMMIT=${COMMIT_SHA} \
   -X ${PKG}/version.REPO=${REPO_INFO}" \
@@ -61,7 +61,7 @@ ${GO_BUILD_CMD} \
 echo "Building ${PKG}/cmd/waitshutdown"
 
 ${GO_BUILD_CMD} \
-  -trimpath -ldflags="-buildid= -w -s \
+  -modcacherw -trimpath -ldflags="-buildid= -w -s \
   -X ${PKG}/version.RELEASE=${TAG} \
   -X ${PKG}/version.COMMIT=${COMMIT_SHA} \
   -X ${PKG}/version.REPO=${REPO_INFO}" \
