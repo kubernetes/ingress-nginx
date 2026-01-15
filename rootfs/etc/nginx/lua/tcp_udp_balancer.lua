@@ -86,6 +86,8 @@ local function sync_backend(backend)
   local implementation = get_implementation(backend)
   local balancer = balancers[backend.name]
 
+  backend.endpoints = format_ipv6_endpoints(backend.endpoints)
+
   if not balancer then
     balancers[backend.name] = implementation:new(backend)
     return
@@ -104,8 +106,6 @@ local function sync_backend(backend)
   if is_backend_with_external_name(backend) then
     backend = resolve_external_names(backend)
   end
-
-  backend.endpoints = format_ipv6_endpoints(backend.endpoints)
 
   balancer:sync(backend)
 end
