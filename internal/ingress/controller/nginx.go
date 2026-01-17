@@ -276,7 +276,7 @@ func (n *NGINXController) Start() {
 
 	// we need to use the defined ingress class to allow multiple leaders
 	// in order to update information about ingress status
-	// TODO: For now, as the the IngressClass logics has changed, is up to the
+	// TODO: For now, as the IngressClass logics has changed, is up to the
 	// cluster admin to create different Leader Election IDs.
 	// Should revisit this in a future
 
