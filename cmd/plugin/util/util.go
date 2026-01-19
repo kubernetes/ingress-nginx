@@ -34,7 +34,7 @@ const (
 	DefaultIngressContainerName  = "controller"
 )
 
-// IssuePrefix is the github url that we can append an issue number to to link to it
+// IssuePrefix is the github url that we can append an issue number to link to it
 const IssuePrefix = "https://github.com/kubernetes/ingress-nginx/issues/"
 
 var versionRegex = regexp.MustCompile(`(\d)+\.(\d)+\.(\d)+.*`)
