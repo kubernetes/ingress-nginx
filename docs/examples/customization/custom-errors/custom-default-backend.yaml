@@ -36,7 +36,7 @@ spec:
     spec:
       containers:
       - name: nginx-error-server
-        image: registry.k8s.io/ingress-nginx/custom-error-pages:v1.2.5@sha256:ff23f1de9659e4960d4dd844c6fadbeb418a6bb9629f0283fc70bd8f10e432a7
+        image: registry.k8s.io/ingress-nginx/custom-error-pages:v1.2.6@sha256:36bcf60b9698205a9f7f4081aeb402235b7103725e460cd897e00f0c96c07bfe
         ports:
         - containerPort: 8080
         # Setting the environment variable DEBUG we can see the headers sent 
