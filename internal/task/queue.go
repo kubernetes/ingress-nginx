@@ -122,6 +122,7 @@ func (t *Queue) worker() {
 		if item.Timestamp != 0 && t.lastSync > item.Timestamp {
 			// fix issue https://github.com/kubernetes/ingress-nginx/issues/14374
 			if t.lastSync > ts {
+				klog.Warningf("The lastSync time %v is later than the current time %v, set lastSync to %v", t.lastSync, ts, item.Timestamp)
 				t.lastSync = item.Timestamp
 			} else {
 				klog.V(3).InfoS("skipping sync", "key", item.Key, "last", t.lastSync, "now", item.Timestamp)
