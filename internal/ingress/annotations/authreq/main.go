@@ -252,7 +252,7 @@ func (e1 *Config) Equal(e2 *Config) bool {
 }
 
 var (
-	methodsRegex    = regexp.MustCompile("(GET|HEAD|POST|PUT|PATCH|DELETE|CONNECT|OPTIONS|TRACE)")
+	methodsRegex    = regexp.MustCompile("^(GET|HEAD|POST|PUT|PATCH|DELETE|CONNECT|OPTIONS|TRACE)$")
 	headerRegexp    = regexp.MustCompile(`^[a-zA-Z\d\-_]+$`)
 	statusCodeRegex = regexp.MustCompile(`^\d{3}$`)
 	durationRegex   = regexp.MustCompile(`^\d+(ms|s|m|h|d|w|M|y)$`) // see https://nginx.org/en/docs/syntax.html
