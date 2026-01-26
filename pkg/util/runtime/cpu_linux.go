@@ -96,6 +96,10 @@ func readCgroup2StringToInt64Tuple(cgroupString string) (quota, period int64) {
 
 	values := strings.Fields(cgroupString)
 
+	if len(values) == 0 {
+		return -1, -1
+	}
+
 	if values[0] == "max" {
 		return -1, -1
 	}
