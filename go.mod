@@ -32,7 +32,7 @@ require (
 	google.golang.org/grpc v1.78.0
 	gopkg.in/go-playground/pool.v3 v3.1.1
 	gopkg.in/mcuadros/go-syslog.v2 v2.3.0
-	helm.sh/helm/v4 v4.0.5
+	helm.sh/helm/v4 v4.1.0
 	k8s.io/api v0.35.0
 	k8s.io/apiextensions-apiserver v0.35.0
 	k8s.io/apimachinery v0.35.0
@@ -64,8 +64,6 @@ require (
 	github.com/go-openapi/swag/typeutils v0.25.4 // indirect
 	github.com/go-openapi/swag/yamlutils v0.25.4 // indirect
 	github.com/google/go-querystring v1.2.0 // indirect
-	github.com/mitchellh/copystructure v1.2.0 // indirect
-	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/moby/sys/userns v0.1.0 // indirect
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
@@ -82,7 +80,7 @@ require (
 require (
 	github.com/Anddd7/pb v0.0.0-20250506021228-7e355c18f206
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
-	github.com/BurntSushi/toml v1.5.0 // indirect
+	github.com/BurntSushi/toml v1.6.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
