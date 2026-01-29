@@ -527,7 +527,7 @@ func newDeployment(name, namespace, image string, port int32, replicas int32, co
 						{
 							Name:  name,
 							Image: image,
-							Env:   []corev1.EnvVar{},
+							Env:   env,
 							Ports: []corev1.ContainerPort{
 								{
 									Name:          "http",
