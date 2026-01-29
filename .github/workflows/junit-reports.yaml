@@ -13,7 +13,7 @@ jobs:
   report:
     runs-on: ubuntu-latest
     steps:
-      - uses: dorny/test-reporter@b082adf0eced0765477756c2a610396589b8c637 # v2.5.0
+      - uses: dorny/test-reporter@2c14ff72a244f739866b0d898151a9a1a9fd1c58  # v2.5.0
         with:
           artifact: /e2e-test-reports-(.*)/
           name: JEST Tests $1               # Name of the check run which will be created
