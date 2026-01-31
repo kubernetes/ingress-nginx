@@ -273,10 +273,10 @@ metadata:
 | controller.admissionWebhooks.namespaceSelector | object | `{}` |  |
 | controller.admissionWebhooks.objectSelector | object | `{}` |  |
 | controller.admissionWebhooks.patch.enabled | bool | `true` |  |
-| controller.admissionWebhooks.patch.image.digest | string | `"sha256:b28e0688be7d1e15fe385053bd4c6b631bc7708c9220632de1b95867e5e7da11"` |  |
+| controller.admissionWebhooks.patch.image.digest | string | `"sha256:7c74a715af2c94cb734785b4d3ea1357b4f02b88e1e123c622a9cb68b62f669c"` |  |
 | controller.admissionWebhooks.patch.image.image | string | `"ingress-nginx/kube-webhook-certgen"` |  |
 | controller.admissionWebhooks.patch.image.pullPolicy | string | `"IfNotPresent"` |  |
-| controller.admissionWebhooks.patch.image.tag | string | `"v1.6.6"` |  |
+| controller.admissionWebhooks.patch.image.tag | string | `"v1.6.7"` |  |
 | controller.admissionWebhooks.patch.labels | object | `{}` | Labels to be added to patch job resources |
 | controller.admissionWebhooks.patch.networkPolicy.enabled | bool | `false` | Enable 'networkPolicy' or not |
 | controller.admissionWebhooks.patch.nodeSelector."kubernetes.io/os" | string | `"linux"` |  |
