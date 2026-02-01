@@ -67,6 +67,7 @@ var (
 		XForwardedPrefix  string
 		SecureBackend     bool
 		enforceRegex      bool
+		pathType          networking.PathType
 	}{
 		"when secure backend enabled": {
 			"/",
@@ -78,6 +79,7 @@ var (
 			"",
 			true,
 			false,
+			networking.PathTypePrefix,
 		},
 		"when secure backend and dynamic config enabled": {
 			"/",
@@ -89,6 +91,7 @@ var (
 			"",
 			true,
 			false,
+			networking.PathTypePrefix,
 		},
 		"when secure backend, stickiness and dynamic config enabled": {
 			"/",
@@ -100,6 +103,7 @@ var (
 			"",
 			true,
 			false,
+			networking.PathTypePrefix,
 		},
 		"invalid redirect / to / with dynamic config enabled": {
 			"/",
@@ -111,6 +115,7 @@ var (
 			"",
 			false,
 			false,
+			networking.PathTypePrefix,
 		},
 		"invalid redirect / to /": {
 			"/",
@@ -122,6 +127,7 @@ var (
 			"",
 			false,
 			false,
+			networking.PathTypePrefix,
 		},
 		"redirect / to /jenkins": {
 			"/",
@@ -137,6 +143,7 @@ proxy_pass $scheme://upstream_balancer;`,
 			"",
 			false,
 			true,
+			networking.PathTypePrefix,
 		},
 		"redirect / to /something with sticky enabled": {
 			"/",
@@ -152,6 +159,7 @@ proxy_pass $scheme://upstream_balancer;`,
 			"",
 			false,
 			true,
+			networking.PathTypePrefix,
 		},
 		"redirect / to /something with sticky and dynamic config enabled": {
 			"/",
@@ -167,6 +175,7 @@ proxy_pass $scheme://upstream_balancer;`,
 			"",
 			false,
 			true,
+			networking.PathTypePrefix,
 		},
 		"add the X-Forwarded-Prefix header": {
 			"/there",
@@ -184,6 +193,7 @@ proxy_pass $scheme://upstream_balancer;`,
 			"/there",
 			false,
 			true,
+			networking.PathTypePrefix,
 		},
 		"use ~* location modifier when ingress does not use rewrite/regex target but at least one other ingress does": {
 			"/something",
@@ -195,6 +205,19 @@ proxy_pass $scheme://upstream_balancer;`,
 			"",
 			false,
 			true,
+			networking.PathTypePrefix,
+		},
+		"exact paths should remain exact when enforce regex is enabled": {
+			"/something",
+			"/something",
+			`~* "^/something$"`,
+			"proxy_pass http://upstream_balancer;",
+			"proxy_pass $scheme://upstream_balancer;",
+			false,
+			"",
+			false,
+			true,
+			networking.PathTypeExact,
 		},
 	}
 )
@@ -319,7 +342,7 @@ func TestBuildLocation(t *testing.T) {
 	for k, tc := range tmplFuncTestcases {
 		loc := &ingress.Location{
 			Path:     tc.Path,
-			PathType: &pathPrefix,
+			PathType: &tc.pathType,
 			Rewrite:  rewrite.Config{Target: tc.Target},
 		}
 
