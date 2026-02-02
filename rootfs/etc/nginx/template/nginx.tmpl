@@ -1041,6 +1041,7 @@ stream {
             # resumes it has the correct value set for this variable so that Lua can pick backend correctly
             set $proxy_upstream_name {{ buildUpstreamName $location | quote }};
 
+            proxy_intercept_errors      off;
             proxy_pass_request_body     off;
             proxy_set_header            Content-Length          "";
             proxy_set_header            X-Forwarded-Proto       "";
