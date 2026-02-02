@@ -157,7 +157,7 @@ var _ = framework.DescribeSetting("Geoip2", func() {
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, host) &&
-					strings.Contains(server, "location /")
+					strings.Contains(server, `location "/"`)
 			})
 
 		f.HTTPTestClient().

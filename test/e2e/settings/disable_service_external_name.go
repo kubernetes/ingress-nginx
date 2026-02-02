@@ -77,11 +77,11 @@ var _ = framework.IngressNginxDescribe("[Flag] disable-service-external-name", f
 		f.EnsureIngress(ing)
 
 		f.WaitForNginxServer(nonexternalhost, func(cfg string) bool {
-			return strings.Contains(cfg, "server_name echo-svc.com")
+			return strings.Contains(cfg, `server_name "echo-svc.com"`)
 		})
 
 		f.WaitForNginxServer(externalhost, func(cfg string) bool {
-			return strings.Contains(cfg, "server_name echo-external-svc.com")
+			return strings.Contains(cfg, `server_name "echo-external-svc.com"`)
 		})
 
 		f.HTTPTestClient().
