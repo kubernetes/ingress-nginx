@@ -113,4 +113,44 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] exact", func() {
 		assert.NotContains(ginkgo.GinkgoT(), body, "pathtype=exact")
 		assert.NotContains(ginkgo.GinkgoT(), body, "duplicated=true")
 	})
+
+	ginkgo.It("should respect exact type when using regex matching", func() {
+		disableSnippet := f.AllowSnippetConfiguration()
+		defer disableSnippet()
+
+		host := "exact.path"
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/configuration-snippet": `more_set_input_headers "pathType: exact";`,
+			"nginx.ingress.kubernetes.io/use-regex":             "true",
+		}
+
+		exactPathType := networking.PathTypeExact
+		ing := framework.NewSingleIngress("exact", "/exact", host, f.Namespace, framework.EchoService, 80, annotations)
+		ing.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &exactPathType
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, host) &&
+					strings.Contains(server, `location ~* "^/exact$"`)
+			})
+
+		body := f.HTTPTestClient().
+			GET("/exact").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Body().
+			Raw()
+
+		assert.NotContains(ginkgo.GinkgoT(), body, "pathtype=prefix")
+		assert.Contains(ginkgo.GinkgoT(), body, "pathtype=exact")
+
+		f.HTTPTestClient().
+			GET("/exact/suffix").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusNotFound)
+	})
 })
