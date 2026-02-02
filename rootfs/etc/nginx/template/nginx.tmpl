@@ -589,7 +589,7 @@ http {
     {{ range $redirect := .RedirectServers }}
     ## start server {{ $redirect.From }}
     server {
-        server_name {{ $redirect.From }};
+        server_name {{ $redirect.From | quote }};
 
         {{ buildHTTPListener  $all $redirect.From }}
         {{ buildHTTPSListener $all $redirect.From }}
@@ -636,7 +636,7 @@ http {
     {{ range $server := $servers }}
     ## start server {{ $server.Hostname }}
     server {
-        server_name {{ buildServerName $server.Hostname }} {{range $server.Aliases }}{{ . }} {{ end }};
+        server_name {{ buildServerName $server.Hostname | quote }} {{ range $server.Aliases }}"{{ sanitizeQuotedRegex . }}" {{ end }};
 
         {{ if $cfg.UseHTTP2 }}
             http2 on;

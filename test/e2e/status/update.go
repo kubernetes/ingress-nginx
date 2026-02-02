@@ -75,7 +75,7 @@ var _ = framework.IngressNginxDescribe("[Status] status update", func() {
 
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
-				return strings.Contains(cfg, fmt.Sprintf("server_name %s", host))
+				return strings.Contains(cfg, fmt.Sprintf(`server_name "%s"`, host))
 			})
 
 		framework.Logf("waiting for leader election and initial status update")

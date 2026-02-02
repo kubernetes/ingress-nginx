@@ -61,7 +61,7 @@ var _ = framework.IngressNginxDescribe("[SSL] secret update", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "server_name ssl-update") &&
+				return strings.Contains(server, `server_name "ssl-update"`) &&
 					strings.Contains(server, "listen 443")
 			})
 
@@ -95,7 +95,7 @@ var _ = framework.IngressNginxDescribe("[SSL] secret update", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "server_name invalid-ssl") &&
+				return strings.Contains(server, `server_name "invalid-ssl"`) &&
 					strings.Contains(server, "listen 443")
 			})
 		//nolint:gosec // Ignore certificate validation in testing

@@ -48,7 +48,7 @@ var _ = framework.DescribeAnnotation("from-to-www-redirect", func() {
 
 		f.WaitForNginxConfiguration(
 			func(cfg string) bool {
-				return strings.Contains(cfg, `server_name www.fromtowwwredirect.bar.com;`) &&
+				return strings.Contains(cfg, `server_name "www.fromtowwwredirect.bar.com";`) &&
 					strings.Contains(cfg, `return 308 $redirect_to;`)
 			})
 
@@ -87,7 +87,7 @@ var _ = framework.DescribeAnnotation("from-to-www-redirect", func() {
 
 		f.WaitForNginxServer(toHost,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf(`server_name %v;`, toHost)) &&
+				return strings.Contains(server, fmt.Sprintf(`server_name "%v";`, toHost)) &&
 					strings.Contains(server, `return 308 $redirect_to;`)
 			})
 

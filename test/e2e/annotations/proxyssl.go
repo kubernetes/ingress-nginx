@@ -220,6 +220,6 @@ func assertProxySSL(f *framework.Framework, host, sslName, ciphers, protocols, v
 				return c
 			}
 
-			return c && strings.Contains(server, fmt.Sprintf("proxy_ssl_server_name %s;", proxySSLServerName))
+			return c && strings.Contains(server, fmt.Sprintf(`proxy_ssl_server_name %s;`, proxySSLServerName))
 		})
 }

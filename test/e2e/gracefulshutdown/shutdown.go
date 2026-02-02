@@ -42,7 +42,7 @@ var _ = framework.IngressNginxDescribe("[Shutdown] ingress controller", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "server_name shutdown")
+				return strings.Contains(server, `server_name "shutdown"`)
 			})
 
 		f.HTTPTestClient().
@@ -77,7 +77,7 @@ var _ = framework.IngressNginxDescribe("[Shutdown] ingress controller", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "server_name shutdown")
+				return strings.Contains(server, `server_name "shutdown"`)
 			})
 
 		startTime := time.Now()
@@ -122,7 +122,7 @@ var _ = framework.IngressNginxDescribe("[Shutdown] ingress controller", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, "server_name shutdown")
+				return strings.Contains(server, `server_name "shutdown"`)
 			})
 
 		startTime := time.Now()

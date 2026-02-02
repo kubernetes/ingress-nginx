@@ -115,7 +115,7 @@ var _ = framework.DescribeSetting("OCSP", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf(`server_name %v`, host))
+				return strings.Contains(server, fmt.Sprintf(`server_name "%v"`, host))
 			})
 
 		tlsConfig := &tls.Config{ServerName: host, InsecureSkipVerify: true} //nolint:gosec // Ignore the gosec error in testing

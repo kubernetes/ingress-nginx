@@ -91,7 +91,6 @@ linters:
         - sloppyReassign
         - sloppyTypeAssert
         - sortSlice
-        - sprintfQuotedString
         - sqlQuery
         - syncMapLoadAndDelete
         - truncateCmp
