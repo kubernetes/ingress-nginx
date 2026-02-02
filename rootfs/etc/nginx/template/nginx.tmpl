@@ -12,6 +12,8 @@
 # setup custom paths that do not require root access
 pid {{ .PID }};
 
+load_module /etc/nginx/modules/ngx_http_js_module.so;
+
 {{ if $cfg.UseGeoIP2 }}
 load_module /etc/nginx/modules/ngx_http_geoip2_module.so;
 {{ end }}
@@ -73,6 +75,10 @@ http {
     init_by_lua_file /etc/nginx/lua/ngx_conf_init.lua;
 
     init_worker_by_lua_file /etc/nginx/lua/ngx_conf_init_worker.lua;
+
+    js_import /etc/nginx/js/nginx/ngx_srv_redirect.js;
+
+    js_set $njs_srv_redirect ngx_srv_redirect.srv_redirect;
 
     {{/* Enable the real_ip module only if we use either X-Forwarded headers or Proxy Protocol. */}}
     {{/* we use the value of the real IP for the geo_ip module */}}
@@ -607,9 +613,10 @@ http {
         }
         {{ end }}
 
-        set_by_lua_file $redirect_to /etc/nginx/lua/nginx/ngx_srv_redirect.lua {{ $redirect.To }}; 
+        set $tmp_redirect_to '{{ $redirect.To }}';
+        set $tmp_forwarded_headers '{{ $cfg.UseForwardedHeaders }}';
 
-        return {{ $all.Cfg.HTTPRedirectCode }} $redirect_to;
+        return {{ $all.Cfg.HTTPRedirectCode }} $njs_srv_redirect;
     }
     ## end server {{ $redirect.From }}
     {{ end }}
