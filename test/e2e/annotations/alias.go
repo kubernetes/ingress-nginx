@@ -43,7 +43,7 @@ var _ = framework.DescribeAnnotation("server-alias", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %v", host))
+				return strings.Contains(server, fmt.Sprintf(`server_name "%v"`, host))
 			})
 
 		f.HTTPTestClient().
@@ -72,7 +72,7 @@ var _ = framework.DescribeAnnotation("server-alias", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %v", host))
+				return strings.Contains(server, fmt.Sprintf(`server_name "%v"`, host))
 			})
 
 		hosts := []string{fooHost, "bar"}
@@ -100,7 +100,7 @@ var _ = framework.DescribeAnnotation("server-alias", func() {
 
 		f.WaitForNginxServer(host,
 			func(server string) bool {
-				return strings.Contains(server, fmt.Sprintf("server_name %v bar", host))
+				return strings.Contains(server, fmt.Sprintf(`server_name "%v" "bar"`, host))
 			})
 
 		hosts := []string{fooHost, "bar"}

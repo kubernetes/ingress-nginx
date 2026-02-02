@@ -48,7 +48,7 @@ var _ = framework.IngressNginxDescribe("[Flag] custom HTTP and HTTPS ports", fun
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name forwarded-headers")
+					return strings.Contains(server, `server_name "forwarded-headers"`)
 				})
 
 			f.HTTPTestClient().
@@ -76,7 +76,7 @@ var _ = framework.IngressNginxDescribe("[Flag] custom HTTP and HTTPS ports", fun
 
 			f.WaitForNginxServer(host,
 				func(server string) bool {
-					return strings.Contains(server, "server_name forwarded-headers")
+					return strings.Contains(server, `server_name "forwarded-headers"`)
 				})
 
 			f.HTTPTestClientWithTLSConfig(tlsConfig).
@@ -110,7 +110,7 @@ var _ = framework.IngressNginxDescribe("[Flag] custom HTTP and HTTPS ports", fun
 
 				f.WaitForNginxServer(host,
 					func(server string) bool {
-						return strings.Contains(server, "server_name forwarded-headers")
+						return strings.Contains(server, `server_name "forwarded-headers"`)
 					})
 
 				f.HTTPTestClientWithTLSConfig(tlsConfig).

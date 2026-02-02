@@ -41,7 +41,7 @@ var _ = framework.IngressNginxDescribe("[Ingress] [PathType] prefix checks", fun
 		f.WaitForNginxServer(host,
 			func(server string) bool {
 				return strings.Contains(server, host) &&
-					strings.Contains(server, "location /aaa")
+					strings.Contains(server, `location "/aaa/"`)
 			})
 
 		f.HTTPTestClient().
