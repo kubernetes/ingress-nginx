@@ -1,5 +1,5 @@
 local auth_path = ngx.var.auth_path
-local auth_keepalive_share_vars = ngx.var.auth_keepalive_share_vars
+local auth_keepalive_share_vars = ngx.var.auth_keepalive_share_vars == "true" and true or false
 local auth_response_headers = ngx.var.auth_response_headers
 local ngx_re_split = require("ngx.re").split
 local ipairs = ipairs
