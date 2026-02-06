@@ -18,7 +18,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-export NGINX_VERSION=1.27.1
+export NGINX_VERSION=1.28.2
 
 # Check for recent changes: https://github.com/vision5/ngx_devel_kit/compare/v0.3.3...master
 export NDK_VERSION=v0.3.3
