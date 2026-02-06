@@ -31,7 +31,7 @@ spec:
 {{- end }}
   triggers:
 {{- with .Values.controller.keda.triggers }}
-{{ toYaml . | indent 2 }}
+{{ tpl (toYaml .) $ | indent 2 }}
 {{ end }}
   advanced:
     restoreToOriginalReplicaCount: {{ .Values.controller.keda.restoreToOriginalReplicaCount }}

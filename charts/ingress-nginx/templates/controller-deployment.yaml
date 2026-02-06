@@ -18,7 +18,7 @@ spec:
     matchLabels:
       {{- include "ingress-nginx.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: controller
-  {{- if eq .Values.controller.autoscaling.enabled .Values.controller.keda.enabled }}
+  {{- if not (or .Values.controller.autoscaling.enabled .Values.controller.keda.enabled) }}
   replicas: {{ .Values.controller.replicaCount }}
   {{- end }}
   revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
