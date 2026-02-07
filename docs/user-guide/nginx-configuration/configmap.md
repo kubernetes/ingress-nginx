@@ -1117,6 +1117,7 @@ _References:_
 ## proxy-request-buffering
 
 Enables or disables [buffering of a client request body](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_request_buffering).
+Valid values are `on` and `off`.
 
 ## ssl-redirect
 
