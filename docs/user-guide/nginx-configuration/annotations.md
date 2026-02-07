@@ -674,7 +674,7 @@ In some scenarios is required to have different values. To allow this we provide
 - `nginx.ingress.kubernetes.io/proxy-next-upstream`
 - `nginx.ingress.kubernetes.io/proxy-next-upstream-timeout`
 - `nginx.ingress.kubernetes.io/proxy-next-upstream-tries`
-- `nginx.ingress.kubernetes.io/proxy-request-buffering`
+- `nginx.ingress.kubernetes.io/proxy-request-buffering`: Valid values are `on` or `off`.
 
 If you indicate [Backend Protocol](#backend-protocol) as `GRPC` or `GRPCS`, the following grpc values will be set and inherited from proxy timeouts:
 
