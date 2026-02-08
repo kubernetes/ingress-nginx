@@ -318,6 +318,53 @@ func TestCheckAnnotationRisk(t *testing.T) {
 	}
 }
 
+func TestCookieDomainRegex(t *testing.T) {
+	validator := ValidateRegex(CookieDomainRegex, false)
+	tests := []struct {
+		name    string
+		value   string
+		wantErr bool
+	}{
+		{
+			name:    "should accept off",
+			value:   "off",
+			wantErr: false,
+		},
+		{
+			name:    "should accept two space-separated domains",
+			value:   "example.org .example.com",
+			wantErr: false,
+		},
+		{
+			name:    "should accept domain with dot prefix",
+			value:   ".old.domain .new.domain",
+			wantErr: false,
+		},
+		{
+			name:    "should reject single domain without space",
+			value:   "example.org",
+			wantErr: true,
+		},
+		{
+			name:    "should reject three parameters",
+			value:   "example.org example.com extra",
+			wantErr: true,
+		},
+		{
+			name:    "should reject empty value",
+			value:   "",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := validator(tt.value); (err != nil) != tt.wantErr {
+				t.Errorf("CookieDomainRegex validator(%q) error = %v, wantErr %v", tt.value, err, tt.wantErr)
+			}
+		})
+	}
+}
+
 func TestCommonNameAnnotationValidator(t *testing.T) {
 	tests := []struct {
 		name       string
