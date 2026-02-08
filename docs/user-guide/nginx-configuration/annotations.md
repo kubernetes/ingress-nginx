@@ -709,6 +709,8 @@ nginx.ingress.kubernetes.io/proxy-body-size: 8m
 
 Sets a text that [should be changed in the domain attribute](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_domain) of the "Set-Cookie" header fields of a proxied server response.
 
+Value must be either `off` or two space-separated tokens (source domain and replacement).
+
 To configure this setting globally for all Ingress rules, the `proxy-cookie-domain` value may be set in the [NGINX ConfigMap](./configmap.md#proxy-cookie-domain).
 
 ### Proxy cookie path
