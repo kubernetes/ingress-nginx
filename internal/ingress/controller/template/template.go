@@ -564,9 +564,7 @@ func buildAuthLocation(input interface{}, globalExternalAuthURL string) string {
 		return ""
 	}
 
-	str := base64.URLEncoding.EncodeToString([]byte(location.Path))
-	// removes "=" after encoding
-	str = strings.ReplaceAll(str, "=", "")
+	str := base64.RawURLEncoding.EncodeToString([]byte(location.Path))
 
 	pathType := "default"
 	if location.PathType != nil {
