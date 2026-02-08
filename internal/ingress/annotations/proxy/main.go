@@ -96,7 +96,7 @@ var proxyAnnotations = parser.Annotation{
 			Documentation: `This annotation sets a text that should be changed in the path attribute of the "Set-Cookie" header fields of a proxied server response.`,
 		},
 		proxyCookieDomainAnnotation: {
-			Validator:     parser.ValidateRegex(parser.CookieDomainRegex, true),
+			Validator:     parser.ValidateRegex(parser.CookieDomainRegex, false),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskMedium,
 			Documentation: `This annotation ets a text that should be changed in the domain attribute of the "Set-Cookie" header fields of a proxied server response.`,
