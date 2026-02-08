@@ -903,6 +903,10 @@ If false, NGINX ignores incoming `X-Forwarded-*` headers, filling them with the 
 
 `enable-real-ip` enables the configuration of [https://nginx.org/en/docs/http/ngx_http_realip_module.html](https://nginx.org/en/docs/http/ngx_http_realip_module.html). Specific attributes of the module can be configured further by using `forwarded-for-header` and `proxy-real-ip-cidr` settings.
 
+## enable-real-ip-recursive
+
+`enable-real-ip-recursive` enables the configuration of [https://nginx.org/en/docs/http/ngx_http_realip_module.html#real_ip_recursive](https://nginx.org/en/docs/http/ngx_http_realip_module.html#real_ip_recursive).
+
 ## forwarded-for-header
 
 Sets the header field for identifying the originating IP address of a client. _**default:**_ X-Forwarded-For
