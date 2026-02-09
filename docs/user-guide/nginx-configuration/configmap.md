@@ -1095,6 +1095,8 @@ Sets a text that [should be changed in the path attribute](https://nginx.org/en/
 
 Sets a text that [should be changed in the domain attribute](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cookie_domain) of the “Set-Cookie” header fields of a proxied server response.
 
+Value must be either `off` or two space-separated tokens (source domain and replacement).
+
 ## proxy-next-upstream
 
 Specifies in [which cases](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream) a request should be passed to the next server.

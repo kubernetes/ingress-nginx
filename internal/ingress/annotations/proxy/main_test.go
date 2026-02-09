@@ -299,6 +299,68 @@ func TestProxyWithNoAnnotation(t *testing.T) {
 	}
 }
 
+func TestCookieDomainRegex(t *testing.T) {
+	validator := parser.ValidateRegex(cookieDomainRegex, false)
+	tests := []struct {
+		name    string
+		value   string
+		wantErr bool
+	}{
+		{
+			name:    "should accept off",
+			value:   "off",
+			wantErr: false,
+		},
+		{
+			name:    "should accept two space-separated domains",
+			value:   "example.org .example.com",
+			wantErr: false,
+		},
+		{
+			name:    "should accept domain with dot prefix",
+			value:   ".old.domain .new.domain",
+			wantErr: false,
+		},
+		{
+			name:    "should reject single domain without space",
+			value:   "example.org",
+			wantErr: true,
+		},
+		{
+			name:    "should accept value with colon",
+			value:   "example.org:8080 .example.com",
+			wantErr: false,
+		},
+		{
+			name:    "should reject three parameters",
+			value:   "example.org example.com extra",
+			wantErr: true,
+		},
+		{
+			name:    "should reject empty value",
+			value:   "",
+			wantErr: true,
+		},
+		{
+			name:    "should reject value with semicolon",
+			value:   "example.org; .example.com",
+			wantErr: true,
+		},
+		{
+			name:    "should accept multiple spaces between tokens",
+			value:   "example.org   .example.com",
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := validator(tt.value); (err != nil) != tt.wantErr {
+				t.Errorf("cookieDomainRegex validator(%q) error = %v, wantErr %v", tt.value, err, tt.wantErr)
+			}
+		})
+	}
+}
+
 func TestProxyWithBusyBuffersSizeAnnotation(t *testing.T) {
 	ing := buildIngress()
 	data := map[string]string{}
