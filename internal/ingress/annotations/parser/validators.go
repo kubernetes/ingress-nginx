@@ -65,8 +65,6 @@ var (
 	// BasicChars is alphanumeric and ".", "-", "_", "~" and ":", usually used on simple host:port/path composition.
 	// This combination can also be used on fields that may contain characters like / (as ns/name)
 	BasicCharsRegex = regexp.MustCompile("^[/" + alphaNumericChars + "]*$")
-	// CookieDomainRegex validates proxy cookie domain: either "off" or two space-separated tokens (e.g. domain replacement)
-	CookieDomainRegex = regexp.MustCompile("^(off|[/" + alphaNumericChars + "]+\\s[" + alphaNumericChars + "]+)$")
 	// ExtendedChars is alphanumeric and ".", "-", "_", "~" and ":" plus "," and spaces, usually used on simple host:port/path composition
 	ExtendedCharsRegex = regexp.MustCompile("^[/" + extendedAlphaNumeric + "]*$")
 	// CharsWithSpace is like basic chars, but includes the space character

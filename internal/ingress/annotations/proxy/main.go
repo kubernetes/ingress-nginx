@@ -46,7 +46,11 @@ const (
 	proxyMaxTempFileSizeAnnotation     = "proxy-max-temp-file-size" //#nosec G101
 )
 
-var validUpstreamAnnotation = regexp.MustCompile(`^((error|timeout|invalid_header|http_500|http_502|http_503|http_504|http_403|http_404|http_429|non_idempotent|off)\s?)+$`)
+var (
+	cookieDomainChars = `\-\.\_\~a-zA-Z0-9\/:`
+	validUpstreamAnnotation = regexp.MustCompile(`^((error|timeout|invalid_header|http_500|http_502|http_503|http_504|http_403|http_404|http_429|non_idempotent|off)\s?)+$`)
+	cookieDomainRegex       = regexp.MustCompile(`^(off|[` + cookieDomainChars + `]+\s+[` + cookieDomainChars + `]+)$`)
+)
 
 var proxyAnnotations = parser.Annotation{
 	Group: "backend",
@@ -96,7 +100,7 @@ var proxyAnnotations = parser.Annotation{
 			Documentation: `This annotation sets a text that should be changed in the path attribute of the "Set-Cookie" header fields of a proxied server response.`,
 		},
 		proxyCookieDomainAnnotation: {
-			Validator:     parser.ValidateRegex(parser.CookieDomainRegex, false),
+			Validator:     parser.ValidateRegex(cookieDomainRegex, false),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskMedium,
 			Documentation: `This annotation ets a text that should be changed in the domain attribute of the "Set-Cookie" header fields of a proxied server response.`,
