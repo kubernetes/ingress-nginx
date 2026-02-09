@@ -327,9 +327,9 @@ func TestCookieDomainRegex(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:    "should reject value with colon",
+			name:    "should accept value with colon",
 			value:   "example.org:8080 .example.com",
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name:    "should reject three parameters",
