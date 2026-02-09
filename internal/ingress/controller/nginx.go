@@ -832,7 +832,11 @@ func (n *NGINXController) setupSSLProxy() {
 		klog.Fatalf("%v", err)
 	}
 
-	proxyList := &proxyproto.Listener{Listener: listener, ReadHeaderTimeout: cfg.ProxyProtocolHeaderTimeout}
+	proxyList := &proxyproto.Listener{
+		Listener:          listener,
+		ReadHeaderTimeout: cfg.ProxyProtocolHeaderTimeout,
+		ReadBufferSize:    4096, // cf #14489
+	}
 
 	// accept TCP connections on the configured HTTPS port
 	go func() {
