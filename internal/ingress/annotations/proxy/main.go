@@ -47,7 +47,7 @@ const (
 )
 
 var (
-	cookieDomainChars = `\-\.\_\~a-zA-Z0-9\/:`
+	cookieDomainChars       = `\-\.\_\~a-zA-Z0-9\/:`
 	validUpstreamAnnotation = regexp.MustCompile(`^((error|timeout|invalid_header|http_500|http_502|http_503|http_504|http_403|http_404|http_429|non_idempotent|off)\s?)+$`)
 	cookieDomainRegex       = regexp.MustCompile(`^(off|[` + cookieDomainChars + `]+\s+[` + cookieDomainChars + `]+)$`)
 )
