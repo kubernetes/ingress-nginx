@@ -1431,6 +1431,10 @@ func (n *NGINXController) createServers(data []*ingress.Ingress,
 				}
 			}
 
+			if !servers[host].SSLPassthrough && anns.SSLPassthrough {
+				servers[host].SSLPassthrough = true
+			}
+
 			// only add SSL ciphers if the server does not have them previously configured
 			if servers[host].SSLCiphers == "" && anns.SSLCipher.SSLCiphers != "" {
 				servers[host].SSLCiphers = anns.SSLCipher.SSLCiphers
