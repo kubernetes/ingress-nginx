@@ -322,7 +322,8 @@ More information with regard to timeouts can be found in the
 [official AWS documentation](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#connection-idle-timeout)
 
 #### GCE-GKE
-
+> **Note:** The default GKE LoadBalancer (Service type `LoadBalancer`) does not support the PROXY protocol.
+> Enabling proxy-protocol in ingress-nginx will not work when using the default GKE LoadBalancer.
 First, your user needs to have `cluster-admin` permissions on the cluster. This can be done with the following command:
 
 ```console
