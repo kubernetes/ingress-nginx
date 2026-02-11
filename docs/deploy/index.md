@@ -323,6 +323,9 @@ More information with regard to timeouts can be found in the
 
 #### GCE-GKE
 
+> **Note:** The default GKE LoadBalancer (Service type `LoadBalancer`) does not support the PROXY protocol.
+> Enabling `use-proxy-protocol` will not work when using the default GKE load balancer.
+
 First, your user needs to have `cluster-admin` permissions on the cluster. This can be done with the following command:
 
 ```console
