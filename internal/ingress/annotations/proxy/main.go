@@ -138,13 +138,13 @@ var proxyAnnotations = parser.Annotation{
 			Documentation: `This annotation enables or disables buffering of a client request body.`,
 		},
 		proxyRedirectFromAnnotation: {
-			Validator:     parser.ValidateRegex(parser.URLIsValidRegex, true),
+			Validator:     parser.ValidateRegex(parser.URLWithPCRERegex, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskMedium,
 			Documentation: `The annotations proxy-redirect-from and proxy-redirect-to will set the first and second parameters of NGINX's proxy_redirect directive respectively`,
 		},
 		proxyRedirectToAnnotation: {
-			Validator:     parser.ValidateRegex(parser.URLIsValidRegex, true),
+			Validator:     parser.ValidateRegex(parser.URLWithPCRERegex, true),
 			Scope:         parser.AnnotationScopeLocation,
 			Risk:          parser.AnnotationRiskMedium,
 			Documentation: `The annotations proxy-redirect-from and proxy-redirect-to will set the first and second parameters of NGINX's proxy_redirect directive respectively`,
