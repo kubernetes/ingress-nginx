@@ -32,6 +32,8 @@ const (
 	sslRedirectAnnotation           = "ssl-redirect"
 	preserveTrailingSlashAnnotation = "preserve-trailing-slash"
 	forceSSLRedirectAnnotation      = "force-ssl-redirect"
+	sslForbidHTTPAnnotation         = "ssl-forbid-http"
+	forceSSLForbidHTTPAnnotation    = "force-ssl-forbid-http"
 	useRegexAnnotation              = "use-regex"
 	appRootAnnotation               = "app-root"
 )
@@ -64,6 +66,18 @@ var rewriteAnnotations = parser.Annotation{
 			Risk:          parser.AnnotationRiskMedium,
 			Documentation: `This annotation forces the redirection to HTTPS even if the Ingress is not TLS Enabled`,
 		},
+		sslForbidHTTPAnnotation: {
+			Validator:     parser.ValidateBool,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `This annotation defines if the location section should forbid HTTP requests`,
+		},
+		forceSSLForbidHTTPAnnotation: {
+			Validator:     parser.ValidateBool,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskMedium,
+			Documentation: `This annotation forces the forbidden error to HTTP even if the Ingress is not TLS Enabled`,
+		},
 		useRegexAnnotation: {
 			Validator: parser.ValidateBool,
 			Scope:     parser.AnnotationScopeLocation,
@@ -88,6 +102,10 @@ type Config struct {
 	SSLRedirect bool `json:"sslRedirect"`
 	// ForceSSLRedirect indicates if the location section is accessible SSL only
 	ForceSSLRedirect bool `json:"forceSSLRedirect"`
+	// SSLForbidHTTP indicates if the location section is accessible SSL only
+	SSLForbidHTTP bool `json:"sslForbidHTTP"`
+	// ForceSSLForbidHTTP indicates if the location section is accessible SSL only
+	ForceSSLForbidHTTP bool `json:"forceSSLForbidHTTP"`
 	// PreserveTrailingSlash indicates if the trailing slash should be kept during a tls redirect
 	PreserveTrailingSlash bool `json:"preserveTrailingSlash"`
 	// AppRoot defines the Application Root that the Controller must redirect if it's in '/' context
@@ -111,6 +129,12 @@ func (r1 *Config) Equal(r2 *Config) bool {
 		return false
 	}
 	if r1.ForceSSLRedirect != r2.ForceSSLRedirect {
+		return false
+	}
+	if r1.SSLForbidHTTP != r2.SSLForbidHTTP {
+		return false
+	}
+	if r1.ForceSSLForbidHTTP != r2.ForceSSLForbidHTTP {
 		return false
 	}
 	if r1.AppRoot != r2.AppRoot {
@@ -170,6 +194,22 @@ func (a rewrite) Parse(ing *networking.Ingress) (interface{}, error) {
 			klog.Warningf("%s is invalid, defaulting to '%t'", forceSSLRedirectAnnotation, a.r.GetDefaultBackend().ForceSSLRedirect)
 		}
 		config.ForceSSLRedirect = a.r.GetDefaultBackend().ForceSSLRedirect
+	}
+
+	config.SSLForbidHTTP, err = parser.GetBoolAnnotation(sslForbidHTTPAnnotation, ing, a.annotationConfig.Annotations)
+	if err != nil {
+		if errors.IsValidationError(err) {
+			klog.Warningf("%s is invalid, defaulting to '%t'", sslForbidHTTPAnnotation, a.r.GetDefaultBackend().SSLForbidHTTP)
+		}
+		config.SSLForbidHTTP = a.r.GetDefaultBackend().SSLForbidHTTP
+	}
+
+	config.ForceSSLForbidHTTP, err = parser.GetBoolAnnotation(forceSSLForbidHTTPAnnotation, ing, a.annotationConfig.Annotations)
+	if err != nil {
+		if errors.IsValidationError(err) {
+			klog.Warningf("%s is invalid, defaulting to '%t'", forceSSLForbidHTTPAnnotation, a.r.GetDefaultBackend().ForceSSLForbidHTTP)
+		}
+		config.ForceSSLForbidHTTP = a.r.GetDefaultBackend().ForceSSLForbidHTTP
 	}
 
 	config.UseRegex, err = parser.GetBoolAnnotation(useRegexAnnotation, ing, a.annotationConfig.Annotations)
