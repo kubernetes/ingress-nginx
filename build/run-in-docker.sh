@@ -86,7 +86,7 @@ if [[ "$DOCKER_IN_DOCKER_ENABLED" == "true" ]]; then
 else
   echo "Reached DIND check ELSE block, inside run-in-docker.sh"
 
-  args="${PLATFORM_FLAG} ${PLATFORM} --tty --rm ${DOCKER_OPTS} -e DEBUG=${DEBUG} -e GOCACHE="/go/src/${PKG}/.cache" -e GOMODCACHE="/go/src/${PKG}/.modcache" -e DOCKER_IN_DOCKER_ENABLED="true" -v "${HOME}/.kube:${HOME}/.kube" -v "${KUBE_ROOT}:/go/src/${PKG}" -v "${KUBE_ROOT}/bin/${ARCH}:/go/bin/linux_${ARCH}" -v "${INGRESS_VOLUME}:/etc/ingress-controller/" -w "/go/src/${PKG}""
+  args="${PLATFORM_FLAG} ${PLATFORM} --tty --rm ${DOCKER_OPTS} -e DEBUG=${DEBUG} -e GOCACHE="/go/src/${PKG}/.cache" -e GOMODCACHE="/go/src/${PKG}/.modcache" -e DOCKER_IN_DOCKER_ENABLED="true" -v "${HOME}/.kube:${HOME}/.kube" -v "${KUBE_ROOT}:/go/src/${PKG}" -v "${KUBE_ROOT}/bin/${ARCH}:/go/bin/linux_${ARCH}" -v "${INGRESS_VOLUME}:/etc/ingress-controller/" -w "/go/src/${PKG}" -u "$(id -u ${USER}):$(id -g ${USER})""
 
   if [[ "$RUNTIME" == "docker" ]]; then
     args="$args -v /var/run/docker.sock:/var/run/docker.sock"
