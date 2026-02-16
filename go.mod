@@ -17,7 +17,7 @@ require (
 	github.com/ncabatoff/process-exporter v0.8.7
 	github.com/onsi/ginkgo/v2 v2.28.1
 	github.com/opencontainers/cgroups v0.0.6
-	github.com/pires/go-proxyproto v0.10.0
+	github.com/pires/go-proxyproto v0.11.0
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
 	github.com/prometheus/client_golang v1.23.2
 	github.com/prometheus/client_model v0.6.2
