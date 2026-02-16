@@ -48,6 +48,7 @@ You can add these Kubernetes annotations to specific Ingress objects to customiz
 |[nginx.ingress.kubernetes.io/canary-weight](#canary)|number|
 |[nginx.ingress.kubernetes.io/canary-weight-total](#canary)|number|
 |[nginx.ingress.kubernetes.io/client-body-buffer-size](#client-body-buffer-size)|string|
+|[nginx.ingress.kubernetes.io/client-body-timeout](#custom-timeouts)[number]:
 |[nginx.ingress.kubernetes.io/configuration-snippet](#configuration-snippet)|string|
 |[nginx.ingress.kubernetes.io/custom-http-errors](#custom-http-errors)|[]int|
 |[nginx.ingress.kubernetes.io/custom-headers](#custom-headers)|string|
@@ -682,7 +683,15 @@ If you indicate [Backend Protocol](#backend-protocol) as `GRPC` or `GRPCS`, the 
 - [`grpc_send_timeout=60s`](https://nginx.org/en/docs/http/ngx_http_grpc_module.html#grpc_send_timeout), from `nginx.ingress.kubernetes.io/proxy-send-timeout`
 - [`grpc_read_timeout=60s`](https://nginx.org/en/docs/http/ngx_http_grpc_module.html#grpc_read_timeout), from `nginx.ingress.kubernetes.io/proxy-read-timeout`
 
+- `nginx.ingress.kubernetes.io/client-body-timeout`
+
+Defines a timeout for reading client request body, in seconds.
+
 Note: All timeout values are unitless and in seconds e.g. `nginx.ingress.kubernetes.io/proxy-read-timeout: "120"` sets a valid 120 seconds proxy read timeout.
+
+
+
+
 
 ### Proxy redirect
 
