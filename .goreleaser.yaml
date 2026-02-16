@@ -1,8 +1,11 @@
+version: 2
+
 project_name: ingress-nginx
+
 release:
-  github:
-    owner: kubernetes
-    name: ingress-nginx
+  # Disable uploading release assets to GitHub as it requires SemVer tags
+  disable: true
+
 builds:
   - id: ingress-nginx
     goos:
@@ -21,9 +24,21 @@ builds:
       -s -w
       -X k8s.io/ingress-nginx/version.COMMIT={{ .Commit }}
       -X k8s.io/ingress-nginx/version.RELEASE={{ .Tag }}
+
 archives:
   - id: ingress-nginx
-    builds:
+    ids:
     - ingress-nginx
     name_template: "kubectl-{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
-    format: tar.gz
+    formats:
+    - tar.gz
+
+checksum:
+  name_template: "kubectl-{{ .ProjectName }}_checksums.txt"
+
+krews:
+  - skip_upload: true
+    homepage: "https://kubernetes.github.io/ingress-nginx/kubectl-plugin/"
+    description: "The official kubectl plugin for ingress-nginx."
+    short_description: "Interact with ingress-nginx"
+    url_template: "http://github.com/kubernetes/ingress-nginx/releases/download/controller-{{ .Tag }}/{{ .ArtifactName }}"

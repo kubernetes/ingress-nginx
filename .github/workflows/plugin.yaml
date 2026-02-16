@@ -10,6 +10,7 @@ permissions:
 jobs:
   release-plugin:
     runs-on: ubuntu-latest
+    if: ${{ startsWith(github.ref, 'refs/tags/controller-') }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -25,26 +26,30 @@ jobs:
           go-version: ${{ env.GOLANG_VERSION }}
           check-latest: true
 
-      - name: Run GoReleaser Snapshot
-        if: ${{ ! startsWith(github.ref, 'refs/tags/') }}
-        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
-        with:
-          version: "~> v2"
-          args: release --snapshot --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set a SemVer tag for goreleaser
+        run: echo "GORELEASER_CURRENT_TAG=${{ github.ref }}" | sed 's/refs\/tags\/controller-//' >> $GITHUB_ENV
+
+      # GoReleaser requires a SemVer tag to be present in the git repository
+      - name: Create a local SemVer tag
+        run: git tag "${{ env.GORELEASER_CURRENT_TAG }}"
 
       - name: Run GoReleaser
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
         uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
         with:
           version: "~> v2"
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GORELEASER_CURRENT_TAG: ${{ env.GORELEASER_CURRENT_TAG }}
+
+      - name: Upload artifacts to release
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2.2.1
+        with:
+          files: dist/kubectl-ingress-nginx_*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update new version in krew-index
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
         uses: rajatjindal/krew-release-bot@3d9faef30a82761d610544f62afddca00993eef9 # v0.0.47
         with:
-          krew_template_file: cmd/plugin/krew.yaml
+          krew_template_file: dist/krew/ingress-nginx.yaml
