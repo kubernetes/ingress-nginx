@@ -107,4 +107,53 @@ var _ = framework.DescribeAnnotation("custom-headers-*", func() {
 			Status(http.StatusOK).
 			Header("My-Custom-Header-Dollar").Contains("$remote_addr")
 	})
+
+	ginkgo.It(`should set "more_set_headers 'My-Custom-Header' '42';" when custom-headers annotation is added`, func() {
+		f.CreateConfigMap("custom-headers", map[string]string{
+			"My-Custom-Header":        "42",
+			"My-Custom-Header-Dollar": "$remote_addr",
+		})
+		f.UpdateNginxConfigMapData("global-allowed-response-headers", "My-Custom-Header,My-Custom-Header-Dollar")
+
+		annotations := map[string]string{}
+		ing := framework.NewSingleIngress(customHeaderHost, "/", customHeaderHost, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		f.WaitForNginxServer(customHeaderHost,
+			func(server string) bool {
+				return strings.Contains(server, "server_name custom-headers")
+			})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", customHeaderHost).
+			Expect().
+			Status(http.StatusOK).
+			Header("My-Custom-Header").Equal("")
+
+		annotations = map[string]string{
+			"nginx.ingress.kubernetes.io/custom-headers": f.Namespace + "/custom-headers",
+		}
+
+		ing.Annotations = annotations
+
+		f.UpdateIngress(ing)
+		f.WaitForNginxServer(customHeaderHost,
+			func(server string) bool {
+				return strings.Contains(server, `more_set_headers "My-Custom-Header: 42";`)
+			})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", customHeaderHost).
+			Expect().
+			Status(http.StatusOK).
+			Header("My-Custom-Header").Contains("42")
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", customHeaderHost).
+			Expect().
+			Status(http.StatusOK).
+			Header("My-Custom-Header-Dollar").Contains("$remote_addr")
+	})
 })
