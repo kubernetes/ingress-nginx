@@ -12,6 +12,8 @@
 # setup custom paths that do not require root access
 pid {{ .PID }};
 
+load_module /etc/nginx/modules/ngx_http_js_module.so;
+
 {{ if $cfg.UseGeoIP2 }}
 load_module /etc/nginx/modules/ngx_http_geoip2_module.so;
 {{ end }}
@@ -73,6 +75,10 @@ http {
     init_by_lua_file /etc/nginx/lua/ngx_conf_init.lua;
 
     init_worker_by_lua_file /etc/nginx/lua/ngx_conf_init_worker.lua;
+
+    js_import /etc/nginx/js/nginx/ngx_conf_rewrite_auth.js;
+
+    js_set $njs_cache_key ngx_conf_rewrite_auth.cache_key;
 
     {{/* Enable the real_ip module only if we use either X-Forwarded headers or Proxy Protocol. */}}
     {{/* we use the value of the real IP for the geo_ip module */}}
@@ -1023,9 +1029,6 @@ stream {
 
             {{ if $externalAuth.AuthCacheKey }}
             set $tmp_cache_key '{{ $server.Hostname }}{{ $authPath }}{{ $externalAuth.AuthCacheKey }}';
-            set $cache_key '';
-
-            rewrite_by_lua_file /etc/nginx/lua/nginx/ngx_conf_rewrite_auth.lua;
 
             proxy_cache auth_cache;
 
@@ -1033,7 +1036,7 @@ stream {
             proxy_cache_valid {{ $dur }};
             {{- end }}
 
-            proxy_cache_key "$cache_key";
+            proxy_cache_key "$njs_cache_key";
             {{ end }}
 
             # ngx_auth_request module overrides variables in the parent request,
