@@ -46,22 +46,26 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, "more_set_headers 'Access-Control-Allow-Methods: GET, PUT, POST, DELETE, PATCH, OPTIONS';") &&
-					strings.Contains(server, "more_set_headers 'Access-Control-Allow-Origin: $http_origin';") &&
-					strings.Contains(server, "more_set_headers 'Access-Control-Allow-Headers: DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization';") &&
-					strings.Contains(server, "more_set_headers 'Access-Control-Max-Age: 1728000';") &&
-					strings.Contains(server, "more_set_headers 'Access-Control-Allow-Credentials: true';") &&
-					strings.Contains(server, "set $http_origin *;") &&
-					strings.Contains(server, "$cors 'true';")
-			})
+		f.WaitForNginxServer(host, func(server string) bool {
+			return strings.Contains(server, "set $cors_allow_methods 'GET, PUT, POST, DELETE, PATCH, OPTIONS';") &&
+				strings.Contains(server, "set $cors_allow_headers 'DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization';") &&
+				strings.Contains(server, "set $cors_max_age '1728000';") &&
+				strings.Contains(server, "set $cors_allow_credentials true;")
+		})
 
 		f.HTTPTestClient().
 			GET("/").
 			WithHeader("Host", host).
 			Expect().
-			Status(http.StatusOK)
+			Status(http.StatusOK).
+			Headers().
+			ValueEqual("Access-Control-Allow-Origin", []string{"*"}).
+			ValueEqual("Access-Control-Allow-Credentials", []string{"true"}).
+			ValueEqual("Access-Control-Allow-Methods",
+				[]string{"GET, PUT, POST, DELETE, PATCH, OPTIONS"}).
+			ValueEqual("Access-Control-Allow-Headers",
+				[]string{"DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"}).
+			ValueEqual("Access-Control-Max-Age", []string{"1728000"})
 	})
 
 	ginkgo.It("should set cors methods to only allow POST, GET", func() {
@@ -74,10 +78,23 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, "more_set_headers 'Access-Control-Allow-Methods: POST, GET';")
-			})
+		f.WaitForNginxServer(host, func(server string) bool {
+			return strings.Contains(server, "set $cors_allow_methods 'POST, GET';")
+		})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Headers().
+			ValueEqual("Access-Control-Allow-Origin", []string{"*"}).
+			ValueEqual("Access-Control-Allow-Credentials", []string{"true"}).
+			ValueEqual("Access-Control-Allow-Methods",
+				[]string{"POST, GET"}).
+			ValueEqual("Access-Control-Allow-Headers",
+				[]string{"DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"}).
+			ValueEqual("Access-Control-Max-Age", []string{"1728000"})
 	})
 
 	ginkgo.It("should set cors max-age", func() {
@@ -90,10 +107,23 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, "more_set_headers 'Access-Control-Max-Age: 200';")
-			})
+		f.WaitForNginxServer(host, func(server string) bool {
+			return strings.Contains(server, "set $cors_max_age '200';")
+		})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Headers().
+			ValueEqual("Access-Control-Allow-Origin", []string{"*"}).
+			ValueEqual("Access-Control-Allow-Credentials", []string{"true"}).
+			ValueEqual("Access-Control-Allow-Methods",
+				[]string{"GET, PUT, POST, DELETE, PATCH, OPTIONS"}).
+			ValueEqual("Access-Control-Allow-Headers",
+				[]string{"DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"}).
+			ValueEqual("Access-Control-Max-Age", []string{"200"})
 	})
 
 	ginkgo.It("should disable cors allow credentials", func() {
@@ -106,10 +136,23 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return !strings.Contains(server, "more_set_headers 'Access-Control-Allow-Credentials: true';")
-			})
+		f.WaitForNginxServer(host, func(server string) bool {
+			return !strings.Contains(server, "set $cors_allow_credentials true;")
+		})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Headers().
+			ValueEqual("Access-Control-Allow-Origin", []string{"*"}).
+			NotContainsKey("Access-Control-Allow-Credentials").
+			ValueEqual("Access-Control-Allow-Methods",
+				[]string{"GET, PUT, POST, DELETE, PATCH, OPTIONS"}).
+			ValueEqual("Access-Control-Allow-Headers",
+				[]string{"DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"}).
+			ValueEqual("Access-Control-Max-Age", []string{"1728000"})
 	})
 
 	ginkgo.It("should allow origin for cors", func() {
@@ -128,15 +171,27 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
-			Headers().ContainsKey("Access-Control-Allow-Origin")
+			Status(http.StatusOK).
+			Headers().
+			ValueEqual("Access-Control-Allow-Origin", []string{origin}).
+			ValueEqual("Access-Control-Allow-Credentials", []string{"true"}).
+			ValueEqual("Access-Control-Allow-Methods",
+				[]string{"GET, PUT, POST, DELETE, PATCH, OPTIONS"}).
+			ValueEqual("Access-Control-Allow-Headers",
+				[]string{"DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"}).
+			ValueEqual("Access-Control-Max-Age", []string{"1728000"})
 
 		f.HTTPTestClient().
 			GET("/").
 			WithHeader("Host", host).
-			WithHeader("Origin", origin).
 			Expect().
-			Status(http.StatusOK).Headers().
-			ValueEqual("Access-Control-Allow-Origin", []string{origin})
+			Status(http.StatusOK).
+			Headers().
+			NotContainsKey("Access-Control-Allow-Origin").
+			NotContainsKey("Access-Control-Allow-Credentials").
+			NotContainsKey("Access-Control-Allow-Methods").
+			NotContainsKey("Access-Control-Allow-Headers").
+			NotContainsKey("Access-Control-Max-Age")
 	})
 
 	ginkgo.It("should allow headers for cors", func() {
@@ -149,10 +204,23 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, "more_set_headers 'Access-Control-Allow-Headers: DNT, User-Agent';")
-			})
+		f.WaitForNginxServer(host, func(server string) bool {
+			return strings.Contains(server, "set $cors_allow_headers 'DNT, User-Agent';")
+		})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Headers().
+			ValueEqual("Access-Control-Allow-Origin", []string{"*"}).
+			ValueEqual("Access-Control-Allow-Credentials", []string{"true"}).
+			ValueEqual("Access-Control-Allow-Methods",
+				[]string{"GET, PUT, POST, DELETE, PATCH, OPTIONS"}).
+			ValueEqual("Access-Control-Allow-Headers",
+				[]string{"DNT, User-Agent"}).
+			ValueEqual("Access-Control-Max-Age", []string{"1728000"})
 	})
 
 	ginkgo.It("should expose headers for cors", func() {
@@ -165,10 +233,24 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
 		f.EnsureIngress(ing)
 
-		f.WaitForNginxServer(host,
-			func(server string) bool {
-				return strings.Contains(server, "more_set_headers 'Access-Control-Expose-Headers: X-CustomResponseHeader, X-CustomSecondHeader';")
-			})
+		f.WaitForNginxServer(host, func(server string) bool {
+			return strings.Contains(server, "set $cors_expose_headers 'X-CustomResponseHeader, X-CustomSecondHeader';")
+		})
+
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK).
+			Headers().
+			ValueEqual("Access-Control-Allow-Origin", []string{"*"}).
+			ValueEqual("Access-Control-Allow-Credentials", []string{"true"}).
+			ValueEqual("Access-Control-Allow-Methods",
+				[]string{"GET, PUT, POST, DELETE, PATCH, OPTIONS"}).
+			ValueEqual("Access-Control-Allow-Headers",
+				[]string{"DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"}).
+			ValueEqual("Access-Control-Expose-Headers", []string{"X-CustomResponseHeader, X-CustomSecondHeader"}).
+			ValueEqual("Access-Control-Max-Age", []string{"1728000"})
 	})
 
 	ginkgo.It("should allow - single origin for multiple cors values", func() {
@@ -187,15 +269,15 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
-			Headers().ContainsKey("Access-Control-Allow-Origin")
-
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithHeader("Origin", origin).
-			Expect().
-			Status(http.StatusOK).Headers().
-			ValueEqual("Access-Control-Allow-Origin", []string{origin})
+			Status(http.StatusOK).
+			Headers().
+			ValueEqual("Access-Control-Allow-Origin", []string{origin}).
+			ValueEqual("Access-Control-Allow-Credentials", []string{"true"}).
+			ValueEqual("Access-Control-Allow-Methods",
+				[]string{"GET, PUT, POST, DELETE, PATCH, OPTIONS"}).
+			ValueEqual("Access-Control-Allow-Headers",
+				[]string{"DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"}).
+			ValueEqual("Access-Control-Max-Age", []string{"1728000"})
 	})
 
 	ginkgo.It("should not allow - single origin for multiple cors values", func() {
@@ -215,7 +297,12 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
-			Headers().NotContainsKey("Access-Control-Allow-Origin")
+			Headers().
+			NotContainsKey("Access-Control-Allow-Origin").
+			NotContainsKey("Access-Control-Allow-Credentials").
+			NotContainsKey("Access-Control-Allow-Methods").
+			NotContainsKey("Access-Control-Allow-Headers").
+			NotContainsKey("Access-Control-Max-Age")
 	})
 
 	ginkgo.It("should allow correct origins - single origin for multiple cors values", func() {
@@ -236,14 +323,12 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			WithHeader("Host", host).
 			WithHeader("Origin", badOrigin).
 			Expect().
-			Headers().NotContainsKey("Access-Control-Allow-Origin")
-
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithHeader("Origin", origin1).
-			Expect().
-			Headers().ContainsKey("Access-Control-Allow-Origin")
+			Headers().
+			NotContainsKey("Access-Control-Allow-Origin").
+			NotContainsKey("Access-Control-Allow-Credentials").
+			NotContainsKey("Access-Control-Allow-Methods").
+			NotContainsKey("Access-Control-Allow-Headers").
+			NotContainsKey("Access-Control-Max-Age")
 
 		f.HTTPTestClient().
 			GET("/").
@@ -251,14 +336,13 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			WithHeader("Origin", origin1).
 			Expect().
 			Status(http.StatusOK).Headers().
-			ValueEqual("Access-Control-Allow-Origin", []string{origin1})
-
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithHeader("Origin", origin2).
-			Expect().
-			Headers().ContainsKey("Access-Control-Allow-Origin")
+			ValueEqual("Access-Control-Allow-Origin", []string{origin1}).
+			ValueEqual("Access-Control-Allow-Credentials", []string{"true"}).
+			ValueEqual("Access-Control-Allow-Methods",
+				[]string{"GET, PUT, POST, DELETE, PATCH, OPTIONS"}).
+			ValueEqual("Access-Control-Allow-Headers",
+				[]string{"DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"}).
+			ValueEqual("Access-Control-Max-Age", []string{"1728000"})
 
 		f.HTTPTestClient().
 			GET("/").
@@ -266,10 +350,16 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			WithHeader("Origin", origin2).
 			Expect().
 			Status(http.StatusOK).Headers().
-			ValueEqual("Access-Control-Allow-Origin", []string{origin2})
+			ValueEqual("Access-Control-Allow-Origin", []string{origin2}).
+			ValueEqual("Access-Control-Allow-Credentials", []string{"true"}).
+			ValueEqual("Access-Control-Allow-Methods",
+				[]string{"GET, PUT, POST, DELETE, PATCH, OPTIONS"}).
+			ValueEqual("Access-Control-Allow-Headers",
+				[]string{"DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"}).
+			ValueEqual("Access-Control-Max-Age", []string{"1728000"})
 	})
 
-	ginkgo.It("should not break functionality", func() {
+	ginkgo.It("should allow wildcard origin", func() {
 		host := corsHost
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/enable-cors":       "true",
@@ -283,40 +373,18 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			GET("/").
 			WithHeader("Host", host).
 			Expect().
-			Headers().ContainsKey("Access-Control-Allow-Origin")
-
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			Expect().
-			Status(http.StatusOK).Headers().
-			ValueEqual("Access-Control-Allow-Origin", []string{"*"})
+			Status(http.StatusOK).
+			Headers().
+			ValueEqual("Access-Control-Allow-Origin", []string{"*"}).
+			ValueEqual("Access-Control-Allow-Credentials", []string{"true"}).
+			ValueEqual("Access-Control-Allow-Methods",
+				[]string{"GET, PUT, POST, DELETE, PATCH, OPTIONS"}).
+			ValueEqual("Access-Control-Allow-Headers",
+				[]string{"DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"}).
+			ValueEqual("Access-Control-Max-Age", []string{"1728000"})
 	})
 
-	ginkgo.It("should not break functionality - without `*`", func() {
-		host := corsHost
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/enable-cors": "true",
-		}
-
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
-
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			Expect().
-			Headers().ContainsKey("Access-Control-Allow-Origin")
-
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			Expect().
-			Status(http.StatusOK).Headers().
-			ValueEqual("Access-Control-Allow-Origin", []string{"*"})
-	})
-
-	ginkgo.It("should not break functionality with extra domain", func() {
+	ginkgo.It("should not break functionality with wildcard and extra domain", func() {
 		host := corsHost
 		annotations := map[string]string{
 			"nginx.ingress.kubernetes.io/enable-cors":       "true",
@@ -330,62 +398,15 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			GET("/").
 			WithHeader("Host", host).
 			Expect().
-			Headers().ContainsKey("Access-Control-Allow-Origin")
-
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			Expect().
-			Status(http.StatusOK).Headers().
-			ValueEqual("Access-Control-Allow-Origin", []string{"*"})
-	})
-
-	ginkgo.It("should not match", func() {
-		host := corsHost
-		origin := "https://fooxbar.com"
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/enable-cors":       "true",
-			"nginx.ingress.kubernetes.io/cors-allow-origin": "https://foo.bar.com",
-		}
-
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
-
-		// the client should still receive a response but browsers should block the request
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithHeader("Origin", origin).
-			Expect().
-			Headers().NotContainsKey("Access-Control-Allow-Origin")
-	})
-
-	ginkgo.It("should allow - single origin with required port", func() {
-		host := corsHost
-		origin := originHost
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/enable-cors":       "true",
-			"nginx.ingress.kubernetes.io/cors-allow-origin": "http://origin.cors.com:8080, http://origin.com:8080",
-		}
-
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
-
-		// the client should still receive a response but browsers should block the request
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithHeader("Origin", origin).
-			Expect().
-			Headers().ContainsKey("Access-Control-Allow-Origin")
-
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithHeader("Origin", origin).
-			Expect().
-			Status(http.StatusOK).Headers().
-			ValueEqual("Access-Control-Allow-Origin", []string{origin})
+			Status(http.StatusOK).
+			Headers().
+			ValueEqual("Access-Control-Allow-Origin", []string{"*"}).
+			ValueEqual("Access-Control-Allow-Credentials", []string{"true"}).
+			ValueEqual("Access-Control-Allow-Methods",
+				[]string{"GET, PUT, POST, DELETE, PATCH, OPTIONS"}).
+			ValueEqual("Access-Control-Allow-Headers",
+				[]string{"DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"}).
+			ValueEqual("Access-Control-Max-Age", []string{"1728000"})
 	})
 
 	ginkgo.It("should not allow - single origin with port and origin without port", func() {
@@ -404,7 +425,12 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
-			Headers().NotContainsKey("Access-Control-Allow-Origin")
+			Headers().
+			NotContainsKey("Access-Control-Allow-Origin").
+			NotContainsKey("Access-Control-Allow-Credentials").
+			NotContainsKey("Access-Control-Allow-Methods").
+			NotContainsKey("Access-Control-Allow-Headers").
+			NotContainsKey("Access-Control-Max-Age")
 	})
 
 	ginkgo.It("should not allow - single origin without port and origin with required port", func() {
@@ -424,7 +450,12 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
-			Headers().NotContainsKey("Access-Control-Allow-Origin")
+			Headers().
+			NotContainsKey("Access-Control-Allow-Origin").
+			NotContainsKey("Access-Control-Allow-Credentials").
+			NotContainsKey("Access-Control-Allow-Methods").
+			NotContainsKey("Access-Control-Allow-Headers").
+			NotContainsKey("Access-Control-Max-Age")
 	})
 
 	ginkgo.It("should allow - matching origin with wildcard origin (2 subdomains)", func() {
@@ -444,22 +475,14 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
-			Headers().ContainsKey("Access-Control-Allow-Origin")
-
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithHeader("Origin", origin).
-			Expect().
 			Status(http.StatusOK).Headers().
-			ValueEqual("Access-Control-Allow-Origin", []string{origin})
-
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithHeader("Origin", origin2).
-			Expect().
-			Headers().ContainsKey("Access-Control-Allow-Origin")
+			ValueEqual("Access-Control-Allow-Origin", []string{origin}).
+			ValueEqual("Access-Control-Allow-Credentials", []string{"true"}).
+			ValueEqual("Access-Control-Allow-Methods",
+				[]string{"GET, PUT, POST, DELETE, PATCH, OPTIONS"}).
+			ValueEqual("Access-Control-Allow-Headers",
+				[]string{"DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"}).
+			ValueEqual("Access-Control-Max-Age", []string{"1728000"})
 
 		f.HTTPTestClient().
 			GET("/").
@@ -467,7 +490,13 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			WithHeader("Origin", origin2).
 			Expect().
 			Status(http.StatusOK).Headers().
-			ValueEqual("Access-Control-Allow-Origin", []string{origin2})
+			ValueEqual("Access-Control-Allow-Origin", []string{origin2}).
+			ValueEqual("Access-Control-Allow-Credentials", []string{"true"}).
+			ValueEqual("Access-Control-Allow-Methods",
+				[]string{"GET, PUT, POST, DELETE, PATCH, OPTIONS"}).
+			ValueEqual("Access-Control-Allow-Headers",
+				[]string{"DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"}).
+			ValueEqual("Access-Control-Max-Age", []string{"1728000"})
 	})
 
 	ginkgo.It("should not allow - unmatching origin with wildcard origin (2 subdomains)", func() {
@@ -487,187 +516,12 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			WithHeader("Host", host).
 			WithHeader("Origin", origin).
 			Expect().
-			Headers().NotContainsKey("Access-Control-Allow-Origin")
-	})
-
-	ginkgo.It("should allow - matching origin+port with wildcard origin", func() {
-		host := corsHost
-		origin := "http://abc.origin.com:8080"
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/enable-cors":       "true",
-			"nginx.ingress.kubernetes.io/cors-allow-origin": "http://origin.cors.com:8080, http://*.origin.com:8080",
-		}
-
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
-
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithHeader("Origin", origin).
-			Expect().
-			Headers().ContainsKey("Access-Control-Allow-Origin")
-
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithHeader("Origin", origin).
-			Expect().
-			Status(http.StatusOK).Headers().
-			ValueEqual("Access-Control-Allow-Origin", []string{origin})
-	})
-
-	ginkgo.It("should not allow - portless origin with wildcard origin", func() {
-		host := corsHost
-		origin := "http://abc.origin.com"
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/enable-cors":       "true",
-			"nginx.ingress.kubernetes.io/cors-allow-origin": "http://origin.cors.com:8080, http://*.origin.com:8080",
-		}
-
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
-
-		// the client should still receive a response but browsers should block the request
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithHeader("Origin", origin).
-			Expect().
-			Headers().NotContainsKey("Access-Control-Allow-Origin")
-	})
-
-	ginkgo.It("should allow correct origins - missing subdomain + origin with wildcard origin and correct origin", func() {
-		host := corsHost
-		badOrigin := originHost
-		origin := "http://bar.origin.com:8080"
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/enable-cors":       "true",
-			"nginx.ingress.kubernetes.io/cors-allow-origin": "http://origin.cors.com:8080, http://*.origin.com:8080",
-		}
-
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
-
-		// the client should still receive a response but browsers should block the request
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithHeader("Origin", badOrigin).
-			Expect().
-			Headers().NotContainsKey("Access-Control-Allow-Origin")
-
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithHeader("Origin", origin).
-			Expect().
-			Headers().ContainsKey("Access-Control-Allow-Origin")
-
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithHeader("Origin", origin).
-			Expect().
-			Status(http.StatusOK).Headers().
-			ValueEqual("Access-Control-Allow-Origin", []string{origin})
-	})
-
-	ginkgo.It("should allow - missing origins (should allow all origins)", func() {
-		host := corsHost
-		origin := "http://origin.com"
-		origin2 := "http://book.origin.com"
-		origin3 := "test.origin.com"
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/enable-cors":       "true",
-			"nginx.ingress.kubernetes.io/cors-allow-origin": "      ",
-		}
-
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
-
-		// the client should still receive a response but browsers should block the request
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithHeader("Origin", origin).
-			Expect().
-			Headers().ContainsKey("Access-Control-Allow-Origin")
-
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithHeader("Origin", origin).
-			Expect().
-			Status(http.StatusOK).Headers().
-			ValueEqual("Access-Control-Allow-Origin", []string{"*"})
-
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithHeader("Origin", origin2).
-			Expect().
-			Headers().ContainsKey("Access-Control-Allow-Origin")
-
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithHeader("Origin", origin2).
-			Expect().
-			Status(http.StatusOK).Headers().
-			ValueEqual("Access-Control-Allow-Origin", []string{"*"})
-
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithHeader("Origin", origin3).
-			Expect().
-			Headers().ContainsKey("Access-Control-Allow-Origin")
-
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithHeader("Origin", origin3).
-			Expect().
-			Status(http.StatusOK).Headers().
-			ValueEqual("Access-Control-Allow-Origin", []string{"*"})
-	})
-
-	ginkgo.It("should allow correct origin but not others - cors allow origin annotations contain trailing comma", func() {
-		host := corsHost
-		annotations := map[string]string{
-			"nginx.ingress.kubernetes.io/enable-cors":       "true",
-			"nginx.ingress.kubernetes.io/cors-allow-origin": "https://origin-123.cors.com:8080,   ,https://origin-321.cors.com:8080,",
-		}
-
-		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
-		f.EnsureIngress(ing)
-
-		origin1 := "https://origin-123.cors.com:8080"
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithHeader("Origin", origin1).
-			Expect().
-			Headers().ContainsKey("Access-Control-Allow-Origin")
-
-		origin2 := "https://origin-321.cors.com:8080"
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithHeader("Origin", origin2).
-			Expect().
-			Status(http.StatusOK).Headers().
-			ValueEqual("Access-Control-Allow-Origin", []string{origin2})
-
-		origin3 := "https://unknown.cors.com:8080"
-		f.HTTPTestClient().
-			GET("/").
-			WithHeader("Host", host).
-			WithHeader("Origin", origin3).
-			Expect().
 			Headers().
-			NotContainsKey("Access-Control-Allow-Origin")
+			NotContainsKey("Access-Control-Allow-Origin").
+			NotContainsKey("Access-Control-Allow-Credentials").
+			NotContainsKey("Access-Control-Allow-Methods").
+			NotContainsKey("Access-Control-Allow-Headers").
+			NotContainsKey("Access-Control-Max-Age")
 	})
 
 	ginkgo.It("should allow - origins with non-http[s] protocols", func() {
@@ -688,7 +542,13 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			WithHeader("Origin", origin).
 			Expect().
 			Status(http.StatusOK).Headers().
-			ValueEqual("Access-Control-Allow-Origin", []string{"test://localhost"})
+			ValueEqual("Access-Control-Allow-Origin", []string{origin}).
+			ValueEqual("Access-Control-Allow-Credentials", []string{"true"}).
+			ValueEqual("Access-Control-Allow-Methods",
+				[]string{"GET, PUT, POST, DELETE, PATCH, OPTIONS"}).
+			ValueEqual("Access-Control-Allow-Headers",
+				[]string{"DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"}).
+			ValueEqual("Access-Control-Max-Age", []string{"1728000"})
 
 		f.HTTPTestClient().
 			GET("/").
@@ -696,6 +556,12 @@ var _ = framework.DescribeAnnotation("cors-*", func() {
 			WithHeader("Origin", origin2).
 			Expect().
 			Status(http.StatusOK).Headers().
-			ValueEqual("Access-Control-Allow-Origin", []string{"tauri://localhost:3000"})
+			ValueEqual("Access-Control-Allow-Origin", []string{origin2}).
+			ValueEqual("Access-Control-Allow-Credentials", []string{"true"}).
+			ValueEqual("Access-Control-Allow-Methods",
+				[]string{"GET, PUT, POST, DELETE, PATCH, OPTIONS"}).
+			ValueEqual("Access-Control-Allow-Headers",
+				[]string{"DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"}).
+			ValueEqual("Access-Control-Max-Age", []string{"1728000"})
 	})
 })
