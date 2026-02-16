@@ -126,6 +126,13 @@ type Backend struct {
 	// This is useful if doing SSL offloading outside of cluster eg AWS ELB
 	ForceSSLRedirect bool `json:"force-ssl-redirect"`
 
+	// Enables or disables forbidden errors (403) to HTTP
+	SSLForbidHTTP bool `json:"ssl-forbid-http"`
+
+	// Enables or disables forbidden errors (403) to HTTP even without TLS cert
+	// This is useful if doing SSL offloading outside of cluster eg AWS ELB
+	ForceSSLForbidHTTP bool `json:"force-ssl-forbid-http"`
+
 	// Enables or disables the specification of port in redirects
 	// Default: false
 	UsePortInRedirects bool `json:"use-port-in-redirects"`

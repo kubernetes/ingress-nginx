@@ -183,6 +183,8 @@ The following table shows a configuration option's name, type, and the default v
 | [proxy-request-buffering](#proxy-request-buffering)                             | string       | "on"                                                                                                                                                                                                                                                                                                                                                         |                                                                                     |
 | [ssl-redirect](#ssl-redirect)                                                   | bool         | "true"                                                                                                                                                                                                                                                                                                                                                       |                                                                                     |
 | [force-ssl-redirect](#force-ssl-redirect)                                       | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
+| [ssl-forbid-http](#ssl-forbid-http)                                             | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
+| [force-ssl-forbid-http](#force-ssl-forbid-http)                                 | bool         | "false"                                                                                                                                                                                                                                                                                                                                                      |                                                                                     |
 | [denylist-source-range](#denylist-source-range)                                 | []string     | []string{}                                                                                                                                                                                                                                                                                                                                                   |                                                                                     |
 | [whitelist-source-range](#whitelist-source-range)                               | []string     | []string{}                                                                                                                                                                                                                                                                                                                                                   |                                                                                     |
 | [skip-access-log-urls](#skip-access-log-urls)                                   | []string     | []string{}                                                                                                                                                                                                                                                                                                                                                   |                                                                                     |
@@ -1128,6 +1130,18 @@ _**default:**_ "true"
 
 ## force-ssl-redirect
 Sets the global value of redirects (308) to HTTPS if the server has a default TLS certificate (defined in extra-args).
+_**default:**_ "false"
+
+## ssl-forbid-http
+
+Sets the global value of 403 Forbidden errors to HTTP if the server has a TLS certificate (defined in an Ingress rule).
+
+_**default:**_ "false"
+
+## force-ssl-forbid-http
+
+Sets the global value of 403 Forbidden errors to HTTP if the server has a default TLS certificate (defined in extra-args).
+
 _**default:**_ "false"
 
 ## denylist-source-range
