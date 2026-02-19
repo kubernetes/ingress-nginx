@@ -19,6 +19,8 @@ package nginx
 import (
 	"archive/tar"
 	"compress/gzip"
+	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -55,12 +57,23 @@ var MaxmindRetriesTimeout = time.Second * 0
 // minimumRetriesCount minimum value of the MaxmindRetriesCount parameter. If MaxmindRetriesCount less than minimumRetriesCount, it will be set to minimumRetriesCount
 const minimumRetriesCount = 1
 
+const maxmindRequestTimeout = 30 * time.Second
+
 const (
 	geoIPPath   = "/etc/ingress-controller/geoip"
 	dbExtension = ".mmdb"
 
 	maxmindURL = "https://download.maxmind.com/app/geoip_download?license_key=%v&edition_id=%v&suffix=tar.gz"
 )
+
+type httpStatusError struct {
+	StatusCode int
+	Status     string
+}
+
+func (e *httpStatusError) Error() string {
+	return fmt.Sprintf("HTTP status %s", e.Status)
+}
 
 // GeoLite2DBExists checks if the required databases for
 // the GeoIP2 NGINX module are present in the filesystem
@@ -115,6 +128,20 @@ func DownloadGeoLite2DB(attempts int, period time.Duration) error {
 			return true, nil
 		}
 
+		if errors.Is(dlError, context.DeadlineExceeded) {
+			retries++
+			klog.InfoS("download failed on attempt "+fmt.Sprint(retries),
+				"reason", "context deadline exceeded")
+			return false, nil
+		}
+
+		if ne, ok := dlError.(net.Error); ok && ne.Timeout() {
+			retries++
+			klog.InfoS("download failed on attempt "+fmt.Sprint(retries),
+				"reason", "timeout")
+			return false, nil
+		}
+
 		if e, ok := dlError.(*url.Error); ok {
 			if e, ok := e.Err.(*net.OpError); ok {
 				if e, ok := e.Err.(*os.SyscallError); ok {
@@ -125,6 +152,14 @@ func DownloadGeoLite2DB(attempts int, period time.Duration) error {
 					}
 				}
 			}
+		}
+
+		if e, ok := dlError.(*httpStatusError); ok {
+			retries++
+			klog.InfoS("download failed on attempt "+fmt.Sprint(retries),
+				"statusCode", e.StatusCode,
+				"status", e.Status)
+			return false, nil
 		}
 		return true, nil
 	})
@@ -140,7 +175,10 @@ func createURL(mirror, licenseKey, dbName string) string {
 
 func downloadDatabase(dbName string) error {
 	newURL := createURL(MaxmindMirror, MaxmindLicenseKey, dbName)
-	req, err := http.NewRequest(http.MethodGet, newURL, http.NoBody)
+	ctx, cancel := context.WithTimeout(context.Background(), maxmindRequestTimeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, newURL, http.NoBody)
 	if err != nil {
 		return err
 	}
@@ -153,7 +191,10 @@ func downloadDatabase(dbName string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("HTTP status %v", resp.Status)
+		return &httpStatusError{
+			StatusCode: resp.StatusCode,
+			Status:     resp.Status,
+		}
 	}
 
 	archive, err := gzip.NewReader(resp.Body)
