@@ -79,7 +79,7 @@ func TestIngressCorsConfigValid(t *testing.T) {
 
 	// Valid
 	data[parser.GetAnnotationWithPrefix(corsEnableAnnotation)] = enableAnnotation
-	data[parser.GetAnnotationWithPrefix(corsAllowHeadersAnnotation)] = "DNT,X-CustomHeader, Keep-Alive,User-Agent"
+	data[parser.GetAnnotationWithPrefix(corsAllowHeadersAnnotation)] = "*, DNT,X-CustomHeader, Keep-Alive,User-Agent"
 	data[parser.GetAnnotationWithPrefix(corsAllowCredentialsAnnotation)] = "false"
 	data[parser.GetAnnotationWithPrefix(corsAllowMethodsAnnotation)] = "GET, PATCH"
 	data[parser.GetAnnotationWithPrefix(corsAllowOriginAnnotation)] = "null, https://origin123.test.com:4443"
@@ -105,7 +105,7 @@ func TestIngressCorsConfigValid(t *testing.T) {
 		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix(corsAllowCredentialsAnnotation)], nginxCors.CorsAllowCredentials)
 	}
 
-	if nginxCors.CorsAllowHeaders != "DNT,X-CustomHeader, Keep-Alive,User-Agent" {
+	if nginxCors.CorsAllowHeaders != "*, DNT,X-CustomHeader, Keep-Alive,User-Agent" {
 		t.Errorf("expected %v but returned %v", data[parser.GetAnnotationWithPrefix(corsAllowHeadersAnnotation)], nginxCors.CorsAllowHeaders)
 	}
 
