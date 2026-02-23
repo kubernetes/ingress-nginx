@@ -280,6 +280,56 @@ func (n *NGINXController) syncIngress(interface{}) error {
 	return nil
 }
 
+// syncEndpoints collects and update only Dynamic configs
+// Triggered for Endpoints changes
+func (n *NGINXController) syncEndpoints(interface{}) error {
+	n.syncRateLimiter.Accept()
+
+	if n.syncEndpointsQueue.IsShuttingDown() {
+		return nil
+	}
+
+	ings := n.store.ListIngresses()
+
+	_, _, pcfg := n.getConfiguration(ings)
+
+	if n.runningConfig.Equal(pcfg) {
+		klog.V(3).Infof("No configuration change detected, skipping backend reload")
+		return nil
+	}
+
+	retry := wait.Backoff{
+		Steps:    1 + n.cfg.DynamicConfigurationRetries,
+		Duration: time.Second,
+		Factor:   1.3,
+		Jitter:   0.1,
+	}
+
+	retriesRemaining := retry.Steps
+	err := wait.ExponentialBackoff(retry, func() (bool, error) {
+		err := n.configureDynamically(pcfg)
+		if err == nil {
+			klog.V(2).Infof("Endpoints reconfiguration succeeded.")
+			return true, nil
+		}
+		retriesRemaining--
+		if retriesRemaining > 0 {
+			klog.Warningf("Endpoints reconfiguration failed (retrying; %d retries left): %v", retriesRemaining, err)
+			return false, nil
+		}
+		klog.Warningf("Endpoints reconfiguration failed: %v", err)
+		return false, err
+	})
+	if err != nil {
+		klog.Errorf("Unexpected failure reconfiguring NGINX Endpoints:\n%v", err)
+		return err
+	}
+
+	n.runningConfig = pcfg
+
+	return nil
+}
+
 // GetWarnings returns a list of warnings an Ingress gets when being created.
 // The warnings are going to be used in an admission webhook, and they represent
 // a list of messages that users need to be aware (like deprecation notices)

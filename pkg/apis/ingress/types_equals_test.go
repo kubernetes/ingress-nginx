@@ -129,7 +129,7 @@ func TestL4ServiceElementsMatch(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		result := compareL4Service(testCase.listA, testCase.listB)
+		result := CompareL4Service(testCase.listA, testCase.listB)
 		if result != testCase.expected {
 			t.Errorf("expected %v but returned %v (%v - %v)", testCase.expected, result, testCase.listA, testCase.listB)
 		}

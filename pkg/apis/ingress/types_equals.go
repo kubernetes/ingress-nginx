@@ -49,12 +49,12 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 		}
 	}
 
-	match = compareL4Service(c1.TCPEndpoints, c2.TCPEndpoints)
+	match = CompareL4Service(c1.TCPEndpoints, c2.TCPEndpoints)
 	if !match {
 		return false
 	}
 
-	match = compareL4Service(c1.UDPEndpoints, c2.UDPEndpoints)
+	match = CompareL4Service(c1.UDPEndpoints, c2.UDPEndpoints)
 	if !match {
 		return false
 	}
@@ -656,6 +656,6 @@ var compareL4ServiceFunc = func(e1, e2 interface{}) bool {
 	return (&b1).Equal(&b2)
 }
 
-func compareL4Service(a, b []L4Service) bool {
+func CompareL4Service(a, b []L4Service) bool {
 	return sets.Compare(a, b, compareL4ServiceFunc)
 }
