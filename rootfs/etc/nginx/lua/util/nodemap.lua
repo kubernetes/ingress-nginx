@@ -122,4 +122,13 @@ function _M.random_except(self, ignore_nodes)
   return get_random_node(valid_nodes)
 end
 
+--- find the key of a given endpoint
+-- @tparam string endpoint The endpoint.
+-- @treturn string The key for endpoint or nil.
+function _M.key_from_endpoint(self, endpoint)
+  for k, v in pairs(self.map) do
+    if v==endpoint then return k end
+  end
+end
+
 return _M
