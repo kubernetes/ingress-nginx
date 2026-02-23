@@ -45,6 +45,6 @@ jobs:
 
       - name: Update new version in krew-index
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
-        uses: rajatjindal/krew-release-bot@3d9faef30a82761d610544f62afddca00993eef9 # v0.0.47
+        uses: rajatjindal/krew-release-bot@a7e82ae57ca41a16fca2691ef00e8a8d35bc77d4 # v0.0.50
         with:
           krew_template_file: cmd/plugin/krew.yaml
