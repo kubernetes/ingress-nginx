@@ -1066,7 +1066,7 @@ func (info *ingressInformation) Equal(other *ingressInformation) bool {
 	return true
 }
 
-func getIngressInformation(i, h, p interface{}) *ingressInformation {
+func getIngressInformation(i, h, p, t interface{}) *ingressInformation {
 	ing, ok := i.(*ingress.Ingress)
 	if !ok {
 		klog.Errorf("expected an '*ingress.Ingress' type but %T was returned", i)
@@ -1083,6 +1083,11 @@ func getIngressInformation(i, h, p interface{}) *ingressInformation {
 	if !ok {
 		klog.Errorf("expected a 'string' type but %T was returned", p)
 		return &ingressInformation{}
+	}
+
+	ingressPathType, ok := t.(*networkingv1.PathType)
+	if !ok {
+		klog.Errorf("expected a '*v1.PathType' type but %T was returned", t)
 	}
 
 	if ing == nil {
@@ -1130,6 +1135,10 @@ func getIngressInformation(i, h, p interface{}) *ingressInformation {
 
 		for _, rPath := range rule.HTTP.Paths {
 			if ingressPath != rPath.Path {
+				continue
+			}
+
+			if *ingressPathType != *rPath.PathType {
 				continue
 			}
 
