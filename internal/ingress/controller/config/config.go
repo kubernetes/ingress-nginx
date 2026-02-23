@@ -563,6 +563,11 @@ type Configuration struct {
 	// Sets whether to enable the real ip module
 	EnableRealIP bool `json:"enable-real-ip"`
 
+	// Sets whether to use recursive search in the real ip module
+	// https://nginx.org/en/docs/http/ngx_http_realip_module.html#real_ip_recursive
+	// Default: true
+	EnableRealIPRecursive bool `json:"enable-real-ip-recursive"`
+
 	// Sets the header field for identifying the originating IP address of a client
 	// Default is X-Forwarded-For
 	ForwardedForHeader string `json:"forwarded-for-header,omitempty"`
@@ -787,6 +792,7 @@ func NewDefault() Configuration {
 		ErrorLogLevel:                    errorLevel,
 		UseForwardedHeaders:              false,
 		EnableRealIP:                     false,
+		EnableRealIPRecursive:            false,
 		ForwardedForHeader:               "X-Forwarded-For",
 		ForwardedForProxyProtocolHeader:  "X-Forwarded-For-Proxy-Protocol",
 		ForwardedHostHeader:              "X-Forwarded-Host",
