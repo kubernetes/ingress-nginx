@@ -25,15 +25,21 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-func newEndpointSliceLister(t *testing.T) *EndpointSliceLister {
+func newEndpointSliceLister(t *testing.T) (*EndpointSliceLister, cache.Indexer) {
 	t.Helper()
 
-	return &EndpointSliceLister{Store: cache.NewStore(cache.MetaNamespaceKeyFunc)}
+	store := cache.NewStore(cache.MetaNamespaceKeyFunc)
+	indexer := cache.NewIndexer(cache.MetaNamespaceKeyFunc, newEPSsIndexer())
+
+	return &EndpointSliceLister{
+		Store:              store,
+		endpointSliceIndex: getEPSsForServiceFuncFromIndexer(indexer),
+	}, indexer
 }
 
 func TestEndpointSliceLister(t *testing.T) {
 	t.Run("the key does not exist", func(t *testing.T) {
-		el := newEndpointSliceLister(t)
+		el, _ := newEndpointSliceLister(t)
 
 		key := "namespace/svcname"
 		_, err := el.MatchByKey(key)
@@ -47,58 +53,60 @@ func TestEndpointSliceLister(t *testing.T) {
 		}
 	})
 	t.Run("the key exists", func(t *testing.T) {
-		el := newEndpointSliceLister(t)
+		el, indexer := newEndpointSliceLister(t)
 
 		key := "namespace/svcname"
-		endpointSlice := &discoveryv1.EndpointSlice{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: "namespace",
-				Name:      "anothername-foo",
-				Labels: map[string]string{
-					discoveryv1.LabelServiceName: "svcname",
+		epss := []*discoveryv1.EndpointSlice{
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "namespace",
+					Name:      "anothername-foo",
+					Labels: map[string]string{
+						discoveryv1.LabelServiceName: "svcname",
+					},
+				},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "namespace",
+					Name:      "svcname-bar",
+					Labels: map[string]string{
+						discoveryv1.LabelServiceName: "othersvc",
+					},
+				},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "namespace",
+					Name:      "svcname-buz",
+					Labels: map[string]string{
+						discoveryv1.LabelServiceName: "svcname2",
+					},
 				},
 			},
 		}
-		if err := el.Add(endpointSlice); err != nil {
-			t.Errorf("unexpected error %v", err)
+		for _, eps := range epss {
+			if err := el.Add(eps); err != nil {
+				t.Errorf("unexpected error %v", err)
+			}
+			if err := indexer.Add(eps); err != nil {
+				t.Errorf("unexpected error %v", err)
+			}
 		}
-		endpointSlice = &discoveryv1.EndpointSlice{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: "namespace",
-				Name:      "svcname-bar",
-				Labels: map[string]string{
-					discoveryv1.LabelServiceName: "othersvc",
-				},
-			},
-		}
-		if err := el.Add(endpointSlice); err != nil {
-			t.Errorf("unexpected error %v", err)
-		}
-		endpointSlice = &discoveryv1.EndpointSlice{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: "namespace",
-				Name:      "svcname-buz",
-				Labels: map[string]string{
-					discoveryv1.LabelServiceName: "svcname",
-				},
-			},
-		}
-		if err := el.Add(endpointSlice); err != nil {
-			t.Errorf("unexpected error %v", err)
-		}
+
 		eps, err := el.MatchByKey(key)
 		if err != nil {
 			t.Errorf("unexpected error %v", err)
 		}
 		if err == nil && len(eps) != 1 {
-			t.Errorf("expected one slice %v, error, got %d slices", endpointSlice, len(eps))
+			t.Errorf("expected one slice %v, error, got %d slices, keys stored in indexer: %v, eps returned by storer: %v", epss[0], len(eps), indexer.ListKeys(), eps)
 		}
-		if len(eps) > 0 && eps[0].GetName() != endpointSlice.GetName() {
-			t.Errorf("expected %v, error, got %v", endpointSlice.GetName(), eps[0].GetName())
+		if len(eps) > 0 && eps[0].GetName() != epss[0].GetName() {
+			t.Errorf("expected %v, error, got %v", epss[0].GetName(), eps[0].GetName())
 		}
 	})
 	t.Run("svc long name", func(t *testing.T) {
-		el := newEndpointSliceLister(t)
+		el, indexer := newEndpointSliceLister(t)
 		ns := "namespace"
 		ns2 := "another-ns"
 		svcName := "test-backend-http-test-http-test-http-test-http-test-http-truncated"
@@ -116,6 +124,9 @@ func TestEndpointSliceLister(t *testing.T) {
 		if err := el.Add(endpointSlice); err != nil {
 			t.Errorf("unexpected error %v", err)
 		}
+		if err := indexer.Add(endpointSlice); err != nil {
+			t.Errorf("unexpected error %v", err)
+		}
 		endpointSlice2 := &discoveryv1.EndpointSlice{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: ns2,
@@ -126,6 +137,9 @@ func TestEndpointSliceLister(t *testing.T) {
 			},
 		}
 		if err := el.Add(endpointSlice2); err != nil {
+			t.Errorf("unexpected error %v", err)
+		}
+		if err := indexer.Add(endpointSlice); err != nil {
 			t.Errorf("unexpected error %v", err)
 		}
 		eps, err := el.MatchByKey(key)
