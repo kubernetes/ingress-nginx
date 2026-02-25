@@ -706,7 +706,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 	}
 
 	if klog.V(2).Enabled() {
-		src, err := os.ReadFile(cfgPath)
+		src, err := os.ReadFile(cfgPath())
 		if err != nil {
 			return err
 		}
@@ -721,7 +721,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 				return err
 			}
 			//nolint:gosec //Ignore G204 error
-			diffOutput, err := exec.Command("diff", "-I", "'# Configuration.*'", "-u", cfgPath, tmpfile.Name()).CombinedOutput()
+			diffOutput, err := exec.Command("diff", "-I", "'# Configuration.*'", "-u", cfgPath(), tmpfile.Name()).CombinedOutput()
 			if err != nil {
 				if exitError, ok := err.(*exec.ExitError); ok {
 					ws, ok := exitError.Sys().(syscall.WaitStatus)
@@ -742,7 +742,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		}
 	}
 
-	err = os.WriteFile(cfgPath, content, file.ReadWriteByUser)
+	err = os.WriteFile(cfgPath(), content, file.ReadWriteByUser)
 	if err != nil {
 		return err
 	}
@@ -1111,7 +1111,7 @@ func (n *NGINXController) createLuaConfig(cfg *ngx_config.Configuration) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(luaCfgPath, jsonCfg, file.ReadWriteByUser)
+	return os.WriteFile(luaCfgPath(), jsonCfg, file.ReadWriteByUser)
 }
 
 func cleanTempNginxCfg() error {
