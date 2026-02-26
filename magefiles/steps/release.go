@@ -27,8 +27,8 @@ import (
 	"github.com/google/go-github/v48/github"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
+	"go.yaml.in/yaml/v3"
 	"golang.org/x/oauth2"
-	"gopkg.in/yaml.v3"
 
 	utils "k8s.io/ingress-nginx/magefiles/utils"
 )
