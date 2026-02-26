@@ -78,7 +78,6 @@ func (acs *AdmissionControllerServer) ServeHTTP(w http.ResponseWriter, req *http
 		w.WriteHeader(http.StatusRequestEntityTooLarge)
 		return
 	}
-	klog.ErrorS(nil, "Admission review request received", "body", len(data))
 
 	codec := json.NewSerializerWithOptions(json.DefaultMetaFactory, scheme, scheme, json.SerializerOptions{
 		Pretty: true,
