@@ -19,6 +19,7 @@ package controller
 import (
 	"crypto/x509"
 	"net"
+	"slices"
 	"strings"
 	"unicode/utf8"
 )
@@ -40,10 +41,8 @@ func verifyHostname(h string, c *x509.Certificate) error {
 	if ip := net.ParseIP(candidateIP); ip != nil {
 		// We only match IP addresses against IP SANs.
 		// https://tools.ietf.org/html/rfc6125#appendix-B.2
-		for _, candidate := range c.IPAddresses {
-			if ip.Equal(candidate) {
-				return nil
-			}
+		if slices.ContainsFunc(c.IPAddresses, ip.Equal) {
+			return nil
 		}
 		return x509.HostnameError{Certificate: c, Host: candidateIP}
 	}

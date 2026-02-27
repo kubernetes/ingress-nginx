@@ -18,6 +18,7 @@ package ingress
 
 import (
 	"k8s.io/ingress-nginx/pkg/util/sets"
+	"slices"
 )
 
 // Equal tests for equality between two Configuration types
@@ -64,13 +65,7 @@ func (c1 *Configuration) Equal(c2 *Configuration) bool {
 	}
 
 	for _, ptb1 := range c1.PassthroughBackends {
-		found := false
-		for _, ptb2 := range c2.PassthroughBackends {
-			if ptb1.Equal(ptb2) {
-				found = true
-				break
-			}
-		}
+		found := slices.ContainsFunc(c2.PassthroughBackends, ptb1.Equal)
 		if !found {
 			return false
 		}
