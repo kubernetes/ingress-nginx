@@ -23,13 +23,16 @@ import (
 	"strings"
 
 	networking "k8s.io/api/networking/v1"
+	"k8s.io/klog/v2"
 
 	"k8s.io/ingress-nginx/internal/ingress/annotations/parser"
+	"k8s.io/ingress-nginx/internal/ingress/errors"
 	"k8s.io/ingress-nginx/internal/ingress/resolver"
 )
 
 const (
-	customHTTPErrorsAnnotation = "custom-http-errors"
+	customHTTPErrorsAnnotation        = "custom-http-errors"
+	customHTTPErrorsEnabledAnnotation = "enable-custom-http-errors"
 )
 
 // We accept anything between 400 and 599, on a comma separated.
@@ -38,13 +41,20 @@ var arrayOfHTTPErrors = regexp.MustCompile(`^(?:[4,5]\d{2},?)*$`)
 var customHTTPErrorsAnnotations = parser.Annotation{
 	Group: "backend",
 	Annotations: parser.AnnotationFields{
+		customHTTPErrorsEnabledAnnotation: {
+			Validator:     parser.ValidateBool,
+			Scope:         parser.AnnotationScopeLocation,
+			Risk:          parser.AnnotationRiskLow,
+			Documentation: `Indicates if the custom http errors feature should be enabled or not for this Ingress rule. The default value is "true".`,
+		},
+
 		customHTTPErrorsAnnotation: {
 			Validator: parser.ValidateRegex(arrayOfHTTPErrors, true),
 			Scope:     parser.AnnotationScopeLocation,
 			Risk:      parser.AnnotationRiskLow,
 			Documentation: `If a default backend annotation is specified on the ingress, the errors code specified on this annotation 
 			will be routed to that annotation's default backend service. Otherwise they will be routed to the global default backend.
-			A comma-separated list of error codes is accepted (anything between 400 and 599, like 403, 503)`,
+			A comma-separated list of error codes is accepted (anything between 400 and 599, like 403, 503).`,
 		},
 	},
 }
@@ -65,6 +75,18 @@ func NewParser(r resolver.Resolver) parser.IngressAnnotation {
 // Parse parses the annotations contained in the ingress to use
 // custom http errors
 func (e customhttperrors) Parse(ing *networking.Ingress) (interface{}, error) {
+	enabled, err := parser.GetBoolAnnotation(customHTTPErrorsEnabledAnnotation, ing, e.annotationConfig.Annotations)
+	if err != nil {
+		if errors.IsValidationError(err) {
+			klog.Warningf("%s is invalid, defaulting to 'true'", customHTTPErrorsEnabledAnnotation)
+		}
+		enabled = true
+	}
+
+	if !enabled {
+		return []int{}, nil
+	}
+
 	c, err := parser.GetStringAnnotation(customHTTPErrorsAnnotation, ing, e.annotationConfig.Annotations)
 	if err != nil {
 		return nil, err

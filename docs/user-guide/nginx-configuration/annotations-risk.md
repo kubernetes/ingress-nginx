@@ -33,6 +33,7 @@
 | CorsConfig | cors-max-age | Low | ingress |
 | CorsConfig | enable-cors | Low | ingress |
 | CustomHTTPErrors | custom-http-errors | Low | location |
+| CustomHTTPErrors | enable-custom-http-errors | Low | location |
 | CustomHeaders | custom-headers | Medium | location |
 | DefaultBackend | default-backend | Low | location |
 | Denylist | denylist-source-range | Medium | location |

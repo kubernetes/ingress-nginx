@@ -38,7 +38,7 @@ var _ = framework.DescribeAnnotation("custom-http-errors", func() {
 		f.NewEchoDeployment()
 	})
 
-	ginkgo.It("configures Nginx correctly", func() {
+	ginkgo.It("configures Nginx correctly when enabled", func() {
 		host := "customerrors.foo.com"
 
 		errorCodes := []string{"404", "500"}
@@ -118,5 +118,31 @@ var _ = framework.DescribeAnnotation("custom-http-errors", func() {
 		})
 		assert.Contains(ginkgo.GinkgoT(), serverConfig, errorBlockName(fmt.Sprintf("custom-default-backend-%s-%s", f.Namespace, customDefaultBackend), "503"))
 		assert.Contains(ginkgo.GinkgoT(), serverConfig, fmt.Sprintf("error_page %s = %s", "503", errorBlockName(fmt.Sprintf("custom-default-backend-%s-%s", f.Namespace, customDefaultBackend), "503")))
+	})
+
+	ginkgo.It("configures Nginx correctly when disabled", func() {
+		host := "customerrors.foo.com"
+
+		annotations := map[string]string{
+			"nginx.ingress.kubernetes.io/enable-custom-http-errors": "false",
+			"nginx.ingress.kubernetes.io/custom-http-errors":        "404, 503",
+		}
+
+		ing := framework.NewSingleIngress(host, "/", host, f.Namespace, framework.EchoService, 80, annotations)
+		f.EnsureIngress(ing)
+
+		var serverConfig string
+		f.WaitForNginxServer(host, func(sc string) bool {
+			serverConfig = sc
+			return strings.Contains(serverConfig, fmt.Sprintf("server_name %s", host))
+		})
+
+		f.UpdateNginxConfigMapData("custom-http-errors", "404, 503")
+
+		ginkgo.By("not turning on proxy_intercept_errors directive")
+		assert.NotContains(ginkgo.GinkgoT(), serverConfig, "proxy_intercept_errors on;")
+
+		ginkgo.By("not creating error locations")
+		assert.NotContains(ginkgo.GinkgoT(), serverConfig, fmt.Sprintf("location %s", errorBlockName("upstream-default-backend", "off")))
 	})
 })

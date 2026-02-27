@@ -29,21 +29,22 @@ import (
 )
 
 var (
-	annotationPassthrough            = parser.GetAnnotationWithPrefix("ssl-passthrough")
-	annotationAffinityType           = parser.GetAnnotationWithPrefix("affinity")
-	annotationAffinityMode           = parser.GetAnnotationWithPrefix("affinity-mode")
-	annotationAffinityCanaryBehavior = parser.GetAnnotationWithPrefix("affinity-canary-behavior")
-	annotationCorsEnabled            = parser.GetAnnotationWithPrefix("enable-cors")
-	annotationCorsAllowMethods       = parser.GetAnnotationWithPrefix("cors-allow-methods")
-	annotationCorsAllowHeaders       = parser.GetAnnotationWithPrefix("cors-allow-headers")
-	annotationCorsExposeHeaders      = parser.GetAnnotationWithPrefix("cors-expose-headers")
-	annotationCorsAllowCredentials   = parser.GetAnnotationWithPrefix("cors-allow-credentials")
-	defaultCorsMethods               = "GET, PUT, POST, DELETE, PATCH, OPTIONS"
-	defaultCorsHeaders               = "DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
-	annotationAffinityCookieName     = parser.GetAnnotationWithPrefix("session-cookie-name")
-	annotationUpstreamHashBy         = parser.GetAnnotationWithPrefix("upstream-hash-by")
-	annotationCustomHTTPErrors       = parser.GetAnnotationWithPrefix("custom-http-errors")
-	annotationCustomHeaders          = parser.GetAnnotationWithPrefix("custom-headers")
+	annotationPassthrough             = parser.GetAnnotationWithPrefix("ssl-passthrough")
+	annotationAffinityType            = parser.GetAnnotationWithPrefix("affinity")
+	annotationAffinityMode            = parser.GetAnnotationWithPrefix("affinity-mode")
+	annotationAffinityCanaryBehavior  = parser.GetAnnotationWithPrefix("affinity-canary-behavior")
+	annotationCorsEnabled             = parser.GetAnnotationWithPrefix("enable-cors")
+	annotationCorsAllowMethods        = parser.GetAnnotationWithPrefix("cors-allow-methods")
+	annotationCorsAllowHeaders        = parser.GetAnnotationWithPrefix("cors-allow-headers")
+	annotationCorsExposeHeaders       = parser.GetAnnotationWithPrefix("cors-expose-headers")
+	annotationCorsAllowCredentials    = parser.GetAnnotationWithPrefix("cors-allow-credentials")
+	defaultCorsMethods                = "GET, PUT, POST, DELETE, PATCH, OPTIONS"
+	defaultCorsHeaders                = "DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
+	annotationAffinityCookieName      = parser.GetAnnotationWithPrefix("session-cookie-name")
+	annotationUpstreamHashBy          = parser.GetAnnotationWithPrefix("upstream-hash-by")
+	annotationCustomHTTPErrorsEnabled = parser.GetAnnotationWithPrefix("enable-custom-http-errors")
+	annotationCustomHTTPErrors        = parser.GetAnnotationWithPrefix("custom-http-errors")
+	annotationCustomHeaders           = parser.GetAnnotationWithPrefix("custom-headers")
 )
 
 type mockCfg struct {
@@ -298,6 +299,14 @@ func TestCustomHTTPErrors(t *testing.T) {
 		{map[string]string{annotationCustomHTTPErrors: "404"}, []int{404}},
 		{map[string]string{annotationCustomHTTPErrors: ""}, []int{}},
 		{map[string]string{annotationCustomHTTPErrors + "_no": "404"}, []int{}},
+		{map[string]string{annotationCustomHTTPErrorsEnabled: "true", annotationCustomHTTPErrors: "404,415"}, []int{404, 415}},
+		{map[string]string{annotationCustomHTTPErrorsEnabled: "true", annotationCustomHTTPErrors: "404"}, []int{404}},
+		{map[string]string{annotationCustomHTTPErrorsEnabled: "true", annotationCustomHTTPErrors: ""}, []int{}},
+		{map[string]string{annotationCustomHTTPErrorsEnabled: "true", annotationCustomHTTPErrors + "_no": "404"}, []int{}},
+		{map[string]string{annotationCustomHTTPErrorsEnabled: "false", annotationCustomHTTPErrors: "404,415"}, []int{}},
+		{map[string]string{annotationCustomHTTPErrorsEnabled: "false", annotationCustomHTTPErrors: "404"}, []int{}},
+		{map[string]string{annotationCustomHTTPErrorsEnabled: "false", annotationCustomHTTPErrors: ""}, []int{}},
+		{map[string]string{annotationCustomHTTPErrorsEnabled: "false", annotationCustomHTTPErrors + "_no": "404"}, []int{}},
 		{map[string]string{}, []int{}},
 		{nil, []int{}},
 	}
