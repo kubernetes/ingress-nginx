@@ -120,6 +120,8 @@ const (
 	DeleteEvent EventType = "DELETE"
 	// ConfigurationEvent event associated when a controller configuration object is created or updated
 	ConfigurationEvent EventType = "CONFIGURATION"
+	// EndpointEvent event associated with an endpoint added, updated or deleted in an informer
+	EndpointEvent EventType = "ENDPOINT"
 )
 
 // Event holds the context of an event.
@@ -708,13 +710,13 @@ func New(
 	epsEventHandler := cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			updateCh.In() <- Event{
-				Type: CreateEvent,
+				Type: EndpointEvent,
 				Obj:  obj,
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
 			updateCh.In() <- Event{
-				Type: DeleteEvent,
+				Type: EndpointEvent,
 				Obj:  obj,
 			}
 		},
@@ -729,7 +731,7 @@ func New(
 			}
 			if !reflect.DeepEqual(ceps.Endpoints, oeps.Endpoints) {
 				updateCh.In() <- Event{
-					Type: UpdateEvent,
+					Type: EndpointEvent,
 					Obj:  cur,
 				}
 			}
