@@ -19,6 +19,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -1587,11 +1588,9 @@ func mergeAlternativeBackend(ing *ingress.Ingress, priUps, altUps *ingress.Backe
 		return false
 	}
 
-	for _, ab := range priUps.AlternativeBackends {
-		if ab == altUps.Name {
-			klog.V(2).Infof("skip merge alternative backend %v into %v, it's already present", altUps.Name, priUps.Name)
-			return true
-		}
+	if slices.Contains(priUps.AlternativeBackends, altUps.Name) {
+		klog.V(2).Infof("skip merge alternative backend %v into %v, it's already present", altUps.Name, priUps.Name)
+		return true
 	}
 
 	if ing.ParsedAnnotations != nil && ing.ParsedAnnotations.SessionAffinity.CanaryBehavior != "legacy" {
