@@ -308,6 +308,20 @@ func TestCheckAnnotationRisk(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name:    "annotation aliases should be considered in risk evaluation",
+			maxrisk: AnnotationRiskLow,
+			annotations: map[string]string{
+				"nginx.ingress.kubernetes.io/alias": "value",
+			},
+			config: AnnotationFields{
+				"annotation": {
+					Risk:              AnnotationRiskCritical,
+					AnnotationAliases: []string{"alias"},
+				},
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
