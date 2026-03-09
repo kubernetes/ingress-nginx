@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -253,8 +254,12 @@ func CheckAnnotationRisk(annotations map[string]string, maxrisk AnnotationRisk, 
 	var err error
 	for annotation := range annotations {
 		annPure := TrimAnnotationPrefix(annotation)
-		if cfg, ok := config[annPure]; ok && cfg.Risk > maxrisk {
-			err = errors.Join(err, fmt.Errorf("annotation %s is too risky for environment", annotation))
+		// We need to iterate through the map as we need to consider annotation aliases which are part of the value.
+		for key, cfg := range config {
+			// Check if either the key or any alias equals the annotation and the risk is higher than allowed.
+			if (key == annPure || slices.Contains(cfg.AnnotationAliases, annPure)) && cfg.Risk > maxrisk {
+				err = errors.Join(err, fmt.Errorf("annotation %s is too risky for environment", annotation))
+			}
 		}
 	}
 	return err
