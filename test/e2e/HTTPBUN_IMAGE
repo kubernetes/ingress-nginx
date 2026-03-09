@@ -1,1 +1,1 @@
-registry.k8s.io/ingress-nginx/httpbun:v1.2.7@sha256:f7655ebaa1ad80bd6b4d44cd59131f38f401db20308a5427c2e5a5af83f83735
+registry.k8s.io/ingress-nginx/httpbun:v1.2.8@sha256:ac71757927e4b4cc0b0ad3c5e50076b609e0f088ab61a4d8b84885c43844a881
