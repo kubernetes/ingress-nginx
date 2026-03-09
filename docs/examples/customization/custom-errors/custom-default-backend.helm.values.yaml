@@ -6,7 +6,7 @@ defaultBackend:
   image:
     registry: registry.k8s.io
     image: ingress-nginx/custom-error-pages
-    tag: v1.2.7@sha256:bc95ae1de9f36ef75cc9ea323893e406c58a2264de21c278879be63e60a659ca
+    tag: v1.2.8@sha256:ac1326cb84f1960d5d1cfeb8a9ee56f63aee39f9a8375b0b925d12efebb88e63
   extraVolumes:
   - name: custom-error-pages
     configMap:
