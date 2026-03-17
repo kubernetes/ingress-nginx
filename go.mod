@@ -12,7 +12,7 @@ require (
 	github.com/google/go-github/v48 v48.2.0
 	github.com/json-iterator/go v1.1.12
 	github.com/kylelemons/godebug v1.1.0
-	github.com/magefile/mage v1.16.0
+	github.com/magefile/mage v1.16.1
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/mitchellh/mapstructure v1.5.0
@@ -35,7 +35,7 @@ require (
 	google.golang.org/grpc v1.79.2
 	gopkg.in/go-playground/pool.v3 v3.1.1
 	gopkg.in/mcuadros/go-syslog.v2 v2.3.0
-	helm.sh/helm/v4 v4.1.1
+	helm.sh/helm/v4 v4.1.3
 	k8s.io/api v0.35.2
 	k8s.io/apiextensions-apiserver v0.35.2
 	k8s.io/apimachinery v0.35.2
