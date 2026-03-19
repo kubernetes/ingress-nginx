@@ -619,7 +619,7 @@ http {
     {{ $applyGlobalAuth := shouldApplyGlobalAuth $location $all.Cfg.GlobalExternalAuth.URL }}
     {{ $applyAuthUpstream := shouldApplyAuthUpstream $location $all.Cfg }}
     {{ if and (eq $applyAuthUpstream true) (eq $applyGlobalAuth false) }}
-    ## start auth upstream {{ $server.Hostname }}{{ $location.Path }}
+    ## start auth upstream {{ $server.Hostname }}
     upstream {{ buildAuthUpstreamName $location $server.Hostname }} {
         {{- $externalAuth := $location.ExternalAuth }}
         server {{ extractHostPort $externalAuth.URL }};
@@ -628,7 +628,7 @@ http {
         keepalive_requests {{ $externalAuth.KeepaliveRequests }};
         keepalive_timeout {{ $externalAuth.KeepaliveTimeout }}s;
     }
-    ## end auth upstream {{ $server.Hostname }}{{ $location.Path }}
+    ## end auth upstream {{ $server.Hostname }}
     {{ end }}
     {{ end }}
     {{ end }}
