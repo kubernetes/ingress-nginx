@@ -12,6 +12,8 @@
 # setup custom paths that do not require root access
 pid {{ .PID }};
 
+load_module /etc/nginx/modules/ngx_http_js_module.so;
+
 {{ if $cfg.UseGeoIP2 }}
 load_module /etc/nginx/modules/ngx_http_geoip2_module.so;
 {{ end }}
@@ -73,6 +75,8 @@ http {
     init_by_lua_file /etc/nginx/lua/ngx_conf_init.lua;
 
     init_worker_by_lua_file /etc/nginx/lua/ngx_conf_init_worker.lua;
+
+    js_import njs_handle_cors from /etc/nginx/js/nginx/ngx_handle_cors.js;
 
     {{/* Enable the real_ip module only if we use either X-Forwarded headers or Proxy Protocol. */}}
     {{/* we use the value of the real IP for the geo_ip module */}}
@@ -872,33 +876,19 @@ stream {
 {{/* CORS support from https://michielkalkman.com/snippets/nginx-cors-open-configuration.html */}}
 {{ define "CORS" }}
      {{ $cors := .CorsConfig }}
-     # Cors Preflight methods needs additional options and different Return Code
-     {{ if $cors.CorsAllowOrigin }}
-        {{ buildCorsOriginRegex $cors.CorsAllowOrigin }}
-     {{ end }}
+
+     set $cors_origins_regex '{{ buildCorsOriginRegex $cors.CorsAllowOrigin }}';
+     set $cors_allowed_origins '{{ join $cors.CorsAllowOrigin "," }}';
+     set $cors_allow_methods '{{ $cors.CorsAllowMethods }}';
+     set $cors_allow_headers '{{ $cors.CorsAllowHeaders }}';
+     set $cors_max_age '{{ $cors.CorsMaxAge }}';
+     {{ if $cors.CorsAllowCredentials }} set $cors_allow_credentials {{ $cors.CorsAllowCredentials }}; {{ end }}
+     {{ if not (empty $cors.CorsExposeHeaders) }} set $cors_expose_headers '{{ $cors.CorsExposeHeaders }}'; {{ end }}
+
+     js_header_filter njs_handle_cors.handle_cors;
+
      if ($request_method = 'OPTIONS') {
-        set $cors ${cors}options;
-     }
-
-     if ($cors = "true") {
-        more_set_headers 'Access-Control-Allow-Origin: $http_origin';
-        {{ if $cors.CorsAllowCredentials }} more_set_headers 'Access-Control-Allow-Credentials: {{ $cors.CorsAllowCredentials }}'; {{ end }}
-        more_set_headers 'Access-Control-Allow-Methods: {{ $cors.CorsAllowMethods }}';
-        more_set_headers 'Access-Control-Allow-Headers: {{ $cors.CorsAllowHeaders }}';
-        {{ if not (empty $cors.CorsExposeHeaders) }} more_set_headers 'Access-Control-Expose-Headers: {{ $cors.CorsExposeHeaders }}'; {{ end }}
-        more_set_headers 'Access-Control-Max-Age: {{ $cors.CorsMaxAge }}';
-     }
-
-     if ($cors = "trueoptions") {
-        more_set_headers 'Access-Control-Allow-Origin: $http_origin';
-        {{ if $cors.CorsAllowCredentials }} more_set_headers 'Access-Control-Allow-Credentials: {{ $cors.CorsAllowCredentials }}'; {{ end }}
-        more_set_headers 'Access-Control-Allow-Methods: {{ $cors.CorsAllowMethods }}';
-        more_set_headers 'Access-Control-Allow-Headers: {{ $cors.CorsAllowHeaders }}';
-        {{ if not (empty $cors.CorsExposeHeaders) }} more_set_headers 'Access-Control-Expose-Headers: {{ $cors.CorsExposeHeaders }}'; {{ end }}
-        more_set_headers 'Access-Control-Max-Age: {{ $cors.CorsMaxAge }}';
-        more_set_headers 'Content-Type: text/plain charset=UTF-8';
-        more_set_headers 'Content-Length: 0';
-        return 204;
+         return 204;
      }
 {{ end }}
 

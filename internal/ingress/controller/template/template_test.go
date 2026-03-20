@@ -2088,3 +2088,36 @@ func TestCleanConf(t *testing.T) {
 		t.Errorf("cleanConf result don't match with expected: %s", diff)
 	}
 }
+
+func TestBuildCorsOriginRegex(t *testing.T) {
+	origins := []string{"http://foo.bar "}
+
+	result := buildCorsOriginRegex(origins)
+
+	expected := `((http://foo\.bar))`
+	if result != expected {
+		t.Errorf("expected '%v' but returned '%v'", expected, result)
+	}
+}
+
+func TestBuildCorsOriginRegexWithMultipleOrigins(t *testing.T) {
+	origins := []string{" http://foo.bar", "http://*.bar"}
+
+	result := buildCorsOriginRegex(origins)
+
+	expected := `((http://foo\.bar)|(http://[A-Za-z0-9\-]+\.bar))`
+	if result != expected {
+		t.Errorf("expected '%v' but returned '%v'", expected, result)
+	}
+}
+
+func TestBuildCorsOriginRegexWithWildcard(t *testing.T) {
+	origins := []string{"*"}
+
+	result := buildCorsOriginRegex(origins)
+
+	expected := `.*`
+	if result != expected {
+		t.Errorf("expected '%v' but returned '%v'", expected, result)
+	}
+}
