@@ -26,6 +26,7 @@ import (
 	"github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
+	networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/ingress-nginx/test/e2e/framework"
@@ -137,5 +138,59 @@ var _ = framework.IngressNginxDescribe("[metrics] exported prometheus metrics", 
 		reqMetrics, err := f.GetMetric("nginx_ingress_controller_requests", ip)
 		assert.EqualError(ginkgo.GinkgoT(), err, "there is no metric with name nginx_ingress_controller_requests")
 		assert.Nil(ginkgo.GinkgoT(), reqMetrics)
+	})
+})
+
+var _ = framework.IngressNginxDescribe("[metrics] exported prometheus metrics when multiple services share a path", func() {
+	f := framework.NewDefaultFramework("metrics")
+	host := "foo.com"
+
+	configuredServices := map[string]networking.PathType{
+		framework.EchoService:    networking.PathTypePrefix,
+		framework.HTTPBunService: networking.PathTypeExact,
+	}
+
+	ginkgo.BeforeEach(func() {
+		f.NewEchoDeployment()
+		f.NewHttpbunDeployment()
+		f.EnsureIngress(framework.NewSingleIngressWithMultiplePathsOfDifferentTypes("multiplepaths", host, f.Namespace, configuredServices, 80, nil))
+		f.WaitForNginxServer(host,
+			func(server string) bool {
+				return strings.Contains(server, fmt.Sprintf("server_name %s ;", host)) &&
+					strings.Contains(server, "proxy_pass http://upstream_balancer;")
+			})
+	})
+
+	ginkgo.It("ensures that each service has metrics reporting", func() {
+		f.HTTPTestClient().
+			GET("/").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
+		f.HTTPTestClient().
+			GET("/path").
+			WithHeader("Host", host).
+			Expect().
+			Status(http.StatusOK)
+
+		time.Sleep(waitForMetrics)
+
+		fetchedServices := []string{}
+
+		ip := f.GetNginxPodIP()
+		mf, err := f.GetMetric("nginx_ingress_controller_requests", ip)
+		assert.Len(ginkgo.GinkgoT(), mf.Metric, 2)
+
+		for _, metric := range mf.Metric {
+			label, _ := f.GetLabelValue(metric, "service")
+			fetchedServices = append(fetchedServices, label)
+		}
+
+		assert.Equal(ginkgo.GinkgoT(), len(configuredServices), len(fetchedServices))
+
+		for _, service := range fetchedServices {
+			assert.Contains(ginkgo.GinkgoT(), configuredServices, service)
+		}
+		assert.NoError(ginkgo.GinkgoT(), err)
 	})
 })
